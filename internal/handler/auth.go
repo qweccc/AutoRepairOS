@@ -12,13 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func writeHTML(w http.ResponseWriter, r *http.Request, name string, data interface{}) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	// TODO: Templ 整合後改用 templ.Render
-	w.Write([]byte("<html><body>" + name + "</body></html>"))
-}
-
 func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(statusCode)
@@ -30,73 +23,111 @@ func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Write(b)
 }
 
-func requireLogin(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		role := r.Context().Value("role")
-		if role == nil {
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-			return
-		}
-		next(w, r)
+const pageStyle = `
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+         background: #0f172a; color: #e2e8f0; }
+  header { background: #1e293b; padding: 16px 28px; display: flex;
+           align-items: center; justify-content: space-between;
+           border-bottom: 2px solid #334155; }
+  header h1 { margin: 0; font-size: 22px; }
+  .user { font-size: 14px; }
+  .badge { background: #38bdf8; color: #0f172a; padding: 2px 10px;
+           border-radius: 999px; font-weight: 700; font-size: 12px; }
+  .logout { margin-left: 16px; padding: 8px 18px; background: #ef4444;
+            color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700; }
+  .logout:hover { background: #dc2626; }
+  main { padding: 28px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+          padding: 20px; margin-bottom: 20px; }
+  .card h2 { margin-top: 0; color: #38bdf8; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px; border-bottom: 1px solid #334155; font-size: 14px; }
+  th { color: #94a3b8; }
+  .stat { display: inline-block; margin-right: 28px; }
+  .stat b { font-size: 28px; color: #f8fafc; display: block; }
+  .stat span { color: #94a3b8; font-size: 13px; }
+`
+
+// currentUser 從 session cookie 解析出使用者，未登入或 cookie 無效時回傳 error。
+func currentUser(r *http.Request) (model.User, error) {
+	var user model.User
+
+	cookie, err := r.Cookie("session_token")
+	if err != nil || cookie.Value == "" {
+		return user, http.ErrNoCookie
 	}
+
+	username := strings.Split(cookie.Value, "-")[0]
+
+	err = db.DB.QueryRow(
+		"SELECT id, username, role, name FROM users WHERE username = ?", username,
+	).Scan(&user.ID, &user.Username, &user.Role, &user.Name)
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 }
 
-func requireRole(roles ...string) func(http.HandlerFunc) http.HandlerFunc {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			ctxRole := r.Context().Value("role")
-			if ctxRole == nil {
-				http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-				return
-			}
-
-			roleStr, ok := ctxRole.(string)
-			if !ok {
-				http.Error(w, "權限錯誤", http.StatusForbidden)
-				return
-			}
-
-			allowed := false
-			for _, r := range roles {
-				if roleStr == r {
-					allowed = true
-					break
-				}
-			}
-
-			if !allowed {
-				http.Error(w, "權限不足", http.StatusForbidden)
-				return
-			}
-
-			next(w, r)
-		}
-	}
+func renderPage(w http.ResponseWriter, title, username, role, body string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(`<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>` + title + ` - AutoRepair OS</title>
+<style>` + pageStyle + `</style>
+</head>
+<body>
+  <header>
+    <h1>🔧 AutoRepair OS</h1>
+    <div class="user">登入中：<code>` + username + `</code> <span class="badge">` + role + `</span>
+    <a href="/logout" class="logout">登出</a>
+    </div>
+  </header>
+  <main>` + body + `
+  </main>
+</body>
+</html>`))
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write([]byte(`
-			<html>
-			<head><title>登入 - AutoRepair OS</title></head>
-			<body>
-				<h1>登入 - AutoRepair OS</h1>
-				<form method="POST" action="/login">
-					<label>帳號: <input type="text" name="username" required></label><br><br>
-					<label>密碼: <input type="password" name="password" required></label><br><br>
-					<button type="submit">登入</button>
-				</form>
-				<hr>
-				<p>預設測試帳號:</p>
-				<ul>
-					<li>Owner: <code>owner</code> / <code>Owner001!</code></li>
-					<li>Counter: <code>counter</code> / <code>Counter001!</code></li>
-					<li>Technician: <code>tech</code> / <code>Tech001!</code></li>
-				</ul>
-			</body>
-			</html>
-		`))
+		w.Write([]byte(`<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>登入 - AutoRepair OS</title>
+<style>` + pageStyle + `
+  .wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
+  form { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+         padding: 32px; width: 340px; }
+  input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;
+          border: 1px solid #334155; background: #0f172a; color: #e2e8f0; }
+  button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;
+           border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .hint { color: #64748b; font-size: 12px; line-height: 1.7; margin-top: 20px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <form method="POST" action="/login">
+      <h2>🔧 AutoRepair OS</h2>
+      <label>帳號<input type="text" name="username" required autofocus></label>
+      <label>密碼<input type="password" name="password" required></label>
+      <button type="submit">登入</button>
+      <div class="hint">
+        預設帳號：owner / Owner001!<br>
+        counter / Counter001!<br>
+        tech / Tech001!
+      </div>
+    </form>
+  </div>
+</body>
+</html>`))
 		return
 	}
 
@@ -114,24 +145,23 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user model.User
-	err := db.DB.QueryRow("SELECT id, username, password, role, name, created_at FROM users WHERE username = ?", username).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name, &user.CreatedAt)
+	err := db.DB.QueryRow(
+		"SELECT id, username, password, role, name FROM users WHERE username = ?", username,
+	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name)
 	if err != nil {
 		http.Error(w, "帳號或密碼錯誤", http.StatusUnauthorized)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
 		http.Error(w, "帳號或密碼錯誤", http.StatusUnauthorized)
 		return
 	}
 
-	// 建立 session cookie (簡易版)
-	sessionToken := strings.ReplaceAll(username+"-"+strconv.FormatInt(user.ID, 10), " ", "_")
+	// TODO: 換成隨機 session token 存進 sessions 表
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
-		Value:    sessionToken,
+		Value:    strings.ReplaceAll(username+"-"+strconv.FormatInt(user.ID, 10), " ", "_"),
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false,
@@ -146,62 +176,64 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_token",
 		Value:    "",
 		Path:     "/",
+		HttpOnly: true,
 		MaxAge:   -1,
 	})
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 func MeHandler(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("session_token")
-	if err != nil || sessionCookie.Value == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "未登入"})
-		return
-	}
-
-	username := strings.Split(sessionCookie.Value, "-")[0]
-
-	var user model.User
-	err = db.DB.QueryRow("SELECT id, username, password, role, name, created_at FROM users WHERE username = ?", username).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name, &user.CreatedAt)
+	user, err := currentUser(r)
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "會話無效"})
+		writeJSON(w, http.StatusUnauthorized, model.SimpleResponse{Error: "未登入"})
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"id":        user.ID,
-		"username":  user.Username,
-		"role":      user.Role,
-		"name":      user.Name,
+		"id":       user.ID,
+		"username": user.Username,
+		"role":     user.Role,
+		"name":     user.Name,
 	})
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	sessionCookie, err := r.Cookie("session_token")
-	if err != nil || sessionCookie.Value == "" {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-
-	username := strings.Split(sessionCookie.Value, "-")[0]
-
-	var user model.User
-	err = db.DB.QueryRow("SELECT id, username, password, role, name, created_at FROM users WHERE username = ?", username).
-		Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name, &user.CreatedAt)
+	user, err := currentUser(r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(`
-		<html>
-		<head><title>AutoRepair OS</title></head>
-		<body>
-			<h1>AutoRepair OS 首頁</h1>
-			<p>你好，<code>` + user.Username + `</code>（角色: ` + user.Role + `）</p>
-			<p><a href="/logout">登出</a></p>
-		</body>
-		</html>
-	`))
+	stats := []struct {
+		label string
+		query string
+	}{
+		{"待處理工單", "SELECT COUNT(1) FROM work_orders WHERE status IN ('pending','in_progress','waiting_parts')"},
+		{"進行中", "SELECT COUNT(1) FROM work_orders WHERE status = 'in_progress'"},
+		{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'"},
+		{"客戶數", "SELECT COUNT(1) FROM customers"},
+		{"車輛數", "SELECT COUNT(1) FROM vehicles"},
+		{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock"},
+	}
+
+	var statHTML strings.Builder
+	for _, s := range stats {
+		var n int
+		if err := db.DB.QueryRow(s.query).Scan(&n); err != nil {
+			n = 0
+		}
+		statHTML.WriteString(`<div class="stat"><b>` + strconv.Itoa(n) + `</b><span>` + s.label + `</span></div>`)
+	}
+
+	body := `
+    <div class="card">
+      <h2>總覽</h2>
+      <div>` + statHTML.String() + `</div>
+    </div>
+    <div class="card">
+      <h2>功能模組</h2>
+      <p>尚未實作。目前僅有登入與總覽統計。</p>
+    </div>`
+
+	renderPage(w, "首頁", user.Username, user.Role, body)
 }
