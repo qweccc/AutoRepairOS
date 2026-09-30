@@ -27,7 +27,7 @@ go run ./cmd/seed
 go run ./cmd/server
 ```
 
-服務器將在 `http://localhost:8080` 啟動。
+服務器將在 `http://localhost:8090` 啟動（主機埠；容器內為 8080）。本機 8080 保留給 llama-server。
 
 ## 預設帳號
 
@@ -96,7 +96,7 @@ go mod tidy
 
 | 變數 | 預設值 | 說明 |
 |------|--------|------|
-| PORT | 8080 | 服務器端口 |
+| PORT | 8080 | 服務器端口（容器內）；Docker 主機埠為 8090 |
 | DB_PATH | file:data/autorepair.db?_journal_mode=WAL&_busy_timeout=5000 | 資料庫路徑 |
 | SESSION_SECRET | autorepair-dev-secret-change-in-production | session 加密密鑰 |
 | RUN_SEED | false | 是否執行種子數據 |

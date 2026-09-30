@@ -10,7 +10,7 @@
    ```bash
    docker compose up --build
    ```
-5. 服務會跑在 `http://localhost:8080`
+5. 服務會跑在 `http://localhost:8090`（主機埠；容器內仍為 8080）
 
 ## 方案 B：純 WSL2 + Docker Engine（若不想裝 Desktop）
 1. Windows 功能開啟「Windows Subsystem for Linux」
@@ -28,7 +28,7 @@
 cd C:/Users/fr/AutoRepairOS
 ./autrepairos.exe
 ```
-服務跑在 `http://localhost:8080`（或 8092，若 8080 被佔）。
+服務跑在 `http://localhost:8090`（主機 8090 → 容器 8080）。8080 保留給本機的 llama-server。
 
 ## 方案 D：臨時 Docker 環境（遠端 / 容器編排）
 若本機真的無法裝 Docker，可改用：
