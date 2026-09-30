@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  autorepairos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=8080
+      - DB_PATH=file:/app/data/autorepair.db?_journal_mode=WAL&_busy_timeout=5000
+      - SESSION_SECRET=autorepair-dev-secret-change-in-production
+      - RUN_SEED=true
+    restart: unless-stopped

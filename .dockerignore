@@ -1,0 +1,28 @@
+# Binary artifacts
+*.exe
+*.test
+
+# Local data
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docs / notes
+*.md
+README*
+LICENSE*
