@@ -1,0 +1,230 @@
+package handler
+
+import (
+	"net/http"
+	"strconv"
+	"strings"
+
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+)
+
+func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+
+	query := `SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(address,''),
+		COALESCE(notification_preference,'line'), COALESCE(notes,''),
+		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), created_at
+		FROM customers`
+	var args []interface{}
+	if q != "" {
+		query += ` WHERE name LIKE ? OR phone LIKE ? OR COALESCE(address,'') LIKE ?`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	query += ` ORDER BY id DESC`
+
+	rows, err := db.DB.Query(query, args...)
+	if err != nil {
+		fail(w, "查詢客戶失敗")
+		return
+	}
+	defer rows.Close()
+
+	var list []model.Customer
+	for rows.Next() {
+		var c model.Customer
+		if err := rows.Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.Address,
+			&c.NotificationPref, &c.Notes, &c.TotalSpent, &c.UnpaidAmount, &c.CreatedAt); err != nil {
+			continue
+		}
+		list = append(list, c)
+	}
+
+	var tb strings.Builder
+	tb.WriteString(`<table><tr><th>ID</th><th>姓名</th><th>電話</th><th>地址</th><th>通知</th><th class="num">累計消費</th><th class="num">未付</th><th>操作</th></tr>`)
+	for _, c := range list {
+		notif := "LINE"
+		switch c.NotificationPref {
+		case "sms":
+			notif = "SMS"
+		case "none":
+			notif = "不通知"
+		}
+		tb.WriteString(`<tr><td>` + strconv.FormatInt(c.ID, 10) + `</td><td>` + htmlEsc(c.Name) + `</td><td>` +
+			htmlEsc(c.Phone) + `</td><td>` + htmlEsc(c.Address) + `</td><td>` + notif +
+			`</td><td class="num">` + money(c.TotalSpent) + `</td><td class="num">` + money(c.UnpaidAmount) +
+			`</td><td><a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-o" href="/vehicles?customer=` + strconv.FormatInt(c.ID, 10) + `">車輛</a> ` +
+			`<a class="btn btn-d" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/delete" onclick="return confirm('確定刪除這位客戶？')">刪除</a></td></tr>`)
+	}
+	tb.WriteString(`</table>`)
+
+	table := tb.String()
+	if len(list) == 0 {
+		table = `<div class="empty">沒有客戶資料</div>`
+	}
+
+	body := flash(r) + `
+    <div class="card">
+      <h2>新增客戶</h2>
+      <form class="frm" method="POST" action="/customers">
+        <label>姓名<input name="name" required></label>
+        <label>電話<input name="phone" required></label>
+        <label>通知偏好
+          <select name="notification_preference">
+            <option value="line">LINE</option>
+            <option value="sms">SMS</option>
+            <option value="none">不通知</option>
+          </select>
+        </label>
+        <label class="full">地址<input name="address"></label>
+        <label class="full">LINE User ID<input name="line_user_id"></label>
+        <label class="full">備註<textarea name="notes"></textarea></label>
+        <div class="full"><button class="btn btn-p" type="submit">建立客戶</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>客戶列表（` + strconv.Itoa(len(list)) + ` 筆）</h2>
+      <form method="GET" action="/customers" style="margin-bottom:12px">
+        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋姓名 / 電話 / 地址" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+        <button class="btn btn-p" type="submit">搜尋</button>
+      </form>` + table + `
+    </div>`
+
+	renderPage(w, "客戶管理", "/customers", user.Username, user.Role, body)
+}
+
+func CreateCustomer(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	phone := r.FormValue("phone")
+
+	if strings.TrimSpace(name) == "" || strings.TrimSpace(phone) == "" {
+		fail(w, "姓名與電話為必填")
+		return
+	}
+
+	_, err := db.DB.Exec(`INSERT INTO customers
+		(name, phone, line_user_id, address, notification_preference, notes)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		strings.TrimSpace(name), strings.TrimSpace(phone),
+		nullStr(r.FormValue("line_user_id")), nullStr(r.FormValue("address")),
+		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")),
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE") {
+			fail(w, "電話號碼已存在")
+			return
+		}
+		fail(w, "建立客戶失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/customers", "客戶已建立")
+}
+
+func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	id := mustInt(r.PathValue("id"))
+
+	var c model.Customer
+	err := db.DB.QueryRow(`SELECT id, name, phone, COALESCE(line_user_id,''),
+		COALESCE(address,''), COALESCE(notification_preference,'line'), COALESCE(notes,''),
+		COALESCE(total_spent,0), COALESCE(unpaid_amount,0)
+		FROM customers WHERE id = ?`, id).
+		Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.Address,
+			&c.NotificationPref, &c.Notes, &c.TotalSpent, &c.UnpaidAmount)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	body := `
+    <div class="card">
+      <h2>編輯客戶 #` + strconv.FormatInt(c.ID, 10) + `</h2>
+      <form class="frm" method="POST" action="/customers/` + strconv.FormatInt(c.ID, 10) + `">
+        <label>姓名<input name="name" value="` + htmlEsc(c.Name) + `" required></label>
+        <label>電話<input name="phone" value="` + htmlEsc(c.Phone) + `" required></label>
+        <label>通知偏好
+          <select name="notification_preference">
+            <option value="line"` + selIf(c.NotificationPref == "line") + `>LINE</option>
+            <option value="sms"` + selIf(c.NotificationPref == "sms") + `>SMS</option>
+            <option value="none"` + selIf(c.NotificationPref == "none") + `>不通知</option>
+          </select>
+        </label>
+        <label class="full">地址<input name="address" value="` + htmlEsc(c.Address) + `"></label>
+        <label class="full">LINE User ID<input name="line_user_id" value="` + htmlEsc(c.LineUserID) + `"></label>
+        <label class="full">備註<textarea name="notes">` + htmlEsc(c.Notes) + `</textarea></label>
+        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/customers">取消</a></div>
+      </form>
+    </div>`
+
+	renderPage(w, "編輯客戶", "/customers", user.Username, user.Role, body)
+}
+
+func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	name := strings.TrimSpace(r.FormValue("name"))
+	phone := strings.TrimSpace(r.FormValue("phone"))
+
+	if name == "" || phone == "" {
+		fail(w, "姓名與電話為必填")
+		return
+	}
+
+	res, err := db.DB.Exec(`UPDATE customers SET name=?, phone=?, line_user_id=?,
+		address=?, notification_preference=?, notes=? WHERE id=?`,
+		name, phone, nullStr(r.FormValue("line_user_id")), nullStr(r.FormValue("address")),
+		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")), id)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE") {
+			fail(w, "電話號碼已存在")
+			return
+		}
+		fail(w, "更新客戶失敗")
+		return
+	}
+
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	redirectMsg(w, r, "/customers", "客戶已更新")
+}
+
+func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+
+	hasVehicles := countRows("SELECT COUNT(1) FROM vehicles WHERE customer_id = ?", id)
+	if hasVehicles > 0 {
+		fail(w, "此客戶仍有車輛，請先移轉或刪除車輛")
+		return
+	}
+
+	hasOrders := countRows("SELECT COUNT(1) FROM work_orders WHERE customer_id = ?", id)
+	if hasOrders > 0 {
+		fail(w, "此客戶仍有工單紀錄，無法刪除")
+		return
+	}
+
+	res, err := db.DB.Exec("DELETE FROM customers WHERE id = ?", id)
+	if err != nil {
+		fail(w, "刪除客戶失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	redirectMsg(w, r, "/customers", "客戶已刪除")
+}
+
+func notifPref(v string) string {
+	switch v {
+	case "line", "sms", "none":
+		return v
+	default:
+		return "line"
+	}
+}

@@ -1,0 +1,263 @@
+package handler
+
+import (
+	"fmt"
+	"html"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+)
+
+const pageStyle = `
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+         background: #0f172a; color: #e2e8f0; }
+  a { color: #38bdf8; }
+  header { background: #1e293b; padding: 14px 28px; border-bottom: 2px solid #334155;
+           display: flex; align-items: center; justify-content: space-between; }
+  header h1 { margin: 0; font-size: 20px; }
+  .user { font-size: 13px; color: #cbd5e1; }
+  .badge { background: #38bdf8; color: #0f172a; padding: 2px 10px;
+           border-radius: 999px; font-weight: 700; font-size: 11px; }
+  .logout { margin-left: 14px; padding: 6px 14px; background: #ef4444; color: #fff;
+            border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
+  nav { background: #111c33; padding: 0 28px; display: flex; gap: 4px;
+        border-bottom: 1px solid #334155; }
+  nav a { padding: 11px 16px; color: #94a3b8; text-decoration: none;
+          font-size: 14px; border-bottom: 2px solid transparent; }
+  nav a:hover { color: #e2e8f0; }
+  nav a.on { color: #38bdf8; border-bottom-color: #38bdf8; font-weight: 700; }
+  main { padding: 24px 28px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+          padding: 20px; margin-bottom: 18px; }
+  .card h2 { margin: 0 0 14px 0; color: #38bdf8; font-size: 17px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #334155; font-size: 13.5px; }
+  th { color: #94a3b8; font-weight: 600; }
+  tr:hover td { background: #263449; }
+  .stat { display: inline-block; margin: 0 32px 12px 0; }
+  .stat b { font-size: 26px; color: #f8fafc; display: block; }
+  .stat span { color: #94a3b8; font-size: 12px; }
+  .pill { padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+  .p-pending    { background: #475569; color: #e2e8f0; }
+  .p-progress   { background: #1d4ed8; color: #dbeafe; }
+  .p-waitparts  { background: #b45309; color: #fef3c7; }
+  .p-completed  { background: #047857; color: #d1fae5; }
+  .p-paid       { background: #065f46; color: #a7f3d0; }
+  .p-apprpend   { background: #b45309; color: #fef3c7; }
+  .p-appryes    { background: #047857; color: #d1fae5; }
+  .p-apprno     { background: #7f1d1d; color: #fecaca; }
+  .btn { display: inline-block; padding: 6px 13px; border-radius: 7px; font-size: 12.5px;
+         text-decoration: none; font-weight: 600; border: 0; cursor: pointer; }
+  .btn-p { background: #38bdf8; color: #0f172a; }
+  .btn-s { background: #334155; color: #e2e8f0; }
+  .btn-d { background: #7f1d1d; color: #fecaca; }
+  .btn-o { background: #92400e; color: #fde68a; }
+  form.inline { display: inline; }
+  .frm { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .frm label { display: block; font-size: 12px; color: #94a3b8; }
+  .frm input, .frm select, .frm textarea {
+    width: 100%; padding: 8px 10px; margin-top: 4px; border-radius: 7px;
+    border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 13.5px;
+    font-family: inherit; }
+  .frm textarea { height: 62px; resize: vertical; }
+  .frm .full { grid-column: 1 / -1; }
+  .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13.5px; }
+  .msg-ok { background: #052e16; color: #86efac; border: 1px solid #166534; }
+  .msg-err { background: #2a0b0b; color: #fca5a5; border: 1px solid #7f1d1d; }
+  .empty { color: #64748b; padding: 26px; text-align: center; font-size: 13.5px; }
+  .num { text-align: right; }
+`
+
+// appRoutes 定義側邊導覽；active 為目前頁面。
+var appRoutes = []struct {
+	Path string
+	Name string
+}{
+	{"/", "總覽"},
+	{"/customers", "客戶"},
+	{"/vehicles", "車輛"},
+	{"/work-orders", "工單"},
+	{"/inventory", "庫存"},
+}
+
+// RequireAuth 擋未登入者，並把使用者注入給頁面 handler。
+func RequireAuth(fn func(http.ResponseWriter, *http.Request, model.User)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := currentUser(r)
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		fn(w, r, user)
+	}
+}
+
+// RequireLogin 擋未登入者，給不需要使用者資訊的 handler 使用。
+func RequireLogin(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, err := currentUser(r); err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		fn(w, r)
+	}
+}
+
+func nav(active string) string {
+	var b strings.Builder
+	for _, rt := range appRoutes {
+		cls := ""
+		if rt.Path == active {
+			cls = ` class="on"`
+		}
+		fmt.Fprintf(&b, `<a href="%s"%s>%s</a>`, rt.Path, cls, rt.Name)
+	}
+	return b.String()
+}
+
+func renderPage(w http.ResponseWriter, title, active, username, role, body string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(`<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>` + html.EscapeString(title) + ` - AutoRepair OS</title>
+<style>` + pageStyle + `</style>
+</head>
+<body>
+  <header>
+    <h1>🔧 AutoRepair OS</h1>
+    <div class="user">登入中：<code>` + html.EscapeString(username) + `</code> <span class="badge">` + html.EscapeString(role) + `</span>
+    <a href="/logout" class="logout">登出</a>
+    </div>
+  </header>
+  <nav>` + nav(active) + `</nav>
+  <main>` + body + `</main>
+</body>
+</html>`))
+}
+
+func flash(r *http.Request) string {
+	msg := r.URL.Query().Get("msg")
+	if msg == "" {
+		return ""
+	}
+	return `<div class="msg msg-ok">` + html.EscapeString(msg) + `</div>`
+}
+
+func fail(w http.ResponseWriter, msg string) {
+	http.Error(w, msg, http.StatusBadRequest)
+}
+
+func redirectMsg(w http.ResponseWriter, r *http.Request, path, msg string) {
+	http.Redirect(w, r, path+"?msg="+urlQueryEscape(msg), http.StatusFound)
+}
+
+func urlQueryEscape(s string) string {
+	var b strings.Builder
+	for _, c := range []byte(s) {
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' {
+			b.WriteByte(c)
+		} else {
+			fmt.Fprintf(&b, "%%%02X", c)
+		}
+	}
+	return b.String()
+}
+
+func atoiDefault(s string, def int) int {
+	n, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return def
+	}
+	return n
+}
+
+func atofDefault(s string, def float64) float64 {
+	f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	if err != nil {
+		return def
+	}
+	return f
+}
+
+func today() string { return time.Now().Format("2006-01-02") }
+
+// nullDate 處理 SQLite DATE 欄位：空字串或非法值回傳空字串。
+func nullDate(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	if _, err := time.Parse("2006-01-02", s); err != nil {
+		return ""
+	}
+	return s
+}
+
+func nullStr(s string) string { return strings.TrimSpace(s) }
+
+func htmlEsc(s string) string { return html.EscapeString(s) }
+
+func selIf(cond bool) string {
+	if cond {
+		return " selected"
+	}
+	return ""
+}
+
+var workOrderStatusLabel = map[string]string{
+	"pending":       "待處理",
+	"in_progress":   "進行中",
+	"waiting_parts": "待料",
+	"completed":     "待結帳",
+	"paid":          "已結帳",
+}
+
+var approvalLabel = map[string]string{
+	"not_required": "-",
+	"pending":      "待核准",
+	"approved":     "已核准",
+	"rejected":     "已拒絕",
+}
+
+var statusPill = map[string]string{
+	"pending":       "p-pending",
+	"in_progress":   "p-progress",
+	"waiting_parts": "p-waitparts",
+	"completed":     "p-completed",
+	"paid":          "p-paid",
+}
+
+var approvalPill = map[string]string{
+	"not_required": "",
+	"pending":      "p-apprpend",
+	"approved":     "p-appryes",
+	"rejected":     "p-apprno",
+}
+
+func money(f float64) string { return fmt.Sprintf("%.0f", f) }
+
+func dateText(s string) string {
+	if s == "" {
+		return "-"
+	}
+	return s
+}
+
+func mustInt(s string) int64 { return int64(atoiDefault(s, 0)) }
+
+// countRows 給統計卡使用，查詢失敗時回 0。
+func countRows(query string, args ...interface{}) int {
+	var n int
+	if err := db.DB.QueryRow(query, args...).Scan(&n); err != nil {
+		return 0
+	}
+	return n
+}

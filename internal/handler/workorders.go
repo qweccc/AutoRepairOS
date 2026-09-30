@@ -1,0 +1,575 @@
+package handler
+
+import (
+	"database/sql"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+)
+
+const workOrderCols = `wo.id, wo.vehicle_id, wo.customer_id, COALESCE(wo.technician_id,0),
+	COALESCE(v.plate_number,''), COALESCE(v.brand_model,''), COALESCE(c.name,''),
+	COALESCE(c.phone,''), COALESCE(u.name,''), wo.status, wo.current_mileage,
+	COALESCE(wo.customer_complaint,''), wo.approval_status, COALESCE(wo.total_amount,0),
+	COALESCE(wo.sop_completed,0), COALESCE(wo.notes,''), wo.created_at, wo.updated_at`
+
+func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrder, error) {
+	var wo model.WorkOrder
+	err := rows.Scan(&wo.ID, &wo.VehicleID, &wo.CustomerID, &wo.TechnicianID,
+		&wo.PlateNumber, &wo.BrandModel, &wo.CustomerName, &wo.CustomerPhone, &wo.TechnicianName,
+		&wo.Status, &wo.CurrentMileage, &wo.CustomerComplaint, &wo.ApprovalStatus,
+		&wo.TotalAmount, &wo.SOPCompleted, &wo.Notes, &wo.CreatedAt, &wo.UpdatedAt)
+	return wo, err
+}
+
+const workOrderFrom = ` FROM work_orders wo
+	JOIN vehicles v ON v.id = wo.vehicle_id
+	JOIN customers c ON c.id = wo.customer_id
+	LEFT JOIN users u ON u.id = wo.technician_id `
+
+func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
+	status := r.URL.Query().Get("status")
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+
+	query := `SELECT ` + workOrderCols + workOrderFrom + ` WHERE 1=1`
+	var args []interface{}
+	if status != "" {
+		if _, ok := workOrderStatusLabel[status]; ok {
+			query += ` AND wo.status = ?`
+			args = append(args, status)
+		}
+	}
+	if q != "" {
+		query += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	query += ` ORDER BY wo.id DESC`
+
+	rows, err := db.DB.Query(query, args...)
+	if err != nil {
+		fail(w, "查詢工單失敗")
+		return
+	}
+	defer rows.Close()
+
+	var list []model.WorkOrder
+	for rows.Next() {
+		wo, err := scanWorkOrder(rows)
+		if err != nil {
+			continue
+		}
+		list = append(list, wo)
+	}
+
+	var tb strings.Builder
+	tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th><th class="num">里程</th><th class="num">金額</th></tr>`)
+	for _, wo := range list {
+		tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">` + strconv.FormatInt(wo.ID, 10) + `</a></td><td><b>` +
+			htmlEsc(wo.PlateNumber) + `</b><br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.BrandModel) + `</span></td><td>` +
+			htmlEsc(wo.CustomerName) + `<br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.CustomerPhone) + `</span></td><td>` +
+			htmlEsc(wo.TechnicianName) + `</td><td><span class="pill ` + statusPill[wo.Status] + `">` + workOrderStatusLabel[wo.Status] +
+			`</span></td><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] +
+			`</span></td><td class="num">` + strconv.Itoa(wo.CurrentMileage) + `</td><td class="num">` + money(wo.TotalAmount) + `</td></tr>`)
+	}
+	tb.WriteString(`</table>`)
+
+	table := tb.String()
+	if len(list) == 0 {
+		table = `<div class="empty">沒有工單資料</div>`
+	}
+
+	// 狀態分頁籤
+	var tabs strings.Builder
+	tabs.WriteString(`<a href="/work-orders" class="btn ` + btnIf(status == "", "btn-p", "btn-s") + `">全部</a> `)
+	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
+		tabs.WriteString(`<a href="/work-orders?status=` + s + `" class="btn ` + btnIf(status == s, "btn-p", "btn-s") + `">` +
+			workOrderStatusLabel[s] + `</a> `)
+	}
+
+	body := flash(r) + `
+    <div class="card">
+      <h2>建立工單</h2>
+      <form class="frm" method="POST" action="/work-orders">
+        <label>車輛<select name="vehicle_id" required>` + vehicleOptions() + `</select></label>
+        <label>技師<select name="technician_id"><option value="0">未指派</option>` + technicianOptions() + `</select></label>
+        <label>進廠里程<input name="current_mileage" type="number" min="0" required></label>
+        <label>需要核准<select name="approval_status">
+          <option value="not_required">不需要</option>
+          <option value="pending">需客戶核准</option>
+        </select></label>
+        <label class="full">客戶反映問題<textarea name="customer_complaint"></textarea></label>
+        <div class="full"><button class="btn btn-p" type="submit">建立工單</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>工單列表（` + strconv.Itoa(len(list)) + ` 筆）</h2>
+      <div style="margin-bottom:12px">` + tabs.String() + `</div>
+      <form method="GET" action="/work-orders" style="margin-bottom:12px">
+        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
+        ` + hiddenStatus(status) + `
+        <button class="btn btn-p" type="submit">搜尋</button>
+      </form>` + table + `
+    </div>`
+
+	renderPage(w, "工單管理", "/work-orders", user.Username, user.Role, body)
+}
+
+func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
+	vehicleID := mustInt(r.FormValue("vehicle_id"))
+	mileage := atoiDefault(r.FormValue("current_mileage"), -1)
+
+	if vehicleID == 0 {
+		fail(w, "請選擇車輛")
+		return
+	}
+	if mileage < 0 {
+		fail(w, "請填寫進廠里程")
+		return
+	}
+
+	var customerID int64
+	err := db.DB.QueryRow("SELECT customer_id FROM vehicles WHERE id = ?", vehicleID).Scan(&customerID)
+	if err != nil {
+		fail(w, "找不到該車輛")
+		return
+	}
+
+	approval := r.FormValue("approval_status")
+	if approval != "pending" {
+		approval = "not_required"
+	}
+
+	techID := mustInt(r.FormValue("technician_id"))
+	if techID > 0 && countRows("SELECT COUNT(1) FROM users WHERE id = ? AND role = 'technician'", techID) == 0 {
+		techID = 0
+	}
+
+	var techArg interface{}
+	if techID > 0 {
+		techArg = techID
+	}
+
+	res, err := db.DB.Exec(`INSERT INTO work_orders
+		(vehicle_id, customer_id, technician_id, status, current_mileage,
+		 customer_complaint, approval_status, total_amount, sop_completed)
+		VALUES (?,?,?,'pending',?,?,?,0,0)`,
+		vehicleID, customerID, techArg, mileage,
+		nullStr(r.FormValue("customer_complaint")), approval)
+	if err != nil {
+		fail(w, "建立工單失敗")
+		return
+	}
+
+	id, _ := res.LastInsertId()
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "工單已建立")
+}
+
+func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
+	id := mustInt(r.PathValue("id"))
+
+	row := db.DB.QueryRow(`SELECT `+workOrderCols+workOrderFrom+` WHERE wo.id = ?`, id)
+	wo, err := scanWorkOrder(row)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	items, itemTotal := loadWorkOrderItems(id)
+
+	var ib strings.Builder
+	ib.WriteString(`<table><tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th><th>主技師</th><th>助手</th><th>操作</th></tr>`)
+	for _, it := range items {
+		typeLabel := map[string]string{"labor": "工資", "part": "零件", "subcontract": "外包"}[it.ItemType]
+		ib.WriteString(`<tr><td><span class="pill p-progress">` + typeLabel + `</span></td><td>` + htmlEsc(it.Description) +
+			`</td><td class="num">` + strconv.Itoa(it.Quantity) + `</td><td class="num">` + money(it.UnitPrice) +
+			`</td><td class="num">` + money(it.Subtotal) + `</td><td>` + htmlEsc(techName(it.PrimaryTechnicianID)) +
+			`</td><td>` + htmlEsc(techName(it.AssistantTechID)) +
+			`</td><td><a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(id, 10) + `/items/` +
+			strconv.FormatInt(it.ID, 10) + `/delete" onclick="return confirm('刪除此項目？')">刪除</a></td></tr>`)
+	}
+	ib.WriteString(`</table>`)
+
+	itemsTable := ib.String()
+	if len(items) == 0 {
+		itemsTable = `<div class="empty">尚未加入任何工資或零件</div>`
+	}
+
+	body := flash(r) + `
+    <div class="card">
+      <h2>工單 #` + strconv.FormatInt(wo.ID, 10) + ` — ` + htmlEsc(wo.PlateNumber) + `</h2>
+      <table>
+        <tr><th style="width:130px">車型</th><td>` + htmlEsc(wo.BrandModel) + `</td><th style="width:130px">進廠里程</th><td>` + strconv.Itoa(wo.CurrentMileage) + ` km</td></tr>
+        <tr><th>客戶</th><td>` + htmlEsc(wo.CustomerName) + ` / ` + htmlEsc(wo.CustomerPhone) + `</td><th>技師</th><td>` + htmlEsc(orDash(wo.TechnicianName)) + `</td></tr>
+        <tr><th>狀態</th><td><span class="pill ` + statusPill[wo.Status] + `">` + workOrderStatusLabel[wo.Status] + `</span></td>
+            <th>核准狀態</th><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] + `</span></td></tr>
+        <tr><th>客戶反映</th><td colspan="3">` + htmlEsc(orDash(wo.CustomerComplaint)) + `</td></tr>
+        <tr><th>SOP</th><td>` + yesNo(wo.SOPCompleted) + `</td><th>建立時間</th><td>` + wo.CreatedAt.Format("2006-01-02 15:04") + `</td></tr>
+      </table>
+      <div style="margin-top:16px">
+        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/status">
+          <label style="font-size:12px;color:#94a3b8">變更狀態</label>
+          <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
+			statusOptions(wo.Status) + `</select>
+          <button class="btn btn-p" type="submit">更新</button>
+        </form>
+        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/approval">
+          <label style="font-size:12px;color:#94a3b8;margin-left:16px">核准</label>
+          <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
+			approvalOptions(wo.ApprovalStatus) + `</select>
+          <button class="btn btn-p" type="submit">更新</button>
+        </form>
+        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
+          <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>工單項目</h2>` + itemsTable + `
+      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
+        <label>類型<select name="item_type">
+          <option value="labor">工資</option>
+          <option value="part">零件</option>
+          <option value="subcontract">外包</option>
+        </select></label>
+        <label>零件（若為零件類）<select name="inventory_item_id"><option value="0">不使用庫存</option>` + inventoryOptions() + `</select></label>
+        <label class="full">描述<input name="description" required></label>
+        <label>數量<input name="quantity" type="number" min="1" value="1" required></label>
+        <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required></label>
+        <label>主技師<select name="primary_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
+        <label>助手<select name="assistant_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
+        <div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>合計</h2>
+      <table>
+        <tr><th>項目小計</th><td class="num">` + money(itemTotal) + `</td></tr>
+        <tr><th>工單總額</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(wo.TotalAmount) + `</td></tr>
+      </table>
+      <p style="color:#64748b;font-size:12.5px;margin-top:10px">新增或刪除項目時自動重算工單總額。</p>
+    </div>`
+
+	renderPage(w, "工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user.Username, user.Role, body)
+}
+
+func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	status := r.FormValue("status")
+	if _, ok := workOrderStatusLabel[status]; !ok {
+		fail(w, "無效狀態")
+		return
+	}
+
+	res, err := db.DB.Exec("UPDATE work_orders SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", status, id)
+	if err != nil {
+		fail(w, "更新狀態失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// 結帳時累計客戶消費
+	if status == "paid" {
+		db.MustExec(`UPDATE customers SET total_spent = COALESCE(total_spent,0) +
+			(SELECT total_amount FROM work_orders WHERE id = ?), unpaid_amount = 0 WHERE id =
+			(SELECT customer_id FROM work_orders WHERE id = ?)`, id, id)
+	}
+
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
+}
+
+func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	approval := r.FormValue("approval_status")
+	if _, ok := approvalLabel[approval]; !ok {
+		fail(w, "無效核准狀態")
+		return
+	}
+
+	res, err := db.DB.Exec("UPDATE work_orders SET approval_status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", approval, id)
+	if err != nil {
+		fail(w, "更新核准狀態失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "核准狀態已更新為「"+approvalLabel[approval]+"」")
+}
+
+func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+
+	res, err := db.DB.Exec("UPDATE work_orders SET sop_completed = 1 - COALESCE(sop_completed,0), updated_at=CURRENT_TIMESTAMP WHERE id=?", id)
+	if err != nil {
+		fail(w, "更新 SOP 失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "SOP 狀態已切換")
+}
+
+func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
+	woID := mustInt(r.PathValue("id"))
+	desc := strings.TrimSpace(r.FormValue("description"))
+
+	qty := atoiDefault(r.FormValue("quantity"), 0)
+	if qty < 1 {
+		fail(w, "數量必須大於 0")
+		return
+	}
+
+	itemType := r.FormValue("item_type")
+	if _, ok := map[string]bool{"labor": true, "part": true, "subcontract": true}[itemType]; !ok {
+		itemType = "labor"
+	}
+
+	invID := mustInt(r.FormValue("inventory_item_id"))
+	if invID < 0 {
+		invID = 0
+	}
+
+	unitPrice := atofDefault(r.FormValue("unit_price"), 0)
+	if itemType == "part" && invID > 0 {
+		var name string
+		var sell float64
+		if err := db.DB.QueryRow("SELECT name, COALESCE(selling_price,0) FROM inventory_items WHERE id=?", invID).
+			Scan(&name, &sell); err == nil {
+			if desc == "" {
+				desc = name
+			}
+			unitPrice = sell
+		} else {
+			fail(w, "找不到該零件")
+			return
+		}
+	}
+
+	if desc == "" {
+		fail(w, "描述為必填")
+		return
+	}
+
+	var invArg interface{}
+	if itemType == "part" && invID > 0 {
+		invArg = invID
+	}
+
+	tx, err := db.DB.Begin()
+	if err != nil {
+		fail(w, "資料庫忙碌")
+		return
+	}
+	defer tx.Rollback()
+
+	var pt, at interface{}
+	if v := mustInt(r.FormValue("primary_technician_id")); v > 0 {
+		pt = v
+	}
+	if v := mustInt(r.FormValue("assistant_technician_id")); v > 0 {
+		at = v
+	}
+
+	if _, err := tx.Exec(`INSERT INTO work_order_items
+		(work_order_id, item_type, inventory_item_id, description, quantity, unit_price, subtotal,
+		 primary_technician_id, assistant_technician_id)
+		VALUES (?,?,?,?,?,?,?,?,?)`,
+		woID, itemType, invArg, desc, qty, unitPrice, float64(qty)*unitPrice, pt, at); err != nil {
+		fail(w, "加入項目失敗")
+		return
+	}
+
+	// 零件扣庫存
+	if invID, ok := invArg.(int64); ok && invID > 0 {
+		if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ? WHERE id = ?", qty, invID); err != nil {
+			fail(w, "扣減庫存失敗")
+			return
+		}
+	}
+
+	if err := recalcWorkOrderTotal(tx, woID); err != nil {
+		fail(w, "重算金額失敗")
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		fail(w, "提交失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已加入項目")
+}
+
+func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
+	woID := mustInt(r.PathValue("id"))
+	itemID := mustInt(r.PathValue("item_id"))
+
+	tx, err := db.DB.Begin()
+	if err != nil {
+		fail(w, "資料庫忙碌")
+		return
+	}
+	defer tx.Rollback()
+
+	// 零件回補庫存
+	var invID int64
+	var qty int
+	var itemType string
+	err = tx.QueryRow("SELECT COALESCE(inventory_item_id,0), COALESCE(quantity,0), item_type FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
+		Scan(&invID, &qty, &itemType)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if _, err := tx.Exec("DELETE FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID); err != nil {
+		fail(w, "刪除項目失敗")
+		return
+	}
+
+	if invID > 0 {
+		if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity + ? WHERE id = ?", qty, invID); err != nil {
+			fail(w, "回補庫存失敗")
+			return
+		}
+	}
+
+	if err := recalcWorkOrderTotal(tx, woID); err != nil {
+		fail(w, "重算金額失敗")
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		fail(w, "提交失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已刪除項目")
+}
+
+func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
+	rows, err := db.DB.Query(`SELECT id, work_order_id, item_type, COALESCE(inventory_item_id,0),
+		description, COALESCE(quantity,0), COALESCE(unit_price,0), COALESCE(subtotal,0),
+		COALESCE(primary_technician_id,0), COALESCE(assistant_technician_id,0), COALESCE(photo_url,'')
+		FROM work_order_items WHERE work_order_id = ? ORDER BY id`, woID)
+	if err != nil {
+		return nil, 0
+	}
+	defer rows.Close()
+
+	var list []model.WorkOrderItem
+	total := 0.0
+	for rows.Next() {
+		var it model.WorkOrderItem
+		if err := rows.Scan(&it.ID, &it.WorkOrderID, &it.ItemType, &it.InventoryItemID,
+			&it.Description, &it.Quantity, &it.UnitPrice, &it.Subtotal,
+			&it.PrimaryTechnicianID, &it.AssistantTechID, &it.PhotoURL); err != nil {
+			continue
+		}
+		total += it.Subtotal
+		list = append(list, it)
+	}
+	return list, total
+}
+
+func recalcWorkOrderTotal(tx *sql.Tx, woID int64) error {
+	_, err := tx.Exec(`UPDATE work_orders SET total_amount =
+		COALESCE((SELECT SUM(subtotal) FROM work_order_items WHERE work_order_id = ?), 0),
+		updated_at = CURRENT_TIMESTAMP WHERE id = ?`, woID, woID)
+	return err
+}
+
+func statusOptions(current string) string {
+	var b strings.Builder
+	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
+		b.WriteString(`<option value="` + s + `"` + selIf(current == s) + `>` + workOrderStatusLabel[s] + `</option>`)
+	}
+	return b.String()
+}
+
+func approvalOptions(current string) string {
+	var b strings.Builder
+	for _, s := range []string{"not_required", "pending", "approved", "rejected"} {
+		b.WriteString(`<option value="` + s + `"` + selIf(current == s) + `>` + approvalLabel[s] + `</option>`)
+	}
+	return b.String()
+}
+
+func technicianOptions() string {
+	rows, err := db.DB.Query(`SELECT id, name, username FROM users WHERE role = 'technician' ORDER BY name`)
+	if err != nil {
+		return ""
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	for rows.Next() {
+		var id int64
+		var name, username string
+		if err := rows.Scan(&id, &name, &username); err != nil {
+			continue
+		}
+		b.WriteString(`<option value="` + strconv.FormatInt(id, 10) + `">` + htmlEsc(name) + ` (` + htmlEsc(username) + `)</option>`)
+	}
+	return b.String()
+}
+
+func techName(id int64) string {
+	if id == 0 {
+		return "-"
+	}
+	var name string
+	if err := db.DB.QueryRow("SELECT name FROM users WHERE id = ?", id).Scan(&name); err != nil {
+		return "-"
+	}
+	return name
+}
+
+func hiddenStatus(status string) string {
+	if status == "" {
+		return ""
+	}
+	return `<input type="hidden" name="status" value="` + htmlEsc(status) + `">`
+}
+
+func btnIf(cond bool, a, b string) string {
+	if cond {
+		return a
+	}
+	return b
+}
+
+func yesNo(b bool) string {
+	if b {
+		return `<span style="color:#86efac">已完成</span>`
+	}
+	return `<span style="color:#fca5a5">未完成</span>`
+}
+
+func sopToggleLabel(done bool) string {
+	if done {
+		return "取消 SOP 完成"
+	}
+	return "標記 SOP 完成"
+}
+
+func orDash(s string) string {
+	if strings.TrimSpace(s) == "" {
+		return "-"
+	}
+	return s
+}

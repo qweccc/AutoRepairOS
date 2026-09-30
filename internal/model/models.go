@@ -1,8 +1,6 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
 type User struct {
 	ID        int64     `json:"id"`
@@ -13,33 +11,78 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Supplier struct {
+	ID            int64     `json:"id"`
+	Name          string    `json:"name"`
+	Phone         string    `json:"phone,omitempty"`
+	ContactPerson string    `json:"contact_person,omitempty"`
+	Address       string    `json:"address,omitempty"`
+	Notes         string    `json:"notes,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
 type Customer struct {
-	ID                int64     `json:"id"`
-	Name              string    `json:"name"`
-	Phone             string    `json:"phone"`
-	LineUserID        string    `json:"line_user_id,omitempty"`
-	Address           string    `json:"address,omitempty"`
-	NotificationPref  string    `json:"notification_preference"`
-	Notes             string    `json:"notes,omitempty"`
-	TotalSpent        float64   `json:"total_spent"`
-	UnpaidAmount      float64   `json:"unpaid_amount"`
-	CreatedAt         time.Time `json:"created_at"`
+	ID               int64     `json:"id"`
+	Name             string    `json:"name"`
+	Phone            string    `json:"phone"`
+	LineUserID       string    `json:"line_user_id,omitempty"`
+	Address          string    `json:"address,omitempty"`
+	NotificationPref string    `json:"notification_preference"`
+	Notes            string    `json:"notes,omitempty"`
+	TotalSpent       float64   `json:"total_spent"`
+	UnpaidAmount     float64   `json:"unpaid_amount"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+type Vehicle struct {
+	ID                    int64     `json:"id"`
+	CustomerID            int64     `json:"customer_id"`
+	CustomerName          string    `json:"customer_name,omitempty"`
+	PlateNumber           string    `json:"plate_number"`
+	BrandModel            string    `json:"brand_model"`
+	ManufactureYear       int       `json:"manufacture_year,omitempty"`
+	VIN                   string    `json:"vin,omitempty"`
+	EngineNumber          string    `json:"engine_number,omitempty"`
+	InspectionDueDate     string    `json:"inspection_due_date,omitempty"`
+	NextMaintenanceDate   string    `json:"next_maintenance_date,omitempty"`
+	NextMaintenanceMileage int       `json:"next_maintenance_mileage,omitempty"`
+	CreatedAt             time.Time `json:"created_at"`
+}
+
+type InventoryItem struct {
+	ID             int64   `json:"id"`
+	SupplierID     int64   `json:"supplier_id,omitempty"`
+	SupplierName   string  `json:"supplier_name,omitempty"`
+	PartNumber     string  `json:"part_number"`
+	Barcode        string  `json:"barcode,omitempty"`
+	Name           string  `json:"name"`
+	BinLocation    string  `json:"bin_location"`
+	CostPrice      float64 `json:"cost_price"`
+	SellingPrice   float64 `json:"selling_price"`
+	StockQuantity  int     `json:"stock_quantity"`
+	MinSafetyStock int     `json:"min_safety_stock"`
+	LowStock       bool    `json:"low_stock"`
 }
 
 type WorkOrder struct {
-	ID              int64     `json:"id"`
-	VehicleID       int64     `json:"vehicle_id"`
-	Status          string    `json:"status"`
-	CurrentMileage  int       `json:"current_mileage"`
-	CustomerComplaint string  `json:"customer_complaint"`
-	ApprovalStatus  string    `json:"approval_status"`
-	TotalAmount     float64   `json:"total_amount"`
-	SOPCompleted    bool      `json:"sop_completed"`
-	CustomerID      int64     `json:"customer_id"`
-	TechnicianID    int64     `json:"technician_id,omitempty"`
-	Notes           string    `json:"notes,omitempty"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID                int64     `json:"id"`
+	VehicleID         int64     `json:"vehicle_id"`
+	CustomerID        int64     `json:"customer_id"`
+	TechnicianID      int64     `json:"technician_id,omitempty"`
+	PlateNumber       string    `json:"plate_number,omitempty"`
+	BrandModel        string    `json:"brand_model,omitempty"`
+	CustomerName      string    `json:"customer_name,omitempty"`
+	CustomerPhone     string    `json:"customer_phone,omitempty"`
+	TechnicianName    string    `json:"technician_name,omitempty"`
+	Status            string    `json:"status"`
+	CurrentMileage    int       `json:"current_mileage"`
+	CustomerComplaint string    `json:"customer_complaint,omitempty"`
+	ApprovalStatus    string    `json:"approval_status"`
+	TotalAmount       float64   `json:"total_amount"`
+	SOPCompleted      bool      `json:"sop_completed"`
+	Notes             string    `json:"notes,omitempty"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 type WorkOrderItem struct {

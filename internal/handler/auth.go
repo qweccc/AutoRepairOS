@@ -23,32 +23,6 @@ func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Write(b)
 }
 
-const pageStyle = `
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
-         background: #0f172a; color: #e2e8f0; }
-  header { background: #1e293b; padding: 16px 28px; display: flex;
-           align-items: center; justify-content: space-between;
-           border-bottom: 2px solid #334155; }
-  header h1 { margin: 0; font-size: 22px; }
-  .user { font-size: 14px; }
-  .badge { background: #38bdf8; color: #0f172a; padding: 2px 10px;
-           border-radius: 999px; font-weight: 700; font-size: 12px; }
-  .logout { margin-left: 16px; padding: 8px 18px; background: #ef4444;
-            color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700; }
-  .logout:hover { background: #dc2626; }
-  main { padding: 28px; }
-  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-          padding: 20px; margin-bottom: 20px; }
-  .card h2 { margin-top: 0; color: #38bdf8; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 10px; border-bottom: 1px solid #334155; font-size: 14px; }
-  th { color: #94a3b8; }
-  .stat { display: inline-block; margin-right: 28px; }
-  .stat b { font-size: 28px; color: #f8fafc; display: block; }
-  .stat span { color: #94a3b8; font-size: 13px; }
-`
-
 // currentUser 從 session cookie 解析出使用者，未登入或 cookie 無效時回傳 error。
 func currentUser(r *http.Request) (model.User, error) {
 	var user model.User
@@ -70,28 +44,16 @@ func currentUser(r *http.Request) (model.User, error) {
 	return user, nil
 }
 
-func renderPage(w http.ResponseWriter, title, username, role, body string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(`<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>` + title + ` - AutoRepair OS</title>
-<style>` + pageStyle + `</style>
-</head>
-<body>
-  <header>
-    <h1>🔧 AutoRepair OS</h1>
-    <div class="user">登入中：<code>` + username + `</code> <span class="badge">` + role + `</span>
-    <a href="/logout" class="logout">登出</a>
-    </div>
-  </header>
-  <main>` + body + `
-  </main>
-</body>
-</html>`))
-}
+const loginStyle = pageStyle + `
+  .wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
+  form.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+               padding: 32px; width: 340px; }
+  form.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;
+                     border: 1px solid #334155; background: #0f172a; color: #e2e8f0; }
+  form.login button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;
+                      border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .hint { color: #64748b; font-size: 12px; line-height: 1.7; margin-top: 20px; }
+`
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -101,20 +63,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 <head>
 <meta charset="utf-8">
 <title>登入 - AutoRepair OS</title>
-<style>` + pageStyle + `
-  .wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
-  form { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-         padding: 32px; width: 340px; }
-  input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;
-          border: 1px solid #334155; background: #0f172a; color: #e2e8f0; }
-  button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;
-           border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
-  .hint { color: #64748b; font-size: 12px; line-height: 1.7; margin-top: 20px; }
-</style>
+<style>` + loginStyle + `</style>
 </head>
 <body>
   <div class="wrap">
-    <form method="POST" action="/login">
+    <form class="login" method="POST" action="/login">
       <h2>🔧 AutoRepair OS</h2>
       <label>帳號<input type="text" name="username" required autofocus></label>
       <label>密碼<input type="password" name="password" required></label>
@@ -197,13 +150,8 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := currentUser(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
-		return
-	}
-
+// IndexHandler 渲染首頁總覽（統計卡片 + 最近工單）。
+func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 	stats := []struct {
 		label string
 		query string
@@ -216,24 +164,46 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock"},
 	}
 
-	var statHTML strings.Builder
+	var sh strings.Builder
 	for _, s := range stats {
-		var n int
-		if err := db.DB.QueryRow(s.query).Scan(&n); err != nil {
-			n = 0
+		sh.WriteString(`<div class="stat"><b>` + strconv.Itoa(countRows(s.query)) + `</b><span>` + s.label + `</span></div>`)
+	}
+
+	var recent string
+	rows, err := db.DB.Query(`SELECT wo.id, v.plate_number, v.brand_model, c.name, wo.status
+		FROM work_orders wo
+		JOIN vehicles v ON v.id = wo.vehicle_id
+		JOIN customers c ON c.id = wo.customer_id
+		ORDER BY wo.created_at DESC LIMIT 8`)
+	if err == nil {
+		defer rows.Close()
+		var tb strings.Builder
+		tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>`)
+		found := false
+		for rows.Next() {
+			var id int64
+			var plate, model_, cname, status string
+			if err := rows.Scan(&id, &plate, &model_, &cname, &status); err != nil {
+				continue
+			}
+			found = true
+			tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(id, 10) + `">` + strconv.FormatInt(id, 10) + `</a></td><td>` + plate +
+				`</td><td>` + model_ + `</td><td>` + cname + `</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel[status] + `</span></td></tr>`)
 		}
-		statHTML.WriteString(`<div class="stat"><b>` + strconv.Itoa(n) + `</b><span>` + s.label + `</span></div>`)
+		tb.WriteString(`</table>`)
+		if found {
+			recent = `<div class="card"><h2>最近工單</h2>` + tb.String() + `</div>`
+		} else {
+			recent = `<div class="card"><h2>最近工單</h2><div class="empty">尚無工單</div></div>`
+		}
 	}
 
 	body := `
     <div class="card">
       <h2>總覽</h2>
-      <div>` + statHTML.String() + `</div>
-    </div>
-    <div class="card">
-      <h2>功能模組</h2>
-      <p>尚未實作。目前僅有登入與總覽統計。</p>
-    </div>`
+      <div>` + sh.String() + `</div>
+    </div>` + recent + `
+    <div class="card"><h2>功能模組</h2><p style="color:#94a3b8;font-size:13.5px">客戶、車輛、工單、庫存皆可正常使用。</p></div>`
 
-	renderPage(w, "首頁", user.Username, user.Role, body)
+	renderPage(w, "總覽", "/", user.Username, user.Role, body)
 }
