@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"autorepairos/internal/config"
+	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
 	"autorepairos/internal/handler"
 	"autorepairos/internal/seed"
@@ -39,6 +40,11 @@ func main() {
 	// 總覽
 	mux.HandleFunc("GET /{$}", handler.RequireAuth(handler.IndexHandler))
 
+	// 首頁靜態（index.html 字面檔，需登入才能取得）
+	mux.HandleFunc("GET /index.html", handler.RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.StripPrefix("/index.html", http.FileServer(http.Dir("web"))).ServeHTTP(w, r)
+	})))
+
 	// 客戶
 	mux.HandleFunc("GET /customers", handler.RequireAuth(handler.ListCustomers))
 	mux.HandleFunc("POST /customers", handler.RequireLogin(handler.CreateCustomer))
@@ -72,9 +78,45 @@ func main() {
 	mux.HandleFunc("POST /inventory/{id}/stock", handler.RequireLogin(handler.ApplyStockAdjust))
 	mux.HandleFunc("GET /inventory/{id}/delete", handler.RequireLogin(handler.DeleteInventoryItem))
 
+	// Phase 2: 技師工時/佣金
+	mux.HandleFunc("GET /work-orders/{id}/worklogs", handler.RequireAuth(handler.ListTechnicianWorklogs))
+	mux.HandleFunc("POST /work-orders/{id}/worklogs", handler.RequireLogin(handler.AddTechnicianWorklog))
+	mux.HandleFunc("GET /work-orders/{id}/worklogs/{log_id}/delete", handler.RequireLogin(handler.DeleteTechnicianWorklog))
+	mux.HandleFunc("GET /technicians/commissions", handler.RequireAuth(handler.ListTechnicianCommissions))
+
+	// Phase 2: 收據列印
+	mux.HandleFunc("GET /work-orders/{id}/receipt", handler.RequireAuth(handler.PrintWorkOrderReceipt))
+
+	// Phase 2: 照片上傳
+	mux.HandleFunc("GET /work-orders/{id}/photos", handler.RequireAuth(handler.ListWorkOrderPhotos))
+	mux.HandleFunc("POST /work-orders/{id}/photos", handler.RequireLogin(handler.UploadWorkOrderPhoto))
+	mux.HandleFunc("GET /work-orders/{id}/photos/{photo_id}/delete", handler.RequireLogin(handler.DeleteWorkOrderPhoto))
+	mux.HandleFunc("GET /photos/{filename}", handler.RequireLogin(handler.ServePhoto))
+
+	// Phase 3: 排程 + 報表
+	mux.HandleFunc("GET /scheduled-tasks", handler.RequireAuth(handler.ListScheduledTasks))
+	mux.HandleFunc("GET /scheduled-tasks/{key}/toggle", handler.RequireLogin(handler.ToggleScheduledTask))
+	mux.HandleFunc("GET /scheduled-tasks/backups/run", handler.RequireLogin(handler.RunBackupNow))
+	mux.HandleFunc("GET /scheduled-tasks/notifications/run", handler.RequireLogin(handler.RunNotificationsNow))
+	mux.HandleFunc("GET /scheduled-tasks/maintenance-due/run", handler.RequireLogin(handler.RunMaintenanceScanNow))
+	mux.HandleFunc("GET /scheduled-tasks/work-order-ready/run", handler.RequireLogin(handler.RunWorkOrderReadyNow))
+	mux.HandleFunc("GET /notifications/{id}/cancel", handler.RequireLogin(handler.CancelNotification))
+	mux.HandleFunc("GET /reports", handler.RequireAuth(handler.ReportsHome))
+
 	port := cfg.Port
 	if port == "" {
 		port = "8080"
+	}
+
+	handler.RegisterStatic(mux)
+
+	// 啟動排程器（通知佇列、每日備份、保養到期掃描）
+	scheduler, err := cron.New()
+	if err != nil {
+		log.Printf("排程器初始化失敗（功能停用）: %v", err)
+	} else {
+		scheduler.Start()
+		defer scheduler.Stop()
 	}
 
 	log.Printf("AutoRepair OS 啟動中，監聽 port: %s", port)

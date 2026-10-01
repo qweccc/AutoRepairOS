@@ -49,5 +49,13 @@ func Run(cfg *config.Config) error {
 		log.Printf("建立使用者: %s (角色: %s)", u.username, u.role)
 	}
 
+	// Phase 2: 供應商與庫存種子（讓零件流程真正可跑）
+	if err := RunSuppliers(cfg); err != nil {
+		return fmt.Errorf("供應商種子失敗: %v", err)
+	}
+	if err := RunInventorySeed(cfg); err != nil {
+		return fmt.Errorf("庫存種子失敗: %v", err)
+	}
+
 	return nil
 }

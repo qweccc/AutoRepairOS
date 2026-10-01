@@ -71,6 +71,14 @@ const pageStyle = `
   .msg-err { background: #2a0b0b; color: #fca5a5; border: 1px solid #7f1d1d; }
   .empty { color: #64748b; padding: 26px; text-align: center; font-size: 13.5px; }
   .num { text-align: right; }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+  .pcard { margin: 0; background: #0f172a; border: 1px solid #334155; border-radius: 10px; overflow: hidden; }
+  .pcard img { width: 100%; height: 148px; object-fit: cover; display: block; }
+  .pcard figcaption { padding: 10px; font-size: 12.5px; }
+  .pname { font-weight: 600; margin: 6px 0 3px; word-break: break-all; }
+  .pmeta { color: #64748b; font-size: 11.5px; }
+  .pnote { color: #94a3b8; font-size: 12px; margin-top: 5px; font-style: italic; }
+  .pcard .btn { margin-top: 8px; }
 `
 
 // appRoutes 定義側邊導覽；active 為目前頁面。
@@ -83,6 +91,9 @@ var appRoutes = []struct {
 	{"/vehicles", "車輛"},
 	{"/work-orders", "工單"},
 	{"/inventory", "庫存"},
+	{"/technicians/commissions", "技師佣金"},
+	{"/reports", "報表"},
+	{"/scheduled-tasks", "排程"},
 }
 
 // RequireAuth 擋未登入者，並把使用者注入給頁面 handler。
@@ -139,6 +150,7 @@ func renderPage(w http.ResponseWriter, title, active, username, role, body strin
   </header>
   <nav>` + nav(active) + `</nav>
   <main>` + body + `</main>
+  <script src="/offline.js"></script>
 </body>
 </html>`))
 }

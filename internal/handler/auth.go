@@ -72,6 +72,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
       <label>帳號<input type="text" name="username" required autofocus></label>
       <label>密碼<input type="password" name="password" required></label>
       <button type="submit">登入</button>
+      <input type="hidden" name="return_to" value="/">
       <div class="hint">
         預設帳號：owner / Owner001!<br>
         counter / Counter001!<br>
@@ -111,6 +112,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 記錄「登入前所在頁面」，登出後回跳過去。
+	returnTo := r.FormValue("return_to")
+	if returnTo == "" || returnTo == "/login" {
+		returnTo = "/"
+	}
+
 	// TODO: 換成隨機 session token 存進 sessions 表
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -125,6 +132,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	// 登出前先清除 session cookie，再回跳到登入前的頁面。
+	// return_to 從登入表單的隱藏欄位帶回（預設首頁 /，避免回跳 loop）。
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    "",
@@ -132,7 +141,11 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		MaxAge:   -1,
 	})
-	http.Redirect(w, r, "/login", http.StatusFound)
+	returnTo := r.URL.Query().Get("return_to")
+	if returnTo == "" || returnTo == "/login" {
+		returnTo = "/"
+	}
+	http.Redirect(w, r, returnTo, http.StatusFound)
 }
 
 func MeHandler(w http.ResponseWriter, r *http.Request) {

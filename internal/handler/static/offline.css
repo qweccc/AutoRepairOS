@@ -1,0 +1,34 @@
+// AutoRepair OS - 離線外殼樣式（深色）
+body.offline-shell {
+  margin: 0;
+  font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.offline-shell .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+}
+.offline-shell h1 {
+  color: #38bdf8;
+  font-size: 24px;
+  margin: 0 0 10px;
+}
+.offline-shell p {
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.offline-shell .btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 18px;
+  background: #38bdf8;
+  color: #0f172a;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}

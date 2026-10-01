@@ -1,0 +1,24 @@
+wid: 4
+today: 2026-09-30
+POST 200
+GET 200 len 14498
+=== technician summary block ===
+NOT FOUND
+=== worklogs detail table ===
+NOT FOUND
+H2 markers:
+  技師工時與佣金
+  工時明細
+  各技師統計
+NUM TABLES: 3
+--- TABLE 0 (len 311) ---
+
+        <tr><th style="width:130px">總工時</th><td class="num">98 小時</td>
+            <th style="width:130px">總工資</th><td class="num">49000</td></tr>
+        <tr><th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">4900</td>
+            <th>紀錄筆數</th><td class="num">28</td></tr>
+      
+--- TABLE 1 (len 8420) ---
+<tr><th>日期</th><th>技師</th><th class="num">工時</th><th class="num">時薪</th><th class="num">工資</th><th class="num">佣金率</th><th class="num">佣金</th><th>備註</th><th>操作</th></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>DB test</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/32/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>DB test</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/31/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>DB test</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/30/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>Phase2 測試工時</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/29/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>Phase2 測試工時</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/28/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>Phase2 測試工時</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/27/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>Phase2 測試工時</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/26/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr><tr><td>2026-09-30</td><td>技師</td><td class="num">3.5</td><td class="num">500</td><td class="num">1750</td><td class="num">10%</td><td class="num">175</td><td>Phase2 測試工時</td><td><a class="btn btn-d" href="/work-orders/4/worklogs/25/delete" onclick="return confirm('刪除這筆工時紀錄？')"
+--- TABLE 2 (len 136) ---
+<tr><th>技師</th><th class="num">總工時</th><th class="num">總佣金</th></tr><tr><td>技師</td><td class="num">98</td><td class="num">4900</td></tr>

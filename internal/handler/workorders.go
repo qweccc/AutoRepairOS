@@ -213,18 +213,23 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/status">
           <label style="font-size:12px;color:#94a3b8">變更狀態</label>
           <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
-			statusOptions(wo.Status) + `</select>
+		statusOptions(wo.Status) + `</select>
           <button class="btn btn-p" type="submit">更新</button>
         </form>
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/approval">
           <label style="font-size:12px;color:#94a3b8;margin-left:16px">核准</label>
           <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
-			approvalOptions(wo.ApprovalStatus) + `</select>
+		approvalOptions(wo.ApprovalStatus) + `</select>
           <button class="btn btn-p" type="submit">更新</button>
         </form>
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
           <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
         </form>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
+          <a class="btn btn-p" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/receipt">🧾 收據列印</a>
+          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/worklogs">⏱ 技師工時</a>
+          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/photos">📷 車損照片</a>
+        </div>
       </div>
     </div>
 
@@ -276,11 +281,75 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 結帳時累計客戶消費
+	// 結帳時累計客戶消費 + 扣減工單中「零件類」項目的實際用量
 	if status == "paid" {
-		db.MustExec(`UPDATE customers SET total_spent = COALESCE(total_spent,0) +
-			(SELECT total_amount FROM work_orders WHERE id = ?), unpaid_amount = 0 WHERE id =
-			(SELECT customer_id FROM work_orders WHERE id = ?)`, id, id)
+		tx, err := db.DB.Begin()
+		if err != nil {
+			fail(w, "資料庫忙碌")
+			return
+		}
+		defer tx.Rollback()
+
+		// 扣料：讀出該工單所有「零件類」項目，按實際數量扣庫（Go 側計算，避免複雜 UPDATE 子查詢）
+		var deltas []struct {
+			invID int64
+			qty   int
+		}
+		rows, err := tx.Query(`SELECT inventory_item_id, quantity
+											FROM work_order_items
+											WHERE work_order_id = ? AND item_type = 'part' AND inventory_item_id > 0 AND quantity > 0
+											ORDER BY id`, id)
+		if err != nil {
+			fail(w, "讀取工單項目失敗")
+			return
+		}
+		for rows.Next() {
+			var invID int64
+			var qty int
+			if err := rows.Scan(&invID, &qty); err != nil {
+				rows.Close()
+				fail(w, "讀取工單項目失敗")
+				return
+			}
+			deltas = append(deltas, struct {
+				invID int64
+				qty   int
+			}{invID, qty})
+		}
+		rows.Close()
+
+		partsDeducted := 0
+		for _, d := range deltas {
+			// 先檢查足額，避免結帳時超賣
+			var avail int
+			if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", d.invID).Scan(&avail); err != nil {
+				fail(w, "查詢庫存失敗")
+				return
+			}
+			if avail < d.qty {
+				fail(w, "結帳時庫存不足："+strconv.FormatInt(d.invID, 10)+" 僅剩 "+strconv.Itoa(avail)+"，需要 "+strconv.Itoa(d.qty))
+				return
+			}
+			if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ? WHERE id = ?", d.qty, d.invID); err != nil {
+				fail(w, "扣減庫存失敗")
+				return
+			}
+			partsDeducted++
+		}
+
+		if partsDeducted > 0 {
+			// 結帳時累計客戶消費（扣料不改變工單金額）
+			if _, err := db.DB.Exec(`UPDATE customers SET total_spent = COALESCE(total_spent,0) +
+																					(SELECT total_amount FROM work_orders WHERE id = ?), unpaid_amount = 0 WHERE id =
+																					(SELECT customer_id FROM work_orders WHERE id = ?)`, id, id); err != nil {
+				fail(w, "累計消費失敗")
+				return
+			}
+		}
+		if err := tx.Commit(); err != nil {
+			fail(w, "提交失敗")
+			return
+		}
 	}
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
@@ -393,8 +462,17 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 零件扣庫存
+	// 零件扣庫存前先檢查足額，避免超賣
 	if invID, ok := invArg.(int64); ok && invID > 0 {
+		var avail int
+		if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", invID).Scan(&avail); err != nil {
+			fail(w, "查詢庫存失敗")
+			return
+		}
+		if avail < qty {
+			fail(w, "庫存不足，僅剩 "+strconv.Itoa(avail)+" 支，需要 "+strconv.Itoa(qty)+" 支")
+			return
+		}
 		if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ? WHERE id = ?", qty, invID); err != nil {
 			fail(w, "扣減庫存失敗")
 			return

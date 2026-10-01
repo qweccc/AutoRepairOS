@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"autorepairos/internal/config"
 
@@ -34,6 +35,14 @@ func Init(cfg *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("開啟 SQLite 失敗: %v", err)
 	}
+
+	// 連線池設定：WAL 模式可安全支援多個讀取連線，寫入則由 SQLite 本身序列化。
+	// 不能設 MaxOpenConns(1)：handler 中常有「查詢 rows 尚未 Close 又發另一個查詢」的
+	// 巢狀呼叫（例如載入工單時同時算技師名稱），單一連線會直接死鎖。
+	// 因此放寬上限，改以 busy_timeout 處理寫入衝突。
+	DB.SetMaxOpenConns(8)
+	DB.SetMaxIdleConns(4)
+	DB.SetConnMaxLifetime(time.Hour)
 
 	if err := DB.Ping(); err != nil {
 		return fmt.Errorf("SQLite 連線失敗: %v", err)
