@@ -25,10 +25,14 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 	}
 
 	items, itemTotal := loadWorkOrderItems(id)
-	// 以 work_orders.total_amount 為權威總額（扣料/增刪項目時會重算），
-	// 不另行加稅，避免與結帳時累加到客戶 total_spent 的金額不一致。
+	// 以 work_orders.total_amount 為權威總額（增刪項目時會重算），
+	// 不另行加稅，避免與結帳時累計到客戶 total_spent 的金額不一致。
+	//
+	// 這裡不實作稅率：台灣汽車維修業的報價通常是含稅價，稅額已內含在工單
+	// 總額中。若之後要另列稅額，必須同步處理總額來源與 total_spent 的計算，
+	// 否則會出現收據金額與已入帳金額不一致。
+	// 原本的「稅金/調整」欄位是 total - itemTotal，恆為 0，屬誤導性死碼，已移除。
 	total := wo.TotalAmount
-	adjust := total - itemTotal // 稅金或手工調整，通常為 0
 
 	// LINE 綁定：讀出客戶的 line_user_id，並用 Flex 估價單模板（明細兩欄 + 金額 + 線上核准）。
 	var lineBlock string
@@ -39,10 +43,10 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 			quoteItems = append(quoteItems, line.ItemLine{Desc: it.Description, Total: it.Subtotal})
 		}
 		em := line.EstimateMessage{
-			Title:     "估價單 #" + strconv.FormatInt(wo.ID, 10),
-			SubText:   wo.PlateNumber + " / " + wo.CustomerName,
-			Items:     quoteItems,
-			Total:     total,
+			Title:      "估價單 #" + strconv.FormatInt(wo.ID, 10),
+			SubText:    wo.PlateNumber + " / " + wo.CustomerName,
+			Items:      quoteItems,
+			Total:      total,
 			ApproveURL: "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt",
 		}
 		flexJSON, _ := json.MarshalIndent(em.ToFlex(), "", "  ")
@@ -61,8 +65,6 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 			`</td><td class="num">` + money(it.Subtotal) + `</td></tr>`)
 	}
 	b.WriteString(`</table>`)
-
-
 
 	receipt := `
   <div class="sheet">
@@ -92,7 +94,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
       <h2>車輛</h2>
       <p><b>` + htmlEsc(wo.PlateNumber) + `</b> — ` + htmlEsc(wo.BrandModel) + `</p>
       <p>進廠里程：` + strconv.Itoa(wo.CurrentMileage) + ` km` +
-        optLine("技師", wo.TechnicianName) + optLine("客戶反映", orDash(wo.CustomerComplaint)) + `</p>
+		optLine("技師", wo.TechnicianName) + optLine("客戶反映", orDash(wo.CustomerComplaint)) + `</p>
     </div>
 
     <div class="rpt-sec">
@@ -101,8 +103,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 
     <div class="rpt-total">
       <div><span>項目小計</span><b>` + money(itemTotal) + `</b></div>
-      <div><span>稅金/調整</span><b>` + money(adjust) + `</b></div>
-      <div class="grand"><span>應付總額</span><b>` + money(total) + `</b></div>
+      <div class="grand"><span>應付總額（含稅）</span><b>` + money(total) + `</b></div>
     </div>
 
     <div class="rpt-foot">

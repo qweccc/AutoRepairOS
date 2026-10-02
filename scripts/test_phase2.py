@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 # Phase 2 端到端測試：技師工時 / 佣金、收據列印、車損照片
 # 注意：Windows 控制台對 Python print 中文會崩（cp1252），所以結果寫到 out.txt 再讀回。
-import urllib.request, urllib.parse, urllib.error, http.cookiejar, re, uuid
+import urllib.request, urllib.parse, urllib.error, http.cookiejar, re, uuid, time
 
-BASE = "http://localhost:8090"
+TODAY = time.strftime("%Y-%m-%d")
+THIS_MONTH = TODAY[:7]
+
+BASE = "http://localhost:8099"
 results = []
 out = []
 
@@ -28,6 +31,35 @@ op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiej
 st, _ = req(op, "/login", {"username": "counter", "password": "Counter001!"})
 check("counter 登入 200", st == 200)
 
+# 測試容器可能是全新空 DB，不能假設已有客戶/車輛/工單。
+# 先自建一條完整鏈路（客戶 → 車輛 → 工單）再往下測。
+_ts = int(time.time())
+st, _ = req(op, "/customers", {
+    "name": "Phase2 客戶", "phone": f"09{_ts % 100000000:08d}",
+    "notification_preference": "line",
+})
+st, html_c = req(op, "/customers")
+_cids = sorted(set(re.findall(r'/customers/(\d+)', html_c)), key=int)
+check("建立 Phase2 測試客戶", st == 200 and len(_cids) > 0)
+_cid = _cids[0] if _cids else "1"
+
+st, _ = req(op, "/vehicles", {
+    "customer_id": _cid, "plate_number": f"P2-{_ts % 100000}",
+    "brand_model": "Test Car", "manufacture_year": "2021",
+    "current_mileage": "10000",
+})
+check("建立 Phase2 測試車輛", st == 200)
+
+st, html_v = req(op, "/vehicles")
+_vids = sorted(set(re.findall(r'/vehicles/(\d+)', html_v)), key=int)
+_vid = _vids[-1] if _vids else "1"
+
+st, _ = req(op, "/work-orders", {
+    "vehicle_id": _vid, "customer_id": _cid,
+    "current_mileage": "10000", "customer_complaint": "Phase2 測試",
+})
+check("建立 Phase2 測試工單", st == 200)
+
 # 找一個真實工單
 st, html = req(op, "/work-orders")
 wids = sorted(set(re.findall(r'/work-orders/(\d+)', html)), key=int)
@@ -40,7 +72,7 @@ check("技師工時頁 200", st == 200)
 
 st, body = req(op, f"/work-orders/{wid}/worklogs", {
     "technician_id": "3",
-    "work_date": "2026-09-30",
+    "work_date": TODAY,
     "hours": "3.5",
     "hourly_rate": "500",
     "commission_rate": "10",
@@ -66,14 +98,15 @@ check("技師明細表存在", "tech" in html)
 st, html = req(op, f"/work-orders/{wid}/receipt")
 check("收據頁 200", st == 200)
 check("收據含店名", "AutoRepair OS" in html)
-check("收據含稅 5%", "稅金" in html or "5%" in html)
+check("收據標示含稅總額", "含稅" in html)
 check("收據含應付總額", "應付總額" in html)
 check("收據含列印按鈕", "window.print()" in html)
 check("收據含 print CSS", "@media print" in html)
 
 # --- 4. 照片上傳 ---
 st, html = req(op, f"/work-orders/{wid}/photos")
-check("照片頁 200", st == 200 and "車損照片" in html)
+# 頁面標題為「工單照片」（含上傳表單與照片網格）
+check("照片頁 200", st == 200 and ("工單照片" in html or "上傳照片" in html))
 check("照片頁含上傳表單", "multipart/form-data" in html)
 
 # 上傳測試圖片（最小 PNG）

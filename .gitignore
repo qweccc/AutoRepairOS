@@ -1,0 +1,47 @@
+# Build artifacts
+autrepairos.exe
+autorepairos
+*.exe
+*.test
+/server
+
+# Local data
+data/
+**/data/
+_trash/
+_verify/
+*.db
+*.db-wal
+*.db-shm
+
+# Logs
+server.log
+server.err
+*.log
+
+# Env / secrets
+.env
+.env.local
+
+# Git
+.git/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp debug scripts
+_*.ps1
+_*.sh
+_*.bat
+_*.py
+out_utf.txt
+out.txt
+*.tmp
+repro_*.db

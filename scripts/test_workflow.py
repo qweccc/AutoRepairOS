@@ -1,6 +1,6 @@
 import urllib.request, urllib.parse, http.cookiejar, re, time
 
-BASE = "http://localhost:8090"
+BASE = "http://localhost:8099"
 # 車牌需唯一以符合 DB UNIQUE 約束，重跑測試時用時間戳避免衝突
 PLATE = f"TEST-{int(time.time()) % 100000}"
 cj = http.cookiejar.CookieJar()
@@ -26,8 +26,21 @@ def check(name, cond, detail=""):
 st, _ = post("/login", {"username": "counter", "password": "Counter001!"})
 check("counter 登入", st == 200)
 
+# 建立測試前提資料（全新容器時 DB 是空的，不能假設 customer_id=1 存在）
+st, body = post("/customers", {
+    "name": "流程測試客戶", "phone": f"09{int(time.time()) % 100000000:08d}",
+    "notification_preference": "line",
+})
+check("建立測試客戶", st == 200, body[:60] if st != 200 else "")
+
+st, html = get("/customers")
+cids = sorted(set(re.findall(r'/customers/(\d+)', html)), key=int)
+check("客戶已建立", len(cids) > 0)
+cust_id = cids[0] if cids else "1"
+print(f"   using customer_id={cust_id}")
+
 st, body = post("/vehicles", {
-    "customer_id": "1",
+    "customer_id": cust_id,
     "plate_number": PLATE,
     "brand_model": "Honda Civic",
     "manufacture_year": "2019",
@@ -44,7 +57,7 @@ vid = sorted(set(vids), key=int)[-1] if vids else None
 print("   vehicle ids:", sorted(set(vids)))
 
 st, body = post("/work-orders", {
-    "customer_id": "1",
+    "customer_id": cust_id,
     "vehicle_id": vid or "1",
     "type": "maintenance",
     "customer_complaint": "定期保養",
