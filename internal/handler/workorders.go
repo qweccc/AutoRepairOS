@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -180,16 +181,23 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	items, itemTotal := loadWorkOrderItems(id)
 
+	// 已結帳工單唯讀：隱藏所有編輯與刪除控件（後端也擋，見 requireOrderMutable）。
+	locked := wo.Status == "paid"
+	canEdit := !locked
+
 	var ib strings.Builder
 	ib.WriteString(`<table><tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th><th>主技師</th><th>助手</th><th>操作</th></tr>`)
 	for _, it := range items {
 		typeLabel := map[string]string{"labor": "工資", "part": "零件", "subcontract": "外包"}[it.ItemType]
+		delCell := `<td style="color:#64748b">—</td>`
+		if canEdit {
+			delCell = `<td><a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(id, 10) + `/items/` +
+				strconv.FormatInt(it.ID, 10) + `/delete" onclick="return confirm('刪除此項目？')">刪除</a></td>`
+		}
 		ib.WriteString(`<tr><td><span class="pill p-progress">` + typeLabel + `</span></td><td>` + htmlEsc(it.Description) +
 			`</td><td class="num">` + strconv.Itoa(it.Quantity) + `</td><td class="num">` + money(it.UnitPrice) +
 			`</td><td class="num">` + money(it.Subtotal) + `</td><td>` + htmlEsc(techName(it.PrimaryTechnicianID)) +
-			`</td><td>` + htmlEsc(techName(it.AssistantTechID)) +
-			`</td><td><a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(id, 10) + `/items/` +
-			strconv.FormatInt(it.ID, 10) + `/delete" onclick="return confirm('刪除此項目？')">刪除</a></td></tr>`)
+			`</td><td>` + htmlEsc(techName(it.AssistantTechID)) + `</td>` + delCell + `</tr>`)
 	}
 	ib.WriteString(`</table>`)
 
@@ -209,22 +217,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
         <tr><th>客戶反映</th><td colspan="3">` + htmlEsc(orDash(wo.CustomerComplaint)) + `</td></tr>
         <tr><th>SOP</th><td>` + yesNo(wo.SOPCompleted) + `</td><th>建立時間</th><td>` + wo.CreatedAt.Format("2006-01-02 15:04") + `</td></tr>
       </table>
-      <div style="margin-top:16px">
-        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/status">
-          <label style="font-size:12px;color:#94a3b8">變更狀態</label>
-          <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
-		statusOptions(wo.Status) + `</select>
-          <button class="btn btn-p" type="submit">更新</button>
-        </form>
-        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/approval">
-          <label style="font-size:12px;color:#94a3b8;margin-left:16px">核准</label>
-          <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
-		approvalOptions(wo.ApprovalStatus) + `</select>
-          <button class="btn btn-p" type="submit">更新</button>
-        </form>
-        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
-          <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
-        </form>
+      <div style="margin-top:16px">` + statusControls(wo, canEdit) + `
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
           <a class="btn btn-p" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/receipt">🧾 收據列印</a>
           <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/worklogs">⏱ 技師工時</a>
@@ -235,20 +228,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 
     <div class="card">
       <h2>工單項目</h2>` + itemsTable + `
-      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
-        <label>類型<select name="item_type">
-          <option value="labor">工資</option>
-          <option value="part">零件</option>
-          <option value="subcontract">外包</option>
-        </select></label>
-        <label>零件（若為零件類）<select name="inventory_item_id"><option value="0">不使用庫存</option>` + inventoryOptions() + `</select></label>
-        <label class="full">描述<input name="description" required></label>
-        <label>數量<input name="quantity" type="number" min="1" value="1" required></label>
-        <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required></label>
-        <label>主技師<select name="primary_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <label>助手<select name="assistant_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
-      </form>
+      ` + addItemForm(wo, canEdit) + `
     </div>
 
     <div class="card">
@@ -271,24 +251,45 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec("UPDATE work_orders SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", status, id)
+	// 已結帳的工單是財務憑證，不允許再改狀態：否則扣料與營收會與實物對不上。
+	if currentStatus := countStatus(id); currentStatus == "paid" {
+		if status == "paid" {
+			// 冪等：重複結帳視為成功，但不得重複扣料或重複計營收。
+			redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10),
+				"此工單已是「已結帳」，未重複計算")
+			return
+		}
+		fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel[status]+"」。如需更正請另行開立沖銷單。")
+		return
+	}
+
+	// 結帳扣料與累計營收必須在同一個 transaction 內完成，並用「目前狀態 = paid」
+	// 作為條件（compare-and-set）。如此重複送出或並行請求最多只有一次會生效，
+	// 不會重複扣庫存或重複累計消費。
+	tx, err := db.DB.Begin()
+	if err != nil {
+		fail(w, "資料庫忙碌")
+		return
+	}
+	defer tx.Rollback()
+
+	cas, err := tx.Exec(`UPDATE work_orders SET status=?, updated_at=CURRENT_TIMESTAMP
+		WHERE id=? AND status != 'paid'`, status, id)
 	if err != nil {
 		fail(w, "更新狀態失敗")
 		return
 	}
-	if n, _ := res.RowsAffected(); n == 0 {
+	if n, _ := cas.RowsAffected(); n == 0 {
+		if countStatus(id) == "paid" {
+			redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10),
+				"此工單已是「已結帳」，未重複計算")
+			return
+		}
 		http.NotFound(w, r)
 		return
 	}
 
-	// 結帳時累計客戶消費 + 扣減工單中「零件類」項目的實際用量
 	if status == "paid" {
-		tx, err := db.DB.Begin()
-		if err != nil {
-			fail(w, "資料庫忙碌")
-			return
-		}
-		defer tx.Rollback()
 
 		// 扣料：讀出該工單所有「零件類」項目，按實際數量扣庫（Go 側計算，避免複雜 UPDATE 子查詢）
 		var deltas []struct {
@@ -337,29 +338,56 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 			partsDeducted++
 		}
 
-		if partsDeducted > 0 {
-			// 結帳時累計客戶消費（扣料不改變工單金額）
-			if _, err := db.DB.Exec(`UPDATE customers SET total_spent = COALESCE(total_spent,0) +
-																					(SELECT total_amount FROM work_orders WHERE id = ?), unpaid_amount = 0 WHERE id =
-																					(SELECT customer_id FROM work_orders WHERE id = ?)`, id, id); err != nil {
-				fail(w, "累計消費失敗")
-				return
-			}
-		}
-		if err := tx.Commit(); err != nil {
-			fail(w, "提交失敗")
+		// 累計客戶消費（扣料不改變工單金額）。
+		// 不以 partsDeducted 為條件：純工資的工單同樣要累計消費。
+		// 必須用 tx 而非 db.DB：此時 transaction 仍持有寫入鎖，
+		// 用獨立連線會因 SQLite 單寫者限制而失敗。
+		if _, err := tx.Exec(`UPDATE customers SET total_spent = COALESCE(total_spent,0) +
+			(SELECT total_amount FROM work_orders WHERE id = ?), unpaid_amount = 0 WHERE id =
+			(SELECT customer_id FROM work_orders WHERE id = ?)`, id, id); err != nil {
+			fail(w, "累計消費失敗")
 			return
 		}
 	}
 
+	// 非結帳的狀態轉換也要提交，否則上面的 CAS 會被 rollback。
+	if err := tx.Commit(); err != nil {
+		fail(w, "提交失敗")
+		return
+	}
+
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
 }
+
+// countStatus 讀取工單目前狀態；查無回傳空字串。
+func countStatus(id int64) string {
+	var s string
+	if err := db.DB.QueryRow("SELECT status FROM work_orders WHERE id = ?", id).Scan(&s); err != nil {
+		return ""
+	}
+	return s
+}
+
+// requireOrderMutable 擋下已結帳工單的內容變更。
+// 已結帳代表已收款、已扣料、已開立收據，此時改內容會讓金額與實物對不上。
+func requireOrderMutable(woID int64) error {
+	if countStatus(woID) == "paid" {
+		return errOrderLocked
+	}
+	return nil
+}
+
+var errOrderLocked = errors.New("此工單已結帳，內容不可再修改")
 
 func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	approval := r.FormValue("approval_status")
 	if _, ok := approvalLabel[approval]; !ok {
 		fail(w, "無效核准狀態")
+		return
+	}
+	if err := requireOrderMutable(id); err != nil {
+		fail(w, err.Error())
 		return
 	}
 
@@ -379,6 +407,11 @@ func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
 func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
+	if err := requireOrderMutable(id); err != nil {
+		fail(w, err.Error())
+		return
+	}
+
 	res, err := db.DB.Exec("UPDATE work_orders SET sop_completed = 1 - COALESCE(sop_completed,0), updated_at=CURRENT_TIMESTAMP WHERE id=?", id)
 	if err != nil {
 		fail(w, "更新 SOP 失敗")
@@ -394,6 +427,10 @@ func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
 
 func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	woID := mustInt(r.PathValue("id"))
+	if err := requireOrderMutable(woID); err != nil {
+		fail(w, err.Error())
+		return
+	}
 	desc := strings.TrimSpace(r.FormValue("description"))
 
 	qty := atoiDefault(r.FormValue("quantity"), 0)
@@ -462,22 +499,10 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 零件扣庫存前先檢查足額，避免超賣
-	if invID, ok := invArg.(int64); ok && invID > 0 {
-		var avail int
-		if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", invID).Scan(&avail); err != nil {
-			fail(w, "查詢庫存失敗")
-			return
-		}
-		if avail < qty {
-			fail(w, "庫存不足，僅剩 "+strconv.Itoa(avail)+" 支，需要 "+strconv.Itoa(qty)+" 支")
-			return
-		}
-		if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ? WHERE id = ?", qty, invID); err != nil {
-			fail(w, "扣減庫存失敗")
-			return
-		}
-	}
+	// 零件不於此處扣庫存。
+	// 扣料統一在結帳（status=paid）時才執行，好處是未成交的工單不會佔用庫存、
+	// 也不會在技師改單時需要回補。結帳路徑會先檢查足額再扣，避免超賣。
+	// 庫存不足的即時回饋交由 UI 顯示預估可扣量，不阻擋加入工單。
 
 	if err := recalcWorkOrderTotal(tx, woID); err != nil {
 		fail(w, "重算金額失敗")
@@ -496,6 +521,11 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	woID := mustInt(r.PathValue("id"))
 	itemID := mustInt(r.PathValue("item_id"))
 
+	if err := requireOrderMutable(woID); err != nil {
+		fail(w, err.Error())
+		return
+	}
+
 	tx, err := db.DB.Begin()
 	if err != nil {
 		fail(w, "資料庫忙碌")
@@ -503,27 +533,25 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	// 零件回補庫存
-	var invID int64
-	var qty int
+	// 讀取項目（僅用於校驗存在性；扣料在結帳時才發生，故此處不回補庫存）
 	var itemType string
-	err = tx.QueryRow("SELECT COALESCE(inventory_item_id,0), COALESCE(quantity,0), item_type FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
-		Scan(&invID, &qty, &itemType)
+	err = tx.QueryRow("SELECT item_type FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
+		Scan(&itemType)
 	if err != nil {
 		http.NotFound(w, r)
+		return
+	}
+
+	// 已結帳（paid）的工單不允許再改動項目，否則庫存與帳務會對不上。
+	var status string
+	if err := tx.QueryRow("SELECT status FROM work_orders WHERE id = ?", woID).Scan(&status); err == nil && status == "paid" {
+		fail(w, "工單已結帳，無法刪除項目")
 		return
 	}
 
 	if _, err := tx.Exec("DELETE FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID); err != nil {
 		fail(w, "刪除項目失敗")
 		return
-	}
-
-	if invID > 0 {
-		if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity + ? WHERE id = ?", qty, invID); err != nil {
-			fail(w, "回補庫存失敗")
-			return
-		}
 	}
 
 	if err := recalcWorkOrderTotal(tx, woID); err != nil {
@@ -636,6 +664,57 @@ func yesNo(b bool) string {
 		return `<span style="color:#86efac">已完成</span>`
 	}
 	return `<span style="color:#fca5a5">未完成</span>`
+}
+
+// statusControls 產生狀態／核准／SOP 的表單；已結帳時改為唯讀提示。
+func statusControls(wo model.WorkOrder, canEdit bool) string {
+	if !canEdit {
+		return `<div style="padding:10px 14px;border-radius:8px;background:#052e16;
+          color:#86efac;border:1px solid #166534;font-size:13.5px">
+          此工單已結帳，內容唯讀。如需更正請另行開立沖銷單。
+        </div>`
+	}
+
+	return `
+        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/status">
+          <label style="font-size:12px;color:#94a3b8">變更狀態</label>
+          <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
+		statusOptions(wo.Status) + `</select>
+          <button class="btn btn-p" type="submit">更新</button>
+        </form>
+        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/approval">
+          <label style="font-size:12px;color:#94a3b8;margin-left:16px">核准</label>
+          <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
+		approvalOptions(wo.ApprovalStatus) + `</select>
+          <button class="btn btn-p" type="submit">更新</button>
+        </form>
+        <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
+          <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
+        </form>`
+}
+
+// addItemForm 產生加入項目的表單；已結帳時不提供。
+func addItemForm(wo model.WorkOrder, canEdit bool) string {
+	if !canEdit {
+		return ""
+	}
+
+	return `
+      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
+        <label>類型<select name="item_type">
+          <option value="labor">工資</option>
+          <option value="part">零件</option>
+          <option value="subcontract">外包</option>
+        </select></label>
+        <label>零件（若為零件類）<select name="inventory_item_id"><option value="0">不使用庫存</option>` +
+		inventoryOptions() + `</select></label>
+        <label class="full">描述<input name="description" required></label>
+        <label>數量<input name="quantity" type="number" min="1" value="1" required></label>
+        <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required></label>
+        <label>主技師<select name="primary_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
+        <label>助手<select name="assistant_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
+        <div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+      </form>`
 }
 
 func sopToggleLabel(done bool) string {

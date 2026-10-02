@@ -23,18 +23,18 @@ const techWorklogFrom = ` FROM technician_worklogs wl
 	JOIN vehicles v ON v.id = wo.vehicle_id `
 
 type techWorklog struct {
-	ID              int64
-	WorkOrderID     int64
-	TechnicianID    int64
-	WorkDate        string
-	Hours           float64
-	HourlyRate      float64
-	LaborAmount     float64
-	CommissionRate  float64
+	ID               int64
+	WorkOrderID      int64
+	TechnicianID     int64
+	WorkDate         string
+	Hours            float64
+	HourlyRate       float64
+	LaborAmount      float64
+	CommissionRate   float64
 	CommissionAmount float64
-	Notes           string
-	TechnicianName  string
-	PlateNumber     string
+	Notes            string
+	TechnicianName   string
+	PlateNumber      string
 }
 
 func scanTechWorklog(row interface{ Scan(...interface{}) error }) (techWorklog, error) {
@@ -142,16 +142,36 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 }
 
 // AddTechnicianWorklog 新增工時紀錄，自動算工資與佣金金額。
-func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request) {
+// actorID 是目前登入者。櫃檯與管理員可替任一技師登錄工時（以表單為準），
+// 技師則只能替自己記（忽略表單值），避免代登或冒用。
+func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 	woID := mustInt(r.PathValue("id"))
+
 	techID := mustInt(r.FormValue("technician_id"))
-	if techID <= 0 {
-		fail(w, "請選擇技師")
-		return
+	if actor.CanPickTechnician() {
+		if techID <= 0 {
+			fail(w, "請選擇技師")
+			return
+		}
+	} else {
+		// 技師只能替自己記，忽略表單送來的 technician_id。
+		techID = actor.ID
 	}
 
 	if countRows("SELECT COUNT(1) FROM work_orders WHERE id = ?", woID) == 0 {
 		http.NotFound(w, r)
+		return
+	}
+
+	// 必須是 technician 角色：否則可以把佣金記到 owner/counter 名下。
+	if countRows("SELECT COUNT(1) FROM users WHERE id = ? AND role = 'technician'", techID) == 0 {
+		fail(w, "指定的使用者不是技師角色")
+		return
+	}
+
+	// 工時是工單的內容之一，已結帳後不可再補登。
+	if err := requireOrderMutable(woID); err != nil {
+		fail(w, err.Error())
 		return
 	}
 
@@ -191,6 +211,11 @@ func DeleteTechnicianWorklog(w http.ResponseWriter, r *http.Request) {
 	woID := mustInt(r.PathValue("id"))
 	logID := mustInt(r.PathValue("log_id"))
 
+	if err := requireOrderMutable(woID); err != nil {
+		fail(w, err.Error())
+		return
+	}
+
 	res, err := db.DB.Exec("DELETE FROM technician_worklogs WHERE id = ? AND work_order_id = ?", logID, woID)
 	if err != nil {
 		fail(w, "刪除工時紀錄失敗")
@@ -206,6 +231,12 @@ func DeleteTechnicianWorklog(w http.ResponseWriter, r *http.Request) {
 
 // ListTechnicianCommissions 全店技師佣金總覽（依月份篩選）。
 func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user model.User) {
+	// 佣金是敏感財務資料，技師不看全店總表（只看自己單張工單的工時頁）。
+	if !canSeeMoney(user) {
+		http.Error(w, "權限不足：佣金統計僅限櫃檯人員與系統管理員使用", http.StatusForbidden)
+		return
+	}
+
 	month := strings.TrimSpace(r.URL.Query().Get("month"))
 	if month == "" {
 		month = today()[:7]
@@ -266,9 +297,9 @@ func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user mode
       </form>
       <table>
         <tr><th style="width:130px">總工單數</th><td class="num">` + money(totalOrders) +
-            `</td><th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td></tr>
+		`</td><th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td></tr>
         <tr><th>總工資</th><td class="num">` + money(totalLabor) +
-            `</td><th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(totalCommission) + `</td></tr>
+		`</td><th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(totalCommission) + `</td></tr>
       </table>
     </div>
     <div class="card">

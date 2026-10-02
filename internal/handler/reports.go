@@ -11,6 +11,12 @@ import (
 
 // ReportsHome 報表總覽：營收、工單、庫存、技師績效。
 func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
+	// 技師不看營收報表（財務數字屬店內機密）。
+	if !canSeeMoney(user) {
+		http.Error(w, "權限不足：營收報表僅限櫃檯人員與系統管理員使用", http.StatusForbidden)
+		return
+	}
+
 	from := strings.TrimSpace(r.URL.Query().Get("from"))
 	to := strings.TrimSpace(r.URL.Query().Get("to"))
 	if from == "" {

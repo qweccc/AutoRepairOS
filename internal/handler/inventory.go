@@ -25,6 +25,7 @@ func scanInventoryItem(rows interface{ Scan(...interface{}) error }) (model.Inve
 func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	lowOnly := r.URL.Query().Get("low") == "1"
+	showMoney := canSeeMoney(user)
 
 	query := `SELECT ` + inventoryCols + ` FROM inventory_items i
 		LEFT JOIN suppliers s ON s.id = i.supplier_id WHERE 1=1`
@@ -55,8 +56,19 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, it)
 	}
 
+	// 技師不看成本價（毛利屬店內機密），但仍需看到售價以便估價。
+	costHead := ``
+	costCell := func(it model.InventoryItem) string { return `` }
+	if showMoney {
+		costHead = `<th class="num">成本</th>`
+		costCell = func(it model.InventoryItem) string {
+			return `<td class="num">` + money(it.CostPrice) + `</td>`
+		}
+	}
+
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th>庫位</th><th>供應商</th><th class="num">成本</th><th class="num">售價</th><th class="num">庫存</th><th class="num">安全值</th><th>操作</th></tr>`)
+	tb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th>庫位</th><th>供應商</th>` + costHead +
+		`<th class="num">售價</th><th class="num">庫存</th><th class="num">安全值</th><th>操作</th></tr>`)
 	for _, it := range list {
 		stockCell := strconv.Itoa(it.StockQuantity)
 		if it.LowStock {
@@ -64,7 +76,7 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		tb.WriteString(`<tr><td><code>` + htmlEsc(it.PartNumber) + `</code></td><td>` + htmlEsc(it.Name) +
 			`</td><td>` + htmlEsc(it.BinLocation) + `</td><td>` + htmlEsc(orDash(it.SupplierName)) +
-			`</td><td class="num">` + money(it.CostPrice) + `</td><td class="num">` + money(it.SellingPrice) +
+			`</td>` + costCell(it) + `<td class="num">` + money(it.SellingPrice) +
 			`</td><td class="num">` + stockCell + `</td><td class="num">` + strconv.Itoa(it.MinSafetyStock) +
 			`</td><td><a class="btn btn-s" href="/inventory/` + strconv.FormatInt(it.ID, 10) + `/edit">編輯</a> ` +
 			`<a class="btn btn-o" href="/inventory/` + strconv.FormatInt(it.ID, 10) + `/stock">調庫</a> ` +
@@ -83,6 +95,11 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 		lowNote = ` <a href="/inventory" style="font-size:13px">（顯示全部）</a>`
 	}
 
+	costField := costInput("0")
+	if !showMoney {
+		costField = ""
+	}
+
 	body := flash(r) + `
     <div class="card">
       <h2>新增零件</h2>
@@ -92,7 +109,7 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>庫位<input name="bin_location" required placeholder="例 A-01-3"></label>
         <label>條碼<input name="barcode"></label>
         <label>供應商<select name="supplier_id"><option value="0">無</option>` + supplierOptions() + `</select></label>
-        <label>成本價<input name="cost_price" type="number" min="0" step="1" value="0"></label>
+        ` + costField + `
         <label>售價<input name="selling_price" type="number" min="0" step="1" value="0"></label>
         <label>庫存數量<input name="stock_quantity" type="number" value="0"></label>
         <label>安全庫存<input name="min_safety_stock" type="number" min="0" value="5"></label>
@@ -156,6 +173,11 @@ func EditInventoryForm(w http.ResponseWriter, r *http.Request, user model.User) 
 		return
 	}
 
+	costField := ""
+	if canSeeMoney(user) {
+		costField = `<label>成本價<input name="cost_price" type="number" step="1" value="` + money(it.CostPrice) + `"></label>`
+	}
+
 	body := `
     <div class="card">
       <h2>編輯零件 ` + htmlEsc(it.Name) + `</h2>
@@ -165,7 +187,7 @@ func EditInventoryForm(w http.ResponseWriter, r *http.Request, user model.User) 
         <label>庫位<input name="bin_location" value="` + htmlEsc(it.BinLocation) + `" required></label>
         <label>條碼<input name="barcode" value="` + htmlEsc(it.Barcode) + `"></label>
         <label>供應商<select name="supplier_id"><option value="0">無</option>` + supplierOptionsSel(it.SupplierID) + `</select></label>
-        <label>成本價<input name="cost_price" type="number" step="1" value="` + money(it.CostPrice) + `"></label>
+        ` + costField + `
         <label>售價<input name="selling_price" type="number" step="1" value="` + money(it.SellingPrice) + `"></label>
         <label>安全庫存<input name="min_safety_stock" type="number" min="0" value="` + strconv.Itoa(it.MinSafetyStock) + `"></label>
         <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/inventory">取消</a></div>
@@ -348,6 +370,11 @@ func inventoryOptions() string {
 			` / 售價 ` + money(sell) + ` / 庫存 ` + strconv.Itoa(stock) + `</option>`)
 	}
 	return b.String()
+}
+
+// costInput 產生成本價欄位；技師看不到此欄位。
+func costInput(value string) string {
+	return `<label>成本價<input name="cost_price" type="number" step="1" value="` + value + `"></label>`
 }
 
 func chkIf(cond bool) string {

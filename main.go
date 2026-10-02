@@ -38,7 +38,7 @@ func main() {
 	mux.HandleFunc("GET /api/me", handler.MeHandler)
 
 	// 總覽
-	mux.HandleFunc("GET /{$}", handler.RequireAuth(handler.IndexHandler))
+	mux.HandleFunc("GET /{$}", handler.AllStaff(handler.IndexHandler))
 
 	// 首頁靜態（index.html 字面檔，需登入才能取得）
 	mux.HandleFunc("GET /index.html", handler.RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,62 +46,62 @@ func main() {
 	})))
 
 	// 客戶
-	mux.HandleFunc("GET /customers", handler.RequireAuth(handler.ListCustomers))
-	mux.HandleFunc("POST /customers", handler.RequireLogin(handler.CreateCustomer))
-	mux.HandleFunc("GET /customers/{id}/edit", handler.RequireAuth(handler.EditCustomerForm))
-	mux.HandleFunc("POST /customers/{id}", handler.RequireLogin(handler.UpdateCustomer))
-	mux.HandleFunc("GET /customers/{id}/delete", handler.RequireLogin(handler.DeleteCustomer))
+	mux.HandleFunc("GET /customers", handler.AllStaff(handler.ListCustomers))
+	mux.HandleFunc("POST /customers", handler.CounterUp(handler.CreateCustomer))
+	mux.HandleFunc("GET /customers/{id}/edit", handler.AllStaff(handler.EditCustomerForm))
+	mux.HandleFunc("POST /customers/{id}", handler.CounterUp(handler.UpdateCustomer))
+	mux.HandleFunc("GET /customers/{id}/delete", handler.OwnerOnly(handler.DeleteCustomer))
 
 	// 車輛
-	mux.HandleFunc("GET /vehicles", handler.RequireAuth(handler.ListVehicles))
-	mux.HandleFunc("POST /vehicles", handler.RequireLogin(handler.CreateVehicle))
-	mux.HandleFunc("GET /vehicles/{id}/edit", handler.RequireAuth(handler.EditVehicleForm))
-	mux.HandleFunc("POST /vehicles/{id}", handler.RequireLogin(handler.UpdateVehicle))
-	mux.HandleFunc("GET /vehicles/{id}/delete", handler.RequireLogin(handler.DeleteVehicle))
+	mux.HandleFunc("GET /vehicles", handler.AllStaff(handler.ListVehicles))
+	mux.HandleFunc("POST /vehicles", handler.CounterUp(handler.CreateVehicle))
+	mux.HandleFunc("GET /vehicles/{id}/edit", handler.AllStaff(handler.EditVehicleForm))
+	mux.HandleFunc("POST /vehicles/{id}", handler.CounterUp(handler.UpdateVehicle))
+	mux.HandleFunc("GET /vehicles/{id}/delete", handler.OwnerOnly(handler.DeleteVehicle))
 
 	// 工單
-	mux.HandleFunc("GET /work-orders", handler.RequireAuth(handler.ListWorkOrders))
-	mux.HandleFunc("POST /work-orders", handler.RequireLogin(handler.CreateWorkOrder))
-	mux.HandleFunc("GET /work-orders/{id}", handler.RequireAuth(handler.ShowWorkOrder))
-	mux.HandleFunc("POST /work-orders/{id}/status", handler.RequireLogin(handler.UpdateWorkOrderStatus))
-	mux.HandleFunc("POST /work-orders/{id}/approval", handler.RequireLogin(handler.UpdateWorkOrderApproval))
-	mux.HandleFunc("POST /work-orders/{id}/sop", handler.RequireLogin(handler.ToggleWorkOrderSOP))
-	mux.HandleFunc("POST /work-orders/{id}/items", handler.RequireLogin(handler.AddWorkOrderItem))
-	mux.HandleFunc("GET /work-orders/{id}/items/{item_id}/delete", handler.RequireLogin(handler.DeleteWorkOrderItem))
+	mux.HandleFunc("GET /work-orders", handler.AllStaff(handler.ListWorkOrders))
+	mux.HandleFunc("POST /work-orders", handler.CounterUp(handler.CreateWorkOrder))
+	mux.HandleFunc("GET /work-orders/{id}", handler.AllStaff(handler.ShowWorkOrder))
+	mux.HandleFunc("POST /work-orders/{id}/status", handler.CounterUp(handler.UpdateWorkOrderStatus))
+	mux.HandleFunc("POST /work-orders/{id}/approval", handler.CounterUp(handler.UpdateWorkOrderApproval))
+	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
+	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))
+	mux.HandleFunc("GET /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))
 
 	// 庫存
-	mux.HandleFunc("GET /inventory", handler.RequireAuth(handler.ListInventory))
-	mux.HandleFunc("POST /inventory", handler.RequireLogin(handler.CreateInventoryItem))
-	mux.HandleFunc("GET /inventory/{id}/edit", handler.RequireAuth(handler.EditInventoryForm))
-	mux.HandleFunc("POST /inventory/{id}", handler.RequireLogin(handler.UpdateInventoryItem))
-	mux.HandleFunc("GET /inventory/{id}/stock", handler.RequireAuth(handler.StockAdjustForm))
-	mux.HandleFunc("POST /inventory/{id}/stock", handler.RequireLogin(handler.ApplyStockAdjust))
-	mux.HandleFunc("GET /inventory/{id}/delete", handler.RequireLogin(handler.DeleteInventoryItem))
+	mux.HandleFunc("GET /inventory", handler.AllStaff(handler.ListInventory))
+	mux.HandleFunc("POST /inventory", handler.CounterUp(handler.CreateInventoryItem))
+	mux.HandleFunc("GET /inventory/{id}/edit", handler.AllStaff(handler.EditInventoryForm))
+	mux.HandleFunc("POST /inventory/{id}", handler.CounterUp(handler.UpdateInventoryItem))
+	mux.HandleFunc("GET /inventory/{id}/stock", handler.AllStaff(handler.StockAdjustForm))
+	mux.HandleFunc("POST /inventory/{id}/stock", handler.CounterUp(handler.ApplyStockAdjust))
+	mux.HandleFunc("GET /inventory/{id}/delete", handler.OwnerOnly(handler.DeleteInventoryItem))
 
 	// Phase 2: 技師工時/佣金
-	mux.HandleFunc("GET /work-orders/{id}/worklogs", handler.RequireAuth(handler.ListTechnicianWorklogs))
-	mux.HandleFunc("POST /work-orders/{id}/worklogs", handler.RequireLogin(handler.AddTechnicianWorklog))
-	mux.HandleFunc("GET /work-orders/{id}/worklogs/{log_id}/delete", handler.RequireLogin(handler.DeleteTechnicianWorklog))
-	mux.HandleFunc("GET /technicians/commissions", handler.RequireAuth(handler.ListTechnicianCommissions))
+	mux.HandleFunc("GET /work-orders/{id}/worklogs", handler.AllStaff(handler.ListTechnicianWorklogs))
+	mux.HandleFunc("POST /work-orders/{id}/worklogs", handler.WithActor(handler.AddTechnicianWorklog))
+	mux.HandleFunc("GET /work-orders/{id}/worklogs/{log_id}/delete", handler.CounterUp(handler.DeleteTechnicianWorklog))
+	mux.HandleFunc("GET /technicians/commissions", handler.AllStaff(handler.ListTechnicianCommissions))
 
 	// Phase 2: 收據列印
-	mux.HandleFunc("GET /work-orders/{id}/receipt", handler.RequireAuth(handler.PrintWorkOrderReceipt))
+	mux.HandleFunc("GET /work-orders/{id}/receipt", handler.AllStaff(handler.PrintWorkOrderReceipt))
 
 	// Phase 2: 照片上傳
-	mux.HandleFunc("GET /work-orders/{id}/photos", handler.RequireAuth(handler.ListWorkOrderPhotos))
-	mux.HandleFunc("POST /work-orders/{id}/photos", handler.RequireLogin(handler.UploadWorkOrderPhoto))
-	mux.HandleFunc("GET /work-orders/{id}/photos/{photo_id}/delete", handler.RequireLogin(handler.DeleteWorkOrderPhoto))
+	mux.HandleFunc("GET /work-orders/{id}/photos", handler.AllStaff(handler.ListWorkOrderPhotos))
+	mux.HandleFunc("POST /work-orders/{id}/photos", handler.CounterUp(handler.UploadWorkOrderPhoto))
+	mux.HandleFunc("GET /work-orders/{id}/photos/{photo_id}/delete", handler.CounterUp(handler.DeleteWorkOrderPhoto))
 	mux.HandleFunc("GET /photos/{filename}", handler.RequireLogin(handler.ServePhoto))
 
 	// Phase 3: 排程 + 報表
-	mux.HandleFunc("GET /scheduled-tasks", handler.RequireAuth(handler.ListScheduledTasks))
-	mux.HandleFunc("GET /scheduled-tasks/{key}/toggle", handler.RequireLogin(handler.ToggleScheduledTask))
-	mux.HandleFunc("GET /scheduled-tasks/backups/run", handler.RequireLogin(handler.RunBackupNow))
-	mux.HandleFunc("GET /scheduled-tasks/notifications/run", handler.RequireLogin(handler.RunNotificationsNow))
-	mux.HandleFunc("GET /scheduled-tasks/maintenance-due/run", handler.RequireLogin(handler.RunMaintenanceScanNow))
-	mux.HandleFunc("GET /scheduled-tasks/work-order-ready/run", handler.RequireLogin(handler.RunWorkOrderReadyNow))
-	mux.HandleFunc("GET /notifications/{id}/cancel", handler.RequireLogin(handler.CancelNotification))
-	mux.HandleFunc("GET /reports", handler.RequireAuth(handler.ReportsHome))
+	mux.HandleFunc("GET /scheduled-tasks", handler.AllStaff(handler.ListScheduledTasks))
+	mux.HandleFunc("GET /scheduled-tasks/{key}/toggle", handler.OwnerOnly(handler.ToggleScheduledTask))
+	mux.HandleFunc("GET /scheduled-tasks/backups/run", handler.OwnerOnly(handler.RunBackupNow))
+	mux.HandleFunc("GET /scheduled-tasks/notifications/run", handler.OwnerOnly(handler.RunNotificationsNow))
+	mux.HandleFunc("GET /scheduled-tasks/maintenance-due/run", handler.OwnerOnly(handler.RunMaintenanceScanNow))
+	mux.HandleFunc("GET /scheduled-tasks/work-order-ready/run", handler.OwnerOnly(handler.RunWorkOrderReadyNow))
+	mux.HandleFunc("GET /notifications/{id}/cancel", handler.OwnerOnly(handler.CancelNotification))
+	mux.HandleFunc("GET /reports", handler.AllStaff(handler.ReportsHome))
 
 	port := cfg.Port
 	if port == "" {

@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/internal/session"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,21 +24,27 @@ func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Write(b)
 }
 
-// currentUser 從 session cookie 解析出使用者，未登入或 cookie 無效時回傳 error。
+// currentUser 由 session cookie 解析出使用者。
+// token 必須存在 sessions 表且未過期；舊版的 username-id 格式一律視為未登入。
 func currentUser(r *http.Request) (model.User, error) {
 	var user model.User
 
-	cookie, err := r.Cookie("session_token")
-	if err != nil || cookie.Value == "" {
+	token := session.TokenFromRequest(r)
+	if token == "" {
 		return user, http.ErrNoCookie
 	}
 
-	username := strings.Split(cookie.Value, "-")[0]
+	userID, err := session.Lookup(token)
+	if err != nil {
+		return user, err
+	}
 
 	err = db.DB.QueryRow(
-		"SELECT id, username, role, name FROM users WHERE username = ?", username,
+		"SELECT id, username, role, name FROM users WHERE id = ?", userID,
 	).Scan(&user.ID, &user.Username, &user.Role, &user.Name)
 	if err != nil {
+		// 帳號已被刪除：順手清掉孤兒 session
+		session.Delete(token)
 		return user, err
 	}
 
@@ -118,29 +125,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		returnTo = "/"
 	}
 
-	// TODO: 換成隨機 session token 存進 sessions 表
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    strings.ReplaceAll(username+"-"+strconv.FormatInt(user.ID, 10), " ", "_"),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   false,
-		MaxAge:   86400 * 7,
-	})
+	token, err := session.Start(user.ID)
+	if err != nil {
+		http.Error(w, "建立登入階段失敗", http.StatusInternalServerError)
+		return
+	}
+	session.SetCookie(w, token)
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	// 登出前先清除 session cookie，再回跳到登入前的頁面。
+	// 撤銷 sessions 表的記錄，再清除 cookie，最後回跳到登入前的頁面。
 	// return_to 從登入表單的隱藏欄位帶回（預設首頁 /，避免回跳 loop）。
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   -1,
-	})
+	session.Delete(session.TokenFromRequest(r))
+	session.ClearCookie(w)
 	returnTo := r.URL.Query().Get("return_to")
 	if returnTo == "" || returnTo == "/login" {
 		returnTo = "/"
