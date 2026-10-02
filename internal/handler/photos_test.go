@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
 
 	"autorepairos/internal/config"
 	"autorepairos/internal/db"
+	"autorepairos/internal/model"
 )
 
 var validPNG = []byte{
@@ -35,6 +35,9 @@ func newTestServer(t *testing.T) (http.Handler, int64) {
 	if err := db.Init(cfg); err != nil {
 		t.Fatalf("db.Init failed: %v", err)
 	}
+	// t.TempDir 的清理會刪除整個目錄；若 DB 連線仍開著，Windows 上 test.db 會被鎖住導致
+	// RemoveAll 失敗（testing.go: TempDir RemoveAll cleanup）。每個測試結束前必須關閉。
+	t.Cleanup(db.Close)
 	if err := db.Migrate(); err != nil {
 		t.Fatalf("db.Migrate failed: %v", err)
 	}
@@ -44,12 +47,23 @@ func newTestServer(t *testing.T) (http.Handler, int64) {
 	if _, err := db.DB.Exec("INSERT INTO vehicles (customer_id, plate_number, brand_model) VALUES (1,'AB-123','X')"); err != nil {
 		t.Fatal(err)
 	}
+	// work_orders.vehicle_id 與 customer_id 皆 NOT NULL，照片上傳前必須先有工單
+	if _, err := db.DB.Exec(`INSERT INTO work_orders (vehicle_id, customer_id, current_mileage) VALUES (1,1,1000)`); err != nil {
+		t.Fatal(err)
+	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /work-orders/{id}/photos", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ListWorkOrderPhotos(w, r, userDummy{}) }))
+	mux.HandleFunc("GET /work-orders/{id}/photos", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ListWorkOrderPhotos(w, r, model.User{Role: "owner"}) }))
 	mux.HandleFunc("POST /work-orders/{id}/photos", http.HandlerFunc(UploadWorkOrderPhoto))
 	mux.HandleFunc("GET /work-orders/{id}/photos/{photo_id}/delete", http.HandlerFunc(DeleteWorkOrderPhoto))
 	mux.HandleFunc("GET /photos/{filename}", http.HandlerFunc(ServePhoto))
 	return mux, 1
+}
+
+// noRedirectClient 不自動跟隨 3xx，才能斷言 handler 回的是 302 而非最終頁面的 200。
+var noRedirectClient = &http.Client{
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
 }
 
 func uploadPhoto(t *testing.T, srvURL string) {
@@ -61,7 +75,7 @@ func uploadPhoto(t *testing.T, srvURL string) {
 	buf.Write(validPNG)
 	buf.WriteString("\r\n--BOUNDARY123--\r\n")
 
-	resp, err := http.Post(srvURL+"/work-orders/1/photos", "multipart/form-data; boundary=BOUNDARY123", bytes.NewReader(buf.Bytes()))
+	resp, err := noRedirectClient.Post(srvURL+"/work-orders/1/photos", "multipart/form-data; boundary=BOUNDARY123", bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +97,7 @@ func TestUploadWorkOrderPhoto(t *testing.T) {
 	buf.Write(validPNG)
 	buf.WriteString("\r\n--BOUNDARY123--\r\n")
 
-	resp, err := http.Post(srv.URL+"/work-orders/1/photos", "multipart/form-data; boundary=BOUNDARY123", bytes.NewReader(buf.Bytes()))
+	resp, err := noRedirectClient.Post(srv.URL+"/work-orders/1/photos", "multipart/form-data; boundary=BOUNDARY123", bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,13 +129,30 @@ func TestServePhoto(t *testing.T) {
 
 	uploadPhoto(t, srv.URL)
 
-	resp, err := http.Get(srv.URL + "/photos/x.png")
+	// 先查出實際的檔名；抓不存在的路徑本來就該是 404，測不出 ServePhoto 的行為。
+	var filename string
+	if err := db.DB.QueryRow("SELECT filename FROM work_order_photos ORDER BY id DESC LIMIT 1").
+		Scan(&filename); err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := http.Get(srv.URL + "/photos/" + filename)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		t.Fatalf("serve status = %d, want 200", resp.StatusCode)
+	}
+
+	// 不存在的檔名應回 404
+	resp404, err := http.Get(srv.URL + "/photos/does-not-exist.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp404.Body.Close()
+	if resp404.StatusCode != 404 {
+		t.Fatalf("missing file status = %d, want 404", resp404.StatusCode)
 	}
 }
 
@@ -132,7 +163,7 @@ func TestDeleteWorkOrderPhoto(t *testing.T) {
 
 	uploadPhoto(t, srv.URL)
 
-	resp, err := http.Get(srv.URL + "/work-orders/1/photos/1/delete")
+	resp, err := noRedirectClient.Get(srv.URL + "/work-orders/1/photos/1/delete")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +181,7 @@ func TestDeleteWorkOrderPhoto(t *testing.T) {
 }
 
 func TestListWorkOrderPhotos(t *testing.T) {
-	mux, woID := newTestServer(t)
+	mux, _ := newTestServer(t)
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 

@@ -61,6 +61,18 @@ func nowDBTime() string {
 	return dbTime(time.Now())
 }
 
+// dedupSince 回傳去重時間界線：現在往前一個排程週期（取最長的間隔）。
+// 用它取代 status='pending' 判斷，可避免已送達的通知在下一輪掃描被重複排入。
+func dedupSince() string {
+	interval := 6 * time.Hour
+	for _, t := range registry {
+		if t.Interval > interval {
+			interval = t.Interval
+		}
+	}
+	return dbTime(time.Now().Add(-interval))
+}
+
 func syncTask(t Task) error {
 	var interval interface{}
 	if t.Interval > 0 {
@@ -227,11 +239,20 @@ func QueueNotification(kind, channel, subject, body string, customerID, workOrde
 
 // PendingNotifications 列出待處理的佇列項目（供 UI 檢視）。
 func PendingNotifications(limit int) []Notification {
+	return queryNotifications(` WHERE status='pending' ORDER BY scheduled_at`, limit)
+}
+
+// RecentNotifications 列出最近的 notification 紀錄（含 pending/sent/cancelled/failed），
+// 讓 UI 在排程器處理完佇列後仍能查到歷史。
+func RecentNotifications(limit int) []Notification {
+	return queryNotifications(` ORDER BY id DESC`, limit)
+}
+
+func queryNotifications(clause string, limit int) []Notification {
 	rows, err := db.DB.Query(`SELECT id, COALESCE(work_order_id,0), COALESCE(customer_id,0),
 		channel, kind, COALESCE(subject,''), body, scheduled_at, COALESCE(sent_at,''),
 		status, COALESCE(retry_count,0)
-		FROM notifications WHERE status='pending'
-		ORDER BY scheduled_at LIMIT ?`, limit)
+		FROM notifications`+clause+` LIMIT ?`, limit)
 	if err != nil {
 		return nil
 	}
@@ -533,46 +554,84 @@ func ScanMaintenanceDueNow() (int, error) {
 
 func scanMaintenanceDueInternal() (int, error) {
 	// 以台北當地日期為準（車行在台灣），不能用 SQLite 的 date('now')（UTC，會差 8 小時）。
-	cutoff := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
 
+	// next_maintenance_date 可能以兩種格式存在：
+	//   - 純日期 "2026-10-04"
+	//   - 驅動寫入的 RFC3339 "2026-10-04T00:00:00Z"
+	// SQLite 的 date() 對後者回傳 NULL，因此在 SQL 內比較會靜默失效。
+	// 這裡改成全部撈回來、在 Go 端用字串前 10 碼比較，行為可預期且不受驅動格式影響。
 	rows, err := db.DB.Query(`SELECT v.id, v.customer_id, v.plate_number, v.next_maintenance_date,
 		COALESCE(c.name,''), COALESCE(c.notification_preference,'line')
 		FROM vehicles v
 		JOIN customers c ON c.id = v.customer_id
 		WHERE v.next_maintenance_date IS NOT NULL
-		  AND v.next_maintenance_date != ''
-		  AND date(v.next_maintenance_date) <= date(?)`, cutoff)
+		  AND TRIM(COALESCE(v.next_maintenance_date,'')) != ''`)
 	if err != nil {
 		return 0, err
 	}
 	defer rows.Close()
 
-	queued := 0
+	cutoff := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
+	today := time.Now().Format("2006-01-02")
+
+	// 先把候選資料全部讀出來，再逐一處理。
+	// 不能在 rows 迴圈內再對 db.DB 發查詢（去重檢查會另開連線），
+	// 部分 SQLite 驅動會因此讓外層 rows 提前失效，導致只處理第一筆。
+	type candidate struct {
+		vehID, custID     int64
+		plate, dueDate    string
+		custName, notifPr string
+	}
+	var candidates []candidate
 	for rows.Next() {
-		var vehID, custID int64
-		var plate, dueDate, custName, notifPref string
-		if err := rows.Scan(&vehID, &custID, &plate, &dueDate, &custName, &notifPref); err != nil {
+		var c candidate
+		if err := rows.Scan(&c.vehID, &c.custID, &c.plate, &c.dueDate, &c.custName, &c.notifPr); err != nil {
 			continue
 		}
 
-		// 避免重複排程：檢查是否已有未處理的同車牌通知
-		dup := 0
-		db.DB.QueryRow(`SELECT COUNT(1) FROM notifications
-			WHERE kind='maintenance_due' AND status='pending' AND body LIKE ?`, "%"+plate+"%").Scan(&dup)
+		// 取前 10 碼當作 YYYY-MM-DD；格式不符就跳過
+		d := strings.TrimSpace(c.dueDate)
+		if len(d) < 10 {
+			continue
+		}
+		d = d[:10]
+		if _, perr := time.Parse("2006-01-02", d); perr != nil {
+			continue
+		}
+		// 只提醒今天（含逾期）到 7 天內到期
+		if d < today || d > cutoff {
+			continue
+		}
+		c.dueDate = d
+		candidates = append(candidates, c)
+	}
+	rows.Close()
+
+	queued := 0
+	for _, c := range candidates {
+		// 避免重複排程：同一台車在「最近一次排程週期」內只提醒一次。
+		// 只看 status='pending' 會讓已送達的通知在下一輪掃描又被重新排入，
+		// 造成客戶每 6 小時收到一次重複提醒。因此改為比對最近一次建立時間。
+		var dup int
+		if err := db.DB.QueryRow(`SELECT COUNT(1) FROM notifications
+			WHERE kind='maintenance_due' AND created_at >= ? AND body LIKE ?`,
+			dedupSince(), "%"+c.plate+"%").Scan(&dup); err != nil {
+			continue
+		}
 		if dup > 0 {
 			continue
 		}
 
-		channel := notifPref
+		channel := c.notifPr
 		if channel != "line" && channel != "sms" {
 			channel = "internal"
 		}
 
 		msg := fmt.Sprintf("親愛的 %s 您好，您的車輛 %s 定期保養日期為 %s，即將到期，歡迎預約保養。",
-			custName, plate, dueDate)
+			c.custName, c.plate, c.dueDate)
 
 		if err := QueueNotification("maintenance_due", channel, "定期保養提醒", msg,
-			custID, 0, time.Now()); err != nil {
+			c.custID, 0, time.Now()); err != nil {
 			continue
 		}
 		queued++

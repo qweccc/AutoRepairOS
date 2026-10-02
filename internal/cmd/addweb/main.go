@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"strings"
+	"time"
 )
 
 // jar 用獨立的 CookieJar，讓 session cookie 在多次 POST 間 persists。
-var jar, _ = http.NewCookieJar(nil)
+var jar, _ = cookiejar.New(nil)
 
 var (
 	baseURL = os.Args[1]
@@ -17,7 +19,7 @@ var (
 	pwd     = os.Args[3]
 )
 
-var c = &http.Client{Timeout: 15000000000}
+var c = &http.Client{Timeout: 15 * time.Second, Jar: jar}
 
 type step struct {
 	method string
@@ -94,11 +96,11 @@ func main() {
 
 	fmt.Println("[2] 新增車輛")
 	vs, vm, _ := do(step{"POST", "/vehicles", map[string]string{
-		"customer_id":       "1",
-		"plate_number":      "台北-1234-567",
-		"brand_model":       "Honda CB190R",
-		"manufacture_year":  "2021",
-		"next_maintenance_date": "2026-12-31",
+		"customer_id":              "1",
+		"plate_number":             "台北-1234-567",
+		"brand_model":              "Honda CB190R",
+		"manufacture_year":         "2021",
+		"next_maintenance_date":    "2026-12-31",
 		"next_maintenance_mileage": "12000",
 	}})
 	fmt.Printf("   HTTP %d | %s\n", vs, vm)
@@ -124,18 +126,18 @@ func main() {
 
 	fmt.Println("[4] 加入工單項目（工資 + 零件）")
 	do(step{"POST", "/work-orders/" + woID + "/items", map[string]string{
-		"item_type":        "labor",
-		"description":      "引擎診斷與檢查",
-		"quantity":         "1",
-		"unit_price":       "1200",
+		"item_type":             "labor",
+		"description":           "引擎診斷與檢查",
+		"quantity":              "1",
+		"unit_price":            "1200",
 		"primary_technician_id": "3",
 	}})
 	do(step{"POST", "/work-orders/" + woID + "/items", map[string]string{
-		"item_type":        "part",
+		"item_type":         "part",
 		"inventory_item_id": "1",
-		"description":      "機油 5W-30",
-		"quantity":         "1",
-		"unit_price":       "980",
+		"description":       "機油 5W-30",
+		"quantity":          "1",
+		"unit_price":        "980",
 	}})
 
 	fmt.Println("== 完成 ==")

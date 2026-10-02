@@ -40,35 +40,59 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		tasksTable = `<div class="empty">尚未註冊任何排程任務</div>`
 	}
 
-	// 通知佇列
+	// 通知紀錄：同時顯示待處理（可取消）與近期歷史（含已送達/已取消）
 	pending := cron.PendingNotifications(50)
+	recent := cron.RecentNotifications(50)
+
+	kindLabels := map[string]string{
+		"maintenance_due":   "保養到期",
+		"work_order_ready":  "完工通知",
+		"estimate_approval": "估價核准",
+	}
+	channelLabels := map[string]string{"line": "LINE", "sms": "SMS", "internal": "內部", "none": "不通知"}
+
+	type statusStyle struct{ Label, Pill string }
+	statusPills := map[string]statusStyle{
+		"pending":   {"待處理", "p-waitparts"},
+		"sent":      {"已送達", "p-completed"},
+		"cancelled": {"已取消", "p-pending"},
+		"failed":    {"失敗", "p-apprno"},
+	}
+
 	var nb strings.Builder
 	nb.WriteString(`<table><tr><th>#</th><th>類型</th><th>通道</th><th>主旨</th><th>內容</th><th>排定時間</th><th>狀態</th><th>操作</th></tr>`)
-	for _, n := range pending {
-		kindLabel := map[string]string{
-			"maintenance_due":   "保養到期",
-			"work_order_ready":  "完工通知",
-			"estimate_approval": "估價核准",
-		}[n.Kind]
+	for _, n := range recent {
+		kindLabel := kindLabels[n.Kind]
 		if kindLabel == "" {
 			kindLabel = n.Kind
 		}
-		chLabel := map[string]string{"line": "LINE", "sms": "SMS", "internal": "內部", "none": "不通知"}[n.Channel]
+		chLabel := channelLabels[n.Channel]
 		if chLabel == "" {
 			chLabel = n.Channel
 		}
+		st, ok := statusPills[n.Status]
+		label, pill := n.Status, "p-pending"
+		if ok {
+			label, pill = st.Label, st.Pill
+		}
+
+		action := `<span style="color:#64748b">—</span>`
+		if n.Status == "pending" {
+			action = `<a class="btn btn-d" href="/notifications/` + strconv.FormatInt(n.ID, 10) +
+				`/cancel" onclick="return confirm('取消這筆通知？')">取消</a>`
+		}
+
 		nb.WriteString(`<tr><td>` + strconv.FormatInt(n.ID, 10) + `</td><td>` + htmlEsc(kindLabel) +
 			`</td><td>` + htmlEsc(chLabel) + `</td><td>` + htmlEsc(orDash(n.Subject)) +
 			`</td><td style="max-width:340px">` + htmlEsc(truncateStr(n.Body, 70)) +
-			`</td><td>` + htmlEsc(n.ScheduledAt) + `</td><td><span class="pill p-waitparts">待處理</span>` +
-			`</td><td><a class="btn btn-d" href="/notifications/` + strconv.FormatInt(n.ID, 10) +
-			`/cancel" onclick="return confirm('取消這筆通知？')">取消</a></td></tr>`)
+			`</td><td>` + htmlEsc(n.ScheduledAt) + `</td><td><span class="pill ` + pill + `">` + label + `</span>` +
+			`</td><td>` + action + `</td></tr>`)
 	}
 	nb.WriteString(`</table>`)
 
 	notifTable := nb.String()
-	if len(pending) == 0 {
-		notifTable = `<div class="empty">佇列為空</div>`
+	if len(recent) == 0 {
+		notifTable = `<div class="empty">尚無通知紀錄</div>`
 	}
 
 	// 備份紀錄
@@ -120,9 +144,10 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
     </div>
 
     <div class="card">
-      <h2>通知佇列（待處理 ` + strconv.Itoa(len(pending)) + ` 筆）</h2>
+      <h2>通知紀錄</h2>
       <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
         LINE/SMS 通道已預留，實際外送待 Phase 4 整合；目前標記為已送達以避免佇列堆積。
+        待處理 ` + strconv.Itoa(len(pending)) + ` 筆，全部 ` + strconv.Itoa(len(recent)) + ` 筆。
       </p>` + notifTable + `
     </div>
 

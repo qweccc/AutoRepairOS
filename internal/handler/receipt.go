@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
 )
 
@@ -27,6 +29,29 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 	// 不另行加稅，避免與結帳時累加到客戶 total_spent 的金額不一致。
 	total := wo.TotalAmount
 	adjust := total - itemTotal // 稅金或手工調整，通常為 0
+
+	// LINE 綁定：讀出客戶的 line_user_id，並用 Flex 估價單模板（明細兩欄 + 金額 + 線上核准）。
+	var lineBlock string
+	var lineUserID string
+	if err := db.DB.QueryRow("SELECT COALESCE(line_user_id,'') FROM customers WHERE id=?", wo.CustomerID).Scan(&lineUserID); err == nil && lineUserID != "" {
+		quoteItems := []line.ItemLine{}
+		for _, it := range items {
+			quoteItems = append(quoteItems, line.ItemLine{Desc: it.Description, Total: it.Subtotal})
+		}
+		em := line.EstimateMessage{
+			Title:     "估價單 #" + strconv.FormatInt(wo.ID, 10),
+			SubText:   wo.PlateNumber + " / " + wo.CustomerName,
+			Items:     quoteItems,
+			Total:     total,
+			ApproveURL: "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt",
+		}
+		flexJSON, _ := json.MarshalIndent(em.ToFlex(), "", "  ")
+		lineBlock = `<div class="rpt-line"><span>LINE 估價單（明細兩欄 + 金額 + 線上核准）</span></div>` +
+			`<pre class="rpt-flex">` + string(flexJSON) + `</pre>`
+		w.Header().Add("X-Line-User-ID", lineUserID)
+	} else {
+		lineBlock = "<div class=\"rpt-line\"><span>LINE 估價單：客戶未綁定 line_user_id</span></div>"
+	}
 
 	var b strings.Builder
 	b.WriteString(`<table class="rpt"><tr><th>項目</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>`)
@@ -56,6 +81,11 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
     <div class="rpt-sec">
       <h2>客戶</h2>
       <p><b>` + htmlEsc(wo.CustomerName) + `</b> / ` + htmlEsc(wo.CustomerPhone) + `</p>
+    </div>
+
+    <div class="rpt-sec">
+      <h2>LINE 估價單</h2>
+      ` + lineBlock + `
     </div>
 
     <div class="rpt-sec">
@@ -143,6 +173,9 @@ const receiptStyle = `
   .rpt-foot { margin-top: 26px; text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 14px; }
   .rpt-foot p { margin: 4px 0; font-size: 14px; }
   .tiny { color: #94a3b8; font-size: 11.5px; }
+  .rpt-line { margin: 8px 0 4px; }
+  .rpt-line span { font-size: 12px; color: #64748b; }
+  .rpt-flex { background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 8px; padding: 12px; font-size: 11px; color: #475569; white-space: pre-wrap; }
   .no-print { max-width: 720px; margin: 18px auto 0; display: flex; gap: 10px; }
   .btn { display: inline-block; padding: 9px 18px; border-radius: 8px; font-size: 14px;
          text-decoration: none; font-weight: 700; border: 0; cursor: pointer; }
