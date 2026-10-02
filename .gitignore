@@ -2,6 +2,7 @@
 autrepairos.exe
 autorepairos
 *.exe
+*.exe~
 *.test
 /server
 
