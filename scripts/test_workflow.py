@@ -1,6 +1,6 @@
 import urllib.request, urllib.parse, http.cookiejar, re, time
 
-BASE = "http://localhost:8099"
+BASE = "http://localhost:8090"
 # 車牌需唯一以符合 DB UNIQUE 約束，重跑測試時用時間戳避免衝突
 PLATE = f"TEST-{int(time.time()) % 100000}"
 cj = http.cookiejar.CookieJar()

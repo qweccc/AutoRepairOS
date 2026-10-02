@@ -47,21 +47,20 @@ func Init(cfg *config.Config) error {
 		return fmt.Errorf("SQLite 連線失敗: %v", err)
 	}
 
-	// journal mode：必須用 PRAGMA 明確設定。
+	// journal mode：由 DB_ENABLE_WAL 明確決定，不依賴 DSN 參數。
 	//
-	// DB_PATH 的 DSN 參數寫法是 `_journal_mode=WAL`，但 modernc.org/sqlite 會
-	// 靜默忽略它——實測帶著該參數連線時 journal_mode 仍是預設的 delete。
-	// 只有在這裡明確下 PRAGMA 才會生效（journal mode 一旦設定會存進 DB 檔案，
-	// 所以過去的 WAL 資料庫即使新版不再設定也仍是 WAL，容易誤以為參數有效）。
-	//
-	// 若目標環境的檔案系統不支援 WAL（例如某些網路磁碟），設為 WAL 會失敗；
-	// 這時退回 rollback journal 並記錄警告，不讓整個服務開不起來。
-	if _, err := DB.Exec("PRAGMA journal_mode=WAL"); err != nil {
-		log.Printf("無法啟用 WAL（%v），改用預設 journal mode", err)
-	} else if mode := journalMode(); mode != "wal" {
-		log.Printf("要求 WAL 但實際為 %s，可能是檔案系統不支援", mode)
+	// DSN 裡的 _journal_mode=WAL 對 modernc.org/sqlite 是無效參數，會被靜默
+	// 忽略；真正的 WAL 必須靠這裡的 PRAGMA。預設關閉，因為 Windows bind-mount
+	// 下 WAL 會讓 SQLite 連線直接失敗（disk I/O error 4618），服務會陷入重啟迴圈。
+	// 要啟用請設 DB_ENABLE_WAL=true，並確保資料目錄不是 bind-mount（改用
+	// Docker named volume），否則會踩到同一個錯誤。
+	if cfg.EnableWAL {
+		if _, err := DB.Exec("PRAGMA journal_mode=WAL"); err != nil {
+			log.Printf("DB_ENABLE_WAL=true 但無法啟用 WAL（%v），沿用預設 journal mode", err)
+		} else if mode := journalMode(); mode != "wal" {
+			log.Printf("要求 WAL 但實際為 %s，可能是檔案系統不支援（例如 bind-mount）", mode)
+		}
 	}
-
 	MustExec("PRAGMA busy_timeout=5000")
 
 	log.Printf("資料庫初始化完成 (journal mode: %s)", journalMode())

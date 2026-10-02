@@ -6,16 +6,17 @@ import (
 )
 
 type Config struct {
-	Port            string
-	DBPath          string
-	SessionSecret   string
-	RunSeed         bool
-	DefaultOwner    string
-	DefaultOwnerPwd string
-	DefaultCounter  string
+	Port              string
+	DBPath            string
+	EnableWAL         bool
+	SessionSecret     string
+	RunSeed           bool
+	DefaultOwner      string
+	DefaultOwnerPwd   string
+	DefaultCounter    string
 	DefaultCounterPwd string
-	DefaultTech     string
-	DefaultTechPwd  string
+	DefaultTech       string
+	DefaultTechPwd    string
 }
 
 func Load() *Config {
@@ -26,7 +27,7 @@ func Load() *Config {
 
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "file:data/autorepair.db?_journal_mode=WAL&_busy_timeout=5000"
+		dbPath = "file:data/autorepair.db?_busy_timeout=5000"
 	}
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
@@ -34,20 +35,26 @@ func Load() *Config {
 		sessionSecret = "autorepair-dev-secret-change-in-production"
 	}
 
+	// DB_ENABLE_WAL 明確 opt-in。預設關閉：Windows bind-mount 下 WAL 會讓
+	// SQLite 直接 disk I/O error (4618)，而 DSN 的 _journal_mode 參數不會生效，
+	// 只會造成「設定看起來是 WAL、實際不是」的誤解。
+	enableWAL := os.Getenv("DB_ENABLE_WAL") == "true" || os.Getenv("DB_ENABLE_WAL") == "1"
+
 	runSeedStr := os.Getenv("RUN_SEED")
 	runSeed := runSeedStr == "true" || runSeedStr == "1"
 
 	return &Config{
-		Port:            port,
-		DBPath:          dbPath,
-		SessionSecret:   sessionSecret,
-		RunSeed:         runSeed,
-		DefaultOwner:    "owner",
-		DefaultOwnerPwd: "Owner001!",
-		DefaultCounter:  "counter",
+		Port:              port,
+		DBPath:            dbPath,
+		EnableWAL:         enableWAL,
+		SessionSecret:     sessionSecret,
+		RunSeed:           runSeed,
+		DefaultOwner:      "owner",
+		DefaultOwnerPwd:   "Owner001!",
+		DefaultCounter:    "counter",
 		DefaultCounterPwd: "Counter001!",
-		DefaultTech:     "tech",
-		DefaultTechPwd:  "Tech001!",
+		DefaultTech:       "tech",
+		DefaultTechPwd:    "Tech001!",
 	}
 }
 

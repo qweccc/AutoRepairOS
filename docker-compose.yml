@@ -8,10 +8,25 @@ services:
     ports:
       - "8090:8080"
     volumes:
-      - ./data:/app/data
+      # 用 named volume 而非 ./data bind-mount。
+      #
+      # 原因：Windows bind-mount 上 SQLite 會遇到 disk I/O error (4618)。
+      # 除了 WAL 不能用，連既有資料夾也可能被主機上的殘留行程鎖住而讓
+      # 容器完全開不起來（曾發生在 _testbin.exe 持有 DB 時）。
+      # named volume 由 Docker 管理，容器與主機都能穩定存取。
+      #
+      # 資料不在 ./data，查看方式：docker compose exec autorepairos ls -la /app/data
+      # 取回備份：docker compose cp autorepairos:/app/data/autorepair.db ./autorepair.db
+      - autorepairos-data:/app/data
     environment:
       - PORT=8080
-      - DB_PATH=file:/app/data/autorepair.db?_journal_mode=WAL&_busy_timeout=5000
+      # DB_ENABLE_WAL 由 internal/db/db.go 讀取。named volume 可安全使用 WAL，
+      # 但本機開發環境先維持關閉，避免並行寫入時的鎖競爭。
+      - DB_PATH=file:/app/data/autorepair.db?_busy_timeout=5000
+      - DB_ENABLE_WAL=false
       - SESSION_SECRET=autorepair-dev-secret-change-in-production
       - RUN_SEED=true
     restart: unless-stopped
+
+volumes:
+  autorepairos-data:

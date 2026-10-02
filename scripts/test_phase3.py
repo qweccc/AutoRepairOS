@@ -1,6 +1,6 @@
 import urllib.request, urllib.parse, http.cookiejar, re, time
 
-BASE = "http://localhost:8099"
+BASE = "http://localhost:8090"
 PLATE = f"MNT-{int(time.time()) % 100000}"
 
 def sess():
