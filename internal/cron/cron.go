@@ -64,6 +64,12 @@ func nowDBTime() string {
 
 // dedupSince 回傳去重時間界線：現在往前一個排程週期（取最長的間隔）。
 // 用它取代 status='pending' 判斷，可避免已送達的通知在下一輪掃描被重複排入。
+//
+// 格式必須與 notifications.created_at 完全一致。該欄位的 DEFAULT 是
+// CURRENT_TIMESTAMP，寫出來是 SQL datetime（"2026-10-05 06:51:07"），
+// 而 dbTime() 產出 RFC3339（"2026-10-05T06:51:07Z"）。用字串比較時
+// 空格(0x20) < 'T'(0x54)，所以 SQL 格式永遠被判為「早於」RFC3339，
+// 會讓去重條件恆成立、每次掃描都跳過所有車輛。
 func dedupSince() string {
 	interval := 6 * time.Hour
 	for _, t := range registry {
@@ -71,8 +77,11 @@ func dedupSince() string {
 			interval = t.Interval
 		}
 	}
-	return dbTime(time.Now().Add(-interval))
+	return time.Now().Add(-interval).UTC().Format(sqlTimeLayout)
 }
+
+// sqlTimeLayout 與 SQLite CURRENT_TIMESTAMP 相同：YYYY-MM-DD HH:MM:SS (UTC)。
+const sqlTimeLayout = "2006-01-02 15:04:05"
 
 func syncTask(t Task) error {
 	var interval interface{}
@@ -667,7 +676,7 @@ func scanMaintenanceDueInternal() (int, error) {
 		// 造成客戶每 6 小時收到一次重複提醒。因此改為比對最近一次建立時間。
 		var dup int
 		if err := db.DB.QueryRow(`SELECT COUNT(1) FROM notifications
-			WHERE kind='maintenance_due' AND created_at >= ? AND body LIKE ?`,
+			WHERE kind='maintenance_due' AND datetime(created_at) >= datetime(?) AND body LIKE ?`,
 			dedupSince(), "%"+c.plate+"%").Scan(&dup); err != nil {
 			continue
 		}
@@ -712,15 +721,20 @@ func scanWorkOrderReadyInternal() (int, error) {
 	now := time.Now()
 	cutoff := now.Add(-1 * time.Hour)
 
-	// DB 的 created_at 一律以 RFC3339 儲存；比較必須用同一格式，否則字串比對
-	// 會把每個 RFC3339 字串都判為「大於」legacy 字串（'T' > ' '），導致每次都命中。
+	// 篩選條件改在 SQL 內用 datetime() 解析後比較，不做字串比對。
+	//
+	// work_orders.created_at 的 DEFAULT 是 CURRENT_TIMESTAMP，實際寫出來是
+	// SQL datetime（"2026-10-05 06:55:07"）；而這裡若帶入 RFC3339
+	// cutoff，因為 空格(0x20) < 'T'(0x54)，每筆 SQL datetime 都會被判為
+	// 「小於」cutoff，條件恆不成立、掃描永遠找不到工單。
+	// datetime() 兩邊都解析成時間點再比，才不受字面格式影響。
 	rows, err := db.DB.Query(`SELECT wo.id, wo.customer_id, wo.total_amount,
 		COALESCE(c.name,''), COALESCE(c.phone,''), COALESCE(c.notification_preference,'line'),
 		wo.created_at
 		FROM work_orders wo
 		JOIN customers c ON c.id = wo.customer_id
 		WHERE wo.status = 'completed'
-		  AND wo.created_at > ?`, cutoff.Format(dbTimeFormat))
+		  AND datetime(wo.created_at) > datetime(?)`, cutoff.UTC().Format(sqlTimeLayout))
 	if err != nil {
 		return 0, err
 	}

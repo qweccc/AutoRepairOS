@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -11,14 +12,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
 // Client 封裝 LINE Messaging API 的連線與簽名。
 type Client struct {
-	cfg *Config
+	cfg        *Config
 	httpClient *http.Client
-	baseURL string
+	baseURL    string
 }
 
 // NewClient 建立 Client。token 缺失時 cfg.Mock=true，仍回傳可用於 Mock 呼叫的 Client。
@@ -32,14 +34,44 @@ func NewClient(cfg *Config) *Client {
 // --- 簽名驗證（Webhook）---
 
 // VerifyEventSignature 驗證 LINE 送來的 webhook 事件簽名，回傳 (是否合法, 原始內容)。
+//
+// 實測發現 Cloudflare Tunnel 會改寫 X-Line-Signature：LINE 原始送出的是
+// base64(base64url) 編碼的 HMAC，但經過 Cloudflare 後變成 "signature=" + hex，
+// 長度從 54 變成 74。兩種格式都必須接受，否則每一筆合法請求都會被誤判為
+// 不合法，而且 log 只會顯示「簽名不匹配」，難以察覺是編碼差異。
+//
+// 驗證順序：先算 HMAC，再分別以 hex 與 base64 兩種編碼比對，任一相符即通過。
+// 比對用時間安全比較（hmac.Equal）以免洩漏資訊。
 func (c *Client) VerifyEventSignature(rawBody []byte, signature string) (bool, []byte) {
 	if c.cfg.ChannelID == "" || c.cfg.ChannelSecret == "" {
 		return false, rawBody
 	}
-	h := hmac.New(sha256.New, []byte(c.cfg.ChannelSecret))
-	h.Write(rawBody)
-	expected := "signature=" + hex.EncodeToString(h.Sum(nil))
-	return hmac.Equal([]byte(signature), []byte(expected)), rawBody
+
+	sig := strings.TrimSpace(signature)
+	sig = strings.TrimPrefix(sig, "signature=")
+	if sig == "" {
+		return false, rawBody
+	}
+
+	mac := hmac.New(sha256.New, []byte(c.cfg.ChannelSecret))
+	mac.Write(rawBody)
+	sum := mac.Sum(nil)
+
+	// 格式一：hex（長度 64）
+	if hmac.Equal([]byte(sig), []byte(hex.EncodeToString(sum))) {
+		return true, rawBody
+	}
+
+	// 格式二：base64（長度 44，含 = 結尾）與 base64url（- _ 替換）
+	for _, enc := range []*base64.Encoding{
+		base64.StdEncoding, base64.URLEncoding, base64.RawStdEncoding, base64.RawURLEncoding,
+	} {
+		if hmac.Equal([]byte(sig), []byte(enc.EncodeToString(sum))) {
+			return true, rawBody
+		}
+	}
+
+	return false, rawBody
 }
 
 // --- HTTP 工具 ---
@@ -81,7 +113,7 @@ func (c *Client) PushMessage(userID, text string) error {
 		return c.mock(func() error { return mockPushLog(userID, text) })
 	}
 	payload := map[string]interface{}{
-		"to": userID,
+		"to":         userID,
 		"replyToken": "",
 		"messages": []map[string]interface{}{
 			{"type": "text", "text": text},
@@ -136,7 +168,7 @@ func (c *Client) SendFlexMessage(userID string, title, text string, items []Item
 			"tag":  "fill",
 			"spec": map[string]interface{}{
 				"layout": map[string]interface{}{
-					"type": "VBOX",
+					"type":     "VBOX",
 					"contents": flexRows(items),
 				},
 			},
@@ -152,9 +184,9 @@ func (c *Client) SendFlexMessage(userID string, title, text string, items []Item
 							"type": "text",
 							"tag":  "fill",
 							"spec": map[string]interface{}{
-								"text": "總計：" + money(total),
-								"color": "#008527",
-								"size": "md",
+								"text":   "總計：" + money(total),
+								"color":  "#008527",
+								"size":   "md",
 								"weight": "bold",
 							},
 						},
@@ -236,7 +268,7 @@ func mockReplyLog(replyToken string, text string) error {
 
 // ItemLine 推播估價單的一行明細。
 type ItemLine struct {
-	Desc string
+	Desc  string
 	Total float64
 }
 

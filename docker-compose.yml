@@ -5,10 +5,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8090:8080"
-    # .env 放憑證（LINE token/secret 等），已被 .gitignore 排除，不進版控。
-    # .env.example 是可進版控的範本，複製成 .env 後填值即可。
-    # required: false —— 沒有 .env 也能啟動，此時 LINE 自動進入 MOCK 模式
-    #（只記錄不外送），方便先跑其他功能。
+    # ===== 憑證用 .env（已 .gitignore 排除，不進版控）=====
+    # 1) 建一個 .env.example 放範例（可進版控）：
+    #    LINE_CHANNEL_ID=你的 Channel ID
+    #    LINE_CHANNEL_SECRET=你的 Channel Secret
+    #    LINE_CHANNEL_TOKEN=你的 long-lived Channel Access Token
+    # 2) 複製成 .env 再填真值：cp .env.example .env
+    # 3) 三欄全空 → LINE 自動 MOCK 模式（只記錄不外送）。
+    # required: false —— 沒有 .env 也能啟動。
     env_file:
       - path: .env
         required: false
@@ -31,6 +35,12 @@ services:
       - DB_ENABLE_WAL=false
       - SESSION_SECRET=autorepair-dev-secret-change-in-production
       - RUN_SEED=true
+
+      # ===== LINE webhook（要對外推播才解開，先留註解）=====
+      # LINE_CHANNEL_ID=<你的 Channel ID      例: channel-xxxxxxxxxxxxxxxx>
+      # LINE_CHANNEL_SECRET=<你的 Channel Secret 例: f5e3d0...>
+      # LINE_CHANNEL_TOKEN=<long-lived token    例: 7xxxx...>
+      # LINE_BASE_URL=<預設官方, 不用改 例: https://api.line.me>
     restart: unless-stopped
 
 volumes:

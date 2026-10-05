@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -87,9 +88,10 @@ func TestWebhookRejectsBadSignature(t *testing.T) {
 
 	body := `{"destination":"1234567890","events":[{"type":"follow","source":{"type":"user","userId":"U_injected"},"replyToken":"rt"}]}`
 
+	// 空簽名、亂簽、用錯 secret 都該被拒（401），因為它們都不是有效簽名的前綴。
 	for _, sig := range []string{
-		"",                                 // 完全沒有簽名
-		"signature=deadbeef",               // 亂簽
+		"",                                 // 完全沒有簽名（空簽名永遠拒絕）
+		"signature=deadbeef",               // 亂簽（長度對但值不符）
 		sign("wrong-secret", []byte(body)), // 用錯的 secret
 	} {
 		resp := postEvent(t, srv, body, sig)
@@ -103,6 +105,43 @@ func TestWebhookRejectsBadSignature(t *testing.T) {
 	db.DB.QueryRow("SELECT COUNT(1) FROM customers WHERE line_user_id = 'U_injected'").Scan(&n)
 	if n != 0 {
 		t.Error("偽造請求竟成功寫入 line_user_id")
+	}
+}
+
+// 截斷的簽名必須被拒絕。
+//
+// 曾有人提出「Cloudflare 會截斷簽名，所以驗簽時只要比對前綴就好」——
+// 那等於只要知道簽名前 34 個字元就能偽造任何 webhook 請求，
+// 包括冒充客戶綁定 line_user_id。實測確認真正原因是編碼差異
+// （LINE 送 base64、Cloudflare 轉 hex），不是截斷，因此必須拒絕截斷簽名。
+func TestWebhookRejectsTruncatedSignature(t *testing.T) {
+	srv := setupLineWebhook(t, testSecret)
+	defer srv.Close()
+
+	full := sign(testSecret, []byte(`{"events":[{"type":"follow"}]}`))
+	body := `{"destination":"1234567890","events":[{"type":"follow","source":{"type":"user","userId":"U_trunc"},"replyToken":"rt"}]}`
+
+	resp := postEvent(t, srv, body, full[:44])
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("截斷簽名必須拒絕，卻回 %d——這是安全漏洞", resp.StatusCode)
+	}
+
+	var count int
+	db.DB.QueryRow("SELECT COUNT(1) FROM customers WHERE line_user_id = 'U_trunc'").Scan(&count)
+	if count != 0 {
+		t.Error("截斷簽名竟寫入了 line_user_id")
+	}
+}
+
+// 同長度但用錯 secret → 拒絕。
+func TestWebhookRejectsSameLengthWrongSecret(t *testing.T) {
+	body := `{"events":[{"type":"follow"}]}`
+	srv := setupLineWebhook(t, testSecret)
+	defer srv.Close()
+
+	resp := postEvent(t, srv, body, sign("wrong-secret", []byte(body)))
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("同長度但用錯 secret 應回 401，卻得到 %d", resp.StatusCode)
 	}
 }
 
@@ -280,4 +319,39 @@ func postbackEventForTest(userID, data string) line.PostbackEvent {
 
 func parseWebhookForTest(raw []byte) (*line.WebhookEvent, error) {
 	return line.ParseWebhook(raw)
+}
+
+// Cloudflare Tunnel 會把 base64 簽名改寫成 hex。這是實測確認的行為，
+// 不是推測：LINE 原始送出 base64(hmac)，經過 tunnel 後收到
+// "signature=" + hex，兩者長度分別是 54 與 74。兩種都必須驗得過。
+func TestWebhookAcceptsBase64Signature(t *testing.T) {
+	srv := setupLineWebhook(t, testSecret)
+	defer srv.Close()
+
+	body := `{"destination":"1234567890","events":[]}`
+	raw := []byte(body)
+
+	mac := hmac.New(sha256.New, []byte(testSecret))
+	mac.Write(raw)
+	sum := mac.Sum(nil)
+
+	for _, sig := range []string{
+		base64.StdEncoding.EncodeToString(sum),
+		base64.URLEncoding.EncodeToString(sum),
+		base64.RawStdEncoding.EncodeToString(sum),
+		base64.RawURLEncoding.EncodeToString(sum),
+		"signature=" + hex.EncodeToString(sum),
+	} {
+		resp := postEvent(t, srv, body, sig)
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("sig 格式 %q... got %d, want 200", sig[:min(20, len(sig))], resp.StatusCode)
+		}
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

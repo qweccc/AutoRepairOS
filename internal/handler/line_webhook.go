@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -52,10 +56,20 @@ func LineWebhook(w http.ResponseWriter, r *http.Request) {
 	signature := r.Header.Get("X-Line-Signature")
 	valid, _ := client.VerifyEventSignature(raw, signature)
 	if !valid {
-		log_line("webhook 簽名驗證失敗（可能是不合法的請求）")
+		// 診斷：記錄收到哪些 header。Cloudflare 的 WAF 或 bot 保護有可能把
+		// X-Line-Signature 移除或改寫，導致 LINE 的合法請求也被拒。
+		// 只記 header 名稱與長度，不記內容（簽名本身是機密）。
+		names := make([]string, 0, len(r.Header))
+		for k, v := range r.Header {
+			names = append(names, fmt.Sprintf("%s(len=%d)", k, len(v)))
+		}
+		sort.Strings(names)
+		log_line("webhook 驗簽失敗：%s 來源=%s UA=%q headers=[%s]",
+			signaturePrefix(signature), clientIP(r), r.UserAgent(), strings.Join(names, " "))
 		http.Error(w, "invalid signature", http.StatusUnauthorized)
 		return
 	}
+	log_line("webhook 簽名驗證通過：來源=%s 事件數=%d", clientIP(r), bytes.Count(raw, []byte(`"type"`)))
 
 	event, err := line.ParseWebhook(raw)
 	if err != nil {
@@ -129,9 +143,12 @@ func bindLineUser(lineUserID string) {
 	//
 	// 這裡採保守做法：記錄成一筆「待綁定」訊息，由櫃檯在 UI 處理。
 	log_line("收到新的 LINE user %s（尚未對應客戶，需手動綁定）", lineUserID)
+	// channel 用 internal：這筆是給櫃檯看的待辦，不是要外送給客戶的訊息。
+	// 若標成 line，會被通知佇列處理器撿走嘗試推送，而 customer_id 是 NULL
+	// 沒有收件者，結果一律標成 failed，反而淹沒真正的外送失敗紀錄。
 	db.MustExec(`INSERT INTO notifications
 		(customer_id, channel, kind, subject, body, scheduled_at, status)
-		VALUES (NULL, 'line', 'line_follow', '新的 LINE 好友',
+		VALUES (NULL, 'internal', 'line_follow', '新的 LINE 好友',
 			?, CURRENT_TIMESTAMP, 'pending')`,
 		"LINE user ID: "+lineUserID+" — 請於客戶頁填入對應客戶")
 }
@@ -212,6 +229,56 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 	default:
 		return "您好，請輸入「進度」查詢車輛狀態，或「工單 編號」查指定工單。"
 	}
+}
+
+// clientIP 取真實來源 IP。Cloudflare Tunnel 會把原始 IP 放在
+// Cf-Connecting-Ip，而 X-Forwarded-For 開頭那一段是 Cloudflare 自己。
+func clientIP(r *http.Request) string {
+	if ip := r.Header.Get("Cf-Connecting-Ip"); ip != "" {
+		return "cf:" + ip
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
+// signaturePrefix 取簽名的前綴用於診斷：去掉 "signature=" 後取前 12 字元。
+// 只輸出前綴，避免完整 MAC 進入 log。
+func signaturePrefix(sig string) string {
+	s := strings.TrimPrefix(sig, "signature=")
+	if len(s) > 12 {
+		return s[:12] + "..."
+	}
+	return s
+}
+
+// bodyFingerprint 判斷收到的 body 是 JSON 還是可能被解壓/重組過。
+func bodyFingerprint(raw []byte) string {
+	s := strings.TrimSpace(string(raw))
+	switch {
+	case len(s) == 0:
+		return "空"
+	case s[0] == '{' && s[len(s)-1] == '}':
+		return "完整JSON物件"
+	case s[0] == '{':
+		return "疑似截斷的JSON"
+	case s[0] == '[':
+		return "JSON陣列"
+	case !json.Valid(raw):
+		return "非合法JSON"
+	default:
+		return "其他"
+	}
+}
+
+// headStr 取 body 前 n 字元，供比對是否被中間層改寫。
+func headStr(raw []byte, n int) string {
+	if len(raw) > n {
+		return string(raw[:n]) + "..."
+	}
+	return string(raw)
 }
 
 func welcomeMessage() string {
