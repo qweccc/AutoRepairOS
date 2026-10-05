@@ -14,6 +14,7 @@ import (
 
 	"autorepairos/internal/config"
 	"autorepairos/internal/db"
+	"autorepairos/internal/integration/line"
 )
 
 // --- 內建任務註冊表 ---
@@ -297,45 +298,97 @@ func ProcessNotificationsNow() int {
 }
 
 func processPendingNotifications() (int, error) {
-	rows, err := db.DB.Query(`SELECT id, COALESCE(customer_id,0), channel, body
-		FROM notifications WHERE status='pending' AND scheduled_at <= ?
-		ORDER BY scheduled_at LIMIT 50`, nowDBTime())
+	rows, err := db.DB.Query(`SELECT n.id, COALESCE(n.customer_id,0), n.channel, n.kind,
+			COALESCE(n.subject,''), n.body, COALESCE(n.work_order_id,0),
+			COALESCE(c.line_user_id,'')
+		FROM notifications n
+		LEFT JOIN customers c ON c.id = n.customer_id
+		WHERE n.status='pending' AND n.scheduled_at <= ?
+		ORDER BY n.scheduled_at LIMIT 50`, nowDBTime())
 	if err != nil {
 		return 0, err
 	}
 
 	type item struct {
-		id      int64
-		custID  int64
-		channel string
-		body    string
+		id, custID, workOrderID int64
+		channel, kind, subject  string
+		body, lineUserID        string
 	}
 	var items []item
 	for rows.Next() {
 		var it item
-		if err := rows.Scan(&it.id, &it.custID, &it.channel, &it.body); err != nil {
+		// Scan 的目標數必須與 SELECT 欄位数完全一致；不一致時 Scan 會回錯，
+		// 而原本的 `continue` 會把整列靜默丟棄，結果是「查得到但一筆都沒處理」。
+		if err := rows.Scan(&it.id, &it.custID, &it.channel, &it.kind,
+			&it.subject, &it.body, &it.workOrderID, &it.lineUserID); err != nil {
+			log.Printf("通知 #%d 欄位掃描失敗，放棄處理: %v", it.id, err)
 			continue
 		}
 		items = append(items, it)
 	}
 	rows.Close()
 
+	cfg, client := line.Shared()
+
+	var sent, failed int
 	for _, it := range items {
-		// channel=internal 或 line/sms 未接整合時，標記為 sent 讓佇列不阻塞，
-		// 實際外送由 integration 層接管（Phase 4 LINE）
 		switch it.channel {
-		case "internal", "none", "line", "sms":
-			db.MustExec(`UPDATE notifications SET status='sent', sent_at=CURRENT_TIMESTAMP WHERE id=?`, it.id)
+		case "internal", "none":
+			// 不外送，直接標記完成，讓佇列不阻塞。
+			markSent(it.id)
+			sent++
+
+		case "line", "sms":
+			// 沒有綁定 LINE user ID 就無法推播，標記失敗並記錄原因，
+			// 不要靜默標成已送——否則 UI 會顯示「已送達」但客戶根本沒收到。
+			if it.lineUserID == "" {
+				markFailed(it.id, "客戶未綁定 LINE user ID")
+				failed++
+				continue
+			}
+			if err := deliver(cfg, client, it); err != nil {
+				markFailed(it.id, err.Error())
+				failed++
+				continue
+			}
+			markSent(it.id)
+			sent++
+
 		default:
-			db.MustExec(`UPDATE notifications SET status='failed', retry_count=retry_count+1,
-				error_message='不支援的通知通道' WHERE id=?`, it.id)
+			markFailed(it.id, "不支援的通知通道: "+it.channel)
+			failed++
 		}
 	}
 
 	if len(items) > 0 {
-		log.Printf("處理 %d 筆通知", len(items))
+		log.Printf("處理 %d 筆通知：送達 %d、失敗 %d", len(items), sent, failed)
 	}
 	return len(items), nil
+}
+
+// deliver 實際外送一則通知。LINE 未設定憑證時由 client 進入 MOCK，只記錄不外送。
+func deliver(cfg *line.Config, client *line.Client, it struct {
+	id, custID, workOrderID int64
+	channel, kind, subject  string
+	body, lineUserID        string
+}) error {
+	// SMS 通道尚未接電信商商；LINE 已接。SMS 改走 LINE 推播並在訊息標註，
+	// 避免整筆失敗造成佇列堆積。真正接 SMS 時應拆成獨立分支。
+	if it.channel == "sms" && !cfg.Ready() {
+		return fmt.Errorf("SMS 通道尚未整合，且 LINE 未設定憑證")
+	}
+	return client.PushMessage(it.lineUserID, it.body)
+}
+
+func markSent(id int64) {
+	db.MustExec(`UPDATE notifications SET status='sent', sent_at=CURRENT_TIMESTAMP,
+		error_message=NULL WHERE id=?`, id)
+}
+
+func markFailed(id int64, reason string) {
+	// retry_count 上限 5 次，避免無限重試。
+	db.MustExec(`UPDATE notifications SET status='failed', retry_count=retry_count+1,
+		error_message=? WHERE id=?`, reason, id)
 }
 
 // --- 每日備份 ---

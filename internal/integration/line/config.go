@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 )
 
 // Config 為 LINE Messaging API 連線設定，全部從環境變數讀取，不寫死。
@@ -63,3 +64,55 @@ func (c *Config) Valid() bool {
 func ErrUnconfigured() error {
 	return fmt.Errorf("LINE integration not configured: set LINE_CHANNEL_ID, LINE_CHANNEL_SECRET, LINE_CHANNEL_TOKEN")
 }
+
+// Missing 列出缺少的環境變數名稱（不含值），供 UI 顯示設定指引。
+func (c *Config) Missing() []string {
+	var out []string
+	if c.ChannelID == "" {
+		out = append(out, "LINE_CHANNEL_ID")
+	}
+	if c.ChannelSecret == "" {
+		out = append(out, "LINE_CHANNEL_SECRET")
+	}
+	if c.ChannelAccessToken == "" {
+		out = append(out, "LINE_CHANNEL_TOKEN")
+	}
+	return out
+}
+
+// --- 共享 client ---
+
+var (
+	sharedOnce   sync.Once
+	sharedCfg    *Config
+	sharedClient *Client
+)
+
+// Shared 回傳全域共用的 Config 與 Client。
+// 排程器與 HTTP handler 都用同一份，避免重複建立與連線。
+func Shared() (*Config, *Client) {
+	sharedOnce.Do(func() {
+		cfg, _ := Load()
+		sharedCfg = cfg
+		sharedClient = NewClient(cfg)
+	})
+	return sharedCfg, sharedClient
+}
+
+// StatusLine 產生給 UI 顯示的一行狀態說明，不洩漏憑證內容。
+func (c *Config) StatusLine() string {
+	if c.Mock {
+		missing := c.Missing()
+		if len(missing) > 0 {
+			return "MOCK 模式（未設定：" + strings.Join(missing, ", ") + "）— 通知只記錄不外送"
+		}
+		return "MOCK 模式 — 通知只記錄不外送"
+	}
+	if !c.Valid() {
+		return "憑證不完整（缺少：" + strings.Join(c.Missing(), ", ") + "）— 通知會失敗"
+	}
+	return "已連線（Channel " + c.ChannelID + "）"
+}
+
+// Ready 表示可以實際外送。
+func (c *Config) Ready() bool { return !c.Mock && c.Valid() }

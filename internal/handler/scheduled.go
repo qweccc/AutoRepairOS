@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
+	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
 )
 
@@ -43,6 +44,15 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 	// 通知紀錄：同時顯示待處理（可取消）與近期歷史（含已送達/已取消）
 	pending := cron.PendingNotifications(50)
 	recent := cron.RecentNotifications(50)
+
+	// LINE 連線狀態：讓管理者一眼看出通知是否真的會外送。
+	lineCfg, _ := line.Shared()
+	linePill := "p-pending"
+	if lineCfg.Ready() {
+		linePill = "p-completed"
+	} else if !lineCfg.Mock {
+		linePill = "p-apprno"
+	}
 
 	kindLabels := map[string]string{
 		"maintenance_due":   "保養到期",
@@ -145,9 +155,12 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 
     <div class="card">
       <h2>通知紀錄</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-        LINE/SMS 通道已預留，實際外送待 Phase 4 整合；目前標記為已送達以避免佇列堆積。
+      <p style="color:#64748b;font-size:12.5px;margin:0 0 6px">
         待處理 ` + strconv.Itoa(len(pending)) + ` 筆，全部 ` + strconv.Itoa(len(recent)) + ` 筆。
+      </p>
+      <p style="font-size:12.5px;margin:0 0 14px">
+        <span class="pill ` + linePill + `">LINE</span>
+        <span style="color:#94a3b8">` + htmlEsc(lineCfg.StatusLine()) + `</span>
       </p>` + notifTable + `
     </div>
 
