@@ -99,6 +99,15 @@ func Shared() (*Config, *Client) {
 	return sharedCfg, sharedClient
 }
 
+// ResetSharedForTest 清除 Shared 的快取，讓下一個呼叫重新讀取環境變數。
+// 僅供測試使用：同一個行程內要模擬不同憑證組合時必須能重載。
+// 正式環境不應呼叫——設定在啟動時讀一次即可，改用環境變數即時切換語意。
+func ResetSharedForTest() {
+	sharedOnce = sync.Once{}
+	sharedCfg = nil
+	sharedClient = nil
+}
+
 // StatusLine 產生給 UI 顯示的一行狀態說明，不洩漏憑證內容。
 func (c *Config) StatusLine() string {
 	if c.Mock {

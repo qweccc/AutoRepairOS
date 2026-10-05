@@ -37,6 +37,10 @@ func main() {
 	mux.HandleFunc("GET /logout", handler.LogoutHandler)
 	mux.HandleFunc("GET /api/me", handler.MeHandler)
 
+	// LINE webhook：不用登入，靠 X-Line-Signature 驗簽。
+	// 網址需經 Cloudflare Tunnel 對外公開，例如 https://<hostname>/webhook/line
+	mux.HandleFunc("POST /webhook/line", handler.LineWebhook)
+
 	// 總覽
 	mux.HandleFunc("GET /{$}", handler.AllStaff(handler.IndexHandler))
 
@@ -61,6 +65,7 @@ func main() {
 
 	// 工單
 	mux.HandleFunc("GET /work-orders", handler.AllStaff(handler.ListWorkOrders))
+	mux.HandleFunc("GET /work-orders/new", handler.CounterUpPage(handler.NewWorkOrder))
 	mux.HandleFunc("POST /work-orders", handler.CounterUp(handler.CreateWorkOrder))
 	mux.HandleFunc("GET /work-orders/{id}", handler.AllStaff(handler.ShowWorkOrder))
 	mux.HandleFunc("POST /work-orders/{id}/status", handler.CounterUp(handler.UpdateWorkOrderStatus))
