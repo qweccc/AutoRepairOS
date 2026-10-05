@@ -1,0 +1,98 @@
+/* 車輛即時搜尋選擇器樣式（搭配 vehicle-search.js） */
+
+.vsearch {
+  position: relative;
+}
+
+.vs-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.vs-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.vsearch.vs-picked .vs-input {
+  border-color: #047857;
+  background: #052e16;
+  color: #86efac;
+}
+
+.vs-list {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 290px;
+  overflow-y: auto;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.vs-list.hidden {
+  display: none;
+}
+
+.vs-opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #263449;
+  color: #e2e8f0;
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.vs-opt:hover {
+  background: #263449;
+}
+
+.vs-opt-on {
+  background: #0c4a6e;
+  color: #7dd3fc;
+  font-weight: 700;
+}
+
+.vs-empty {
+  padding: 18px 14px;
+  color: #fca5a5;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.vs-more {
+  padding: 8px 12px;
+  color: #64748b;
+  font-size: 11.5px;
+  background: #0f172a;
+}
+
+.vs-hint {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* 深色背景下的表格列也不需要額外處理，沿用既有 .btn 樣式 */
+@media print {
+  .vs-list {
+    display: none !important;
+  }
+}

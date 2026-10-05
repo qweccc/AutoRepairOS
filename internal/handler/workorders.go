@@ -11,25 +11,39 @@ import (
 	"autorepairos/internal/model"
 )
 
+// workOrderCols 的欄位順序必須與 scanWorkOrder 的 Scan 目標完全一致。
+// 新增欄位時兩邊都要同步，且順序不可調換——
+// SQLite driver 只比對數量，順序錯了不會報錯而是默默塞錯值。
 const workOrderCols = `wo.id, wo.vehicle_id, wo.customer_id, COALESCE(wo.technician_id,0),
 	COALESCE(v.plate_number,''), COALESCE(v.brand_model,''), COALESCE(c.name,''),
 	COALESCE(c.phone,''), COALESCE(u.name,''), wo.status, wo.current_mileage,
 	COALESCE(wo.customer_complaint,''), wo.approval_status, COALESCE(wo.total_amount,0),
-	COALESCE(wo.sop_completed,0), COALESCE(wo.notes,''), wo.created_at, wo.updated_at`
+	COALESCE(wo.sop_completed,0), COALESCE(wo.notes,''),
+	COALESCE(wo.insurance_company_id,0), COALESCE(ic.name,''),
+	COALESCE(wo.claim_no,''), COALESCE(wo.is_insurance,0),
+	COALESCE(wo.accident_date,''), COALESCE(wo.deductible_amount,0),
+	wo.created_at, wo.updated_at`
 
 func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrder, error) {
 	var wo model.WorkOrder
+	// Scan 目標數（19）必須與 workOrderCols 的欄位數（19）完全一致。
+	var isIns int
 	err := rows.Scan(&wo.ID, &wo.VehicleID, &wo.CustomerID, &wo.TechnicianID,
 		&wo.PlateNumber, &wo.BrandModel, &wo.CustomerName, &wo.CustomerPhone, &wo.TechnicianName,
 		&wo.Status, &wo.CurrentMileage, &wo.CustomerComplaint, &wo.ApprovalStatus,
-		&wo.TotalAmount, &wo.SOPCompleted, &wo.Notes, &wo.CreatedAt, &wo.UpdatedAt)
+		&wo.TotalAmount, &wo.SOPCompleted, &wo.Notes,
+		&wo.InsuranceCompanyID, &wo.InsuranceName, &wo.ClaimNo, &isIns,
+		&wo.AccidentDate, &wo.DeductibleAmount,
+		&wo.CreatedAt, &wo.UpdatedAt)
+	wo.IsInsurance = isIns != 0
 	return wo, err
 }
 
 const workOrderFrom = ` FROM work_orders wo
 	JOIN vehicles v ON v.id = wo.vehicle_id
 	JOIN customers c ON c.id = wo.customer_id
-	LEFT JOIN users u ON u.id = wo.technician_id `
+	LEFT JOIN users u ON u.id = wo.technician_id
+	LEFT JOIN insurance_companies ic ON ic.id = wo.insurance_company_id `
 
 func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	status := r.URL.Query().Get("status")
@@ -93,21 +107,11 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	body := flash(r) + `
     <div class="card">
-      <h2>建立工單</h2>
-      <form class="frm" method="POST" action="/work-orders">
-        <label>車輛<select name="vehicle_id" required>` + vehicleOptions() + `</select></label>
-        <label>技師<select name="technician_id"><option value="0">未指派</option>` + technicianOptions() + `</select></label>
-        <label>進廠里程<input name="current_mileage" type="number" min="0" required></label>
-        <label>需要核准<select name="approval_status">
-          <option value="not_required">不需要</option>
-          <option value="pending">需客戶核准</option>
-        </select></label>
-        <label class="full">客戶反映問題<textarea name="customer_complaint"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">建立工單</button></div>
-      </form>
-    </div>
-    <div class="card">
       <h2>工單列表（` + strconv.Itoa(len(list)) + ` 筆）</h2>
+      <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a class="btn btn-p" href="/work-orders/new">＋ 開立新工單</a>
+        <span style="color:#64748b;font-size:12.5px">（可搜尋車牌 / 車主 / 電話）</span>
+      </div>
       <div style="margin-bottom:12px">` + tabs.String() + `</div>
       <form method="GET" action="/work-orders" style="margin-bottom:12px">
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
@@ -154,12 +158,44 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 		techArg = techID
 	}
 
+	// 保險理賠（CAR35 P0-1）
+	// 保險公司必須是「啟用中」才允許綁定，避免選到已停用的歷史資料。
+	// 前端在保險欄位 disabled 時不會送出 insurance_company_id，
+	// 因此以 _mirror 的 hidden 欄位為準（未勾保險件時 mirror 為空字串）。
+	insID := mustInt(r.FormValue("insurance_company_id_mirror"))
+	if insID == 0 {
+		insID = mustInt(r.FormValue("insurance_company_id"))
+	}
+	if insID > 0 && countRows(
+		"SELECT COUNT(1) FROM insurance_companies WHERE id = ? AND active = 1", insID) == 0 {
+		fail(w, "找不到這家保險公司（或已停用）")
+		return
+	}
+	isIns := 0
+	if mustInt(r.FormValue("is_insurance")) == 1 {
+		isIns = 1
+	}
+	// 勾選保險件卻沒選公司 → 報表無法歸屬，直接擋下讓櫃檯補齊。
+	if isIns == 1 && insID == 0 {
+		fail(w, "請選擇保險公司")
+		return
+	}
+	var insArg interface{}
+	if insID > 0 {
+		insArg = insID
+	}
+	claimNo := strings.TrimSpace(r.FormValue("claim_no"))
+	accidentDate := strings.TrimSpace(r.FormValue("accident_date"))
+	deductible := atofDefault(r.FormValue("deductible_amount"), 0)
+
 	res, err := db.DB.Exec(`INSERT INTO work_orders
 		(vehicle_id, customer_id, technician_id, status, current_mileage,
-		 customer_complaint, approval_status, total_amount, sop_completed)
-		VALUES (?,?,?,'pending',?,?,?,0,0)`,
+		 customer_complaint, approval_status, total_amount, sop_completed,
+		 insurance_company_id, claim_no, is_insurance, accident_date, deductible_amount)
+		VALUES (?,?,?,'pending',?,?,?,0,0,?,?,?,?,?)`,
 		vehicleID, customerID, techArg, mileage,
-		nullStr(r.FormValue("customer_complaint")), approval)
+		nullStr(r.FormValue("customer_complaint")), approval,
+		insArg, nullStr(claimNo), isIns, nullStr(accidentDate), deductible)
 	if err != nil {
 		fail(w, "建立工單失敗")
 		return
@@ -206,6 +242,19 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		itemsTable = `<div class="empty">尚未加入任何工資或零件</div>`
 	}
 
+	// 保險理賠資訊（CAR35 P0-1，對應 Header.Insurance）
+	insuranceRow := ""
+	if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
+		insuranceRow = `<tr><th>件別</th><td><span class="pill p-progress">保險理賠</span></td>
+			<th>保險公司</th><td>` + htmlEsc(orDash(wo.InsuranceName)) + `</td></tr>
+			<tr><th>理賠編號</th><td>` + htmlEsc(orDash(wo.ClaimNo)) + `</td>
+			<th>事故日期</th><td>` + htmlEsc(orDash(wo.AccidentDate)) + `</td></tr>
+			<tr><th>自負額</th><td>` + money(wo.DeductibleAmount) + `</td><th></th><td></td></tr>`
+	} else {
+		insuranceRow = `<tr><th>件別</th><td><span class="pill">自費</span></td>
+			<th></th><td></td></tr>`
+	}
+
 	body := flash(r) + `
     <div class="card">
       <h2>工單 #` + strconv.FormatInt(wo.ID, 10) + ` — ` + htmlEsc(wo.PlateNumber) + `</h2>
@@ -216,6 +265,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
             <th>核准狀態</th><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] + `</span></td></tr>
         <tr><th>客戶反映</th><td colspan="3">` + htmlEsc(orDash(wo.CustomerComplaint)) + `</td></tr>
         <tr><th>SOP</th><td>` + yesNo(wo.SOPCompleted) + `</td><th>建立時間</th><td>` + wo.CreatedAt.Format("2006-01-02 15:04") + `</td></tr>
+        ` + insuranceRow + `
       </table>
       <div style="margin-top:16px">` + statusControls(wo, canEdit) + `
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">

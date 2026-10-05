@@ -81,8 +81,19 @@ type WorkOrder struct {
 	TotalAmount       float64   `json:"total_amount"`
 	SOPCompleted      bool      `json:"sop_completed"`
 	Notes             string    `json:"notes,omitempty"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
+
+	// 保險理賠（CAR35 P0-1，對應 Header.Insurance）
+	// InsuranceCompanyID 與 IsInsurance 分開：車主有保險但本次自費維修很常見，
+	// 且報表要能只篩 is_insurance 而不必 JOIN insurance_companies。
+	InsuranceCompanyID int64   `json:"insurance_company_id,omitempty"`
+	InsuranceName      string  `json:"insurance_name,omitempty"`
+	ClaimNo            string  `json:"claim_no,omitempty"`
+	IsInsurance       bool    `json:"is_insurance"`
+	AccidentDate       string  `json:"accident_date,omitempty"`
+	DeductibleAmount   float64 `json:"deductible_amount"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type WorkOrderItem struct {
