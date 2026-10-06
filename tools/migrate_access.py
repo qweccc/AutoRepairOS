@@ -219,6 +219,27 @@ def convert_roc_date(d):
     return None
 
 
+def add_months(date_str, months):
+    """日期加 N 個月，回傳 YYYY-MM-DD。用於推算下次保養日。
+
+    以純字串運算，不引入 dateutil 依賴。
+    """
+    if not date_str:
+        return None
+    try:
+        y, m, d = (int(x) for x in date_str[:10].replace('/', '-').split('-'))
+    except (ValueError, AttributeError):
+        return None
+    total = y * 12 + (m - 1) + int(months)
+    ny, nm = divmod(total, 12)
+    nm += 1
+    # 處理月底（如 1/31 + 1 個月 → 2/28）
+    import calendar
+    last = calendar.monthrange(ny, nm)[1]
+    nd = min(d, last)
+    return f"{ny:04d}-{nm:02d}-{nd:02d}"
+
+
 # ============================================================
 # 資料提取
 # ============================================================
@@ -375,10 +396,16 @@ class Migrator:
             print("  無 Car 表，跳過")
             return
 
+        # 以工單歷史推算保養基準：最後一張有里程的工單日期/里程最可靠。
+        # 舊系統的 Car.Last Maintain Date 停在 2023 且與工單對不上，
+        # 而工單是實際發生的事實，優先採用。
+        last_by_plate = self._last_maintenance_by_plate()
+
         self.cur.execute("SELECT plate_number FROM vehicles")
         used = {r[0] for r in self.cur.fetchall()}
 
         rows = []
+        from_orders = 0
         for i in range(len(t['No'])):
             plate = clean_str(col(t, 'No', i))
             if not plate or plate in used:
@@ -393,6 +420,24 @@ class Migrator:
             brand = clean_str(col(t, 'OEM No', i))
             brand_model = model or brand or '未登錄'
 
+            # 保養基準：工單歷史優先，退回舊系統的 Last Maintain Date / Last Mileage
+            base_date = None
+            base_mileage = None
+            if plate in last_by_plate:
+                base_date, base_mileage = last_by_plate[plate]
+                from_orders += 1
+            if not base_date:
+                base_date = convert_roc_date(col(t, 'Last Maintain Date', i))
+            if not base_mileage:
+                lm = clean_int(col(t, 'Last Mileage', i))
+                base_mileage = lm if lm > 0 else None
+
+            # 保養間隔：舊系統 Maintain Month 幾乎全空，有值就用，否則用預設 6 個月
+            months = clean_int(col(t, 'Maintain Month', i)) or 6
+            if months <= 0 or months > 60:
+                months = 6
+            km = 5000
+
             rows.append((
                 cid,                                            # customer_id
                 plate,                                          # plate_number (UNIQUE)
@@ -401,27 +446,100 @@ class Migrator:
                 clean_str(col(t, 'Body No', i)),                # vin
                 clean_str(col(t, 'Engine No', i)),              # engine_number
                 convert_roc_date(col(t, 'Vaild Date', i)),      # inspection_due_date
-                convert_roc_date(col(t, 'Order Maintain Date', i)),  # next_maintenance_date
-                clean_int(col(t, 'Last Mileage', i)) or None,   # next_maintenance_mileage
+                None,                                           # next_maintenance_date（稍後由基準推算）
+                None,                                           # next_maintenance_mileage
+                base_date,                                      # last_maintenance_date
+                base_mileage,                                   # last_maintenance_mileage
+                months,                                         # next_maintenance_interval_months
+                km,                                             # next_maintenance_interval_km
             ))
             used.add(plate)
 
         if self.dry_run:
-            print(f"  [DRY-RUN] 將新增 {len(rows)} 筆車輛")
+            print(f"  [DRY-RUN] 將新增 {len(rows)} 筆車輛（{from_orders} 台有工單保養基準）")
         else:
             self.cur.executemany("""
                 INSERT INTO vehicles
                   (customer_id, plate_number, brand_model, manufacture_year, vin,
                    engine_number, inspection_due_date, next_maintenance_date,
-                   next_maintenance_mileage)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   next_maintenance_mileage, last_maintenance_date,
+                   last_maintenance_mileage, next_maintenance_interval_months,
+                   next_maintenance_interval_km)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, rows)
             self.conn.commit()
-            print(f"  新增 {len(rows)} 筆車輛")
+            print(f"  新增 {len(rows)} 筆車輛（{from_orders} 台以工單歷史為保養基準）")
+            self._derive_next_maintenance()
 
         self.cur.execute("SELECT id, plate_number FROM vehicles")
         self.veh_id = {r[1]: r[0] for r in self.cur.fetchall()}
         self.stats['vehicles'] = len(rows)
+
+    def _last_maintenance_by_plate(self):
+        """從工單歷史取每台車最後一次保養的（日期, 里程）。
+
+        只採計有里程紀錄的工單 —— 沒里程的工單無法推算下次保養里程。
+        """
+        mh = self.data.get('Maintain Header')
+        car = self.data.get('Car')
+        if not mh or not car:
+            return {}
+
+        # Car No → 車牌（mh 用 Car No 參照 Car 表）
+        no_to_plate = {}
+        for i in range(len(car['No'])):
+            no_to_plate[clean_str(col(car, 'No', i))] = clean_str(col(car, 'No', i))
+
+        best = {}   # plate → (date, mileage)
+        for i in range(len(mh['No'])):
+            plate = clean_str(col(mh, 'Car No', i))
+            if not plate:
+                continue
+            mileage = clean_int(col(mh, 'Mileage', i))
+            if mileage <= 0:
+                continue
+            date = convert_roc_date(col(mh, 'Date', i))
+            if not date:
+                continue
+            cur_best = best.get(plate)
+            # 取日期最新的；同日期取里程較大者
+            if (cur_best is None or date > cur_best[0]
+                    or (date == cur_best[0] and mileage > cur_best[1])):
+                best[plate] = (date, mileage)
+        return best
+
+    def _derive_next_maintenance(self):
+        """由「最後保養基準 + 間隔」推算下次保養日期與里程。
+
+        下次保養日期 = 最後保養日 + 間隔月數
+        下次保養里程 = 最後保養里程 + 間隔公里數
+        （舊系統的 Order Maintain Date 只有 24 筆有值，無法直接用）
+        """
+        rows = self.cur.execute("""
+            SELECT id, last_maintenance_date, last_maintenance_mileage,
+                   next_maintenance_interval_months, next_maintenance_interval_km
+            FROM vehicles
+            WHERE COALESCE(last_maintenance_date,'') <> ''
+               OR COALESCE(last_maintenance_mileage,0) > 0
+        """).fetchall()
+
+        updates = []
+        for vid, base_date, base_km, months, km in rows:
+            next_date = None
+            if base_date:
+                next_date = add_months(base_date, months or 6)
+            next_km = None
+            if base_km and base_km > 0:
+                next_km = base_km + (km or 5000)
+            if next_date or next_km:
+                updates.append((next_date, next_km, vid))
+
+        if updates:
+            self.cur.executemany(
+                "UPDATE vehicles SET next_maintenance_date=?, next_maintenance_mileage=? WHERE id=?",
+                updates)
+            self.conn.commit()
+        print(f"  推算下次保養: {len(updates)} 台")
 
     # ---------- 3. 廠商 ----------
     def migrate_suppliers(self):

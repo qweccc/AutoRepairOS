@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -13,14 +14,89 @@ import (
 const vehicleCols = `v.id, v.customer_id, COALESCE(c.name,''), v.plate_number, v.brand_model,
 	COALESCE(v.manufacture_year,0), COALESCE(v.vin,''), COALESCE(v.engine_number,''),
 	COALESCE(v.inspection_due_date,''), COALESCE(v.next_maintenance_date,''),
-	COALESCE(v.next_maintenance_mileage,0)`
+	COALESCE(v.next_maintenance_mileage,0),
+	COALESCE(v.last_maintenance_date,''), COALESCE(v.last_maintenance_mileage,0),
+	COALESCE(v.next_maintenance_interval_months,6), COALESCE(v.next_maintenance_interval_km,5000)`
 
 func scanVehicle(rows interface{ Scan(...interface{}) error }) (model.Vehicle, error) {
 	var v model.Vehicle
 	err := rows.Scan(&v.ID, &v.CustomerID, &v.CustomerName, &v.PlateNumber, &v.BrandModel,
 		&v.ManufactureYear, &v.VIN, &v.EngineNumber, &v.InspectionDueDate,
-		&v.NextMaintenanceDate, &v.NextMaintenanceMileage)
+		&v.NextMaintenanceDate, &v.NextMaintenanceMileage,
+		&v.LastMaintenanceDate, &v.LastMaintenanceMileage,
+		&v.MaintIntervalMonths, &v.MaintIntervalKm)
 	return v, err
+}
+
+// normDate 把舊資料的 '2016/02/22' 轉成 HTML date input 要的 '2016-02-22'。
+func normDate(s string) string {
+	s = strings.TrimSpace(s)
+	if len(s) >= 10 {
+		s = s[:10]
+	}
+	return strings.ReplaceAll(s, "/", "-")
+}
+
+// intOrBlank 0 顯示為空字串（表單留白比填 0 清楚）。
+func intOrBlank(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	return strconv.Itoa(n)
+}
+
+// lastMileageOf 該車工單紀錄中的最大里程（用來算「距下次保養還差多少」）。
+func lastMileageOf(vehicleID int64) int {
+	var km int
+	db.DB.QueryRow(`SELECT COALESCE(MAX(current_mileage),0) FROM work_orders
+		WHERE vehicle_id = ?`, vehicleID).Scan(&km)
+	return km
+}
+
+// maintDueText 保養到期顯示：日期與里程分開兩欄，各自標示是否已到。
+//
+// 為什麼要分開：保養是兩條獨立觸發條件 —— 里程到（車跑得多）或日期到
+// （車少跑）。舊版併成一個字串「2026-04-01 / 5500km」，看不出哪個先到，
+// 也無法判斷是否已逾期。
+func maintDueText(v model.Vehicle, currentMileage int) (string, string) {
+	dateCell := `<span style="color:#64748b">-</span>`
+	if v.NextMaintenanceDate != "" {
+		d := v.NextMaintenanceDate
+		if len(d) > 10 {
+			d = d[:10]
+		}
+		if t, err := time.Parse("2006-01-02", d); err == nil {
+			days := int(time.Until(t).Hours() / 24)
+			switch {
+			case days < 0:
+				dateCell = `<b style="color:#f87171">` + d + ` 逾期` + strconv.Itoa(-days) + `天</b>`
+			case days <= 14:
+				dateCell = `<b style="color:#fde68a">` + d + ` 剩` + strconv.Itoa(days) + `天</b>`
+			default:
+				dateCell = d
+			}
+		} else {
+			dateCell = d
+		}
+	}
+
+	kmCell := `<span style="color:#64748b">-</span>`
+	if v.NextMaintenanceMileage > 0 {
+		if currentMileage > 0 {
+			remain := v.NextMaintenanceMileage - currentMileage
+			switch {
+			case remain < 0:
+				kmCell = `<b style="color:#f87171">` + strconv.Itoa(v.NextMaintenanceMileage) + `km 已超過 ` + strconv.Itoa(-remain) + `</b>`
+			case remain <= 1000:
+				kmCell = `<b style="color:#fde68a">` + strconv.Itoa(v.NextMaintenanceMileage) + `km 剩 ` + strconv.Itoa(remain) + `</b>`
+			default:
+				kmCell = strconv.Itoa(v.NextMaintenanceMileage) + "km"
+			}
+		} else {
+			kmCell = strconv.Itoa(v.NextMaintenanceMileage) + "km"
+		}
+	}
+	return dateCell, kmCell
 }
 
 func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
@@ -67,15 +143,15 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>年份</th><th>VIN</th><th>業主</th><th>下次保養</th><th>操作</th></tr>`)
+	tb.WriteString(`<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>年份</th><th>業主</th>` +
+		`<th>下次保養日</th><th>下次保養里程</th><th>操作</th></tr>`)
 	for _, v := range list {
-		nextMaint := dateText(v.NextMaintenanceDate)
-		if v.NextMaintenanceMileage > 0 {
-			nextMaint += " / " + strconv.Itoa(v.NextMaintenanceMileage) + "km"
-		}
+		// 最近里程：抓該車工單的最大里程，才能算「還差多少公里」
+		curKm := lastMileageOf(v.ID)
+		dateCell, kmCell := maintDueText(v, curKm)
 		tb.WriteString(`<tr><td>` + strconv.FormatInt(v.ID, 10) + `</td><td><b>` + htmlEsc(v.PlateNumber) + `</b></td><td>` +
-			htmlEsc(v.BrandModel) + `</td><td>` + yearText(v.ManufactureYear) + `</td><td>` + htmlEsc(v.VIN) + `</td><td>` +
-			htmlEsc(v.CustomerName) + `</td><td>` + htmlEsc(nextMaint) + `</td><td>` +
+			htmlEsc(v.BrandModel) + `</td><td>` + yearText(v.ManufactureYear) + `</td><td>` +
+			htmlEsc(v.CustomerName) + `</td><td>` + dateCell + `</td><td>` + kmCell + `</td><td>` +
 			`<a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">開工單</a> ` +
 			`<a class="btn btn-o" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `">履歷</a> ` +
 			`<a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯</a> ` +
@@ -104,8 +180,8 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>VIN<input name="vin"></label>
         <label>引擎號碼<input name="engine_number"></label>
         <label>檢驗到期日<input name="inspection_due_date" type="date"></label>
-        <label>下次保養日期<input name="next_maintenance_date" type="date"></label>
-        <label>下次保養里程<input name="next_maintenance_mileage" type="number" min="0"></label>
+        <label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value="6"></label>
+        <label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="5000"></label>
         <div class="full"><button class="btn btn-p" type="submit">建立車輛</button></div>
       </form>
     </div>
@@ -233,6 +309,10 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
+	// 保養狀態：日期與里程分開兩列，各自標示是否已到
+	curKm := lastMileageOf(v.ID)
+	dateCell, kmCell := maintDueText(v, curKm)
+
 	body := `
     <div class="card">
       <h2>` + htmlEsc(v.PlateNumber) + ` — ` + htmlEsc(v.BrandModel) + `</h2>
@@ -240,7 +320,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
         <div class="stat"><b>` + strconv.Itoa(orderCount) + `</b><span>維修次數</span></div>
         <div class="stat"><b>` + money(totalSpent) + `</b><span>累計消費</span></div>
         <div class="stat"><b>` + money(unpaid) + `</b><span>未結金額</span></div>
-        <div class="stat"><b>` + strconv.Itoa(lastMileage) + `</b><span>最近里程</span></div>
+        <div class="stat"><b>` + strconv.Itoa(curKm) + `</b><span>最近里程</span></div>
       </div>
       <table>
         <tr><th>業主</th><td>` + htmlEsc(v.CustomerName) + ` <a href="/customers/` +
@@ -249,14 +329,25 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
         <tr><th>VIN</th><td>` + orDash(htmlEsc(v.VIN)) + `</td></tr>
         <tr><th>引擎號碼</th><td>` + orDash(htmlEsc(v.EngineNumber)) + `</td></tr>
         <tr><th>檢驗到期日</th><td>` + dateText(v.InspectionDueDate) + `</td></tr>
-        <tr><th>下次保養</th><td>` + dateText(v.NextMaintenanceDate) +
+        <tr><th>最後保養</th><td>` + dateText(normDate(v.LastMaintenanceDate)) +
 		func() string {
-			if v.NextMaintenanceMileage > 0 {
-				return " / " + strconv.Itoa(v.NextMaintenanceMileage) + "km"
+			if v.LastMaintenanceMileage > 0 {
+				return " / " + strconv.Itoa(v.LastMaintenanceMileage) + "km"
 			}
 			return ""
 		}() + `</td></tr>
+        <tr><th>保養間隔</th><td>每 ` + strconv.Itoa(v.MaintIntervalMonths) + ` 個月 或 ` +
+		strconv.Itoa(v.MaintIntervalKm) + ` 公里</td></tr>
       </table>
+      <div style="margin-top:14px;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:9px">
+        <div style="color:#94a3b8;font-size:12.5px;margin-bottom:8px">
+          下次保養（兩者先到者為準）
+        </div>
+        <table style="margin:0">
+          <tr><th style="width:110px">依日期</th><td>` + dateCell + `</td></tr>
+          <tr><th>依里程</th><td>` + kmCell + `</td></tr>
+        </table>
+      </div>
       <div style="margin-top:16px">
         <a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">＋ 開立工單</a>
         <a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯車輛</a>
@@ -285,14 +376,19 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 
 	_, err := db.DB.Exec(`INSERT INTO vehicles
 		(customer_id, plate_number, brand_model, manufacture_year, vin, engine_number,
-		 inspection_due_date, next_maintenance_date, next_maintenance_mileage)
-		VALUES (?,?,?,?,?,?,?,?,?)`,
+		 inspection_due_date, next_maintenance_date, next_maintenance_mileage,
+		 last_maintenance_date, last_maintenance_mileage,
+		 next_maintenance_interval_months, next_maintenance_interval_km)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		customerID, plate, model_,
 		atoiDefault(r.FormValue("manufacture_year"), 0), nullStr(r.FormValue("vin")),
 		nullStr(r.FormValue("engine_number")),
 		nullDate(r.FormValue("inspection_due_date")),
-		nullDate(r.FormValue("next_maintenance_date")),
-		atoiDefault(r.FormValue("next_maintenance_mileage"), 0),
+		nil, nil,
+		nullDate(r.FormValue("last_maintenance_date")),
+		atoiOrNil(r.FormValue("last_maintenance_mileage")),
+		atoiDefault(r.FormValue("maint_interval_months"), 6),
+		atoiDefault(r.FormValue("maint_interval_km"), 5000),
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
@@ -303,7 +399,68 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 有保養基準就立刻推算下次保養（日期 + 里程），讓清單馬上可用
+	if vid := lastInsertID("vehicles"); vid > 0 {
+		recalcNextMaintenance(vid)
+	}
+
 	redirectMsg(w, r, "/vehicles", "車輛已建立")
+}
+
+// atoiOrNil 空字串回 nil（讓 DB 存 NULL 而非 0）。
+func atoiOrNil(s string) interface{} {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+	n, err := strconv.Atoi(s)
+	if err != nil || n <= 0 {
+		return nil
+	}
+	return n
+}
+
+func lastInsertID(table string) int64 {
+	var id int64
+	db.DB.QueryRow("SELECT COALESCE(MAX(id),0) FROM " + table).Scan(&id)
+	return id
+}
+
+// recalcNextMaintenance 由「最後保養基準 + 間隔」推算下次保養日期與里程。
+//
+// 保養是兩條獨立條件（日期到 / 里程到），兩者都要算，先到者為準。
+// 車行慣例：每 6 個月或每 5000 公里保養一次（可用 vehicles 的間隔欄位調整）。
+func recalcNextMaintenance(vehicleID int64) {
+	var lastDate string
+	var lastKm, months, km int
+	err := db.DB.QueryRow(`SELECT COALESCE(last_maintenance_date,''),
+		COALESCE(last_maintenance_mileage,0),
+		COALESCE(next_maintenance_interval_months,6),
+		COALESCE(next_maintenance_interval_km,5000)
+		FROM vehicles WHERE id = ?`, vehicleID).Scan(&lastDate, &lastKm, &months, &km)
+	if err != nil {
+		return
+	}
+	if months <= 0 {
+		months = 6
+	}
+	if km <= 0 {
+		km = 5000
+	}
+
+	var nextDate interface{}
+	if d := normDate(lastDate); d != "" {
+		if t, perr := time.Parse("2006-01-02", d); perr == nil {
+			nextDate = t.AddDate(0, months, 0).Format("2006-01-02")
+		}
+	}
+	var nextKm interface{}
+	if lastKm > 0 {
+		nextKm = lastKm + km
+	}
+
+	db.DB.Exec(`UPDATE vehicles SET next_maintenance_date=?, next_maintenance_mileage=? WHERE id=?`,
+		nextDate, nextKm, vehicleID)
 }
 
 func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
@@ -328,8 +485,10 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>VIN<input name="vin" value="` + htmlEsc(v.VIN) + `"></label>
         <label>引擎號碼<input name="engine_number" value="` + htmlEsc(v.EngineNumber) + `"></label>
         <label>檢驗到期日<input name="inspection_due_date" type="date" value="` + htmlEsc(v.InspectionDueDate) + `"></label>
-        <label>下次保養日期<input name="next_maintenance_date" type="date" value="` + htmlEsc(v.NextMaintenanceDate) + `"></label>
-        <label>下次保養里程<input name="next_maintenance_mileage" type="number" value="` + strconv.Itoa(v.NextMaintenanceMileage) + `" min="0"></label>
+        <label>最後保養日<input name="last_maintenance_date" type="date" value="` + htmlEsc(normDate(v.LastMaintenanceDate)) + `"></label>
+        <label>最後保養里程<input name="last_maintenance_mileage" type="number" min="0" value="` + intOrBlank(v.LastMaintenanceMileage) + `"></label>
+        <label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value="` + strconv.Itoa(v.MaintIntervalMonths) + `"></label>
+        <label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="` + strconv.Itoa(v.MaintIntervalKm) + `"></label>
         <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/vehicles">取消</a></div>
       </form>
     </div>`
@@ -354,13 +513,16 @@ func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 
 	res, err := db.DB.Exec(`UPDATE vehicles SET customer_id=?, plate_number=?, brand_model=?,
 		manufacture_year=?, vin=?, engine_number=?, inspection_due_date=?,
-		next_maintenance_date=?, next_maintenance_mileage=? WHERE id=?`,
+		last_maintenance_date=?, last_maintenance_mileage=?,
+		next_maintenance_interval_months=?, next_maintenance_interval_km=? WHERE id=?`,
 		customerID, plate, model_,
 		atoiDefault(r.FormValue("manufacture_year"), 0), nullStr(r.FormValue("vin")),
 		nullStr(r.FormValue("engine_number")),
 		nullDate(r.FormValue("inspection_due_date")),
-		nullDate(r.FormValue("next_maintenance_date")),
-		atoiDefault(r.FormValue("next_maintenance_mileage"), 0), id)
+		nullDate(r.FormValue("last_maintenance_date")),
+		atoiOrNil(r.FormValue("last_maintenance_mileage")),
+		atoiDefault(r.FormValue("maint_interval_months"), 6),
+		atoiDefault(r.FormValue("maint_interval_km"), 5000), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			fail(w, "車牌號碼已存在")
@@ -373,6 +535,9 @@ func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+
+	// 基準或間隔改了 → 重算下次保養
+	recalcNextMaintenance(id)
 
 	redirectMsg(w, r, "/vehicles", "車輛已更新")
 }

@@ -46,7 +46,11 @@ type Vehicle struct {
 	EngineNumber          string    `json:"engine_number,omitempty"`
 	InspectionDueDate     string    `json:"inspection_due_date,omitempty"`
 	NextMaintenanceDate   string    `json:"next_maintenance_date,omitempty"`
-	NextMaintenanceMileage int       `json:"next_maintenance_mileage,omitempty"`
+	NextMaintenanceMileage int      `json:"next_maintenance_mileage,omitempty"`
+	LastMaintenanceDate   string    `json:"last_maintenance_date,omitempty"`
+	LastMaintenanceMileage int      `json:"last_maintenance_mileage,omitempty"`
+	MaintIntervalMonths   int       `json:"next_maintenance_interval_months"`
+	MaintIntervalKm       int       `json:"next_maintenance_interval_km"`
 	CreatedAt             time.Time `json:"created_at"`
 }
 
