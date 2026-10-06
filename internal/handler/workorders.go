@@ -384,6 +384,12 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 結帳扣料的異動紀錄需要操作人
+	actorID := int64(0)
+	if u, uerr := currentUser(r); uerr == nil {
+		actorID = u.ID
+	}
+
 	// 已結帳的工單是財務憑證，不允許再改狀態：否則扣料與營收會與實物對不上。
 	if currentStatus := countStatus(id); currentStatus == "paid" {
 		if status == "paid" {
@@ -466,6 +472,12 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 			}
 			if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ? WHERE id = ?", d.qty, d.invID); err != nil {
 				fail(w, "扣減庫存失敗")
+				return
+			}
+			// 留痕：結帳扣料同樣寫入異動紀錄，否則庫存對帳會出現缺口
+			if err := recordMovement(tx, d.invID, -d.qty, avail, avail-d.qty,
+				"工單 #"+strconv.FormatInt(id, 10)+" 結帳扣料", "checkout", id, actorID); err != nil {
+				fail(w, "寫入異動紀錄失敗")
 				return
 			}
 			partsDeducted++

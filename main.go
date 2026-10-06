@@ -86,6 +86,15 @@ func main() {
 	mux.HandleFunc("POST /inventory/{id}/stock", handler.CounterUp(handler.ApplyStockAdjust))
 	mux.HandleFunc("GET /inventory/{id}/delete", handler.OwnerOnly(handler.DeleteInventoryItem))
 
+	// 庫存異動紀錄與舊系統負庫存補正。
+	//
+	// 補正表單刻意走 query 參數（/inventory/negative?id=N）而非
+	// /inventory/negative/{id}：後者與既有的 /inventory/{id}/edit 同為三段路徑，
+	// Go 1.22 ServeMux 判定互不更明確，會在啟動時 panic。
+	mux.HandleFunc("GET /inventory/movements", handler.AllStaff(handler.MovementLog))
+	mux.HandleFunc("GET /inventory/negative", handler.AllStaff(handler.NegativeStockList))
+	mux.HandleFunc("POST /inventory/negative/fix", handler.CounterUpPage(handler.ApplyNegativeStockFix))
+
 	// 保險公司（CAR35 P0-1：Company 表，理賠案件歸屬對象）
 	mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 	mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))

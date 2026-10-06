@@ -203,6 +203,9 @@ func atofDefault(s string, def float64) float64 {
 
 func today() string { return time.Now().Format("2006-01-02") }
 
+// nowStamp 現在時間（秒級），供庫存異動等紀錄使用。
+func nowStamp() string { return time.Now().Format("2006-01-02 15:04:05") }
+
 // parseFlexTime 寬鬆解析 SQLite 的時間字串。
 //
 // 為什麼需要：舊系統 CAR35 遷移進來的 created_at 是 '2016/02/22'，

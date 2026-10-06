@@ -98,9 +98,20 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	lowCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < COALESCE(min_safety_stock,0)")
+	negCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < 0")
 	lowNote := ""
 	if lowOnly {
 		lowNote = ` <a href="/inventory" style="font-size:13px">（顯示全部）</a>`
+	}
+
+	// 負庫存是舊系統匯入的歷史包袱，單獨拉一條提示與入口，
+	// 否則混在「低庫存」裡會被忽略（低庫存是正常營運訊號，負庫存是資料問題）。
+	negBanner := ""
+	if negCount > 0 {
+		negBanner = `<div class="msg msg-err" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <span>⚠ 有 <b>` + strconv.Itoa(negCount) + `</b> 個料號庫存為負數（舊系統進貨未登錄造成）。負庫存會讓扣料與報表失準。</span>
+        <a class="btn btn-p" href="/inventory/negative">前往補正</a>
+      </div>`
 	}
 
 	costField := costInput("0")
@@ -108,7 +119,7 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 		costField = ""
 	}
 
-	body := flash(r) + `
+	body := flash(r) + negBanner + `
     <div class="card">
       <h2>新增零件</h2>
       <form class="frm" method="POST" action="/inventory">
@@ -131,6 +142,7 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
         <label style="font-size:13px;margin-left:10px"><input type="checkbox" name="low" value="1"` + chkIf(lowOnly) + `> 只看低庫存</label>
         <button class="btn btn-p" type="submit">搜尋</button>
         <a class="btn btn-s" href="/inventory">清除</a>
+        <a class="btn btn-s" href="/inventory/movements">異動紀錄</a>
       </form>` + table + pager("/inventory", qv, total, page, size) +
 		`<div style="margin-top:6px">` + perPageSel("/inventory", qv, size) + `</div>
     </div>`
@@ -287,11 +299,38 @@ func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if current+delta < 0 {
-		fail(w, "庫存不足：目前 "+strconv.Itoa(current)+"，無法扣 "+strconv.Itoa(-delta))
+		fail(w, "庫存不足：目前 "+strconv.Itoa(current)+"，無法扣 "+strconv.Itoa(-delta)+
+			"（若是舊系統留下的負庫存，請用「負庫存補正」）")
 		return
 	}
 
-	if _, err := db.DB.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity + ? WHERE id = ?", delta, id); err != nil {
+	reason := strings.TrimSpace(r.FormValue("note"))
+	if reason == "" {
+		reason = "手動調庫"
+	}
+
+	// 改庫存與寫異動紀錄必須同進同出，否則會出現「庫存變了但查不到原因」
+	tx, err := db.DB.Begin()
+	if err != nil {
+		fail(w, "調庫失敗")
+		return
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity + ? WHERE id = ?",
+		delta, id); err != nil {
+		fail(w, "調庫失敗")
+		return
+	}
+	actorID := int64(0)
+	if u, uerr := currentUser(r); uerr == nil {
+		actorID = u.ID
+	}
+	if err := recordMovement(tx, id, delta, current, current+delta, reason, "manual", 0, actorID); err != nil {
+		fail(w, "寫入異動紀錄失敗")
+		return
+	}
+	if err := tx.Commit(); err != nil {
 		fail(w, "調庫失敗")
 		return
 	}
