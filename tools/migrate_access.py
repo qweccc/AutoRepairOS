@@ -219,6 +219,27 @@ def convert_roc_date(d):
     return None
 
 
+def norm_staff_no(s):
+    """正規化人員編號，用於比對舊系統的各種變體。
+
+    實測同一人的寫法有：E003 / e003 / E0003 / E03 / RE003 / `E003。
+    規則：去非英數 → 大寫 → 去掉開頭的 R/W 前綴 → 去掉字母後多餘的 0 →
+    數字補零到 3 碼。
+    """
+    import re
+    s = re.sub(r'[^A-Za-z0-9]', '', s or '').upper()
+    s = re.sub(r'^[RW]+', '', s)
+    s = re.sub(r'^([A-Z])0+(\d)', r'\1\2', s)
+    m = re.match(r'^([A-Z])(\d+)$', s)
+    if m:
+        s = m.group(1) + m.group(2).zfill(3)
+    return s
+
+
+# 模組層級別名（供 Migrator 方法內呼叫）
+_norm_staff_no = norm_staff_no
+
+
 def add_months(date_str, months):
     """日期加 N 個月，回傳 YYYY-MM-DD。用於推算下次保養日。
 
@@ -677,7 +698,12 @@ class Migrator:
                     'technician',
                     name or no,
                     br,                             # staff_branch
-                    kind,                           # staff_kind
+                    'dependent' if kind == 'family' else kind,  # staff_kind
+                    clean_str(col(t, 'Id No', i)),          # national_id（身分證）
+                    convert_roc_date(col(t, 'Birthday', i)),# birthday
+                    convert_roc_date(col(t, 'Start Date', i)),  # insurance_start 加保日
+                    convert_roc_date(col(t, 'End Date', i)),    # insurance_end 退保日
+                    clean_str(col(t, 'Bank No', i)),        # bank_account
                 ))
                 used_users.add(username)
                 kind_stat[kind] += 1
@@ -706,9 +732,12 @@ class Migrator:
             print(f"  [DRY-RUN] 員工 {len(user_rows)}、廠商 {len(sup_rows)}、保險公司 {len(ins_rows)}")
         else:
             if user_rows:
-                self.cur.executemany(
-                    "INSERT INTO users (username, password, role, name, staff_branch, staff_kind) VALUES (?,?,?,?,?,?)",
-                    user_rows)
+                self.cur.executemany("""
+                    INSERT INTO users (username, password, role, name, staff_branch,
+                       staff_kind, national_id, birthday, insurance_start,
+                       insurance_end, bank_account)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                """, user_rows)
             if sup_rows:
                 self.cur.executemany("""
                     INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type)
@@ -729,9 +758,48 @@ class Migrator:
             self.user_id[username] = uid
         # 工單的 Staff No 有大小寫/前綴變體（e003 / E0003 / RE003），做別名對應
         self._alias_staff_ids()
+        # 眷屬依附的主被保險人（E03-1 → E003）
+        self._link_dependents()
         self.stats['users'] = len(user_rows)
         self.stats['insurance'] = len(ins_rows)
         self.stats['supplier_vendors'] = len(sup_rows)
+
+    def _link_dependents(self):
+        """把健保眷屬連到主被保險人。
+
+        舊系統用編號後綴表示眷屬關係：
+            E03-1 嚴一舒 → E003 王彩秀
+            G11-1 蔡雪雲 → G11  黃協湯
+        去掉 -N 後綴再正規化編號，即可對應到主員工。
+        """
+        import re as _re
+
+        self.cur.execute("""SELECT id, username FROM users
+            WHERE COALESCE(staff_kind,'') = 'dependent'""")
+        deps = self.cur.fetchall()
+        if not deps:
+            return
+
+        # 建立 正規化編號 → id（僅主被保險人，排除眷屬本身）
+        self.cur.execute("""SELECT id, username FROM users
+            WHERE COALESCE(staff_kind,'') <> 'dependent'""")
+        by_norm = {}
+        for uid, uname in self.cur.fetchall():
+            by_norm.setdefault(_norm_staff_no(uname), uid)
+
+        updates = []
+        for uid, uname in deps:
+            m = _re.match(r'^(.*?)-\d+$', uname or '')
+            if not m:
+                continue
+            parent = by_norm.get(_norm_staff_no(m.group(1)))
+            if parent and parent != uid:
+                updates.append((parent, uid))
+
+        if updates:
+            self.cur.executemany("UPDATE users SET dependent_of=? WHERE id=?", updates)
+            self.conn.commit()
+        print(f"  健保眷屬依附: {len(updates)}/{len(deps)} 筆對應到主被保險人")
 
     def _staff_reference_counts(self):
         """統計每個 Staff No 被工單引用的次數。
@@ -763,7 +831,6 @@ class Migrator:
         mh = self.data.get('Maintain Header')
         if not mh:
             return
-        import re as _re
 
         # username → id
         self.cur.execute("SELECT id, username FROM users")
@@ -771,23 +838,10 @@ class Migrator:
         for uid, uname in self.cur.fetchall():
             by_username[uname] = uid
 
-        # 正規化函式：去非英數、轉大寫、移除多餘的 R/W 前綴與重複數字
-        def norm(s):
-            s = _re.sub(r'[^A-Za-z0-9]', '', s or '').upper()
-            # RE003 → E003（去掉開頭的 R/W）
-            s = _re.sub(r'^[RW]+', '', s)
-            # E0003 → E003（字母後的多餘 0）
-            s = _re.sub(r'^([A-Z])0+(\d)', r'\1\2', s)
-            # E03 → E003（補零到 3 碼）
-            m = _re.match(r'^([A-Z])(\d+)$', s)
-            if m:
-                s = m.group(1) + m.group(2).zfill(3)
-            return s
-
         # 建立 正規化 → id
         norm_map = {}
         for uname, uid in by_username.items():
-            norm_map.setdefault(norm(uname), uid)
+            norm_map.setdefault(norm_staff_no(uname), uid)
 
         # 走訪所有工單引用過的代碼，補上別名
         seen = set()
@@ -798,7 +852,7 @@ class Migrator:
             seen.add(raw)
             if raw in by_username:
                 continue
-            n = norm(raw)
+            n = norm_staff_no(raw)
             if n in norm_map:
                 self.user_id[raw] = norm_map[n]
         self.stats['staff_alias'] = len(self.user_id) - len(by_username)

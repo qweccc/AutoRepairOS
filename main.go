@@ -98,6 +98,9 @@ func main() {
 	// 廠商（材料商 / 協力廠商）
 	mux.HandleFunc("GET /suppliers", handler.AllStaff(handler.ListSuppliers))
 
+	// 員工與健保資料（含健保眷屬）
+	mux.HandleFunc("GET /staff", handler.AllStaff(handler.ListStaff))
+
 	// 保險公司（CAR35 P0-1：Company 表，理賠案件歸屬對象）
 	mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 	mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))

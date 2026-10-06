@@ -242,15 +242,22 @@ func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user mode
 		month = today()[:7]
 	}
 
+	// 只列真正在做事的人。
+	//
+	// 排除 staff_kind='dependent'（健保眷屬）：眷屬沒有在修車，出現在佣金表
+	// 會讓財務數字失真（一排 0 佣金的人名），也會讓人誤以為要付他們錢。
+	// 眷屬要看請到「員工/健保」頁。
 	rows, err := db.DB.Query(`SELECT u.id, COALESCE(u.name,'-'), u.username,
+		COALESCE(u.staff_branch,''),
 		COALESCE(SUM(wl.hours),0), COALESCE(SUM(wl.labor_amount),0),
 		COALESCE(SUM(wl.commission_amount),0), COUNT(wl.id)
 		FROM users u
 		LEFT JOIN technician_worklogs wl
 		  ON wl.technician_id = u.id AND substr(wl.work_date,1,7) = ?
 		WHERE u.role = 'technician'
+		  AND COALESCE(u.staff_kind,'employee') = 'employee'
 		GROUP BY u.id, u.name, u.username
-		ORDER BY COALESCE(SUM(wl.commission_amount),0) DESC`, month)
+		ORDER BY COALESCE(SUM(wl.commission_amount),0) DESC, u.staff_branch, u.name`, month)
 	if err != nil {
 		fail(w, "查詢佣金統計失敗")
 		return
@@ -258,19 +265,20 @@ func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user mode
 	defer rows.Close()
 
 	var b strings.Builder
-	b.WriteString(`<table><tr><th>技師</th><th>帳號</th><th class="num">工單數</th><th class="num">總工時</th><th class="num">總工資</th><th class="num">總佣金</th></tr>`)
+	b.WriteString(`<table><tr><th>技師</th><th>帳號</th><th>部門</th><th class="num">工單數</th><th class="num">總工時</th><th class="num">總工資</th><th class="num">總佣金</th></tr>`)
 
 	var totalOrders, totalHours, totalLabor, totalCommission float64
 	n := 0
 	for rows.Next() {
 		var id int64
-		var name, username string
+		var name, username, branch string
 		var hours, labor, commission, orders float64
-		if err := rows.Scan(&id, &name, &username, &hours, &labor, &commission, &orders); err != nil {
+		if err := rows.Scan(&id, &name, &username, &branch, &hours, &labor, &commission, &orders); err != nil {
 			continue
 		}
 		b.WriteString(`<tr><td>` + htmlEsc(name) + `</td><td><code>` + htmlEsc(username) +
-			`</code></td><td class="num">` + money(orders) + `</td><td class="num">` + trimNum(hours) +
+			`</code></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(branchLabel(branch)) +
+			`</td><td class="num">` + money(orders) + `</td><td class="num">` + trimNum(hours) +
 			`</td><td class="num">` + money(labor) + `</td><td class="num" style="color:#38bdf8;font-weight:700">` +
 			money(commission) + `</td></tr>`)
 		totalOrders += orders
