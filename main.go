@@ -95,6 +95,9 @@ func main() {
 	mux.HandleFunc("GET /inventory/negative", handler.AllStaff(handler.NegativeStockList))
 	mux.HandleFunc("POST /inventory/negative/fix", handler.CounterUpPage(handler.ApplyNegativeStockFix))
 
+	// 廠商（材料商 / 協力廠商）
+	mux.HandleFunc("GET /suppliers", handler.AllStaff(handler.ListSuppliers))
+
 	// 保險公司（CAR35 P0-1：Company 表，理賠案件歸屬對象）
 	mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 	mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))

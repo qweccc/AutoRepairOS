@@ -760,8 +760,16 @@ func approvalOptions(current string) string {
 	return b.String()
 }
 
+// technicianOptions 技師下拉選單。
+//
+// 只列 staff_kind='employee'：舊系統的 Staff 表混了協力廠商（上上汽車、
+// 元發電機）與眷屬（車行家族），全部列出來會讓指派技師時選錯人。
+// 協力廠商要看請到「廠商」頁。
 func technicianOptions() string {
-	rows, err := db.DB.Query(`SELECT id, name, username FROM users WHERE role = 'technician' ORDER BY name`)
+	rows, err := db.DB.Query(`SELECT u.id, u.name, u.username, COALESCE(u.staff_branch,'')
+		FROM users u
+		WHERE u.role = 'technician' AND COALESCE(u.staff_kind,'employee') = 'employee'
+		ORDER BY u.staff_branch, u.name`)
 	if err != nil {
 		return ""
 	}
@@ -770,13 +778,40 @@ func technicianOptions() string {
 	var b strings.Builder
 	for rows.Next() {
 		var id int64
-		var name, username string
-		if err := rows.Scan(&id, &name, &username); err != nil {
+		var name, username, branch string
+		if err := rows.Scan(&id, &name, &username, &branch); err != nil {
 			continue
 		}
-		b.WriteString(`<option value="` + strconv.FormatInt(id, 10) + `">` + htmlEsc(name) + ` (` + htmlEsc(username) + `)</option>`)
+		label := name + ` (` + username + `)`
+		if dept := branchLabel(branch); dept != "" {
+			label += `　` + dept
+		}
+		b.WriteString(`<option value="` + strconv.FormatInt(id, 10) + `">` + htmlEsc(label) + `</option>`)
 	}
 	return b.String()
+}
+
+// branchLabel CAR35 部門代碼 → 中文（舊系統 Branch 表）。
+func branchLabel(code string) string {
+	switch strings.ToUpper(strings.TrimSpace(code)) {
+	case "A":
+		return "引擎"
+	case "B":
+		return "電機"
+	case "C":
+		return "鈑金"
+	case "D":
+		return "烤漆"
+	case "E":
+		return "行政"
+	case "F":
+		return "零件"
+	case "G":
+		return "眷屬"
+	case "H":
+		return "廠商"
+	}
+	return ""
 }
 
 func techName(id int64) string {

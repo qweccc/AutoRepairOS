@@ -59,9 +59,53 @@ TX_TABLES = ['Maintain Header', 'Maintain Detail',
              'Material Header', 'Material Detail', 'Customer Pay']
 
 # 查表 (lookup)
-LOOKUP_TABLES = ['Car Class', 'Gas Class', 'Store', 'Branch', 'Class', 'Bank']
+# 注意：Insurance Company 是「保險公司主檔」（含統編、地址），
+# 與 Insurance Class（險種）不同，兩者都要匯出。
+LOOKUP_TABLES = ['Car Class', 'Gas Class', 'Store', 'Branch', 'Class',
+                 'Unit Class', 'Insurance Class', 'Insurance Company',
+                 'Model', 'OEM', 'Color Class', 'Bank']
 
 ALL_TABLES = MASTER_TABLES + TX_TABLES + LOOKUP_TABLES
+
+# CAR35 零件類別（Material.Class No → 可讀名稱）。
+# 來源：Class 查表（A 引擎 / B 電機音響 / …），但 Material 實際用到更多單碼
+# （M 變速箱 / N 烤漆細項 / P 塗料 / L 鈑金 / Z 其他），依實際資料補齊。
+PART_CATEGORY = {
+    'A': '引擎',
+    'B': '電機音響',
+    'C': '傳動轉向',
+    'D': '制動',
+    'E': '車身鈑金',
+    'F': '輪胎',
+    'G': '工資',
+    'H': '烤漆',
+    'I': '其他',
+    'L': '鈑金',
+    'M': '變速箱',
+    'N': '烤漆',
+    'P': '塗料',
+    'Z': '其他',
+}
+
+# CAR35 部門（Branch）→ 判斷人員身分
+# A 引擎 / B 電機 / C 鈑金 / D 烤漆 / E 行政 / F 零件 = 員工
+# G = 眷屬（車行家族成員，不是技師）
+# H = 廠商（外包商，不該當技師）
+STAFF_BRANCHES = {'A', 'B', 'C', 'D', 'E', 'F'}
+FAMILY_BRANCH = 'G'
+VENDOR_BRANCH = 'H'
+
+# 保險公司名稱特徵（Branch 為空時用來辨識）
+INSURANCE_HINT = ('產物', '保險', '產險', '人壽', '壽險')
+
+# 外包廠商名稱特徵（用來把協力廠商與真員工分開）
+#
+# 為什麼需要：Branch A-F 表面上是「員工部門」，但裡面混了協力廠商
+# （上上汽車、元發電機、精修汽車、嘉隆汽車…）。工單的 Staff No 同時
+# 記錄「誰做的」，可能是指派員工也可能是外包商。
+OUTSOURCE_HINT = ('汽車', '電機', '幫浦', '輪胎', '鈑金', '烤漆', '實業',
+                  '企業', '興業', '貿易', '自動', '帆布', '廣告', '吊車',
+                  '玻璃', '塗料', '事務', '修護', '保養廠', '材料')
 
 
 # ============================================================
@@ -381,7 +425,7 @@ class Migrator:
 
     # ---------- 3. 廠商 ----------
     def migrate_suppliers(self):
-        print("\n[3] 廠商 (Firm → suppliers)")
+        print("\n[3] 材料商 (Firm → suppliers)")
         t = self.data.get('Firm')
         if not t:
             print("  無 Firm 表，跳過")
@@ -399,14 +443,15 @@ class Migrator:
                 continue
 
             addr_parts = [clean_str(col(t, f'Address-{n}', i)) for n in (1, 2, 3)]
-            address = ''.join(p for p in addr_parts if p) or None
+            address = clean_address(*addr_parts)
 
             rows.append((
                 key,                                            # name
-                clean_str(col(t, 'Telephone-1', i)),            # phone
+                clean_phone(col(t, 'Telephone-1', i)),          # phone
                 clean_str(col(t, 'Sales Name', i)),             # contact_person
                 address,                                        # address
                 f"舊編號:{no}" if no else None,                 # notes
+                'material',                                     # vendor_type：材料商
             ))
             used.add(key)
 
@@ -414,8 +459,8 @@ class Migrator:
             print(f"  [DRY-RUN] 將新增 {len(rows)} 筆廠商")
         else:
             self.cur.executemany("""
-                INSERT INTO suppliers (name, phone, contact_person, address, notes)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, rows)
             self.conn.commit()
             print(f"  新增 {len(rows)} 筆廠商")
@@ -427,91 +472,257 @@ class Migrator:
             self.sup_id.setdefault(name, sid)
         self.stats['suppliers'] = len(rows)
 
-    # ---------- 4. 員工 / 保險公司 ----------
+    # ---------- 4. 人員分類：員工 / 廠商 / 保險公司 / 眷屬 ----------
     def migrate_staff(self):
-        print("\n[4] 員工/保險 (Staff → users / insurance_companies)")
+        """舊系統的 Staff 表把四種東西混在一起，這裡按 Branch 拆開。
+
+        實測 Branch 分布（246 筆）：
+            H (86) 廠商      — 久葆汽車、大立輪胎、上豪…（外包商，不是技師）
+            '' (52) 混雜     — 保險公司（華山產物）+ 廠商（大統、上方廣告）
+            G (40) 眷屬      — 謝惠芳、嚴金猜…（車行家族，不該當技師）
+            A-F (68) 員工    — 王彩秀被工單引用 21,969 次，是真正的技師
+
+        舊版把 Branch 含「保險」或「廠商」的當保險公司，結果 86 家廠商
+        被灌進保險公司表；正確做法是用專用的 Insurance Company 表（15 家含統編），
+        而 Staff 表的廠商併入 suppliers。
+        """
+        print("\n[4] 人員分類 (Staff → users / suppliers / insurance_companies)")
         t = self.data.get('Staff')
         if not t:
             print("  無 Staff 表，跳過")
             return
 
-        # 部門代碼 → 判斷是否為保險公司
         branch = self.data.get('Branch', {})
         branch_map = {}
         for i in range(len(branch.get('No', []))):
             branch_map[clean_str(col(branch, 'No', i))] = clean_str(col(branch, 'Name', i))
 
+        # 既有資料（避免重複）
         self.cur.execute("SELECT username FROM users")
         used_users = {r[0] for r in self.cur.fetchall()}
-        self.cur.execute("SELECT code, name FROM insurance_companies")
-        used_ins = set()
-        for code, name in self.cur.fetchall():
-            used_ins.add(code)
-            used_ins.add(name)
+        self.cur.execute("SELECT code FROM insurance_companies")
+        used_ins = {r[0] for r in self.cur.fetchall()}
+        self.cur.execute("SELECT name FROM suppliers")
+        used_sup = {r[0] for r in self.cur.fetchall()}
 
-        user_rows, ins_rows = [], []
+        # 工單引用次數 → 判斷誰是真的被指派過的人員
+        ref_count = self._staff_reference_counts()
+        used_by_orders = set(ref_count)
+
+        user_rows, ins_rows, sup_rows = [], [], []
+        kind_stat = defaultdict(int)
+
         for i in range(len(t['No'])):
             no = clean_str(col(t, 'No', i))
             name = clean_str(col(t, 'Name', i))
             if not name and not no:
                 continue
-            key = name or no
+            br = clean_str(col(t, 'Branch No', i)) or ''
+            dept_name = branch_map.get(br, '')
 
-            dept = clean_str(col(t, 'Branch No', i))
-            dept_name = branch_map.get(dept, '')
+            is_insurance = any(h in (name or '') for h in INSURANCE_HINT)
+            looks_vendor = any(h in (name or '') for h in OUTSOURCE_HINT)
+            times_used = ref_count.get(no, 0)
 
-            # 部門含「保險」或「廠商」→ 保險公司；否則視為員工
-            if dept_name and ('保險' in dept_name or '廠商' in dept_name):
-                if key in used_ins:
-                    continue
-                ins_rows.append((
-                    no or name,                     # code (UNIQUE)
-                    name or no,                     # name
-                    clean_str(col(t, 'Id No', i)),  # tax_id
-                    clean_str(col(t, 'Telephone', i)),  # claim_phone
-                    clean_str(col(t, 'Telephone', i)),  # phone
-                    None,                           # contact_person
-                    clean_str(col(t, 'Address', i)),# address
-                    None,                           # postal_code
-                    f"部門:{dept_name}" if dept_name else None,  # notes
-                    1,                              # active
-                ))
-                used_ins.add(key)
+            # 身分判定：
+            #   1. 工單引用 ≥ 3 次 → 實際被當人員指派，保留為員工
+            #   2. 名稱像廠商（汽車/電機/輪胎…）→ 協力廠商
+            #   3. Branch G → 眷屬；Branch H → 廠商
+            #   4. 其餘 Branch A-F → 員工
+            if times_used >= 3 and br not in (FAMILY_BRANCH, VENDOR_BRANCH):
+                kind = 'employee'
+            elif br == FAMILY_BRANCH:
+                kind = 'family'
+            elif br == VENDOR_BRANCH or looks_vendor:
+                kind = 'vendor'
+            elif is_insurance:
+                kind = 'vendor'          # 保險公司在 Staff 表只是往來對象
+            elif br in STAFF_BRANCHES:
+                kind = 'employee'
+            elif times_used > 0:
+                kind = 'employee'
             else:
+                kind = 'vendor'
+
+            # 保險公司：只認專用 Insurance Company 表（含統編、正式全名）。
+            # Staff 表裡的保險公司只是名字，灌進去會與專用表重複。
+            if is_insurance:
+                continue
+
+            if kind in ('employee', 'family'):
                 username = no or name
                 if username in used_users:
                     continue
                 user_rows.append((
-                    username,                       # username (UNIQUE)
-                    'legacy',                       # password (舊資料無密碼，需重設)
-                    'technician',                   # role
-                    name or no,                     # name
+                    username,
+                    'legacy',                       # 舊資料無密碼，需重設
+                    'technician',
+                    name or no,
+                    br,                             # staff_branch
+                    kind,                           # staff_kind
                 ))
                 used_users.add(username)
+                kind_stat[kind] += 1
+                continue
+
+            # 協力廠商 / 往來對象 → suppliers
+            key = name or no
+            if key in used_sup:
+                continue
+            sup_rows.append((
+                key,
+                clean_phone(col(t, 'Telephone', i)),
+                None,
+                clean_str(col(t, 'Address', i)),
+                f"舊編號:{no}" if no else None,
+                'vendor',
+            ))
+            used_sup.add(key)
+            kind_stat['supplier_vendor'] += 1
+
+        # 專用保險公司表（優先，含統編與正式全名）
+        official_ins = self._official_insurance_companies(used_ins)
+        ins_rows.extend(official_ins)
 
         if self.dry_run:
-            print(f"  [DRY-RUN] 將新增 {len(user_rows)} 位員工, {len(ins_rows)} 家保險公司")
+            print(f"  [DRY-RUN] 員工 {len(user_rows)}、廠商 {len(sup_rows)}、保險公司 {len(ins_rows)}")
         else:
             if user_rows:
+                self.cur.executemany(
+                    "INSERT INTO users (username, password, role, name, staff_branch, staff_kind) VALUES (?,?,?,?,?,?)",
+                    user_rows)
+            if sup_rows:
                 self.cur.executemany("""
-                    INSERT INTO users (username, password, role, name)
-                    VALUES (?, ?, ?, ?)
-                """, user_rows)
+                    INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type)
+                    VALUES (?,?,?,?,?,?)
+                """, sup_rows)
             if ins_rows:
                 self.cur.executemany("""
                     INSERT INTO insurance_companies
                       (code, name, tax_id, claim_phone, phone, contact_person,
                        address, postal_code, notes, active)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)
                 """, ins_rows)
             self.conn.commit()
-            print(f"  新增 {len(user_rows)} 位員工, {len(ins_rows)} 家保險公司")
+            print(f"  新增 員工 {len(user_rows)}、廠商 {len(sup_rows)}、保險公司 {len(ins_rows)}")
 
         self.cur.execute("SELECT id, username FROM users")
         for uid, username in self.cur.fetchall():
             self.user_id[username] = uid
+        # 工單的 Staff No 有大小寫/前綴變體（e003 / E0003 / RE003），做別名對應
+        self._alias_staff_ids()
         self.stats['users'] = len(user_rows)
         self.stats['insurance'] = len(ins_rows)
+        self.stats['supplier_vendors'] = len(sup_rows)
+
+    def _staff_reference_counts(self):
+        """統計每個 Staff No 被工單引用的次數。
+
+        這是判斷「誰是真的被指派的人員」最可靠的依據 —— 名稱與 Branch
+        都可能誤導（Branch A-F 混了協力廠商），但被工單引用 21,969 次
+        的王彩秀無疑是實際在做事的技師。
+        """
+        mh = self.data.get('Maintain Header')
+        if not mh:
+            return {}
+        counts = defaultdict(int)
+        for i in range(len(mh.get('No', []))):
+            no = clean_str(col(mh, 'Staff No', i))
+            if no:
+                counts[no] += 1
+        return counts
+
+    def _staff_referenced_by_orders(self):
+        """回傳被工單引用過的 Staff No 集合。"""
+        return set(self._staff_reference_counts())
+
+    def _alias_staff_ids(self):
+        """把工單裡的 Staff No 變體對應到正確的 user id。
+
+        實測工單引用的代碼有 E003 / e003 / E0003 / E03 / RE003 / `E003 等變體，
+        全都是同一位技師。原樣比對會讓 21,969 筆工單的技師變成空白。
+        """
+        mh = self.data.get('Maintain Header')
+        if not mh:
+            return
+        import re as _re
+
+        # username → id
+        self.cur.execute("SELECT id, username FROM users")
+        by_username = {}
+        for uid, uname in self.cur.fetchall():
+            by_username[uname] = uid
+
+        # 正規化函式：去非英數、轉大寫、移除多餘的 R/W 前綴與重複數字
+        def norm(s):
+            s = _re.sub(r'[^A-Za-z0-9]', '', s or '').upper()
+            # RE003 → E003（去掉開頭的 R/W）
+            s = _re.sub(r'^[RW]+', '', s)
+            # E0003 → E003（字母後的多餘 0）
+            s = _re.sub(r'^([A-Z])0+(\d)', r'\1\2', s)
+            # E03 → E003（補零到 3 碼）
+            m = _re.match(r'^([A-Z])(\d+)$', s)
+            if m:
+                s = m.group(1) + m.group(2).zfill(3)
+            return s
+
+        # 建立 正規化 → id
+        norm_map = {}
+        for uname, uid in by_username.items():
+            norm_map.setdefault(norm(uname), uid)
+
+        # 走訪所有工單引用過的代碼，補上別名
+        seen = set()
+        for i in range(len(mh.get('No', []))):
+            raw = clean_str(col(mh, 'Staff No', i))
+            if not raw or raw in seen:
+                continue
+            seen.add(raw)
+            if raw in by_username:
+                continue
+            n = norm(raw)
+            if n in norm_map:
+                self.user_id[raw] = norm_map[n]
+        self.stats['staff_alias'] = len(self.user_id) - len(by_username)
+
+    def _official_insurance_companies(self, used_codes):
+        """從專用的 Insurance Company 表匯入保險公司（含統編、正式全名）。
+
+        這張表才是真正的保險公司主檔（15 家），舊版漏掉它，
+        導致 86 家廠商被誤灌進保險公司。
+        """
+        t = self.data.get('Insurance Company')
+        if not t:
+            return []
+        rows = []
+        for i in range(len(t.get('No', []))):
+            no = clean_str(col(t, 'No', i))
+            name = clean_str(col(t, 'Name', i))
+            short = clean_str(col(t, 'Short Name', i))
+            if not name and not no:
+                continue
+            code = short or no
+            if not code or code in used_codes:
+                continue
+
+            addr_parts = [clean_str(col(t, f'Address-{n}', i)) for n in (1, 2)]
+            addr = clean_address(*addr_parts)
+
+            rows.append((
+                code,                                   # code（簡稱，如「富邦」）
+                name,                                   # 正式全名
+                clean_str(col(t, 'Tax No', i)),         # tax_id
+                clean_str(col(t, 'Telephone-1', i)),    # claim_phone（打報案用）
+                clean_str(col(t, 'Telephone-2', i)),    # phone
+                clean_str(col(t, 'Comm Name', i)),      # contact_person
+                addr,                                   # address
+                None,                                   # postal_code
+                clean_str(col(t, 'Remark', i)),         # notes（含業務員手機等）
+                1,
+            ))
+            used_codes.add(code)
+        print(f"  專用保險公司表: {len(rows)} 家（含統編）")
+        return rows
 
     # ---------- 5. 零件庫存 ----------
     def migrate_inventory(self):
@@ -524,7 +735,12 @@ class Migrator:
         self.cur.execute("SELECT part_number FROM inventory_items")
         used = {r[0] for r in self.cur.fetchall()}
 
+        # CAR35 用 Material.Class（0/1/2）表示性質，Class No（單碼）表示類別。
+        # 實測：Class=0 多為零件、1 為鈑金烤漆工項、2 為工資/服務項目。
+        kind_map = {0: 'part', 1: 'labor', 2: 'labor'}
+
         rows = []
+        cat_stat = defaultdict(int)
         for i in range(len(t['No'])):
             no = clean_str(col(t, 'No', i))
             name = clean_str(col(t, 'Name', i))
@@ -533,6 +749,18 @@ class Migrator:
 
             firm_no = clean_str(col(t, 'Firm No-1', i)) or clean_str(col(t, 'Firm No-2', i))
             sid = self.sup_id.get(firm_no)
+
+            # 零件類別：Class No 單碼 → 可讀名稱
+            cn = (clean_str(col(t, 'Class No', i)) or '').upper()
+            category = PART_CATEGORY.get(cn, '')
+            cat_stat[category or '(未分類)'] += 1
+
+            # 性質：0 零件 / 1-2 工資服務
+            try:
+                cval = int(t['Class'][i]) if t.get('Class') and t['Class'][i] is not None else 0
+            except (TypeError, ValueError):
+                cval = 0
+            item_kind = kind_map.get(cval, 'part')
 
             rows.append((
                 sid,                                            # supplier_id
@@ -544,6 +772,8 @@ class Migrator:
                 clean_num(col(t, 'Out Price', i)),              # selling_price
                 clean_int(col(t, 'Current Amount', i)),         # stock_quantity
                 clean_int(col(t, 'Safe Amount', i)) or 5,       # min_safety_stock
+                category,                                       # category
+                item_kind,                                      # item_kind
             ))
             used.add(no)
 
@@ -553,11 +783,14 @@ class Migrator:
             self.cur.executemany("""
                 INSERT INTO inventory_items
                   (supplier_id, part_number, barcode, name, bin_location,
-                   cost_price, selling_price, stock_quantity, min_safety_stock)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   cost_price, selling_price, stock_quantity, min_safety_stock,
+                   category, item_kind)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
             """, rows)
             self.conn.commit()
             print(f"  新增 {len(rows)} 筆零件")
+            print("  類別分布: " + "、".join(
+                f"{k} {v}" for k, v in sorted(cat_stat.items(), key=lambda x: -x[1])[:8]))
 
         self.cur.execute("SELECT id, part_number FROM inventory_items")
         self.inv_id = {r[1]: r[0] for r in self.cur.fetchall()}
@@ -751,10 +984,13 @@ class Migrator:
         print(f"  suppliers: -{self.cur.rowcount}")
         self.cur.execute("DELETE FROM inventory_items WHERE id > 1")
         print(f"  inventory_items: -{self.cur.rowcount}")
+        self.cur.execute("DELETE FROM inventory_movements")
+        print(f"  inventory_movements: -{self.cur.rowcount}")
         self.cur.execute("DELETE FROM users WHERE password = 'legacy'")
         print(f"  users(legacy): -{self.cur.rowcount}")
-        self.cur.execute("DELETE FROM insurance_companies WHERE id > 4")
-        print(f"  insurance_companies: -{self.cur.rowcount}")
+        # 只保留 seed 建立的非舊資料保險公司，其餘（含被誤灌的廠商）全部清掉
+        self.cur.execute("DELETE FROM insurance_companies WHERE COALESCE(notes,'') LIKE '%舊系統%' OR COALESCE(notes,'') LIKE '%部門:%' OR code IN ('005','01','02','05','07','08','10','12','13','14')")
+        print(f"  insurance_companies(舊資料): -{self.cur.rowcount}")
         self.conn.commit()
 
     def run(self, lookups_path=None):

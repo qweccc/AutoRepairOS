@@ -18,6 +18,7 @@ type Supplier struct {
 	ContactPerson string    `json:"contact_person,omitempty"`
 	Address       string    `json:"address,omitempty"`
 	Notes         string    `json:"notes,omitempty"`
+	VendorType    string    `json:"vendor_type"` // material 材料商 / vendor 協力廠商
 	CreatedAt     time.Time `json:"created_at"`
 }
 
@@ -62,6 +63,8 @@ type InventoryItem struct {
 	StockQuantity  int     `json:"stock_quantity"`
 	MinSafetyStock int     `json:"min_safety_stock"`
 	LowStock       bool    `json:"low_stock"`
+	Category       string  `json:"category,omitempty"`  // 零件類別（引擎/電機音響/…）
+	ItemKind       string  `json:"item_kind"`           // part 零件 / labor 工資服務
 }
 
 type WorkOrder struct {

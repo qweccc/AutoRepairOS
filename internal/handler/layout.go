@@ -93,6 +93,7 @@ var appRoutes = []struct {
 	{"/work-orders", "工單"},
 	{"/insurance-companies", "保險公司"},
 	{"/inventory", "庫存"},
+	{"/suppliers", "廠商"},
 	{"/technicians/commissions", "技師佣金"},
 	{"/reports", "報表"},
 	{"/scheduled-tasks", "排程"},

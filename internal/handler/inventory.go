@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -11,13 +12,14 @@ import (
 
 const inventoryCols = `i.id, COALESCE(i.supplier_id,0), COALESCE(s.name,''), i.part_number,
 	COALESCE(i.barcode,''), i.name, i.bin_location, COALESCE(i.cost_price,0),
-	COALESCE(i.selling_price,0), COALESCE(i.stock_quantity,0), COALESCE(i.min_safety_stock,0)`
+	COALESCE(i.selling_price,0), COALESCE(i.stock_quantity,0), COALESCE(i.min_safety_stock,0),
+	COALESCE(i.category,''), COALESCE(i.item_kind,'part')`
 
 func scanInventoryItem(rows interface{ Scan(...interface{}) error }) (model.InventoryItem, error) {
 	var it model.InventoryItem
 	err := rows.Scan(&it.ID, &it.SupplierID, &it.SupplierName, &it.PartNumber, &it.Barcode,
 		&it.Name, &it.BinLocation, &it.CostPrice, &it.SellingPrice,
-		&it.StockQuantity, &it.MinSafetyStock)
+		&it.StockQuantity, &it.MinSafetyStock, &it.Category, &it.ItemKind)
 	it.LowStock = it.StockQuantity < it.MinSafetyStock
 	return it, err
 }
@@ -26,6 +28,7 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	qv := r.URL.Query()
 	q := strings.TrimSpace(qv.Get("q"))
 	lowOnly := qv.Get("low") == "1"
+	category := strings.TrimSpace(qv.Get("category"))
 	showMoney := canSeeMoney(user)
 	page := pageNo(r)
 	size := pageSize(r)
@@ -39,6 +42,14 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	if lowOnly {
 		where += ` AND COALESCE(i.stock_quantity,0) < COALESCE(i.min_safety_stock,0)`
+	}
+	if category != "" {
+		if category == "__none__" {
+			where += ` AND COALESCE(i.category,'') = ''`
+		} else {
+			where += ` AND i.category = ?`
+			args = append(args, category)
+		}
 	}
 
 	total := countRows(`SELECT COUNT(1) FROM inventory_items i`+where, args...)
@@ -75,15 +86,24 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th>庫位</th><th>供應商</th>` + costHead +
+	tb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th>類別</th><th>庫位</th><th>供應商</th>` + costHead +
 		`<th class="num">售價</th><th class="num">庫存</th><th class="num">安全值</th><th>操作</th></tr>`)
 	for _, it := range list {
 		stockCell := strconv.Itoa(it.StockQuantity)
 		if it.LowStock {
 			stockCell = `<b style="color:#f87171">` + stockCell + ` ⚠</b>`
 		}
-		tb.WriteString(`<tr><td><code>` + htmlEsc(it.PartNumber) + `</code></td><td>` + htmlEsc(it.Name) +
-			`</td><td>` + htmlEsc(it.BinLocation) + `</td><td>` + htmlEsc(orDash(it.SupplierName)) +
+		catCell := `<span style="color:#64748b">-</span>`
+		if it.Category != "" {
+			catCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + htmlEsc(it.Category) + `</span>`
+		}
+		// 工資/服務類沒有實體庫存，標記出來避免誤判為缺料
+		kindTag := ""
+		if it.ItemKind == "labor" {
+			kindTag = ` <span style="color:#94a3b8;font-size:11px">(工資)</span>`
+		}
+		tb.WriteString(`<tr><td><code>` + htmlEsc(it.PartNumber) + `</code></td><td>` + htmlEsc(it.Name) + kindTag +
+			`</td><td>` + catCell + `</td><td>` + orDash(htmlEsc(it.BinLocation)) + `</td><td>` + orDash(htmlEsc(it.SupplierName)) +
 			`</td>` + costCell(it) + `<td class="num">` + money(it.SellingPrice) +
 			`</td><td class="num">` + stockCell + `</td><td class="num">` + strconv.Itoa(it.MinSafetyStock) +
 			`</td><td><a class="btn btn-s" href="/inventory/` + strconv.FormatInt(it.ID, 10) + `/edit">編輯</a> ` +
@@ -95,6 +115,28 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	table := tb.String()
 	if len(list) == 0 {
 		table = `<div class="empty">沒有零件資料</div>`
+	}
+
+	// 類別篩選籤（依實際資料的類別列出，附筆數）
+	var catTabs strings.Builder
+	catTabs.WriteString(`<a class="btn ` + btnIf(category == "", "btn-p", "btn-s") + `" href="` + invTabURL(qv, "", lowOnly) + `">全部</a> `)
+	catRows, cerr := db.DB.Query(`SELECT COALESCE(NULLIF(category,''),'__none__') c, COUNT(1) n
+		FROM inventory_items GROUP BY 1 ORDER BY n DESC`)
+	if cerr == nil {
+		defer catRows.Close()
+		for catRows.Next() {
+			var c string
+			var n int
+			if catRows.Scan(&c, &n) != nil {
+				continue
+			}
+			label := c
+			if c == "__none__" {
+				label = "未分類"
+			}
+			catTabs.WriteString(`<a class="btn ` + btnIf(category == c, "btn-p", "btn-s") + `" href="` +
+				invTabURL(qv, c, lowOnly) + `">` + htmlEsc(label) + ` ` + strconv.Itoa(n) + `</a> `)
+		}
 	}
 
 	lowCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < COALESCE(min_safety_stock,0)")
@@ -137,8 +179,12 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
     </div>
     <div class="card">
       <h2>零件列表（符合條件 ` + strconv.Itoa(total) + ` 筆，低庫存 ` + strconv.Itoa(lowCount) + ` 種）` + lowNote + `</h2>
+      <div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        ` + catTabs.String() + `
+      </div>
       <form method="GET" action="/inventory" style="margin-bottom:12px">
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋名稱 / 料號 / 條碼 / 庫位" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
+        ` + hiddenInputs(qv, "q", "low", "page", "per") + `
         <label style="font-size:13px;margin-left:10px"><input type="checkbox" name="low" value="1"` + chkIf(lowOnly) + `> 只看低庫存</label>
         <button class="btn btn-p" type="submit">搜尋</button>
         <a class="btn btn-s" href="/inventory">清除</a>
@@ -148,6 +194,24 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
     </div>`
 
 	renderPage(w, "庫存管理", "/inventory", user.Username, user.Role, body)
+}
+
+// invTabURL 產生庫存類別篩選連結，保留搜尋與低庫存條件。
+func invTabURL(qv url.Values, category string, lowOnly bool) string {
+	out := url.Values{}
+	if q := qv.Get("q"); q != "" {
+		out.Set("q", q)
+	}
+	if lowOnly {
+		out.Set("low", "1")
+	}
+	if category != "" {
+		out.Set("category", category)
+	}
+	if s := out.Encode(); s != "" {
+		return "/inventory?" + s
+	}
+	return "/inventory"
 }
 
 func CreateInventoryItem(w http.ResponseWriter, r *http.Request) {
