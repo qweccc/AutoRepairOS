@@ -63,6 +63,9 @@ func main() {
 	mux.HandleFunc("POST /vehicles/{id}", handler.CounterUp(handler.UpdateVehicle))
 	mux.HandleFunc("GET /vehicles/{id}/delete", handler.OwnerOnly(handler.DeleteVehicle))
 
+	// 車輛履歷
+	mux.HandleFunc("GET /vehicles/{id}", handler.AllStaff(handler.ShowVehicle))
+
 	// 工單
 	mux.HandleFunc("GET /work-orders", handler.AllStaff(handler.ListWorkOrders))
 	mux.HandleFunc("GET /work-orders/new", handler.CounterUpPage(handler.NewWorkOrder))

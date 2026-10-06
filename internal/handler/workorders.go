@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -26,17 +28,27 @@ const workOrderCols = `wo.id, wo.vehicle_id, wo.customer_id, COALESCE(wo.technic
 
 func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrder, error) {
 	var wo model.WorkOrder
-	// Scan 目標數（19）必須與 workOrderCols 的欄位數（19）完全一致。
+	// Scan 目標數（24）必須與 workOrderCols 的欄位數（24）完全一致。
+	//
+	// 時間欄位刻意掃成字串再自行解析：舊系統遷移進來的 created_at 是
+	// '2016/02/22'，直接掃進 time.Time 會解析失敗，而錯誤被呼叫端的
+	// continue 吞掉 → 列表只顯示新工單、舊工單全部消失。
 	var isIns int
+	var createdAt, updatedAt string
 	err := rows.Scan(&wo.ID, &wo.VehicleID, &wo.CustomerID, &wo.TechnicianID,
 		&wo.PlateNumber, &wo.BrandModel, &wo.CustomerName, &wo.CustomerPhone, &wo.TechnicianName,
 		&wo.Status, &wo.CurrentMileage, &wo.CustomerComplaint, &wo.ApprovalStatus,
 		&wo.TotalAmount, &wo.SOPCompleted, &wo.Notes,
 		&wo.InsuranceCompanyID, &wo.InsuranceName, &wo.ClaimNo, &isIns,
 		&wo.AccidentDate, &wo.DeductibleAmount,
-		&wo.CreatedAt, &wo.UpdatedAt)
+		&createdAt, &updatedAt)
+	if err != nil {
+		return wo, err
+	}
 	wo.IsInsurance = isIns != 0
-	return wo, err
+	wo.CreatedAt = parseFlexTime(createdAt)
+	wo.UpdatedAt = parseFlexTime(updatedAt)
+	return wo, nil
 }
 
 const workOrderFrom = ` FROM work_orders wo
@@ -46,25 +58,53 @@ const workOrderFrom = ` FROM work_orders wo
 	LEFT JOIN insurance_companies ic ON ic.id = wo.insurance_company_id `
 
 func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
-	status := r.URL.Query().Get("status")
-	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	qv := r.URL.Query()
+	status := qv.Get("status")
+	q := strings.TrimSpace(qv.Get("q"))
+	from := strings.TrimSpace(qv.Get("from"))
+	to := strings.TrimSpace(qv.Get("to"))
+	page := pageNo(r)
+	size := pageSize(r)
 
-	query := `SELECT ` + workOrderCols + workOrderFrom + ` WHERE 1=1`
+	where := ` WHERE 1=1`
 	var args []interface{}
 	if status != "" {
 		if _, ok := workOrderStatusLabel[status]; ok {
-			query += ` AND wo.status = ?`
+			where += ` AND wo.status = ?`
 			args = append(args, status)
 		}
 	}
 	if q != "" {
-		query += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)`
+		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)`
 		like := "%" + q + "%"
 		args = append(args, like, like, like)
 	}
-	query += ` ORDER BY wo.id DESC`
+	// 日期區間。
+	//
+	// 注意：SQLite 的 date() 不吃斜線格式（date('2016/02/22') 會回 NULL），
+	// 而舊系統遷移進來的 created_at 正是 'YYYY/MM/DD'。
+	// 因此先用 replace() 正規化成 '-' 再比對，兩種格式都能正確篩選。
+	const woDate = `date(replace(wo.created_at,'/','-'))`
+	if from != "" {
+		where += ` AND ` + woDate + ` >= date(?)`
+		args = append(args, from)
+	}
+	if to != "" {
+		where += ` AND ` + woDate + ` <= date(?)`
+		args = append(args, to)
+	}
 
-	rows, err := db.DB.Query(query, args...)
+	// 總筆數（分頁用）
+	total := 0
+	db.DB.QueryRow(`SELECT COUNT(1) FROM work_orders wo
+		JOIN vehicles v ON v.id = wo.vehicle_id
+		JOIN customers c ON c.id = wo.customer_id`+where, args...).Scan(&total)
+
+	query := `SELECT ` + workOrderCols + workOrderFrom + where +
+		` ORDER BY wo.created_at DESC, wo.id DESC LIMIT ? OFFSET ?`
+	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
+
+	rows, err := db.DB.Query(query, pageArgs...)
 	if err != nil {
 		fail(w, "查詢工單失敗")
 		return
@@ -81,46 +121,89 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th><th class="num">里程</th><th class="num">金額</th></tr>`)
+	tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th><th class="num">里程</th><th class="num">金額</th><th>日期</th></tr>`)
 	for _, wo := range list {
+		insTag := ""
+		if wo.IsInsurance {
+			insTag = ` <span class="pill p-waitparts">保險</span>`
+		}
 		tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">` + strconv.FormatInt(wo.ID, 10) + `</a></td><td><b>` +
 			htmlEsc(wo.PlateNumber) + `</b><br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.BrandModel) + `</span></td><td>` +
 			htmlEsc(wo.CustomerName) + `<br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.CustomerPhone) + `</span></td><td>` +
 			htmlEsc(wo.TechnicianName) + `</td><td><span class="pill ` + statusPill[wo.Status] + `">` + workOrderStatusLabel[wo.Status] +
-			`</span></td><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] +
-			`</span></td><td class="num">` + strconv.Itoa(wo.CurrentMileage) + `</td><td class="num">` + money(wo.TotalAmount) + `</td></tr>`)
+			`</span>` + insTag + `</td><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] +
+			`</span></td><td class="num">` + strconv.Itoa(wo.CurrentMileage) + `</td><td class="num">` + money(wo.TotalAmount) +
+			`</td><td style="font-size:12.5px;color:#94a3b8">` + htmlEsc(woCreatedText(wo.CreatedAt)) + `</td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
 	table := tb.String()
 	if len(list) == 0 {
-		table = `<div class="empty">沒有工單資料</div>`
+		table = `<div class="empty">沒有符合條件的工單</div>`
 	}
 
-	// 狀態分頁籤
+	// 狀態分頁籤（保留搜尋與日期條件）
 	var tabs strings.Builder
-	tabs.WriteString(`<a href="/work-orders" class="btn ` + btnIf(status == "", "btn-p", "btn-s") + `">全部</a> `)
+	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(status == "", "btn-p", "btn-s") + `">全部</a> `)
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
-		tabs.WriteString(`<a href="/work-orders?status=` + s + `" class="btn ` + btnIf(status == s, "btn-p", "btn-s") + `">` +
+		tabs.WriteString(`<a href="` + woTabURL(qv, s) + `" class="btn ` + btnIf(status == s, "btn-p", "btn-s") + `">` +
 			workOrderStatusLabel[s] + `</a> `)
 	}
 
+	pg := pager("/work-orders", qv, total, page, size)
+
 	body := flash(r) + `
     <div class="card">
-      <h2>工單列表（` + strconv.Itoa(len(list)) + ` 筆）</h2>
+      <h2>工單列表（符合條件 ` + strconv.Itoa(total) + ` 筆）</h2>
       <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <a class="btn btn-p" href="/work-orders/new">＋ 開立新工單</a>
-        <span style="color:#64748b;font-size:12.5px">（可搜尋車牌 / 車主 / 電話）</span>
+        <span style="color:#64748b;font-size:12.5px">（可搜尋車牌 / 車主 / 電話，並限定日期區間）</span>
       </div>
       <div style="margin-bottom:12px">` + tabs.String() + `</div>
-      <form method="GET" action="/work-orders" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
-        ` + hiddenStatus(status) + `
+      <form method="GET" action="/work-orders" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px">
+        <input type="hidden" name="status" value="` + htmlEsc(status) + `">
+        <label style="font-size:12.5px;color:#94a3b8">日期從
+          <input type="date" name="from" value="` + htmlEsc(from) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+        </label>
+        <label style="font-size:12.5px;color:#94a3b8">到
+          <input type="date" name="to" value="` + htmlEsc(to) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+        </label>
         <button class="btn btn-p" type="submit">搜尋</button>
-      </form>` + table + `
+        <a class="btn btn-s" href="/work-orders">清除</a>
+      </form>` + table + pg + `<div style="margin-top:6px">` + perPageSel("/work-orders", qv, size) + `</div>
     </div>`
 
 	renderPage(w, "工單管理", "/work-orders", user.Username, user.Role, body)
+}
+
+// woCreatedText 工單日期顯示。
+//
+// 舊資料遷移進來的 created_at 是 'YYYY/MM/DD' 字串（SQLite 無嚴格型別，
+// driver 會依欄位宣告轉成 time.Time）；新開的工單則是 DATETIME。
+// 這裡統一輸出成 YYYY-MM-DD，無法解析時退回原字串。
+func woCreatedText(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	return t.Format("2006-01-02")
+}
+
+// woTabURL 產生狀態分頁籤連結，保留 q / from / to 條件。
+func woTabURL(qv url.Values, status string) string {
+	out := url.Values{}
+	for _, k := range []string{"q", "from", "to"} {
+		if v := qv.Get(k); v != "" {
+			out.Set(k, v)
+		}
+	}
+	if status != "" {
+		out.Set("status", status)
+	}
+	if s := out.Encode(); s != "" {
+		return "/work-orders?" + s
+	}
+	return "/work-orders"
 }
 
 func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {

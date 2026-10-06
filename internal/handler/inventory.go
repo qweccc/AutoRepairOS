@@ -23,24 +23,32 @@ func scanInventoryItem(rows interface{ Scan(...interface{}) error }) (model.Inve
 }
 
 func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
-	q := strings.TrimSpace(r.URL.Query().Get("q"))
-	lowOnly := r.URL.Query().Get("low") == "1"
+	qv := r.URL.Query()
+	q := strings.TrimSpace(qv.Get("q"))
+	lowOnly := qv.Get("low") == "1"
 	showMoney := canSeeMoney(user)
+	page := pageNo(r)
+	size := pageSize(r)
 
-	query := `SELECT ` + inventoryCols + ` FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id WHERE 1=1`
+	where := ` WHERE 1=1`
 	var args []interface{}
 	if q != "" {
-		query += ` AND (i.name LIKE ? OR i.part_number LIKE ? OR COALESCE(i.barcode,'') LIKE ? OR i.bin_location LIKE ?)`
+		where += ` AND (i.name LIKE ? OR i.part_number LIKE ? OR COALESCE(i.barcode,'') LIKE ? OR i.bin_location LIKE ?)`
 		like := "%" + q + "%"
 		args = append(args, like, like, like, like)
 	}
 	if lowOnly {
-		query += ` AND COALESCE(i.stock_quantity,0) < COALESCE(i.min_safety_stock,0)`
+		where += ` AND COALESCE(i.stock_quantity,0) < COALESCE(i.min_safety_stock,0)`
 	}
-	query += ` ORDER BY i.name`
 
-	rows, err := db.DB.Query(query, args...)
+	total := countRows(`SELECT COUNT(1) FROM inventory_items i`+where, args...)
+
+	query := `SELECT ` + inventoryCols + ` FROM inventory_items i
+		LEFT JOIN suppliers s ON s.id = i.supplier_id` + where +
+		` ORDER BY i.name LIMIT ? OFFSET ?`
+	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
+
+	rows, err := db.DB.Query(query, pageArgs...)
 	if err != nil {
 		fail(w, "查詢庫存失敗")
 		return
@@ -117,12 +125,14 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
       </form>
     </div>
     <div class="card">
-      <h2>零件列表（` + strconv.Itoa(len(list)) + ` 筆，低庫存 ` + strconv.Itoa(lowCount) + ` 種）` + lowNote + `</h2>
+      <h2>零件列表（符合條件 ` + strconv.Itoa(total) + ` 筆，低庫存 ` + strconv.Itoa(lowCount) + ` 種）` + lowNote + `</h2>
       <form method="GET" action="/inventory" style="margin-bottom:12px">
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋名稱 / 料號 / 條碼 / 庫位" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
         <label style="font-size:13px;margin-left:10px"><input type="checkbox" name="low" value="1"` + chkIf(lowOnly) + `> 只看低庫存</label>
         <button class="btn btn-p" type="submit">搜尋</button>
-      </form>` + table + `
+        <a class="btn btn-s" href="/inventory">清除</a>
+      </form>` + table + pager("/inventory", qv, total, page, size) +
+		`<div style="margin-top:6px">` + perPageSel("/inventory", qv, size) + `</div>
     </div>`
 
 	renderPage(w, "庫存管理", "/inventory", user.Username, user.Role, body)

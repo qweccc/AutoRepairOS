@@ -10,21 +10,28 @@ import (
 )
 
 func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
-	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	qv := r.URL.Query()
+	q := strings.TrimSpace(qv.Get("q"))
+	page := pageNo(r)
+	size := pageSize(r)
+
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (name LIKE ? OR phone LIKE ? OR COALESCE(address,'') LIKE ? OR COALESCE(notes,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like, like)
+	}
+
+	total := countRows(`SELECT COUNT(1) FROM customers`+where, args...)
 
 	query := `SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(address,''),
 		COALESCE(notification_preference,'line'), COALESCE(notes,''),
 		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), created_at
-		FROM customers`
-	var args []interface{}
-	if q != "" {
-		query += ` WHERE name LIKE ? OR phone LIKE ? OR COALESCE(address,'') LIKE ?`
-		like := "%" + q + "%"
-		args = append(args, like, like, like)
-	}
-	query += ` ORDER BY id DESC`
+		FROM customers` + where + ` ORDER BY id DESC LIMIT ? OFFSET ?`
+	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
-	rows, err := db.DB.Query(query, args...)
+	rows, err := db.DB.Query(query, pageArgs...)
 	if err != nil {
 		fail(w, "查詢客戶失敗")
 		return
@@ -34,10 +41,12 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 	var list []model.Customer
 	for rows.Next() {
 		var c model.Customer
+		var createdAt string
 		if err := rows.Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.Address,
-			&c.NotificationPref, &c.Notes, &c.TotalSpent, &c.UnpaidAmount, &c.CreatedAt); err != nil {
+			&c.NotificationPref, &c.Notes, &c.TotalSpent, &c.UnpaidAmount, &createdAt); err != nil {
 			continue
 		}
+		c.CreatedAt = parseFlexTime(createdAt)
 		list = append(list, c)
 	}
 
@@ -54,7 +63,8 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		tb.WriteString(`<tr><td>` + strconv.FormatInt(c.ID, 10) + `</td><td>` + htmlEsc(c.Name) + `</td><td>` +
 			htmlEsc(c.Phone) + `</td><td>` + htmlEsc(c.Address) + `</td><td>` + notif +
 			`</td><td class="num">` + money(c.TotalSpent) + `</td><td class="num">` + money(c.UnpaidAmount) +
-			`</td><td><a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/edit">編輯</a> ` +
+			`</td><td><a class="btn btn-p" href="/work-orders/new?customer=` + strconv.FormatInt(c.ID, 10) + `">開工單</a> ` +
+			`<a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/edit">編輯</a> ` +
 			`<a class="btn btn-o" href="/vehicles?customer=` + strconv.FormatInt(c.ID, 10) + `">車輛</a> ` +
 			`<a class="btn btn-d" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/delete" onclick="return confirm('確定刪除這位客戶？')">刪除</a></td></tr>`)
 	}
@@ -62,7 +72,7 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	table := tb.String()
 	if len(list) == 0 {
-		table = `<div class="empty">沒有客戶資料</div>`
+		table = `<div class="empty">沒有符合條件的客戶</div>`
 	}
 
 	body := flash(r) + `
@@ -85,11 +95,13 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
       </form>
     </div>
     <div class="card">
-      <h2>客戶列表（` + strconv.Itoa(len(list)) + ` 筆）</h2>
+      <h2>客戶列表（符合條件 ` + strconv.Itoa(total) + ` 筆）</h2>
       <form method="GET" action="/customers" style="margin-bottom:12px">
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋姓名 / 電話 / 地址" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
         <button class="btn btn-p" type="submit">搜尋</button>
-      </form>` + table + `
+        <a class="btn btn-s" href="/customers">清除</a>
+      </form>` + table + pager("/customers", qv, total, page, size) +
+		`<div style="margin-top:6px">` + perPageSel("/customers", qv, size) + `</div>
     </div>`
 
 	renderPage(w, "客戶管理", "/customers", user.Username, user.Role, body)

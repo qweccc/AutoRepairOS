@@ -50,19 +50,27 @@ func scanInsuranceCompany(rows interface{ Scan(...interface{}) error }) (insuran
 
 // ListInsuranceCompanies 保險公司列表 + 新增表單。
 func ListInsuranceCompanies(w http.ResponseWriter, r *http.Request, user model.User) {
-	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	qv := r.URL.Query()
+	q := strings.TrimSpace(qv.Get("q"))
+	page := pageNo(r)
+	size := pageSize(r)
 
-	query := `SELECT ` + insuranceCols + ` FROM insurance_companies ic WHERE 1=1`
+	where := ` WHERE 1=1`
 	var args []interface{}
 	if q != "" {
-		query += ` AND (ic.code LIKE ? OR ic.name LIKE ? OR COALESCE(ic.tax_id,'') LIKE ?)`
+		where += ` AND (ic.code LIKE ? OR ic.name LIKE ? OR COALESCE(ic.tax_id,'') LIKE ?)`
 		like := "%" + q + "%"
 		args = append(args, like, like, like)
 	}
-	// 停用的排最後，不要消失在清單裡（要查歷史案件的保險公司時還找得到）
-	query += ` ORDER BY ic.active DESC, ic.code`
 
-	rows, err := db.DB.Query(query, args...)
+	total := countRows(`SELECT COUNT(1) FROM insurance_companies ic`+where, args...)
+
+	// 停用的排最後，不要消失在清單裡（要查歷史案件的保險公司時還找得到）
+	query := `SELECT ` + insuranceCols + ` FROM insurance_companies ic` + where +
+		` ORDER BY ic.active DESC, ic.code LIMIT ? OFFSET ?`
+	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
+
+	rows, err := db.DB.Query(query, pageArgs...)
 	if err != nil {
 		fail(w, "查詢保險公司失敗")
 		return
@@ -119,7 +127,7 @@ func ListInsuranceCompanies(w http.ResponseWriter, r *http.Request, user model.U
       </form>
     </div>
     <div class="card">
-      <h2>保險公司（` + strconv.Itoa(len(list)) + ` 家）</h2>
+      <h2>保險公司（符合條件 ` + strconv.Itoa(total) + ` 家）</h2>
       <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
         保險理賠案件需在此維護對應保險公司，工單開立時才能選擇。
       </p>
@@ -127,7 +135,9 @@ func ListInsuranceCompanies(w http.ResponseWriter, r *http.Request, user model.U
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋簡稱 / 公司名稱 / 統編"
                style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
         <button class="btn btn-p" type="submit">搜尋</button>
-      </form>` + table + `
+        <a class="btn btn-s" href="/insurance-companies">清除</a>
+      </form>` + table + pager("/insurance-companies", qv, total, page, size) +
+		`<div style="margin-top:6px">` + perPageSel("/insurance-companies", qv, size) + `</div>
     </div>`
 
 	renderPage(w, "保險公司", "/insurance-companies", user.Username, user.Role, body)
