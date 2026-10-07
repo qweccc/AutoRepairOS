@@ -1,0 +1,157 @@
+{
+ "tables": [
+  {
+   "car35_table": "Customer",
+   "meaning": "客戶主檔",
+   "car35_rows": 8118,
+   "ours_table": "customers",
+   "ours_rows": 6512,
+   "missing": 1606
+  },
+  {
+   "car35_table": "Car",
+   "meaning": "車輛主檔",
+   "car35_rows": 15010,
+   "ours_table": "vehicles",
+   "ours_rows": 12964,
+   "missing": 2046
+  },
+  {
+   "car35_table": "Firm",
+   "meaning": "廠商主檔",
+   "car35_rows": 563,
+   "ours_table": "suppliers",
+   "ours_rows": 691,
+   "missing": -128
+  },
+  {
+   "car35_table": "Staff",
+   "meaning": "人員（含外包商）",
+   "car35_rows": 246,
+   "ours_table": "users",
+   "ours_rows": 102,
+   "missing": 144
+  },
+  {
+   "car35_table": "Material",
+   "meaning": "零件主檔",
+   "car35_rows": 10351,
+   "ours_table": "inventory_items",
+   "ours_rows": 10352,
+   "missing": -1
+  },
+  {
+   "car35_table": "Insurance Company",
+   "meaning": "保險公司主檔",
+   "car35_rows": 15,
+   "ours_table": "insurance_companies",
+   "ours_rows": 16,
+   "missing": -1
+  },
+  {
+   "car35_table": "Maintain Header",
+   "meaning": "工單主檔（估價/維修單）",
+   "car35_rows": 95440,
+   "ours_table": "work_orders",
+   "ours_rows": 85825,
+   "missing": 9615
+  },
+  {
+   "car35_table": "Maintain Detail",
+   "meaning": "工單明細（零件/工資）",
+   "car35_rows": 390425,
+   "ours_table": "work_order_items",
+   "ours_rows": 344745,
+   "missing": 45680
+  },
+  {
+   "car35_table": "Maintain Record Header",
+   "meaning": "保養套餐主檔",
+   "car35_rows": 25,
+   "ours_table": "maintenance_templates",
+   "ours_rows": 25,
+   "missing": 0
+  },
+  {
+   "car35_table": "Maintain Record Detail",
+   "meaning": "保養套餐明細",
+   "car35_rows": 283,
+   "ours_table": "maintenance_template_items",
+   "ours_rows": 43,
+   "missing": 240
+  },
+  {
+   "car35_table": "Car Insurance List",
+   "meaning": "車輛投保紀錄",
+   "car35_rows": 2667,
+   "ours_table": "vehicle_insurances",
+   "ours_rows": 2438,
+   "missing": 229
+  },
+  {
+   "car35_table": "Car Check List",
+   "meaning": "車輛定檢排程",
+   "car35_rows": 21176,
+   "ours_table": "vehicle_inspections",
+   "ours_rows": 19918,
+   "missing": 1258
+  },
+  {
+   "car35_table": "Spend List",
+   "meaning": "零用金／雜支",
+   "car35_rows": 3390,
+   "ours_table": "expenses",
+   "ours_rows": 3390,
+   "missing": 0
+  },
+  {
+   "car35_table": "Customer Pay",
+   "meaning": "應收帳款沖銷（收款紀錄）",
+   "car35_rows": 90762,
+   "ours_table": "（缺：收款/付款方式）",
+   "ours_rows": null,
+   "missing": 90762
+  },
+  {
+   "car35_table": "Material Header",
+   "meaning": "進貨單主檔（廠商→車行）",
+   "car35_rows": 103916,
+   "ours_table": "（缺：進貨單）",
+   "ours_rows": null,
+   "missing": 103916
+  },
+  {
+   "car35_table": "Material Detail",
+   "meaning": "進貨單明細",
+   "car35_rows": 166315,
+   "ours_table": "（缺：進貨明細）",
+   "ours_rows": null,
+   "missing": 166315
+  },
+  {
+   "car35_table": "Check In",
+   "meaning": "應收票據",
+   "car35_rows": 0,
+   "ours_table": "（空表）",
+   "ours_rows": null,
+   "missing": 0
+  },
+  {
+   "car35_table": "Check Out",
+   "meaning": "應付票據",
+   "car35_rows": 0,
+   "ours_table": "（空表）",
+   "ours_rows": null,
+   "missing": 0
+  },
+  {
+   "car35_table": "Firm Pay",
+   "meaning": "應付帳款沖銷",
+   "car35_rows": 0,
+   "ours_table": "（空表）",
+   "ours_rows": null,
+   "missing": 0
+  }
+ ],
+ "report": "==============================================================================\nCAR35 資料缺口盤點\n  Access : C:\\Users\\fr\\35-20231008\\Data35.mdb  (128 MB)\n  SQLite : C:\\Users\\fr\\AutoRepairOS\\data\\autorepair.db\n==============================================================================\n\n【A】CAR35 全部資料表\n    Bank                            160 筆\n    Branch                            8 筆\n    Car                          15,010 筆\n    Car Check List               21,176 筆\n    Car Class                        21 筆\n    Car Insurance List            2,667 筆\n    Check In                          0 筆\n    Check Out                         0 筆\n    Class                             9 筆\n    Color Class                     100 筆\n    Customer                      8,118 筆\n    Customer Pay                 90,762 筆\n    Firm                            563 筆\n    Firm Pay                          0 筆\n    Gas Class                         4 筆\n    Insurance Class                  12 筆\n    Insurance Company                15 筆\n    Maintain Detail             390,425 筆\n    Maintain Header              95,440 筆\n    Maintain Record Detail          283 筆\n    Maintain Record Header           25 筆\n    Material                     10,351 筆\n    Material Detail             166,315 筆\n    Material Header             103,916 筆\n    Model                           929 筆\n    OEM                              74 筆\n    Register                          6 筆\n    Spend List                    3,390 筆\n    Staff                           246 筆\n    Store                             4 筆\n    String Lib                      737 筆\n    Unit Class                       56 筆\n    Âà´«¿ù»~                          0 筆\n\n【B】逐表對照：CAR35 → AutoRepairOS\n    CAR35 表                        筆數  → 我們的表                           筆數  差額\n    --------------------------------------------------------------------------\n    Customer                    8,118  customers                      6512  +1,606\n    Car                        15,010  vehicles                      12964  +2,046\n    Firm                          563  suppliers                       691  -128\n    Staff                         246  users                           102  +144\n    Material                   10,351  inventory_items               10352  -1\n    Insurance Company              15  insurance_companies              16  -1\n    Maintain Header            95,440  work_orders                   85825  +9,615\n    Maintain Detail           390,425  work_order_items             344745  +45,680\n    Maintain Record Header         25  maintenance_templates            25  +0\n    Maintain Record Detail        283  maintenance_template_items       43  +240\n    Car Insurance List          2,667  vehicle_insurances             2438  +229\n    Car Check List             21,176  vehicle_inspections           19918  +1,258\n    Spend List                  3,390  expenses                       3390  +0\n    Customer Pay               90,762  （缺：收款/付款方式）                       -  缺 90,762\n    Material Header           103,916  （缺：進貨單）                           -  缺 103,916\n    Material Detail           166,315  （缺：進貨明細）                          -  缺 166,315\n    Check In                        0  （空表）                              -  缺 0\n    Check Out                       0  （空表）                              -  缺 0\n    Firm Pay                        0  （空表）                              -  缺 0\n\n【C】關鍵欄位的實際使用率（非空筆數 / 總筆數）\n    重點看「不是 100% 也不是 0%」的欄位 —— 那代表功能真的在用但只覆蓋部分資料。\n\n    ── Customer（客戶主檔）8,118 筆\n       No                          8,117  100.0%  ← 幾乎都有\n       Name                        8,117  100.0%  ← 幾乎都有\n       Short Name                  8,116  100.0%  ← 幾乎都有\n       Birthday                    2,205   27.2%\n       ID No                       3,049   37.6%\n       Telephone-1                 7,053   86.9%\n       Hand Telephone              2,027   25.0%\n       Address-1                   4,375   53.9%\n       Comm Name                   7,991   98.4%\n\n    ── Car（車輛主檔）15,010 筆\n       No                         14,987   99.8%  ← 幾乎都有\n       Customer No                14,984   99.8%  ← 幾乎都有\n       Model No                    5,582   37.2%\n       OEM No                     13,175   87.8%\n       Year                        6,309   42.0%\n       Color                      11,711   78.0%\n       Cylinder Capacity           7,803   52.0%\n       Engine No                   5,115   34.1%\n       Body No                     1,845   12.3%\n       Driver Name                14,607   97.3%\n       Driver Telephone-1          4,057   27.0%\n       Last Mileage                7,973   53.1%\n       Last Maintain Date         14,287   95.2%\n       Start Check Date            4,896   32.6%\n       End Check Date                190    1.3%\n       Vaild Date                  4,853   32.3%\n\n    ── Firm（廠商主檔）563 筆\n       No                            562   99.8%  ← 幾乎都有\n       Name                          562   99.8%  ← 幾乎都有\n       Short Name                    562   99.8%  ← 幾乎都有\n       Tax No                        150   26.6%\n       Fax                           235   41.7%\n       Sales Name                    209   37.1%\n\n    ── Staff（人員（含外包商））246 筆\n       No                            246  100.0%  ← 幾乎都有\n       Name                          246  100.0%  ← 幾乎都有\n       Branch No                     194   78.9%\n       Id No                         134   54.5%\n       Start Date                     74   30.1%\n       End Date                       48   19.5%\n       Bank No                        40   16.3%\n       Birthday                      101   41.1%\n\n    ── Material（零件主檔）10,351 筆\n       No                         10,351  100.0%  ← 幾乎都有\n       Name                       10,348  100.0%  ← 幾乎都有\n       Specific                      121    1.2%\n       Class No                    8,380   81.0%\n       Store No                       10    0.1%\n       In Price                    3,362   32.5%\n       Out Price                   7,915   76.5%\n       Current Amount              7,625   73.7%\n       Safe Amount                     6    0.1%\n       Firm No-1                      34    0.3%\n       Last In Date                1,607   15.5%\n       Last Out Date               8,389   81.0%\n\n    ── Insurance Company（保險公司主檔）15 筆\n       No                             15  100.0%  ← 幾乎都有\n       Name                           15  100.0%  ← 幾乎都有\n       Short Name                     15  100.0%  ← 幾乎都有\n       Tax No                         14   93.3%\n       Comm Name                       7   46.7%\n       Telephone-1                    15  100.0%  ← 幾乎都有\n       Fax                            14   93.3%\n       Address-1                      15  100.0%  ← 幾乎都有\n\n    ── Maintain Header（工單主檔（估價/維修單））95,440 筆\n       No                         95,421  100.0%  ← 幾乎都有\n       Date                       95,424  100.0%  ← 幾乎都有\n       Car No                     95,425  100.0%  ← 幾乎都有\n       Customer No                95,373   99.9%  ← 幾乎都有\n       Mileage                    44,369   46.5%\n       Real Total                 95,367   99.9%  ← 幾乎都有\n       Detail Total               95,381   99.9%  ← 幾乎都有\n       Discount Percent               80    0.1%\n       Discount Price             16,098   16.9%\n       Tax Flag                   17,045   17.9%\n       Tax Price                   9,508   10.0%\n       Tax Total                   9,569   10.0%\n       Pay Flag                   87,374   91.5%\n       Clear No                   87,462   91.6%\n       Staff No                   24,495   25.7%\n       Remark                         71    0.1%\n       Complete Date              95,396  100.0%  ← 幾乎都有\n       Consign Date               95,396  100.0%  ← 幾乎都有\n       Insurance Flag                  0    0.0%  ← 全表 0 筆（預留欄位，非功能）\n       Insurance Company No            0    0.0%  ← 全表 0 筆（預留欄位，非功能）\n       Insurance Remark                0    0.0%  ← 全表 0 筆（預留欄位，非功能）\n       Decorate Flag                   0    0.0%  ← 全表 0 筆（預留欄位，非功能）\n\n    ── Maintain Detail（工單明細（零件/工資））390,425 筆\n       No                        390,425  100.0%  ← 幾乎都有\n       Sequence No               390,425  100.0%  ← 幾乎都有\n       Material No               390,405  100.0%  ← 幾乎都有\n       Price                     370,684   94.9%\n       Amount                    390,371  100.0%  ← 幾乎都有\n       Staff No                  231,167   59.2%\n       Remark                    129,011   33.0%\n\n    ── Maintain Record Header（保養套餐主檔）25 筆\n       No                             25  100.0%  ← 幾乎都有\n       Name                           25  100.0%  ← 幾乎都有\n\n    ── Maintain Record Detail（保養套餐明細）283 筆\n       No                            283  100.0%  ← 幾乎都有\n       Sequence No                   283  100.0%  ← 幾乎都有\n       Material No                   283  100.0%  ← 幾乎都有\n       Price                          56   19.8%\n       Amount                        263   92.9%\n       Staff No                        0    0.0%  ← 全表 0 筆（預留欄位，非功能）\n\n    ── Car Insurance List（車輛投保紀錄）2,667 筆\n       No                          2,667  100.0%  ← 幾乎都有\n       Insurance Class             2,666  100.0%  ← 幾乎都有\n       License Date                2,537   95.1%\n       Card No                     2,189   82.1%\n       Company No                  2,210   82.9%\n       Remark                      1,828   68.5%\n\n    ── Car Check List（車輛定檢排程）21,176 筆\n       No                         21,176  100.0%  ← 幾乎都有\n       Order Date                 21,173  100.0%  ← 幾乎都有\n       Check Date                      1    0.0%\n       Firm No                         0    0.0%  ← 全表 0 筆（預留欄位，非功能）\n\n    ── Spend List（零用金／雜支）3,390 筆\n       Sequence No                 3,390  100.0%  ← 幾乎都有\n       Date                        3,390  100.0%  ← 幾乎都有\n       In Price                      887   26.2%\n       Out Price                   2,501   73.8%\n       Material No                 3,385   99.9%  ← 幾乎都有\n       Remark                      1,186   35.0%\n\n    ── Customer Pay（應收帳款沖銷（收款紀錄））90,762 筆\n       No                         90,762  100.0%  ← 幾乎都有\n       Maintain No                90,759  100.0%  ← 幾乎都有\n       Customer No                90,756  100.0%  ← 幾乎都有\n       Car No                     90,757  100.0%  ← 幾乎都有\n       Real Total                 90,742  100.0%  ← 幾乎都有\n       Detail Total               90,750  100.0%  ← 幾乎都有\n       Discount Price             16,155   17.8%\n       Tax Price                   8,076    8.9%\n       Pay Total                  90,736  100.0%  ← 幾乎都有\n       Cash Total                 83,094   91.6%\n       Card Total                  7,126    7.9%\n       Check Total                   741    0.8%\n       Card No                       265    0.3%\n       Check No                       23    0.0%\n       Bank Class                     19    0.0%\n       Check Date                     19    0.0%\n       Pay Date                   90,757  100.0%  ← 幾乎都有\n       Pay Remark                     14    0.0%\n       Delete Flag                     9    0.0%\n\n    ── Material Header（進貨單主檔（廠商→車行））103,916 筆\n       No                        103,916  100.0%  ← 幾乎都有\n       Date                      103,916  100.0%  ← 幾乎都有\n       Firm No                   103,162   99.3%  ← 幾乎都有\n       Firm Cit No               100,441   96.7%\n       Real Total                103,045   99.2%  ← 幾乎都有\n       Detail Total              103,049   99.2%  ← 幾乎都有\n       Discount Percent               82    0.1%\n       Tax Flag                    1,721    1.7%\n       Tax Price                   1,719    1.7%\n       Staff No                       71    0.1%\n       Remark                      4,970    4.8%\n\n    ── Material Detail（進貨單明細）166,315 筆\n       No                        166,315  100.0%  ← 幾乎都有\n       Sequence No               166,315  100.0%  ← 幾乎都有\n       Material No               166,311  100.0%  ← 幾乎都有\n       Price                     165,876   99.7%  ← 幾乎都有\n       Amount                    166,315  100.0%  ← 幾乎都有\n       Remark                     85,093   51.2%\n\n【D】金流拆分實際使用率（Customer Pay = 應收帳款沖銷）\n    總筆數 90,762\n      現金    83,094 筆  合計      348,217,863\n      刷卡     7,126 筆  合計       44,173,554\n      支票       741 筆  合計        7,142,575\n    → 現金佔金額 87.2%，但刷卡＋支票有 7,867 筆\n      ＝ 這塊不做，帳面上看不到 5 千萬的資金流。\n\n【E】進貨（Material Header / Detail）是否真的對應到廠商與料號\n    Material Header  103,916 筆\n      Firm No 有值 103,365 筆，能對到廠商主檔 101,373 筆\n    Material Detail  166,315 筆\n      Material No 有值 166,311 筆，能對到零件主檔 163,908 筆\n    → 對得到主檔 ＝ 這是真的進貨單（不是領料單），可以直接建採購/入庫紀錄。\n\n【F】資料對不上的地方（migration 需要補的關聯）\n    工單車牌 12,654 種，其中 2,148 種不在 vehicles 表\n      樣本：['-', '0005-SJ', '0008-YB', '0017-DV', '0037-FE', '0053-D2', '0055-VM', '0060-WY']\n    投保車牌 1,721 種，其中 174 種不在 vehicles 表\n      樣本：['0053-D2', '0191-LN', '0272-WJ', '081-YS', '0825-FY', '0911-399', '095-TEA', '0960-LA']\n    → 原因是 migrate_vehicles() 遇到「客戶對不上」就整台車跳過，\n      連帶讓工單、投保、定檢紀錄失去車主。要補的是車主對應，不是重跑全部。\n\n【G】保險件在舊系統怎麼記錄（影響 P0-1 的資料回填）\n    Maintain Header 的保險欄位（Insurance Flag / Company No / Name / Date /\n    Remark / Table No）**全表 0 筆** —— 設計了但沒在用。\n    Remark 有值共 71 筆，其中 54 筆提到保險\n      樣本：['100/0210退保', '030CBC0000524新光財損自付70%', '富邦產物04D401471財損', '泰安0901W0156']\n    → 保險件無法從結構化欄位回填，只能靠 Remark 關鍵字比對（覆蓋率低）。\n      結論：工單的 insurance_company_id / claim_no 從舊資料回填的效益很低，\n      直接從「新開的工單」開始收結構化資料比較實際。\n    另有 Car Insurance List（車輛投保紀錄）2,667 筆是完整可用的：\n      險種 + 發照日 + 保險卡號 + 保險公司編號，這才是車輛保險的資料來源。\n\n【H】舊系統「建立好但全表 0 筆」的欄位（不要為它們改 schema）\n    Maintain Header: Insurance Flag, Insurance Company No, Insurance Name, Insurance Date, Insurance Table No, Insurance Remark, Decorate Flag, Maintain Price, Check Date, State_1, State_2, State_3, State_4\n\n【I】規模（決定 migration 與備份策略）\n    Maintain Detail            390,425 筆\n    Maintain Header             95,440 筆\n    Material Detail            166,315 筆\n    Material Header            103,916 筆\n    Customer Pay                90,762 筆\n    Car Check List              21,176 筆\n    Car                         15,010 筆\n    Material                    10,351 筆\n    Customer                     8,118 筆"
+}

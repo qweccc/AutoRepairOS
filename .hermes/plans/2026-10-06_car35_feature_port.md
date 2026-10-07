@@ -47,11 +47,40 @@ work_order_items  work_order_photos  work_orders
 | 14 | 車型/原廠對照 | `Model` / `OEM`（Carp31/74/75/76） | 完全沒有 | P3 |
 | 15 | 零件分類 | `Material.Class` / `Store`（Carp61/73） | 完全沒有 | P3 |
 
+### 資料盤點修正（2026-10-07，實讀 Data35.mdb 後）
+
+原表是從 32 份 `.rpt` 反推**功能**；補做逐表逐欄盤點後，有 4 處判斷要改。
+可重跑：`python scripts/analyze_car35_data.py`（輸出 `data/car35_data_gap.json`）。
+
+| # | 原本寫的 | 實際狀況（非空筆數為證） | 修正 |
+|---|---------|------------------------|------|
+| 2 | 保險理賠工單「CAR35 有」 | `Maintain Header` 的 `Insurance Flag` / `Company No` / `Name` / `Date` / `Remark` / `Table No` **全部 0/95,440 筆**；保險資訊只出現在 `Remark`，95,440 張工單中僅 50 筆的備註提到保險公司 | CAR35 這塊**設計了但沒在用**。不回填舊工單，只從新工單收結構化資料。車輛保險改用 `Car Insurance List`（2,667 筆，完整） |
+| 5 | 應付帳款 `Out`（Carp83） | `Check Out` **0 筆**、`Firm Pay` **0 筆** | 舊系統從未使用應付票據/應付沖銷。這是**全新功能**，不是移植 |
+| 6 | 採購單 `List`（Carp84） | `Material Header` 103,916 筆、`Material Detail` 166,315 筆，`Firm No` 10.1 萬筆能對到廠商、料號 16.4 萬筆能對到零件主檔 | 這是**真的進貨單**（不是領料單，明細單價對應 `In Price`）。可回填成採購/入庫歷史，優先度可上調 |
+| 8 | 代客保管 `Header.Consign` | `Consign` 欄位**不存在**；`Consign Date` 有 95,396 筆，語意是「交車日期」（`Complete Date` 幾乎相同） | 舊系統**沒有**代客保管功能。純加值，且無歷史資料可遷 |
+| 12 | 裝潢分帳 `Header.Decorate` | `Decorate Flag` **0/95,440 筆** | 同 #2，設計了沒用。**移除**此項 |
+| 3 | 付款方式拆分 | `Customer Pay` 90,762 筆：現金 83,094 筆、刷卡 7,126 筆、支票 741 筆；金額合計 3.48 億 / 4,417 萬 / 714 萬 | 確認是真的，但**刷卡＋支票不到 8,000 筆**。欄位仍要做，但舊資料回填的價值主要在現金以外的 7,867 筆 |
+| — | （新增）收款紀錄本身 | `Customer Pay` 90,762 筆可對到 87,625 張工單 | 應收帳款明細的**歷史資料來源**，不是只有報表格式 |
+
+其餘查證為真的欄位（可直接遷移）：
+
+| 項目 | 證據 |
+|------|------|
+| 客戶生日 | `Customer.Birthday` 2,205/8,118（27%） |
+| 客戶統編 | `Customer.Tax Name` 8,112、`ID No` 3,049 |
+| 駕駛人 | `Car.Driver Name` 14,607/15,010（97%） |
+| 車輛定檢 | `Car.Start Check Date` 4,902、`Car Check List` 21,176 筆 |
+| 技師分工 | `Maintain Detail.Staff No` 231,188/390,425 筆有值，可算技師產值 |
+| 零件分類/庫位 | `Material.Class No`、`Store No`（已有 `category` 欄） |
+| 廠商完整資料 | `Firm.Tax No` 150、`Fax` 235、`Sales Name` 209 |
+
 ### 明確不做
 
 - 總帳會計、稅務申報（SRS 已排除；CAR35 的 Carp9x 是 1999 年代做法，不符台灣現行稅制）
 - 分店管理（SRS 為單店，CAR35 的 `Branch` 用不到）
 - 郵寄標籤（`Label-1` / `Letter-1`，無實用價值）
+- **代客保管**（CAR35 沒有此功能，無資料可遷；要做也是純新功能）
+- **裝潢分帳**（`Decorate Flag` 全表 0 筆）
 
 ---
 
@@ -187,7 +216,7 @@ Expected: FAIL（handler 未定義）
 - `ListInsuranceCompanies(w, r, user)` — 列表 + 搜尋
 - `CreateInsuranceCompany` — 建立（code 唯一性檢查）
 - `EditInsuranceCompanyForm` / `UpdateInsuranceCompany`
-- `DeleteInsuranceCompany` — 軟刪除（active=0）
+- `DeactivateInsuranceCompany` — 停用（active=0，軟刪除；歷史工單透過 insurance_company_id 引用，故不真刪）
 
 權限：`CounterUp`（櫃檯可維護保險公司清單）
 
@@ -196,9 +225,9 @@ Expected: FAIL（handler 未定義）
 ```go
 mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))
-mux.HandleFunc("GET /insurance-companies/{id}/edit", handler.CounterUp(handler.EditInsuranceCompanyForm))
+mux.HandleFunc("GET /insurance-companies/{id}/edit", handler.CounterUpPage(handler.EditInsuranceCompanyForm))
 mux.HandleFunc("POST /insurance-companies/{id}", handler.CounterUp(handler.UpdateInsuranceCompany))
-mux.HandleFunc("GET /insurance-companies/{id}/delete", handler.OwnerOnly(handler.DeleteInsuranceCompany))
+mux.HandleFunc("GET /insurance-companies/{id}/delete", handler.OwnerOnly(handler.DeactivateInsuranceCompany))
 ```
 
 **Step 5: 跑測試確認通過**
