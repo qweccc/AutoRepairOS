@@ -135,6 +135,12 @@ type WorkOrder struct {
 	AccidentDate       string  `json:"accident_date,omitempty"`
 	DeductibleAmount   float64 `json:"deductible_amount"`
 
+	// 列表顯示用的零件彙總（非資料庫欄位）。
+	// PartSummary 例："BE071×2、G015×1"；PartCount 是不同料號數。
+	// 由 ListWorkOrders 整頁一次查回填入，見 woPartUsage 的說明。
+	PartSummary string `json:"part_summary,omitempty"`
+	PartCount   int    `json:"part_count,omitempty"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

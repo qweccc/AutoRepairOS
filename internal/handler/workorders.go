@@ -63,6 +63,8 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	q := strings.TrimSpace(qv.Get("q"))
 	from := strings.TrimSpace(qv.Get("from"))
 	to := strings.TrimSpace(qv.Get("to"))
+	tech := strings.TrimSpace(qv.Get("tech")) // 技師篩選（users.id，'0' = 未指派）
+	part := strings.TrimSpace(qv.Get("part")) // 零件篩選：料號或名稱的文字查詢
 	page := pageNo(r)
 	size := pageSize(r)
 
@@ -77,6 +79,32 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	if q != "" {
 		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)`
 		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	// 技師篩選。
+	//   tech='0'     → 只看未指派（technician_id 為 0 或 NULL）
+	//   tech='<id>'  → 該技師
+	// 未指派刻意用獨立值而非留空：留空等於「不篩選」，
+	// 而「找出漏派工的單」正是這頁最需要的查詢之一。
+	if tech == "0" {
+		where += ` AND COALESCE(wo.technician_id,0) = 0`
+	} else if n := mustInt(tech); n > 0 {
+		where += ` AND wo.technician_id = ?`
+		args = append(args, n)
+	}
+	// 零件篩選：工單明細曾用過這個料號或名稱。
+	//
+	// 為什麼用文字而非下拉：料號有 10,366 個，做成 <select> 會讓這一頁
+	// 從 13 KB 膨脹到 647 KB。用 LIKE 打「雨刷」「BE071」比捲動一萬項快。
+	//
+	// 用 EXISTS 而非 JOIN：同一張工單可能分多列用同一個料號
+	// （實測 5,489 組，最多 10 列），JOIN 會讓該工單重複出現。
+	if part != "" {
+		where += ` AND EXISTS (SELECT 1 FROM work_order_items i
+			LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+			WHERE i.work_order_id = wo.id
+			  AND (ii.part_number LIKE ? OR ii.name LIKE ? OR i.description LIKE ?))`
+		like := "%" + part + "%"
 		args = append(args, like, like, like)
 	}
 	// 日期區間。
@@ -119,20 +147,70 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		list = append(list, wo)
 	}
+	rows.Close()
+
+	// 零件欄：整頁一次查回，避免每列一次查詢（N+1）。
+	// 同料號分多列的情況在這裡彙總（見 woPartUsage 的說明）。
+	if len(list) > 0 {
+		ids := make([]string, 0, len(list))
+		idx := make(map[int64]int, len(list))
+		for i, wo := range list {
+			ids = append(ids, strconv.FormatInt(wo.ID, 10))
+			idx[wo.ID] = i
+		}
+		q := `SELECT i.work_order_id, COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,''),
+				COALESCE(SUM(i.quantity),0)
+			FROM work_order_items i
+			LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+			WHERE i.item_type = 'part' AND i.work_order_id IN (` + strings.Join(ids, ",") + `)
+			GROUP BY i.work_order_id, COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,'')
+			ORDER BY i.work_order_id, COALESCE(ii.part_number,'')`
+		if pr, perr := db.DB.Query(q); perr == nil {
+			for pr.Next() {
+				var wid int64
+				var part, name string
+				var qty float64
+				if err := pr.Scan(&wid, &part, &name, &qty); err != nil {
+					continue
+				}
+				i, ok := idx[wid]
+				if !ok {
+					continue
+				}
+				if list[i].PartSummary != "" {
+					list[i].PartSummary += "、"
+				}
+				list[i].PartSummary += part + "×" + trimQty(qty)
+				list[i].PartCount++
+			}
+			pr.Close()
+		}
+	}
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th><th class="num">里程</th><th class="num">金額</th><th>日期</th></tr>`)
+	tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th><th>零件</th><th class="num">里程</th><th class="num">金額</th><th>日期</th></tr>`)
 	for _, wo := range list {
 		insTag := ""
 		if wo.IsInsurance {
 			insTag = ` <span class="pill p-waitparts">保險</span>`
+		}
+		// 零件欄：只在有明細時顯示，且彙總同料號的多列。
+		// 一次查詢取回整頁（最多 50 筆）用過的零件，避免每列一次查詢。
+		partCell := `<span style="color:#475569">—</span>`
+		if wo.PartCount > 0 {
+			partCell = htmlEsc(wo.PartSummary)
+			if wo.PartCount > 1 {
+				partCell += ` <span style="color:#64748b;font-size:11.5px">等 ` +
+					strconv.Itoa(wo.PartCount) + ` 項</span>`
+			}
 		}
 		tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">` + strconv.FormatInt(wo.ID, 10) + `</a></td><td><b>` +
 			htmlEsc(wo.PlateNumber) + `</b><br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.BrandModel) + `</span></td><td>` +
 			htmlEsc(wo.CustomerName) + `<br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.CustomerPhone) + `</span></td><td>` +
 			htmlEsc(wo.TechnicianName) + `</td><td><span class="pill ` + statusPill[wo.Status] + `">` + workOrderStatusLabel[wo.Status] +
 			`</span>` + insTag + `</td><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] +
-			`</span></td><td class="num">` + strconv.Itoa(wo.CurrentMileage) + `</td><td class="num">` + money(wo.TotalAmount) +
+			`</span></td><td style="font-size:12.5px;max-width:190px">` + partCell +
+			`</td><td class="num">` + strconv.Itoa(wo.CurrentMileage) + `</td><td class="num">` + money(wo.TotalAmount) +
 			`</td><td style="font-size:12.5px;color:#94a3b8">` + htmlEsc(woCreatedText(wo.CreatedAt)) + `</td></tr>`)
 	}
 	tb.WriteString(`</table>`)
@@ -161,7 +239,17 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
       </div>
       <div style="margin-bottom:12px">` + tabs.String() + `</div>
       <form method="GET" action="/work-orders" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px">
+        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:240px">
+        <label style="font-size:12.5px;color:#94a3b8">技師
+          <select name="tech" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+            <option value="">全部</option>
+            <option value="0"` + selIf(tech == "0") + `>— 未指派 —</option>` +
+		woTechFilterOptions(tech) + `
+          </select>
+        </label>
+        <label style="font-size:12.5px;color:#94a3b8">零件
+          <input name="part" value="` + htmlEsc(part) + `" placeholder="料號 / 名稱，例：雨刷" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:190px">
+        </label>
         <input type="hidden" name="status" value="` + htmlEsc(status) + `">
         <label style="font-size:12.5px;color:#94a3b8">日期從
           <input type="date" name="from" value="` + htmlEsc(from) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
@@ -189,10 +277,10 @@ func woCreatedText(t time.Time) string {
 	return t.Format("2006-01-02")
 }
 
-// woTabURL 產生狀態分頁籤連結，保留 q / from / to 條件。
+// woTabURL 產生狀態分頁籤連結，保留 q / from / to / tech / part 條件。
 func woTabURL(qv url.Values, status string) string {
 	out := url.Values{}
-	for _, k := range []string{"q", "from", "to"} {
+	for _, k := range []string{"q", "from", "to", "tech", "part"} {
 		if v := qv.Get(k); v != "" {
 			out.Set(k, v)
 		}
@@ -204,6 +292,88 @@ func woTabURL(qv url.Values, status string) string {
 		return "/work-orders?" + s
 	}
 	return "/work-orders"
+}
+
+// woTechFilterOptions 工單列表的技師篩選下拉。
+//
+// 與 technicianOptions() 分開，因為用途不同：
+//   technicianOptions()     指派技師 —— 只列「現在會動手的人」（排除行政/眷屬/廠商）
+//   woTechFilterOptions()   查歷史  —— 要能查到已離職或轉行政者做的舊單，
+//                                      否則 2016 年那張單會永遠找不到人。
+// 兩者都排除 role='technician' 以外的帳號。
+func woTechFilterOptions(selected string) string {
+	rows, err := db.DB.Query(`SELECT u.id, u.name, COALESCE(u.username,''), COALESCE(u.staff_branch,'')
+		FROM users u
+		WHERE u.role = 'technician' AND COALESCE(u.staff_kind,'employee') = 'employee'
+		ORDER BY u.staff_branch, u.name`)
+	if err != nil {
+		return ""
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	for rows.Next() {
+		var id int64
+		var name, username, branch string
+		if err := rows.Scan(&id, &name, &username, &branch); err != nil {
+			continue
+		}
+		label := name + ` (` + username + `)`
+		if dept := branchLabel(branch); dept != "" {
+			label += `　` + dept
+		}
+		b.WriteString(`<option value="` + strconv.FormatInt(id, 10) + `"` +
+			selIf(strconv.FormatInt(id, 10) == selected) + `>` + htmlEsc(label) + `</option>`)
+	}
+	return b.String()
+}
+
+// trimQty 數量顯示：整數不帶小數點（2 而非 2.0），有小數才保留一位。
+// 舊資料的 quantity 是 REAL（1.0、2.0…），直接印會出現一堆 .0。
+func trimQty(q float64) string {
+	if q == float64(int64(q)) {
+		return strconv.FormatInt(int64(q), 10)
+	}
+	return strconv.FormatFloat(q, 'f', 1, 64)
+}
+
+// woPartUsage 回傳指定工單用過的零件彙總（料號/名稱/數量），供列表展開顯示。
+//
+// 為什麼要彙總：同一張工單可能分多列用同一個料號（實測 5,489 組，最多 10 列），
+// 逐列顯示會讓「用了幾個」看起來比實際少。這裡 SUM(quantity) 後才對。
+func woPartUsage(workOrderID int64) []struct {
+	Part string
+	Name string
+	Qty  float64
+} {
+	rows, err := db.DB.Query(`SELECT COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,''),
+			COALESCE(SUM(i.quantity),0)
+		FROM work_order_items i
+		LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+		WHERE i.work_order_id = ? AND i.item_type = 'part'
+		GROUP BY COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,'')
+		ORDER BY COALESCE(ii.part_number,'')`, workOrderID)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var out []struct {
+		Part string
+		Name string
+		Qty  float64
+	}
+	for rows.Next() {
+		var r struct {
+			Part string
+			Name string
+			Qty  float64
+		}
+		if err := rows.Scan(&r.Part, &r.Name, &r.Qty); err != nil {
+			continue
+		}
+		out = append(out, r)
+	}
+	return out
 }
 
 func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
