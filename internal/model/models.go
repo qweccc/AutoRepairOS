@@ -22,6 +22,42 @@ type Supplier struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+// VehicleInsurance 車輛投保紀錄（CAR35 Car Insurance List）。
+type VehicleInsurance struct {
+	ID                 int64  `json:"id"`
+	VehicleID          int64  `json:"vehicle_id"`
+	PlateNumber        string `json:"plate_number,omitempty"`
+	InsuranceCompanyID int64  `json:"insurance_company_id,omitempty"`
+	CompanyName        string `json:"company_name,omitempty"`
+	CompanyNo          string `json:"company_no,omitempty"`
+	InsuranceClass     string `json:"insurance_class,omitempty"`
+	InsuranceClassName string `json:"insurance_class_name,omitempty"`
+	LicenseDate        string `json:"license_date,omitempty"`
+	CardNo             string `json:"card_no,omitempty"`
+	AmountRaw          string `json:"amount_raw,omitempty"`
+	Notes              string `json:"notes,omitempty"`
+}
+
+// VehicleInspection 車輛定檢排程（CAR35 Car Check List）。
+type VehicleInspection struct {
+	ID          int64  `json:"id"`
+	VehicleID   int64  `json:"vehicle_id"`
+	PlateNumber string `json:"plate_number,omitempty"`
+	OrderDate   string `json:"order_date,omitempty"`
+	CheckDate   string `json:"check_date,omitempty"`
+	FirmNo      string `json:"firm_no,omitempty"`
+	Notes       string `json:"notes,omitempty"`
+}
+
+// MaintenanceTemplate 保養套餐範本（CAR35 Maintain Record Header）。
+type MaintenanceTemplate struct {
+	ID        int64  `json:"id"`
+	Code      string `json:"code"`
+	Name      string `json:"name"`
+	Notes     string `json:"notes,omitempty"`
+	ItemCount int    `json:"item_count"`
+}
+
 type Customer struct {
 	ID               int64     `json:"id"`
 	Name             string    `json:"name"`

@@ -1,0 +1,12 @@
+DROP INDEX IF EXISTS idx_expenses_date;
+DROP INDEX IF EXISTS idx_mt_items_template;
+DROP INDEX IF EXISTS idx_veh_insp_order;
+DROP INDEX IF EXISTS idx_veh_insp_vehicle;
+DROP INDEX IF EXISTS idx_veh_ins_date;
+DROP INDEX IF EXISTS idx_veh_ins_company;
+DROP INDEX IF EXISTS idx_veh_ins_vehicle;
+DROP TABLE IF EXISTS expenses;
+DROP TABLE IF EXISTS maintenance_template_items;
+DROP TABLE IF EXISTS maintenance_templates;
+DROP TABLE IF EXISTS vehicle_inspections;
+DROP TABLE IF EXISTS vehicle_insurances;

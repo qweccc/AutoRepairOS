@@ -101,6 +101,12 @@ func main() {
 	// 員工與健保資料（含健保眷屬）
 	mux.HandleFunc("GET /staff", handler.AllStaff(handler.ListStaff))
 
+	// 舊系統補遷移：車輛投保紀錄 / 定檢排程 / 保養套餐 / 零用金
+	mux.HandleFunc("GET /insurances", handler.AllStaff(handler.ListVehicleInsurances))
+	mux.HandleFunc("GET /inspections", handler.AllStaff(handler.ListVehicleInspections))
+	mux.HandleFunc("GET /maintenance-templates", handler.AllStaff(handler.ListMaintenanceTemplates))
+	mux.HandleFunc("GET /expenses", handler.CounterUpPage(handler.ListExpenses))
+
 	// 保險公司（CAR35 P0-1：Company 表，理賠案件歸屬對象）
 	mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 	mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))

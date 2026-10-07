@@ -96,7 +96,11 @@ var appRoutes = []struct {
 	{"/inventory", "庫存"},
 	{"/suppliers", "廠商"},
 	{"/staff", "員工"},
+	{"/insurances", "投保"},
+	{"/inspections", "定檢"},
+	{"/maintenance-templates", "保養套餐"},
 	{"/technicians/commissions", "技師佣金"},
+	{"/expenses", "支出"},
 	{"/reports", "報表"},
 	{"/scheduled-tasks", "排程"},
 }
@@ -302,6 +306,15 @@ var approvalPill = map[string]string{
 }
 
 func money(f float64) string { return fmt.Sprintf("%.0f", f) }
+
+// pctText 把 part/total 算成百分比字串，供報表說明行使用。
+// total 為 0 時回傳 "—"，避免除以零顯示 NaN。
+func pctText(part, total float64) string {
+	if total <= 0 {
+		return "—"
+	}
+	return fmt.Sprintf("%.1f%%", part/total*100)
+}
 
 func dateText(s string) string {
 	if s == "" {
