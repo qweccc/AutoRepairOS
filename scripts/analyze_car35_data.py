@@ -258,10 +258,12 @@ def report(mdb, db_path):
     P("\n【F】資料對不上的地方（migration 需要補的關聯）")
     mh_car = c.values("Maintain Header", "Car No")
     our_plates = set()
+    our_names = set()
     if os.path.exists(db_path):
         conn = sqlite3.connect(db_path)
         try:
             our_plates = {r[0] for r in conn.execute("SELECT plate_number FROM vehicles")}
+            our_names = {r[0] for r in conn.execute("SELECT name FROM customers")}
         except sqlite3.Error:
             pass
         conn.close()
@@ -276,6 +278,51 @@ def report(mdb, db_path):
         P(f"      樣本：{miss_i[:8]}")
     P("    → 原因是 migrate_vehicles() 遇到「客戶對不上」就整台車跳過，")
     P("      連帶讓工單、投保、定檢紀錄失去車主。要補的是車主對應，不是重跑全部。")
+
+    P("\n【J】車主對應缺口（最高價值的單一修復）")
+    if our_names:
+        car = c.get("Car")
+        # CAR35 客戶編號 → 客戶姓名（Customer 表 100% 已遷移）
+        no2name = {}
+        cu = c.get("Customer")
+        for i in range(len(cu.get("No", []))):
+            k, v = norm(cu['No'][i]), norm(cu['Name'][i])
+            if k and v:
+                no2name.setdefault(k, v)
+        our_name_set = our_names
+        car_missing = []
+        for i in range(len(car.get("No", []))):
+            p = norm(car['No'][i])
+            if p and p not in our_plates:
+                car_missing.append((p, no2name.get(norm(car['Customer No'][i]))))
+        recov = {p for p, n in car_missing if n in our_name_set}
+        P(f"    CAR35 客戶 {c.rows('Customer'):,} 筆，用「姓名」比對後 100% 都已在 customers")
+        P(f"    車輛主檔缺 {len(car_missing):,} 台，其中 {len(recov):,} 台的車主其實已經在 customers")
+        P(f"      → 只要把車輛遷移的比對鍵從「電話」改成「姓名」，覆蓋率 "
+          f"{100.0*(c.rows('Car')-len(car_missing))/c.rows('Car'):.1f}% → "
+          f"{100.0*(c.rows('Car')-len(car_missing)+len(recov))/c.rows('Car'):.1f}%")
+        # 工單
+        mh = c.get("Maintain Header")
+        have = rec = bad = 0
+        for i in range(len(mh.get("Car No", []))):
+            p = norm(mh['Car No'][i])
+            if not p:
+                continue
+            if p in our_plates:
+                have += 1
+            elif p in recov or no2name.get(norm(mh['Customer No'][i])) in our_name_set:
+                rec += 1
+            else:
+                bad += 1
+        tot = have + rec + bad
+        if tot:
+            P(f"    工單 {tot:,} 筆：車已在 {have:,} / 靠車主可救回 {rec:,} / 仍缺 {bad:,}")
+            P(f"      → 覆蓋率 {100.0*have/tot:.1f}% → {100.0*(have+rec)/tot:.1f}%")
+        P("    為什麼是「電話」出問題：customers.phone 有 UNIQUE 限制，")
+        P("      遷移時撞號會自動加 #序號（如 07002-232#1），")
+        P("      而 CAR35 客戶編號被存進 customers.notes，兩者都不再等於原編號。")
+        P("    修法：以 CAR35 客戶編號（customers.notes）或客戶姓名為鍵重建對應，")
+        P("      再補齊缺的車輛與工單，不必重跑全部。")
 
     P("\n【G】保險件在舊系統怎麼記錄（影響 P0-1 的資料回填）")
     mh = c.get("Maintain Header")
