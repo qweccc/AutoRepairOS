@@ -164,28 +164,33 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 
 // IndexHandler 渲染首頁總覽（統計卡片 + 最近工單）。
 func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
+	// href：點卡片就能跳到對應的列表（帶好篩選條件），不必自己找路徑。
 	stats := []struct {
 		label string
 		query string
+		href  string
 	}{
-		{"待處理工單", "SELECT COUNT(1) FROM work_orders WHERE status IN ('pending','in_progress','waiting_parts')"},
-		{"進行中", "SELECT COUNT(1) FROM work_orders WHERE status = 'in_progress'"},
-		{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'"},
-		{"客戶數", "SELECT COUNT(1) FROM customers"},
-		{"車輛數", "SELECT COUNT(1) FROM vehicles"},
-		{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock"},
+		{"待處理工單", "SELECT COUNT(1) FROM work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
+		{"進行中", "SELECT COUNT(1) FROM work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
+		{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+		{"客戶數", "SELECT COUNT(1) FROM customers", "/customers"},
+		{"車輛數", "SELECT COUNT(1) FROM vehicles", "/vehicles"},
+		{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
 	}
 
 	var sh strings.Builder
 	for _, s := range stats {
-		sh.WriteString(`<div class="stat"><b>` + strconv.Itoa(countRows(s.query)) + `</b><span>` + s.label + `</span></div>`)
+		sh.WriteString(`<a class="stat" href="` + s.href + `"><b>` +
+			strconv.Itoa(countRows(s.query)) + `</b><span>` + s.label + `</span></a>`)
 	}
 
 	var recent string
+	// 排除種子/測試資料（車牌 TEST-* 或客戶名含「測試」），否則正式工單會被擠掉。
 	rows, err := db.DB.Query(`SELECT wo.id, v.plate_number, v.brand_model, c.name, wo.status
 		FROM work_orders wo
 		JOIN vehicles v ON v.id = wo.vehicle_id
 		JOIN customers c ON c.id = wo.customer_id
+		WHERE v.plate_number NOT LIKE 'TEST-%' AND c.name NOT LIKE '%測試%'
 		ORDER BY wo.created_at DESC LIMIT 8`)
 	if err == nil {
 		defer rows.Close()

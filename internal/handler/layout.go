@@ -40,7 +40,8 @@ const pageStyle = `
   th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #334155; font-size: 13.5px; }
   th { color: #94a3b8; font-weight: 600; }
   tr:hover td { background: #263449; }
-  .stat { display: inline-block; margin: 0 32px 12px 0; }
+  .stat { display: inline-block; margin: 0 32px 12px 0; text-decoration: none; }
+  .stat:hover b { color: #7dd3fc; }
   .stat b { font-size: 26px; color: #f8fafc; display: block; }
   .stat span { color: #94a3b8; font-size: 12px; }
   .pill { padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }

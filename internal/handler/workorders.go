@@ -762,13 +762,22 @@ func approvalOptions(current string) string {
 
 // technicianOptions 技師下拉選單。
 //
-// 只列 staff_kind='employee'：舊系統的 Staff 表混了協力廠商（上上汽車、
-// 元發電機）與眷屬（車行家族），全部列出來會讓指派技師時選錯人。
-// 協力廠商要看請到「廠商」頁。
+// 只列「真的會動手的人」，兩層過濾缺一不可：
+//   staff_kind='employee' —— 舊系統的 Staff 表混了協力廠商（上上汽車、元發電機）
+//                            與眷屬（車行家族），協力廠商請到「廠商」頁。
+//   staff_branch NOT IN ('E','G','H') —— E 是行政、G 是眷屬、H 是廠商。
+//                            舊資料有 40 個眷屬編號（G001…G038）在遷移時被判成
+//                            employee，只靠 staff_kind 擋不掉，會讓行政與眷屬
+//                            出現在技師選單裡，污染技師產值與佣金統計。
+//
+// 註：users 表沒有「在職」欄位（舊系統的到職/離職日未遷），所以擋不掉已離職者。
+// 要處理得先加欄位，不在本次範圍。
 func technicianOptions() string {
 	rows, err := db.DB.Query(`SELECT u.id, u.name, u.username, COALESCE(u.staff_branch,'')
 		FROM users u
-		WHERE u.role = 'technician' AND COALESCE(u.staff_kind,'employee') = 'employee'
+		WHERE u.role = 'technician'
+		  AND COALESCE(u.staff_kind,'employee') = 'employee'
+		  AND UPPER(COALESCE(u.staff_branch,'')) NOT IN ('E','G','H')
 		ORDER BY u.staff_branch, u.name`)
 	if err != nil {
 		return ""
@@ -860,13 +869,13 @@ func statusControls(wo model.WorkOrder, canEdit bool) string {
           <label style="font-size:12px;color:#94a3b8">變更狀態</label>
           <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
 		statusOptions(wo.Status) + `</select>
-          <button class="btn btn-p" type="submit">更新</button>
+          <button class="btn btn-p" type="submit">更新狀態</button>
         </form>
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/approval">
           <label style="font-size:12px;color:#94a3b8;margin-left:16px">核准</label>
           <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
 		approvalOptions(wo.ApprovalStatus) + `</select>
-          <button class="btn btn-p" type="submit">更新</button>
+          <button class="btn btn-p" type="submit">更新核准</button>
         </form>
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
           <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
