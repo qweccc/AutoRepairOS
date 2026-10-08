@@ -141,13 +141,29 @@ if not inv_ids:
     inv_ids = sorted(set(re.findall(r'/inventory/(\d+)/edit', html)), key=int)
 inv = inv_ids[0]
 inv = str(inv)  # regex 結果是字串，格式化前先統一
+
+# 舊資料庫的零件庫存多為負數（見負庫存補正頁），挑「列表第一筆」可能撿到
+# 庫存 < 2 的零件，結帳時會被「庫存不足」擋下（400），測試就與程式無關地失敗。
+# 因此改為自建一筆庫存充足的測試零件，售價/庫存都已知。
+probe_name = f"FLOW-PART-{ts}"
+probe_price = 120
+st, _ = post(counter, "/inventory", {
+    "part_number": f"FLOW{ts}", "name": probe_name, "bin_location": "T-01",
+    "cost_price": "80", "selling_price": str(probe_price),
+    "stock_quantity": "50", "min_safety_stock": "5",
+})
+check("建立測試零件（庫存充足）302", st == 302, f"got={st}")
+
 # 售價直接讀「加入項目」表單中該零件 option 的標籤，避免解析欄位位置。
 # 格式：<option value="ID">名稱 / 料號 / 售價 980 / 庫存 30</option>
 st, ord_html = get(counter, base)
-m = re.search(r'<option value="' + re.escape(inv) + r'">([^<]*)</option>', ord_html)
+m = re.search(r'<option value="(\d+)">' + re.escape(probe_name) + r'[^<]*</option>', ord_html)
+check("測試零件出現在零件下拉", m is not None)
+if m:
+    inv = m.group(1)
 selling = "0"
 if m:
-    ms = re.search(r'售價\s*([\d,]+)', m.group(1))
+    ms = re.search(r'售價\s*([\d,]+)', m.group(0))
     if ms:
         selling = ms.group(1).replace(",", "")
 print(f"    (零件 #{inv} 售價 = {selling})")

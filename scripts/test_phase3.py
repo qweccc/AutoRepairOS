@@ -49,11 +49,15 @@ cids = sorted(set(re.findall(r'/customers/(\d+)', html_c)), key=int)
 check("建立保養測試客戶", st == 200 and len(cids) > 0)
 cust_id = cids[0] if cids else "1"
 
-soon = time.strftime("%Y-%m-%d", time.localtime(time.time() + 3*86400))
+# 保養到期是「兩條獨立基準」：日期到 / 里程到，先到者為準。
+# 這裡用「最後保養日 = 今天往前推 6 個月」讓下次保養日剛好是今天，
+# 而不是直接塞 next_maintenance_date（那個欄位由系統推算，表單不吃）。
+last_maint = time.strftime("%Y-%m-%d", time.localtime(time.time() - 183*86400))
 st, body = req(op, "/vehicles", {
     "customer_id": cust_id, "plate_number": PLATE, "brand_model": "Test Car",
-    "manufacture_year": "2021", "current_mileage": "10000",
-    "next_maintenance_date": soon,
+    "manufacture_year": "2021", "last_maintenance_date": last_maint,
+    "last_maintenance_mileage": "10000",
+    "maint_interval_months": "6", "maint_interval_km": "5000",
 })
 check("建立到期車輛", st == 200, body[:70] if st != 200 else "")
 

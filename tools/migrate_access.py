@@ -56,7 +56,10 @@ MASTER_TABLES = ['Customer', 'Car', 'Firm', 'Staff', 'Material']
 
 # 交易表
 TX_TABLES = ['Maintain Header', 'Maintain Detail',
-             'Material Header', 'Material Detail', 'Customer Pay']
+             'Material Header', 'Material Detail', 'Customer Pay',
+             'Car Insurance List', 'Car Check List',
+             'Maintain Record Header', 'Maintain Record Detail',
+             'Spend List']
 
 # 查表 (lookup)
 # 注意：Insurance Company 是「保險公司主檔」（含統編、地址），
@@ -202,21 +205,46 @@ def clean_year(v):
 
 def convert_roc_date(d):
     """民國年 → 西元年。 '105/02/22' → '2016/02/22'
-    容忍格式異常（如 '106/11/3'、'108/02/2'）。"""
+
+    舊資料有大量打字錯誤，實測需處理：
+      '990/01/31'  → 多打一個 0，應為 99 年（2010）
+      '105/11/31'  → 11 月沒有 31 日，夾到月底 11/30
+      '176/28/93'  → 年月日全錯，無法救，回 None
+      '63361/10/'  → 年份爆走，回 None
+
+    年份範圍設 1..130（民國 130 = 2041）：超過必為打字錯誤而非真實日期，
+    直接捨棄比產生 2069 年這種荒謬值好。
+    """
+    import calendar
+
     d = clean_str(d)
     if not d:
         return None
     parts = d.split('/')
-    if len(parts) == 3:
-        try:
-            y = int(parts[0])
-            m = int(parts[1])
-            day = int(parts[2])
-            if 1 <= m <= 12 and 1 <= day <= 31 and 1 <= y <= 200:
-                return f"{y + 1911:04d}/{m:02d}/{day:02d}"
-        except ValueError:
-            pass
-    return None
+    if len(parts) != 3:
+        return None
+    try:
+        y = int(parts[0])
+        m = int(parts[1])
+        day = int(parts[2])
+    except ValueError:
+        return None
+
+    # 年份修正：'990' → 99（多打的 0）
+    while y > 130 and y % 10 == 0:
+        y //= 10
+    if not (1 <= y <= 130):
+        return None
+    if not (1 <= m <= 12):
+        return None
+    # 日超出該月天數 → 夾到月底（如 11/31 → 11/30、2/31 → 2/28）
+    last_day = calendar.monthrange(2000, m)[1]
+    if day < 1:
+        return None
+    if day > last_day:
+        day = last_day
+
+    return f"{y + 1911:04d}/{m:02d}/{day:02d}"
 
 
 def norm_staff_no(s):
@@ -747,8 +775,8 @@ class Migrator:
                 self.cur.executemany("""
                     INSERT INTO insurance_companies
                       (code, name, tax_id, claim_phone, phone, contact_person,
-                       address, postal_code, notes, active)
-                    VALUES (?,?,?,?,?,?,?,?,?,?)
+                       address, postal_code, notes, active, legacy_no)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)
                 """, ins_rows)
             self.conn.commit()
             print(f"  新增 員工 {len(user_rows)}、廠商 {len(sup_rows)}、保險公司 {len(ins_rows)}")
@@ -891,6 +919,7 @@ class Migrator:
                 None,                                   # postal_code
                 clean_str(col(t, 'Remark', i)),         # notes（含業務員手機等）
                 1,
+                no,                                     # legacy_no：舊編號（投保表用它對應）
             ))
             used_codes.add(code)
         print(f"  專用保險公司表: {len(rows)} 家（含統編）")
@@ -1140,6 +1169,237 @@ class Migrator:
             json.dump(out, f, ensure_ascii=False, indent=2)
         print(f"  已寫入 {path}")
 
+    # ---------- 8. 車輛投保紀錄 ----------
+    def migrate_vehicle_insurances(self):
+        """Car Insurance List → vehicle_insurances（2,667 筆）。
+
+        舊系統用 Company No 參照保險公司，但該編號與 Insurance Company 表的
+        No 不完全一致，因此同時保留 company_no 原文，能對應才填 company_id。
+        """
+        print("\n[8] 車輛投保 (Car Insurance List → vehicle_insurances)")
+        t = self.data.get('Car Insurance List')
+        if not t:
+            print("  無 Car Insurance List 表，跳過")
+            return
+
+        # 險種代碼 → 中文（Insurance Class 查表）
+        ic = self.data.get('Insurance Class', {})
+        class_map = {}
+        for i in range(len(ic.get('No', []))):
+            class_map[(clean_str(col(ic, 'No', i)) or '').upper()] = clean_str(col(ic, 'Name', i))
+
+        # 保險公司編號 → id
+        #
+        # 舊系統有兩套編號：主檔的 No（'07'）與 code（簡稱「泰安產物」）。
+        # Car Insurance List 的 Company No 用的是主檔 No，因此要用 legacy_no 對應。
+        self.cur.execute("SELECT id, code, COALESCE(legacy_no,'') FROM insurance_companies")
+        comp_map = {}
+        for cid, code, legacy in self.cur.fetchall():
+            comp_map[clean_str(code)] = cid
+            if legacy:
+                comp_map[clean_str(legacy)] = cid
+
+        # 車牌 → vehicle id
+        plate_map = {}
+        self.cur.execute("SELECT id, plate_number FROM vehicles")
+        for vid, plate in self.cur.fetchall():
+            plate_map[plate] = vid
+
+        rows = []
+        skip_no_vehicle = 0
+        for i in range(len(t['No'])):
+            plate = clean_str(col(t, 'No', i))
+            vid = plate_map.get(plate)
+            if not vid:
+                skip_no_vehicle += 1
+                continue
+
+            comp_no = clean_str(col(t, 'Company No', i)) or ''
+            cls = (clean_str(col(t, 'Insurance Class', i)) or '').upper()
+
+            rows.append((
+                vid,
+                comp_map.get(comp_no),                          # insurance_company_id
+                comp_no,                                        # company_no（原文保留）
+                cls,                                            # insurance_class
+                class_map.get(cls, ''),                         # insurance_class_name
+                convert_roc_date(col(t, 'License Date', i)),    # license_date
+                clean_str(col(t, 'Card No', i)),                # card_no
+                clean_str(col(t, 'Remark', i)),                 # amount_raw
+                None,                                           # notes
+            ))
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將新增 {len(rows)} 筆投保紀錄（{skip_no_vehicle} 筆無對應車輛）")
+        else:
+            self.cur.executemany("""
+                INSERT INTO vehicle_insurances
+                  (vehicle_id, insurance_company_id, company_no, insurance_class,
+                   insurance_class_name, license_date, card_no, amount_raw, notes)
+                VALUES (?,?,?,?,?,?,?,?,?)
+            """, rows)
+            self.conn.commit()
+            print(f"  新增 {len(rows)} 筆投保紀錄（{skip_no_vehicle} 筆無對應車輛）")
+        self.stats['vehicle_insurances'] = len(rows)
+
+    # ---------- 9. 車輛定檢排程 ----------
+    def migrate_vehicle_inspections(self):
+        """Car Check List → vehicle_inspections（21,176 筆）。
+
+        舊系統只記錄「排定檢驗日」，Check Date 幾乎全空（只有 3 筆），
+        所以 check_date 為空代表「尚未完成檢驗」。
+        """
+        print("\n[9] 定檢排程 (Car Check List → vehicle_inspections)")
+        t = self.data.get('Car Check List')
+        if not t:
+            print("  無 Car Check List 表，跳過")
+            return
+
+        plate_map = {}
+        self.cur.execute("SELECT id, plate_number FROM vehicles")
+        for vid, plate in self.cur.fetchall():
+            plate_map[plate] = vid
+
+        rows = []
+        skip_no_vehicle = 0
+        for i in range(len(t['No'])):
+            plate = clean_str(col(t, 'No', i))
+            vid = plate_map.get(plate)
+            if not vid:
+                skip_no_vehicle += 1
+                continue
+            rows.append((
+                vid,
+                convert_roc_date(col(t, 'Order Date', i)),
+                convert_roc_date(col(t, 'Check Date', i)),
+                clean_str(col(t, 'Firm No', i)),
+                clean_str(col(t, 'Remark', i)),
+            ))
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將新增 {len(rows)} 筆定檢排程（{skip_no_vehicle} 筆無對應車輛）")
+        else:
+            BATCH = 5000
+            for s in range(0, len(rows), BATCH):
+                self.cur.executemany("""
+                    INSERT INTO vehicle_inspections
+                      (vehicle_id, order_date, check_date, firm_no, notes)
+                    VALUES (?,?,?,?,?)
+                """, rows[s:s + BATCH])
+                self.conn.commit()
+            print(f"  新增 {len(rows)} 筆定檢排程（{skip_no_vehicle} 筆無對應車輛）")
+        self.stats['vehicle_inspections'] = len(rows)
+
+    # ---------- 10. 保養套餐範本 ----------
+    def migrate_maintenance_templates(self):
+        """Maintain Record Header/Detail → maintenance_templates(_items)。
+
+        開工單時可一鍵套用標準項目（如「5千公里定期保養」）。
+        """
+        print("\n[10] 保養套餐 (Maintain Record * → maintenance_templates)")
+        h = self.data.get('Maintain Record Header')
+        if not h:
+            print("  無 Maintain Record Header 表，跳過")
+            return
+        d = self.data.get('Maintain Record Detail', {})
+
+        self.cur.execute("SELECT code FROM maintenance_templates")
+        used = {r[0] for r in self.cur.fetchall()}
+
+        tpl_rows = []
+        for i in range(len(h['No'])):
+            code = clean_str(col(h, 'No', i))
+            name = clean_str(col(h, 'Name', i))
+            if not code or code in used:
+                continue
+            tpl_rows.append((code, name or code, clean_str(col(h, 'Remark', i))))
+            used.add(code)
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將新增 {len(tpl_rows)} 個套餐")
+        else:
+            if tpl_rows:
+                self.cur.executemany(
+                    "INSERT INTO maintenance_templates (code, name, notes) VALUES (?,?,?)",
+                    tpl_rows)
+                self.conn.commit()
+
+        # code → template id
+        self.cur.execute("SELECT id, code FROM maintenance_templates")
+        tpl_map = {code: tid for tid, code in self.cur.fetchall()}
+
+        item_rows = []
+        for i in range(len(d.get('No', []))):
+            tcode = clean_str(col(d, 'No', i))
+            tid = tpl_map.get(tcode)
+            if not tid:
+                continue
+            part = clean_str(col(d, 'Material No', i))
+            item_rows.append((
+                tid,
+                clean_int(col(d, 'Sequence No', i)),
+                part or '',
+                part or '',                                 # description 先帶料號
+                clean_num(col(d, 'Amount', i)) or 1,        # quantity
+                clean_num(col(d, 'Price', i)),              # unit_price
+            ))
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將新增 {len(item_rows)} 個套餐項目")
+        else:
+            if item_rows:
+                self.cur.executemany("""
+                    INSERT INTO maintenance_template_items
+                      (template_id, sequence_no, part_number, description, quantity, unit_price)
+                    VALUES (?,?,?,?,?,?)
+                """, item_rows)
+                self.conn.commit()
+            print(f"  新增 {len(tpl_rows)} 個套餐、{len(item_rows)} 個項目")
+        self.stats['maintenance_templates'] = len(tpl_rows)
+        self.stats['maintenance_template_items'] = len(item_rows)
+
+    # ---------- 11. 零用金／雜支支出 ----------
+    def migrate_expenses(self):
+        """Spend List → expenses（3,390 筆）。
+
+        金額沿用舊系統原值（分），依指示不換算。
+        """
+        print("\n[11] 零用金支出 (Spend List → expenses)")
+        t = self.data.get('Spend List')
+        if not t:
+            print("  無 Spend List 表，跳過")
+            return
+
+        key = 'Sequence No'
+        n = len(t.get(key, []))
+        rows = []
+        for i in range(n):
+            date = clean_str(col(t, 'Date', i))
+            # 舊資料是 2 碼年（88/01/01 = 民國 88 年）→ 轉西元
+            d = convert_roc_date(date) if date else None
+            rows.append((
+                clean_int(col(t, 'Sequence No', i)),
+                d,
+                clean_num(col(t, 'In Price', i)),
+                clean_num(col(t, 'Out Price', i)),
+                clean_str(col(t, 'Material No', i)),
+                clean_str(col(t, 'Remark', i)),
+            ))
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將新增 {len(rows)} 筆支出")
+        else:
+            BATCH = 2000
+            for s in range(0, len(rows), BATCH):
+                self.cur.executemany("""
+                    INSERT INTO expenses
+                      (sequence_no, spend_date, amount_in, amount_out, part_number, notes)
+                    VALUES (?,?,?,?,?,?)
+                """, rows[s:s + BATCH])
+                self.conn.commit()
+            print(f"  新增 {len(rows)} 筆支出（金額沿用原單位）")
+        self.stats['expenses'] = len(rows)
+
     # ---------- 清理 ----------
     def reset(self, keep_orders=7, keep_items=21):
         """清空先前遷移的資料，保留測試資料。"""
@@ -1158,10 +1418,20 @@ class Migrator:
         print(f"  inventory_items: -{self.cur.rowcount}")
         self.cur.execute("DELETE FROM inventory_movements")
         print(f"  inventory_movements: -{self.cur.rowcount}")
+        # 新遷移的表（整表重建，無測試資料需保留）
+        for tbl in ('vehicle_insurances', 'vehicle_inspections',
+                    'maintenance_template_items', 'maintenance_templates',
+                    'expenses'):
+            self.cur.execute(f"DELETE FROM {tbl}")
+            print(f"  {tbl}: -{self.cur.rowcount}")
         self.cur.execute("DELETE FROM users WHERE password = 'legacy'")
         print(f"  users(legacy): -{self.cur.rowcount}")
-        # 只保留 seed 建立的非舊資料保險公司，其餘（含被誤灌的廠商）全部清掉
-        self.cur.execute("DELETE FROM insurance_companies WHERE COALESCE(notes,'') LIKE '%舊系統%' OR COALESCE(notes,'') LIKE '%部門:%' OR code IN ('005','01','02','05','07','08','10','12','13','14')")
+        # 清掉舊系統匯入的保險公司，只保留 seed 建立的示範資料（ACME-001）。
+        #
+        # 不能用 notes 條件判斷（舊版這樣做，導致 16 家沒被清掉 → 重跑時
+        # 去重邏輯全部跳過 → legacy_no 永遠填不進去 → 投保紀錄對不到保險公司）。
+        # 改用「非 seed 代碼」判定：seed 只建 ACME-001。
+        self.cur.execute("DELETE FROM insurance_companies WHERE code <> 'ACME-001'")
         print(f"  insurance_companies(舊資料): -{self.cur.rowcount}")
         self.conn.commit()
 
@@ -1173,6 +1443,10 @@ class Migrator:
         self.migrate_inventory()
         self.migrate_work_orders()
         self.migrate_work_order_items()
+        self.migrate_vehicle_insurances()
+        self.migrate_vehicle_inspections()
+        self.migrate_maintenance_templates()
+        self.migrate_expenses()
         if lookups_path:
             self.export_lookups(lookups_path)
 

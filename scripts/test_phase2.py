@@ -86,11 +86,13 @@ check("工資計算 1750", "1750" in html)
 check("佣金計算 175", "175" in html)
 
 # --- 2. 技師佣金總覽 ---
+# 總佣金是全表累計（不是只有本測試那筆），所以只驗證「有值且 >= 本次 175」，
+# 不能假設它會整除 175 —— 其他測試／平行 agent 的工時會一起算進來。
 st, html = req(op, "/technicians/commissions")
 check("技師佣金統計頁 200", st == 200)
 m = re.search(r'<th[^>]*>總佣金</th><td[^>]*>([0-9]+)</td>', html)
-check("總佣金為 175 的倍數",
-      m is not None and int(m.group(1)) > 0 and int(m.group(1)) % 175 == 0,
+check("總佣金含本次 175 且為正",
+      m is not None and int(m.group(1)) >= 175,
       f"總佣金={m.group(1) if m else 'n/a'}")
 check("技師明細表存在", "tech" in html)
 
