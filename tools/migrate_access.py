@@ -1657,10 +1657,9 @@ class Migrator:
                     self.user_id[username] = uid
             print(f"  建立 {len(shadow_users)} 個影子用戶")
 
-        # 建立 work_order_id → staff_no 映射
-        wo_staff = {}  # work_order_id → staff_no
+        # 收集 (work_order_id, staff_no) 對
+        wo_staff_pairs = []
         no_cursor2 = defaultdict(int)
-        staff_no_count = 0
         for i in range(len(md['No'])):
             no = clean_str(col(md, 'No', i))
             if not no:
@@ -1678,18 +1677,14 @@ class Migrator:
                 continue
             staff_no = clean_str(col(md, 'Staff No', i))
             if staff_no:
-                staff_no_count += 1
-                wo_staff[wo_id] = staff_no
-        print(f"  staff_no_count: {staff_no_count}")
+                wo_staff_pairs.append((wo_id, staff_no))
 
         # 更新 work_order_items 的 primary_technician_id
-        print(f"  wo_staff: {len(wo_staff)}")
         updates = []
-        for wo_id, staff_no in wo_staff.items():
+        for wo_id, staff_no in wo_staff_pairs:
             tech_id = self.user_id.get(staff_no)
             if tech_id:
                 updates.append((tech_id, wo_id))
-        print(f"  updates: {len(updates)}")
 
         if self.dry_run:
             print(f"  [DRY-RUN] 將更新 {len(updates)} 筆 work_order_items")
