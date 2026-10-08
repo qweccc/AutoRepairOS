@@ -46,3 +46,16 @@ out_utf.txt
 out.txt
 *.tmp
 repro_*.db
+
+# 探測腳本的輸出（*_out.txt / *_run.txt）與 HTML 快照。
+# 這些是除錯產物，不是交付物；正式的分析腳本請命名為 analyze_*.py / ux_probe.py
+# 並把結果寫進 docs/。
+*_out.txt
+*_run.txt
+detail*.html
+me_body.json
+cookies.txt
+
+# 瀏覽器除錯殘留
+_trash_browser_*/
+

@@ -64,13 +64,12 @@ func serveSub(w http.ResponseWriter, r *http.Request, sub fs.FS) {
 		http.NotFound(w, r)
 		return
 	}
+	// 必須 return，否則 http.NotFound 寫出的 404 狀態碼會被後續的
+	// w.WriteHeader(http.StatusOK) 與內容寫入覆蓋，變成「狀態碼 404 但 body 有檔案」。
 	switch stat.Mode().Type() {
-	case fs.ModeSymlink:
+	case fs.ModeSymlink, fs.ModeDir, fs.ModeNamedPipe, fs.ModeSocket, fs.ModeDevice:
 		http.NotFound(w, r)
-	case fs.ModeDir:
-		http.NotFound(w, r)
-	case 0:
-		http.NotFound(w, r)
+		return
 	}
 	// 依擴充檔設定 Content-Type
 	switch path.Ext(rel) {
