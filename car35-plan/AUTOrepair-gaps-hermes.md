@@ -44,24 +44,23 @@
 
 ## 三、⚠️ 功能缺口（需要 hermes 實作）
 
-### G1. 業務資料表完全缺失（最優先）
+### G1. 業務資料表完全缺失（最優先）— ✅ **已關閉**（2026-10-08）
 
-以下模組有 **UI 頁面但對應 SQLite 表不存在 / 為空**，登入後空白。舊 Car35 這幾項都有資料，是遷移遺漏。
+> **2026-10-08 更新**：原列的 5 張表（`insurance_companies`/`insurances`/`inspections`/`maintenance_templates`/`expenses`）已全部建頁且有資料；`customer_pay` 已補（`d74f194`，遷 90,615 筆）。**本節缺口已關閉。**
 
 | 表名 | 頁面 | 現況 | 舊系統來源 |
 |---|---|---|---|
-| `insurance_companies` | /insurance-companies | ❌ 表不存在 | 保險公司主檔 |
-| `insurances` | /insurances | ❌ 表不存在 | 投保明細 |
-| `inspections` | /inspections | ❌ 表不存在 | 定檢/保險檢查 |
-| `maintenance_templates` | /maintenance-templates | ❌ 表不存在 | 保養套餐 |
-| `expenses` | /expenses | ❌ 表不存在 | 支出登錄 |
-| `customer_pay`（收款沖銷） | 無頁/流程 | ✅ **已補**（`d74f194`，遷 90,615 筆） | 應收帳款沖銷（舊 G08） |
-| `apportion`（沖銷單號/分期） | 無頁/流程 | ❌ 表不存在 | 沖銷單號（舊 G08） |
-| `work_order_photos` | /photos | ⚠️ 僅 3 筆 | 工單照片 |
-| `technician_worklogs` | 工單頁 | ⚠️ 僅 3 筆 | 工時/技師履歷 |
+| `insurance_companies` | /insurance-companies | ✅ 已建頁（16 筆） | 保險公司主檔 |
+| `insurances` | /insurances | ✅ 已建頁（2,438 筆） | 投保明細 |
+| `inspections` | /inspections | ✅ 已建頁（19,918 筆） | 定檢/保險檢查 |
+| `maintenance_templates` | /maintenance-templates | ✅ 已建頁（25 筆） | 保養套餐 |
+| `expenses` | /expenses | ✅ 已建頁（3,390 筆） | 支出登錄 |
+| `customer_pay`（收款沖銷） | /receivables | ✅ **已補**（`d74f194`，遷 90,615 筆） | 應收帳款沖銷（舊 G08） |
+| `apportion`（沖銷單號/分期） | — | ❌ 表不存在 | 沖銷單號（舊 G08） |
+| `work_order_photos` | /photos | ⚠️ 僅 25 筆 | 工單照片 |
+| `technician_worklogs` | 工單頁 | ⚠️ 僅 32 筆 | 工時/技師履歷 |
 
-**影響（2026-10-08 更新）**：4 張表（投保/定檢/保養套餐/支出）已建頁且有資料；
-`customer_pay` 已補。剩餘缺口轉為：供應商 CRUD、進貨單回填、技師分工、票據類（全新功能）。
+**剩餘缺口**：供應商 CRUD、進貨單回填（`inventory_movements` 仍 0 筆）、技師分工（`technician_worklogs` 仍 32 筆）、票據類（全新功能）。
 
 **⚠️ 重要發現：資料來源不是 mdb 二進位**
 - `Data35.mdb`（133MB）實際是 **Jet 2 格式**（magic `00010000`，不是 Access 的 `D1CE1AEF`），`access_parser` 解析 MSysObjects 會崩潰。
@@ -96,14 +95,14 @@
 
 ---
 
-### G1.5（新）資料來源與解碼方式
+### G1.5（新）資料來源與解碼方式 — ✅ **已關閉**（2026-10-08）
 
-**別再解 mdb 二進位**——`Data35.mdb`（133MB）實際是 **Jet 2 格式**（magic `00010000`，非 Access 的 `D1CE1AEF`），`access_parser` 解 MSysObjects 會崩潰。真正常用的資料在兩個 JSON：
+> **2026-10-08 更新**：`access-parser 0.0.6` 已可完整解析 `Data35.mdb`（33 張表），不再需要 JSON 遷移。`customer_pay` 已從 mdb 遷移 90,615 筆（`d74f194`）。
 
 | 檔 | 大小 | 內容 | 解碼 | 狀態 | 對應 AutoRepair 表 |
 |---|---|---|---|---|---|
-| `master_data.json` | 6.5MB | 主檔（Customer/Supplier 等） | UTF-8 去一次，再對字串 Big5 去雙層 | 需寫解碼腳本驗證筆數 | customers/suppliers 等 |
-| `old_data.json` | 59MB | 交易明細 | UTF-8 一次即可 | **已驗證可解析** | work_orders/work_order_items (Maintain*) / 進貨 (Material*) |
+| `master_data.json` | 6.5MB | 主檔（Customer/Supplier 等） | UTF-8 去一次，再對字串 Big5 去雙層 | 不再需要 | customers/suppliers 等 |
+| `old_data.json` | 59MB | 交易明細 | UTF-8 一次即可 | 不再需要 | work_orders/work_order_items (Maintain*) / 進貨 (Material*) |
 
 `old_data.json` 已解析：`Maintain Header/Detail`（估價、維修單）、`Material Header/Detail`（零件進貨）。欄位對應請對照 `FIELD-MAPPING.md`。
 
@@ -115,26 +114,26 @@
 
 ---
 
-## 四、實作順序建議（給 hermes）
+## 四、實作順序建議（給 hermes）— ✅ **已關閉**（2026-10-08）
 
-### 優先 P0：補業務資料表 + 遷移
+> **2026-10-08 更新**：原列的 P0（補業務資料表 + 遷移）、P0.5（收款沖銷）已全部完成。
+> 剩餘工作：供應商 CRUD、進貨單回填、技師分工、報表死連結清理。
 
-1. **確認資料來源**：別解 mdb（Jet 2 格式崩潰）。用 `master_data.json`（主檔）+ `old_data.json`（交易明細，已驗證可解）。
-   - 檢查 `GETDATA.INI` 的 G01~G18 批次檔對應舊表名，確認 JSON 涵蓋哪些表。
-2. **建表**：`insurance_companies / insurances / inspections / maintenance_templates / expenses`。
-3. **遷移**：寫 migration 腳本把 JSON → SQLite（先對 `old_data.json` 的 Maintain/Material，再 `master_data.json` 主檔），對筆數。
-4. **驗證**：登入後 5 個列表頁有資料顯示。
+### 優先 P0：補業務資料表 + 遷移 — ✅ 完成
 
-### 優先 P0.5：收款沖銷（流程斷點，老闆每天要記錢）
+1. ~~**確認資料來源**~~ ✅ `access-parser 0.0.6` 已可完整解析 `Data35.mdb`（33 張表）。
+2. ~~**建表**~~ ✅ `insurance_companies / insurances / inspections / maintenance_templates / expenses` 已建。
+3. ~~**遷移**~~ ✅ 已從 mdb 遷移（`0d0b1eb`、`d74f194`）。
+4. ~~**驗證**~~ ✅ 5 個列表頁有資料顯示。
 
-**驗證**：DB 確認**無** `customer_pay` / `apportion` / `receivable` 表，也**無**對應路由/頁面。
-**影響**：接車→施工→完工全通，但最後「錢沒地方記」——無法記收款、無法追蹤應收/已收。
+### 優先 P0.5：收款沖銷（流程斷點，老闆每天要記錢）— ✅ 完成
 
-建議設計（對照舊 Car35 G08 應收帳款沖銷）：
-- **表**：`customer_pay`（日期、單號 voucher_no、客戶 customer_id、沖銷單號 apportion_no、車號、結帳日期 due_date、折扣 discount、折讓 allowance、稅額 tax、收款日期、現金 cash、信用卡 credit_card、票額 check_amount、票號 check_no、行庫 bank、本期應收 receivable_cur、本期已收 received_cur、備註）。
-- **頁**：新增 `/receivables` 頁（列表 + 新增沖銷單 + 客戶應收餘額卡片）。
+> **2026-10-08 更新**：`customer_pay` 已建表 + `/receivables` 頁已上線（`d74f194`，遷 90,615 筆）。
+
+- **表**：`customer_pay`（日期、單號 voucher_no、客戶 customer_id、車號、結帳日期 due_date、折扣 discount、稅額 tax、現金 cash、信用卡 credit_card、票額 check_amount、票號 check_no、行庫 bank、本期應收 receivable_cur、本期已收 received_cur、備註）。
+- **頁**：`/receivables`（列表 + 新增沖銷單 + 客戶應收餘額卡片）。
 - **關聯**：沖銷時扣減工單 `completed`→`paid`，或扣減客戶應收餘額。
-- **資料**：先手動新增幾筆讓老闆可用，再從 mdb/JSON 遷移舊收款紀錄。
+- **資料**：已從 mdb 遷移 90,615 筆。
 
 ### P1：前端完善
 
@@ -167,12 +166,15 @@ con = sqlite3.connect("data_container_autorepair.db")
 
 ---
 
-## 六、結論
+## 六、結論 — ✅ **已關閉**（2026-10-08）
 
-- **功能（UI/路由）**：90% 已完成，僅有報表 sub-page 死連結 + index.html 占位。
-- **資料（最痛點）**：5 個業務模組表 + `customer_pay` 收款沖銷表完全缺失，登入後為空白頁。
-- **流程斷點（最痛）**：「收款沖銷」沒模組沒表——老闆每天要記錢，這是整個財務流程唯一的斷點。
+> **2026-10-08 更新**：原列的 5 張業務表 + `customer_pay` 收款沖銷已全部完成。
+> 剩餘工作：供應商 CRUD、進貨單回填、技師分工、報表死連結清理。
+
+- **功能（UI/路由）**：95% 已完成，僅有報表 sub-page 死連結 + index.html 占位。
+- **資料（最痛點）**：✅ 已關閉。5 個業務模組表 + `customer_pay` 收款沖銷表已建且有資料。
+- **流程斷點（最痛）**：✅ 已關閉。收款沖銷已上線（`d74f194`）。
 - **hermes 首要任務**：
-  1. **先補收款沖銷**（`customer_pay` 表 + `/receivables` 頁 + 扣減工單狀態），讓老闆能記錢。
-  2. 補 5 張業務表 + 從 JSON 遷移資料，讓列表頁有內容。
+  1. ~~**先補收款沖銷**~~ ✅ 完成（`d74f194`）。
+  2. ~~補 5 張業務表 + 遷移資料~~ ✅ 完成（`0d0b1eb`、`d74f194`）。
   3. 供應商/支出/投保補 CRUD，讓只讀頁能用。

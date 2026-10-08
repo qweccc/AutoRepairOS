@@ -101,10 +101,21 @@ GET  /work-orders/{id}/items/{item_id}/delete → 刪零件
   或加 `/work-orders/mine` 頁。
 - 減少技師翻全店列表找對車、再點 `/worklogs` 的多一道手。
 
-### F. 擋離職技師
-- `technicianOptions()` 查詢加擋離職。
-- 低優先：先擋 `insurance_end` 有值者（已退保者）。
-- 需先確認 `users` 是否有明確「在職」標記（或改動 `staff_kind`／`active`）。
+### F. 擋離職技師（離職標記）
+- **現況**：`users` 表**沒有** `active/deleted/is_active` 欄位（只有 12 欄）→ 目前無法標記離職。
+- **做法**：先 `ALTER TABLE users ADD COLUMN active INTEGER DEFAULT 1`，再：
+  - `DeactivateStaff`：`UPDATE users SET active=0 WHERE id=?`（離職／退休）
+  - `reactivateStaff`：`UPDATE users SET active=1 WHERE id=?`（復職）
+  - `technicianOptions()` 改查 `WHERE active=1`，**離職技師不再出現在指派選單**。
+  - `/staff` 頁表頭加「**狀態**」欄：`active=1` 顯示「在職」，`active=0` 顯示「離職／已停用」（置灰）。
+- **62 技師 + 40 眷屬**，其中 `insurance_end` 已 47 筆有值（約 12 人已退保）—— 退保時間可對到離職。
+- **權限**：停用／復職限櫃檯／管理員；員工只能改自己。
+
+### F1. 退保時間（健保進出編修）
+- 照 D 節健保 CRUD，`insurance_end`（退保日）與 `insurance_start`（加保日）都做成**可編輯**。
+- 頁首顯示「**在保中**」統計：`employee AND active=1 AND insurance_start<>'' AND insurance_end=''`。
+- 退保日有值 → 紅字標示「已退保」；**復保**時可清空 `insurance_end`（走 `reactivateStaff`）。
+- 62 技師 + 40 眷屬，47 筆有退保日（約 12 人已退保）。
 
 ### G. 收款沖銷可編輯／部分沖銷
 - 現況只有 `void`（整單沖銷）。建議加：
@@ -128,8 +139,8 @@ GET  /work-orders/{id}/items/{item_id}/delete → 刪零件
 | **P2** | C 工時日期預設 | 極小 | 一行改成 `wo.created_at` |
 | **P2** | E 我的工單 | 中 | 需權限判斷，減少技師翻列表 |
 | **P2** | H 狀態進度條 | 中 | 提升技師體驗，需 CSS 進度條 |
-| **P3** | F 擋離職技師 | 小 | 需先加在職標記，低優先 |
-| **P3** | G 收款可編輯 | 中 | 影響櫃檯收錢體驗 |
+| **P3** | F 擋離職技師（離職標記） | 小 | 需先 `ALTER TABLE users ADD active`；`technicianOptions` 改查 `active=1` |
+| **P3** | F1 退保時間（健保進出編修） | 中 | `insurance_end/start` 可編輯；47 筆退保日需對照離職 |
 
 ---
 
@@ -137,7 +148,7 @@ GET  /work-orders/{id}/items/{item_id}/delete → 刪零件
 
 | 檔 | 原標記 | 新標記 |
 |---|---|---|
-| `technician-flow.md` | P0.5 健保編修 / P1 工時編輯 / P1 工時顯示狀態 / P2 我的工單 / P2 擋離職 | ✅ 本檔正式化（含改寫範圍 + 路由 + 權限） |
+| `technician-flow.md` | P0.5 健保編修＋離職標記＋退保時間 / P1 工時編輯 / P1 工時顯示狀態 / P2 我的工單 / P2 擋離職 / P3 退保時間 | ✅ 本檔正式化（含改寫範圍 + 路由 + 權限） |
 
 ---
 

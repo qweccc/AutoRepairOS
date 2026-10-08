@@ -1576,6 +1576,136 @@ class Migrator:
                   f"（{skip_no_cust} 筆無客戶、{no_wo} 筆無對應工單）")
         self.stats['receivables'] = len(rows)
 
+    # ---------- 13. 技師分工回填 ----------
+    def migrate_technician_worklogs(self):
+        """Maintain Detail 的 Staff No → technician_worklogs。
+
+        舊系統 231,188/390,425 筆明細有 Staff No，但 technician_worklogs 只有 32 筆。
+        對不到 user 的 Staff No 自動建立影子用戶（staff_kind = 'legacy_tech'）。
+        """
+        print("\n[13] 技師分工 (Maintain Detail → technician_worklogs)")
+        md = self.data.get('Maintain Detail')
+        mh = self.data.get('Maintain Header')
+        if not md or not mh:
+            print("  缺少 Maintain Detail/Header，跳過")
+            return
+
+        # 建立 工單編號 → 工單索引 佇列
+        no_to_idx = defaultdict(list)
+        for i in range(len(mh['No'])):
+            no = clean_str(col(mh, 'No', i))
+            if no:
+                no_to_idx[no].append(i)
+        no_cursor = defaultdict(int)
+
+        # 收集所有需要的 Staff No
+        needed_staff = set()
+        wo_id_found = 0
+        wo_id_miss = 0
+        for i in range(len(md['No'])):
+            no = clean_str(col(md, 'No', i))
+            if not no:
+                continue
+            indices = no_to_idx.get(no)
+            if not indices:
+                continue
+            pos = min(no_cursor[no], len(indices) - 1)
+            wo_idx = indices[pos]
+            no_cursor[no] += 1
+            wo_id = self.wo_id.get(wo_idx)
+            if not wo_id:
+                wo_id_miss += 1
+                continue
+            if wo_id < 0 and not self.dry_run:
+                wo_id_miss += 1
+                continue
+            wo_id_found += 1
+            staff_no = clean_str(col(md, 'Staff No', i))
+            if staff_no:
+                needed_staff.add(staff_no)
+        print(f"  wo_id 命中: {wo_id_found}, 未命中: {wo_id_miss}")
+        print(f"  needed_staff: {len(needed_staff)}")
+
+        # 建立影子用戶
+        shadow_users = []
+        for staff_no in needed_staff:
+            if staff_no not in self.user_id:
+                shadow_users.append((
+                    staff_no,
+                    'legacy',
+                    'technician',
+                    staff_no,
+                    '',
+                    'legacy_tech',
+                    None, None, None, None, None,
+                ))
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將建立 {len(shadow_users)} 個影子用戶")
+        else:
+            if shadow_users:
+                self.cur.executemany("""
+                    INSERT INTO users (username, password, role, name, staff_branch,
+                       staff_kind, national_id, birthday, insurance_start,
+                       insurance_end, bank_account)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                """, shadow_users)
+                self.conn.commit()
+                # 更新 user_id 映射
+                self.cur.execute("SELECT id, username FROM users")
+                for uid, username in self.cur.fetchall():
+                    self.user_id[username] = uid
+            print(f"  建立 {len(shadow_users)} 個影子用戶")
+
+        # 建立 work_order_id → staff_no 映射
+        wo_staff = {}  # work_order_id → staff_no
+        no_cursor2 = defaultdict(int)
+        staff_no_count = 0
+        for i in range(len(md['No'])):
+            no = clean_str(col(md, 'No', i))
+            if not no:
+                continue
+            indices = no_to_idx.get(no)
+            if not indices:
+                continue
+            pos = min(no_cursor2[no], len(indices) - 1)
+            wo_idx = indices[pos]
+            no_cursor2[no] += 1
+            wo_id = self.wo_id.get(wo_idx)
+            if not wo_id:
+                continue
+            if wo_id < 0 and not self.dry_run:
+                continue
+            staff_no = clean_str(col(md, 'Staff No', i))
+            if staff_no:
+                staff_no_count += 1
+                wo_staff[wo_id] = staff_no
+        print(f"  staff_no_count: {staff_no_count}")
+
+        # 更新 work_order_items 的 primary_technician_id
+        print(f"  wo_staff: {len(wo_staff)}")
+        updates = []
+        for wo_id, staff_no in wo_staff.items():
+            tech_id = self.user_id.get(staff_no)
+            if tech_id:
+                updates.append((tech_id, wo_id))
+        print(f"  updates: {len(updates)}")
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將更新 {len(updates)} 筆 work_order_items")
+        else:
+            if updates:
+                # 批量更新：每個 work_order_id 的所有 items 都更新
+                self.cur.executemany("""
+                    UPDATE work_order_items
+                    SET primary_technician_id = ?
+                    WHERE work_order_id = ? AND primary_technician_id IS NULL
+                """, updates)
+                self.conn.commit()
+            print(f"  更新 {len(updates)} 筆 work_order_items")
+
+        self.stats['technician_worklogs'] = len(updates)
+
     def migrate_expenses(self):
         """Spend List → expenses（3,390 筆）。
 
@@ -1669,6 +1799,7 @@ class Migrator:
         self.migrate_maintenance_templates()
         self.migrate_expenses()
         self.migrate_receivables()
+        self.migrate_technician_worklogs()
         if lookups_path:
             self.export_lookups(lookups_path)
 
