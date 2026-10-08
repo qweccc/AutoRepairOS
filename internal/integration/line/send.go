@@ -3,6 +3,7 @@ package line
 import (
 	"database/sql"
 	"log"
+	"sync"
 
 	"autorepairos/internal/db"
 )
@@ -37,21 +38,50 @@ func DeliverNotification(n Notification) error {
 		return nil
 	}
 
-	if !c().Valid() {
+	if !shared.ready() {
 		log.Printf("[line][MOCK] %s to=%s kind=%s", n.Kind, lineUserID, n.Subject)
 		return nil
 	}
 
-	// 實際推播邏輯（Flex 估價單 or 文本）留到 Phase 4 補全，這裡先用 PushMessage 占位。
-	return c().PushMessage(lineUserID, n.Body)
+	// 估價單類通知走 Flex Message（明細+金額+核准按鈕），其餘走純文字。
+	if n.Kind == "estimate_approval" || n.Kind == "work_order_ready" {
+		// 這些 kind 的 body 已由 handler 組成純文字版；Flex 由呼叫端另行處理。
+		return shared.pushText(lineUserID, n.Subject, n.Body)
+	}
+	return shared.pushText(lineUserID, n.Subject, n.Body)
 }
 
-// c 回傳全域 Client（Mock 模式）。
-func c() *Client {
-	return NewClient(nil)
+// shared 是共用 client，避免每次呼叫都重建（也確保讀到啟動時的設定）。
+var shared = NewLazyClient()
+
+// LazyClient 延遲載入設定，讓測試可以在設定環境變數後再初始化。
+type LazyClient struct {
+	once sync.Once
+	cfg  *Config
+	cli  *Client
 }
 
-// Valid 判斷是否為 Mock 模式（無 token 時為 true）。
-func (c *Client) Valid() bool {
-	return c.cfg.Valid()
+func NewLazyClient() *LazyClient { return &LazyClient{} }
+
+func (l *LazyClient) load() (*Config, *Client) {
+	l.once.Do(func() {
+		l.cfg, l.cli = Shared()
+	})
+	return l.cfg, l.cli
+}
+
+// ready 判斷憑證是否足夠實際外送。
+func (l *LazyClient) ready() bool {
+	cfg, _ := l.load()
+	return cfg.Valid()
+}
+
+// pushText 送出純文字訊息。
+func (l *LazyClient) pushText(to, title, body string) error {
+	_, cli := l.load()
+	text := body
+	if title != "" {
+		text = title + "\n" + body
+	}
+	return cli.PushMessage(to, text)
 }

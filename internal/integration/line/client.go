@@ -26,6 +26,8 @@ type Client struct {
 // NewClient 建立 Client。token 缺失時 cfg.Mock=true，仍回傳可用於 Mock 呼叫的 Client。
 func NewClient(cfg *Config) *Client {
 	if cfg == nil {
+		// BaseURL 為 Messaging API 的根路徑。端點為 /v2/bot/...，
+		// 不是 /version2/bot/...（那是另一套產品線，用錯會得到 404）。
 		cfg = &Config{BaseURL: "https://api.line.me"}
 	}
 	return &Client{cfg: cfg, httpClient: &http.Client{Timeout: 15 * time.Second}}
@@ -119,7 +121,7 @@ func (c *Client) PushMessage(userID, text string) error {
 			{"type": "text", "text": text},
 		},
 	}
-	resp, data, err := c.do(http.MethodPost, "/version2/bot/message/push", payload, map[string]string{"Authorization": c.authHeader()})
+	resp, data, err := c.do(http.MethodPost, "/v2/bot/message/push", payload, map[string]string{"Authorization": c.authHeader()})
 	if err != nil {
 		return fmt.Errorf("推播失敗: %w", err)
 	}
@@ -210,7 +212,7 @@ func (c *Client) SendFlexMessage(userID string, title, text string, items []Item
 			{"type": "flex", "altText": title, "contents": contents},
 		},
 	}
-	resp, data, err := c.do(http.MethodPost, "/version2/bot/message/push", payload, map[string]string{"Authorization": c.authHeader()})
+	resp, data, err := c.do(http.MethodPost, "/v2/bot/message/push", payload, map[string]string{"Authorization": c.authHeader()})
 	if err != nil {
 		return fmt.Errorf("推播 Flex 失敗: %w", err)
 	}
@@ -228,7 +230,12 @@ func (c *Client) authHeader() string {
 
 // ReplyMessage 針對已推播訊息回傳回應（replyToken）。無 token 時只 logging。
 func (c *Client) ReplyMessage(replyToken, text string) error {
+	// 記錄嘗試與結果。replyToken 只能用一次且有效期限很短（約 30 秒內），
+	// 失敗時若不記錄，外部完全看不出為什麼客戶沒收到回覆。
+	log.Printf("[line] 回訊嘗試：token長度=%d 內容長度=%d", len(replyToken), len(text))
+
 	if !c.cfg.Valid() {
+		log.Printf("[line] MOCK 模式，未實際送出回訊")
 		return c.mock(func() error { return mockReplyLog(replyToken, text) })
 	}
 	payload := map[string]interface{}{
@@ -237,14 +244,28 @@ func (c *Client) ReplyMessage(replyToken, text string) error {
 			{"type": "text", "text": text},
 		},
 	}
-	resp, data, err := c.do(http.MethodPost, "/version2/bot/message/reply", payload, map[string]string{"Authorization": c.authHeader()})
+	resp, data, err := c.do(http.MethodPost, "/v2/bot/message/reply", payload, map[string]string{"Authorization": c.authHeader()})
 	if err != nil {
+		log.Printf("[line] 回訊請求失敗: %v", err)
 		return fmt.Errorf("回訊失敗: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
+		// 常見原因：
+		//   400 invalid reply token — token 已使用或過期。若官方帳號同時啟用
+		//     「加入好友的歡迎訊息」，該功能會先消耗 token，這裡就會失敗。
+		//   401 — token 無效。
+		log.Printf("[line] 回訊被拒（狀態 %d）: %s", resp.StatusCode, truncate(string(data), 200))
 		return fmt.Errorf("回訊狀態 %d: %s", resp.StatusCode, string(data))
 	}
+	log.Printf("[line] 回訊成功送達")
 	return nil
+}
+
+func truncate(s string, n int) string {
+	if len(s) > n {
+		return s[:n] + "..."
+	}
+	return s
 }
 
 // mock 在 Mock 模式下只 logging 並回空。

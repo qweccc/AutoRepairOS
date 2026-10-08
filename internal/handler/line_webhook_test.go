@@ -355,3 +355,40 @@ func min(a, b int) int {
 	}
 	return b
 }
+
+// LINE API 端點路徑回歸測試。
+//
+// 先前誤用 /version2/bot/message/reply（另一套產品線的路徑），回訊一律得到
+// 404，而且程式只記錄「回訊狀態 404」不帶原因，很難立刻看出是路徑打錯。
+// 用 httptest 掛一個假伺服器，確認實際打出去的 path 是 /v2/...
+func TestLineAPIEndpointPaths(t *testing.T) {
+	var gotPaths []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPaths = append(gotPaths, r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+	}))
+	defer srv.Close()
+
+	cfg := &line.Config{
+		ChannelID:          "1234567890",
+		ChannelSecret:      testSecret,
+		ChannelAccessToken: "dummy-token",
+		BaseURL:            srv.URL,
+	}
+	client := line.NewClient(cfg)
+
+	// 這三個端點若路徑錯誤，LINE 端全部回 404。
+	_ = client.PushMessage("U0000000000000000000000000000", "t")
+	_ = client.ReplyMessage("dummy-reply-token", "t")
+
+	want := []string{"/v2/bot/message/push", "/v2/bot/message/reply"}
+	if len(gotPaths) != len(want) {
+		t.Fatalf("實際請求路徑 = %v，預期 %v", gotPaths, want)
+	}
+	for i, w := range want {
+		if gotPaths[i] != w {
+			t.Errorf("第 %d 個請求路徑 = %s，預期 %s", i+1, gotPaths[i], w)
+		}
+	}
+}
