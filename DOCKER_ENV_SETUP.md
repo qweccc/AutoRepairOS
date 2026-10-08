@@ -26,7 +26,7 @@
 ## 方案 C：本機 exe 直接跑（跳過 Docker，已有可執行檔）
 ```bash
 cd C:/Users/fr/AutoRepairOS
-./autrepairos.exe
+./autos.exe
 ```
 服務跑在 `http://localhost:8090`（主機 8090 → 容器 8080）。8080 保留給本機的 llama-server。
 
@@ -38,8 +38,6 @@ cd C:/Users/fr/AutoRepairOS
 
 ## 確認環境
 目前檢測結果：
-- Docker: 未安裝
+- Docker: 未安裝（本機以 `autos.exe` 直接跑為主）
 - WSL2: 未安裝或未掛載
-- Go: 本機有但 agent 執行環境找不到（可能是 PATH 問題）
-
-若要我幫忙裝 Docker Desktop 或 WSL2，請明確說要哪個方案，我會開終端機安裝。
+- Go: 本機有

@@ -2,8 +2,8 @@
 
 ## 環境需求
 - Go 1.22+
-- Node.js（用於 Tailwind CSS 建構）
-- Docker + docker-compose（用於容器部署）
+
+> 純 Go 單檔服務，不需要 Node.js 或 Docker 也能在本機直接跑。Node.js / Docker 僅在容器化部署時選用。
 
 ## 初始設置
 
@@ -19,15 +19,17 @@ go mod download
 
 ### 3. 執行種子數據（初始化預設帳號）
 ```bash
-go run ./cmd/seed
+go run ./seed
 ```
 
 ### 4. 啟動服務器
 ```bash
-go run ./cmd/server
+go run .
 ```
 
 服務器將在 `http://localhost:8090` 啟動（主機埠；容器內為 8080）。本機 8080 保留給 llama-server。
+
+> 若本机沒有 Docker，可直接用已編譯的 `autos.exe`（`go build -o autos.exe .`）或 `./autos.exe` 執行。
 
 ## 預設帳號
 
@@ -54,20 +56,51 @@ docker compose logs -f
 docker compose down
 ```
 
-## API 端點
+## HTTP 端點
+
+> 服務為單頁式（無 RESTful `/api/` 前綴）。下表為實際路由。
 
 ### 身份驗證
 - `GET /login` - 登入頁面
-- `POST /login` - 登入
+- `POST /login` - 登入（帳號 / 密碼）
 - `GET /logout` - 登出
 - `GET /api/me` - 獲取當前用戶資訊
+- `GET /{$}` 與 `GET /index.html` - 首頁
 
 ### 客戶
-- `GET /api/customers` - 獲取客戶列表
+- `GET /customers` - 客戶列表（帶搜尋 `?q=`）
+- `POST /customers` - 新增客戶
+- `GET /customers/{id}/edit` - 編輯頁
+- `POST /customers/{id}` - 更新客戶
+- `GET /customers/{id}/delete` - 刪除
+
+### 車輛
+- `GET /vehicles` - 車輛列表
+- `POST /vehicles` - 新增車輛
+- `GET /vehicles/{id}/edit` - 編輯頁
+- `POST /vehicles/{id}` - 更新車輛
+- `GET /vehicles/{id}/delete` - 刪除
 
 ### 工單
-- `GET /api/workorders` - 獲取工單列表
-- `POST /api/workorders` - 建立新工單
+- `GET /work-orders` - 工單列表（狀態分頁 / 搜尋）
+- `GET /work-orders/new` - 開立新工單
+- `POST /work-orders` - 建立工單
+- `GET /work-orders/{id}` - 工單詳情
+- `POST /work-orders/{id}/status` - 變更狀態
+- `POST /work-orders/{id}/approval` - 核准
+- `POST /work-orders/{id}/sop` - 切換 SOP
+- `POST /work-orders/{id}/items` - 加入項目
+- `GET /work-orders/{id}/items/{item_id}/delete` - 刪除項目
+
+### 保險公司
+- `GET /insurance-companies` - 保險公司列表
+- `POST /insurance-companies` - 新增保險公司
+- `GET /insurance-companies/{id}/edit` - 編輯頁
+- `POST /insurance-companies/{id}` - 更新保險公司
+- `GET /insurance-companies/{id}/delete` - 停用（軟刪除）
+
+### LINE Webhook
+- `POST /webhook/line` - LINE 接收端點
 
 ## 資料庫
 
