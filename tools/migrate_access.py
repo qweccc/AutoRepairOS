@@ -344,12 +344,19 @@ class Migrator:
         self.stats = defaultdict(int)
 
         # 編號 → 新 id 對應表
-        self.cust_id = {}       # Customer.No  → customers.id
+        self.cust_id = {}       # Customer.No  → customers.id（相容用，見 _build_customer_resolver）
         self.veh_id = {}        # Car.No       → vehicles.id
         self.sup_id = {}        # Firm.No      → suppliers.id
         self.user_id = {}       # Staff.No     → users.id
         self.inv_id = {}        # Material.No  → inventory_items.id
         self.wo_id = {}         # Maintain Header index → work_orders.id
+
+        # 客戶解析器（notes 精確 + 姓名 fallback），見 _build_customer_resolver
+        self.no2name = {}       # Customer.No  → Customer.Name
+        self.cust_by_notes = {}  # Customer.No  → customers.id（精確）
+        self.cust_by_name = {}   # Customer.Name → customers.id
+        # 統計每個解析路徑命中次數，讓「救回多少」可從輸出看出來
+        self.resolve_via = defaultdict(int)
 
     # ---------- 1. 客戶 ----------
     def migrate_customers(self):
@@ -438,6 +445,75 @@ class Migrator:
         self.stats['customers'] = len(rows)
 
     # ---------- 2. 車輛 ----------
+    def _build_customer_resolver(self):
+        """建立「CAR35 客戶編號 → customers.id」的解析器（含姓名 fallback）。
+
+        為什麼需要姓名 fallback：
+          CAR35 的 Customer 表有 8,118 筆（8,117 個不同編號），但只有 6,511 個
+          不同姓名 —— 同名客戶在遷移時被合併成同一筆 customers（name 為鍵）。
+          因此 8,117 個編號中有約 1,600 個對不到 customers.notes（只有被選為
+          代表的那個編號會被寫進 notes）。
+
+          實際後果：車輛遷移用 cust_id.get(customer_no) 找車主，這 1,600 個
+          編號全部落空 → 整台車被跳過。實測 2,024 台車因此沒遷進來。
+
+          修法：先查 notes（精確），查不到再用「CAR35 編號 → 姓名 → customers.name」
+          兩段解析。實測可救回 2,000/2,024 台（86.5% → 99.8%）。
+
+        注意：姓名 fallback 會讓同名客戶的車輛全部掛到同一筆 customers，
+        這是既有合併策略的結果（無法還原成兩筆），但「車有車主」遠優於
+        「車不存在」—— 車主資訊仍可從 CAR35 的車主姓名欄核對。
+        """
+        # CAR35 編號 → 姓名
+        cu = self.data.get('Customer')
+        self.no2name = {}
+        if cu:
+            for i in range(len(cu['No'])):
+                no = clean_str(col(cu, 'No', i))
+                name = clean_str(col(cu, 'Name', i))
+                if no and name:
+                    self.no2name.setdefault(no, name)
+
+        # notes（CAR35 編號）→ customers.id
+        self.cust_by_notes = {}
+        # name → customers.id（取 id 最小者，與 migrate_customers 的 setdefault 一致）
+        self.cust_by_name = {}
+        self.cur.execute("SELECT id, notes, name FROM customers")
+        for cid, notes, name in self.cur.fetchall():
+            if notes:
+                self.cust_by_notes.setdefault(notes, cid)
+            if name:
+                self.cust_by_name.setdefault(name, cid)
+
+        # 相容：cust_id 仍保留（notes + name 兩種鍵），舊呼叫端不需改
+        self.cust_id = dict(self.cust_by_notes)
+        for k, v in self.cust_by_name.items():
+            self.cust_id.setdefault(k, v)
+
+        print(f"  客戶解析器：notes {len(self.cust_by_notes):,} 筆、"
+              f"姓名 {len(self.cust_by_name):,} 筆、"
+              f"CAR35 編號→姓名 {len(self.no2name):,} 筆")
+
+    def resolve_customer(self, cust_no):
+        """CAR35 客戶編號 → customers.id，查不到回 None。
+
+        三段解析：notes 精確 → 編號轉姓名 → 姓名。
+        """
+        if not cust_no:
+            return None
+        cid = self.cust_by_notes.get(cust_no)
+        if cid is not None:
+            self.resolve_via['notes'] += 1
+            return cid
+        name = self.no2name.get(cust_no)
+        if name:
+            cid = self.cust_by_name.get(name)
+            if cid is not None:
+                self.resolve_via['name'] += 1
+                return cid
+        self.resolve_via['miss'] += 1
+        return None
+
     def migrate_vehicles(self):
         print("\n[2] 車輛 (Car → vehicles)")
         t = self.data.get('Car')
@@ -461,7 +537,7 @@ class Migrator:
                 continue
 
             cust_no = clean_str(col(t, 'Customer No', i))
-            cid = self.cust_id.get(cust_no)
+            cid = self.resolve_customer(cust_no)
             if cid is None:
                 continue    # 沒有對應客戶，跳過（避免 FK 錯誤）
 
@@ -1011,7 +1087,7 @@ class Migrator:
             cust_no = clean_str(col(t, 'Customer No', i))
 
             vid = self.veh_id.get(car_no)
-            cid = self.cust_id.get(cust_no)
+            cid = self.resolve_customer(cust_no)
             if vid is None or cid is None:
                 continue
 
@@ -1169,6 +1245,33 @@ class Migrator:
             json.dump(out, f, ensure_ascii=False, indent=2)
         print(f"  已寫入 {path}")
 
+    def _guard_append_only(self, table, expected):
+        """append-only 表的防重複檢查。
+
+        為什麼需要：vehicle_insurances / vehicle_inspections / expenses 這三張表
+        在舊系統是完整歷史，遷移是「整批 append」。若在已有資料的庫上重跑
+        （例如只補車輛卻連帶重跑全部），筆數會變成 2 倍或 3 倍，而且不會報錯
+        —— 實測重跑一次就從 2,438 變 5,022 筆。
+
+        這裡在寫入前檢查：已有資料且接近預期筆數時，直接跳過並提示，
+        避免靜默地把歷史資料翻倍。要重新遷移請加 --reset。
+        """
+        have = 0
+        try:
+            self.cur.execute(f"SELECT COUNT(1) FROM {table}")
+            have = self.cur.fetchone()[0]
+        except sqlite3.Error:
+            return False
+        if have <= 0:
+            return False
+        # 容忍小幅差異（先前遷移可能因對應失敗少幾筆）
+        if have >= expected * 0.9:
+            print(f"  已有 {have:,} 筆（預期約 {expected:,}），跳過以免重複。"
+                  f"要重新遷移請加 --reset")
+            self.stats[table] = 0
+            return True
+        return False
+
     # ---------- 8. 車輛投保紀錄 ----------
     def migrate_vehicle_insurances(self):
         """Car Insurance List → vehicle_insurances（2,667 筆）。
@@ -1180,6 +1283,8 @@ class Migrator:
         t = self.data.get('Car Insurance List')
         if not t:
             print("  無 Car Insurance List 表，跳過")
+            return
+        if not self.dry_run and self._guard_append_only('vehicle_insurances', len(t['No'])):
             return
 
         # 險種代碼 → 中文（Insurance Class 查表）
@@ -1253,6 +1358,8 @@ class Migrator:
         t = self.data.get('Car Check List')
         if not t:
             print("  無 Car Check List 表，跳過")
+            return
+        if not self.dry_run and self._guard_append_only('vehicle_inspections', len(t['No'])):
             return
 
         plate_map = {}
@@ -1369,6 +1476,8 @@ class Migrator:
         if not t:
             print("  無 Spend List 表，跳過")
             return
+        if not self.dry_run and self._guard_append_only('expenses', len(t.get('Sequence No', []))):
+            return
 
         key = 'Sequence No'
         n = len(t.get(key, []))
@@ -1437,6 +1546,8 @@ class Migrator:
 
     def run(self, lookups_path=None):
         self.migrate_customers()
+        # 客戶全部就位後才建解析器：車輛與工單都要用它找車主。
+        self._build_customer_resolver()
         self.migrate_vehicles()
         self.migrate_suppliers()
         self.migrate_staff()
@@ -1449,6 +1560,14 @@ class Migrator:
         self.migrate_expenses()
         if lookups_path:
             self.export_lookups(lookups_path)
+
+        # 客戶解析路徑統計：讓「姓名 fallback 救回多少」可被稽核，
+        # 而不是只有一個總筆數看不出來源。
+        if sum(self.resolve_via.values()) > 0:
+            print("\n客戶解析路徑統計：")
+            print(f"  notes 精確命中 : {self.resolve_via['notes']:,}")
+            print(f"  姓名 fallback  : {self.resolve_via['name']:,}")
+            print(f"  對不到（略過） : {self.resolve_via['miss']:,}")
 
         if not self.dry_run:
             self.cur.execute("PRAGMA wal_checkpoint(TRUNCATE)")
