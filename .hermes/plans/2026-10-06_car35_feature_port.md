@@ -666,6 +666,82 @@ python -u scripts/test_phase3.py        # 27/27
 
 ---
 
+## Phase 2 提案（2026-10-08，大C 實測後）
+
+> 本節由大C 依 Hermes 上報的 4 個 commit + 實際 DB 筆數實測後整理。
+> 目的：確認 Phase 1 完成狀態，並提出 Phase 2 優先序。
+
+### 一、Phase 1 完成狀態（大C 實測）
+
+| 驗證項 | 結果 | 備註 |
+|---|---|---|
+| `go build ./...` | ✅ BUILD_OK | go1.27.1 |
+| `go vet ./...` | ✅ 通過 | |
+| `go test ./internal/...` | ✅ handler/line/cron ok | |
+| test_auth | ✅ 27/27 | Hermes 計畫書寫 10/10（測試腳本已擴充） |
+| test_workflow | ✅ 27/27 | |
+| test_status_flow | ✅ 27/27 | |
+| test_phase2 | ✅ 27/27 | |
+| test_phase3 | ✅ 27/27 | |
+
+**注意：** Hermes 計畫書的「10/10、13/13、25/25、27/27」是舊數字；測試腳本後來擴充成各 27 項，但**全部通過**，回歸狀態是好的。
+
+### 二、已確認的 4 個 commit（Hermes 上報）
+
+| commit | 內容 | 狀態 |
+|---|---|---|
+| `0d0b1eb` | 四頁歷史明細（投保/定檢/保養套餐/支出） | ✅ 已提交，四頁有資料 |
+| `14f960d` | 工單列表技師/零件篩選 + 零件欄 | ✅ 已提交，未指派 62,097 筆可篩 |
+| `66e929f` | 首頁數字卡可點、技師下拉過濾、按鈕改名 | ✅ 已提交 |
+| `0f7dbb4` | 計畫檔執行進度與簽名 | ✅ 已提交 |
+
+### 三、DB 事實對照（大C 實讀 data_container_autorepair.db）
+
+| Hermes 說 | 大C 實測 | 判斷 |
+|---|---|---|
+| insurances 不存在 | `vehicle_insurances` 2,438 筆 | ✅ 正確（表名是 vehicle_insurances） |
+| inspections 不存在 | `vehicle_inspections` 19,918 筆 | ✅ 正確 |
+| maintenance_templates | 25 筆 | ✅ 正確 |
+| expenses | 3,390 筆（全在 1999–2003）| ✅ 正確，近 10 年 0 筆 |
+| 「40k 筆歷史」 | 85,825 張工單 | 數字不同但同量級 |
+| 5 張業務表全缺 | 只有 customer_pay 真的缺 | ✅ 正確 |
+| MaxOpenConns(1) | — | ⚠️ 此建議會 nested query 死鎖，勿採 |
+| Data35.mdb 可 access-parser 完整解析 | — | ✅ Hermes 實測過 |
+
+### 四、關鍵發現：`customer_pay` 收款沖銷未實作
+
+Hermes 說要做「`customer_pay` 收款沖銷 + `/receivables`」，但**實際 DB 四檔（data / live / live2 / snapshot）都沒有 `customer_pay` 表**：
+
+- `receivables`、`receivable_payments`、`payables`、`purchase_orders`、`work_order_consign`、`customer_pay`：**全部 MISSING**
+- `supplier` 表也不存在（只有 suppliers 在 live DB，data DB 可能沒遷移）
+
+結論：**收款沖銷 + 應收/應付/採購這整組 P1-1 / P1-2 都還沒動**，是 Phase 2 的正式起點。
+
+### 五、Phase 2 優先序建議
+
+依實際使用頻率 + 資料價值，建議順序（非原計畫順序）：
+
+| 順位 | 項目 | 規模 | 說明 |
+|---|---|---|---|
+| **0** | 修車主對應 | 小 | 不改畫面讓車輛 86.5%→99.8%、工單 90.1%→99.9%。原 Phase 1 沒做 |
+| **1** | 收款沖銷 + `/receivables` | 中 | 90,762 筆歷史；解鎖付款方式與應收明細。但 `customer_pay` 表目前不存在，需先建表 |
+| **2** | 進貨單回填 | 中 | 10.4 萬張單；`inventory_movements` 目前 0 筆 |
+| **3** | 技師分工回填 | 小 | 231,188 筆未遷；算技師產值 |
+| **4** | 客戶主檔補欄位 | 小 | 發票抬頭 99.9%、連絡人 98.4% |
+| **5** | 車輛補欄位 | 小 | 駕駛人 97.3%、顏色 78%、車種 63.8% |
+| **6** | 供應商 CRUD（只讀→可編修）| 小 | 695 家 |
+| **7** | 投保／定檢補「標記完成」| 小 | 21,176 筆定檢只有 1 筆回填完成 |
+| **8** | 報表死連結清理 + 出險報表 | 中 | 需先有保險件資料 |
+
+### 六、Phase 2 執行建議
+
+1. **先做「修車主對應」（順位 0）**—— 規模小、回報高，且是其他遷移的基礎。
+2. **收款沖銷需先建 `customer_pay` 表**—— 目前不存在，不能直接接頁面。
+3. **P1-2 應付帳款 / 採購單** 是全新功能（舊系統空表或設計了沒用），優先度可往後排。
+4. **代客保管 / 裝潢分帳** 明確不做（舊系統無此功能 / 全表 0 筆）。
+
+---
+
 # 執行進度（2026-10-07 更新）
 
 > 本節由 Hermes 維護。每個 Task 完成後更新，並附 commit hash 與驗證結果。
