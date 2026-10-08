@@ -2,8 +2,16 @@ package telegram
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
+
+func appName() string {
+	if v := os.Getenv("APP_NAME"); v != "" {
+		return v
+	}
+	return "AutoRepair OS"
+}
 
 // 內部通知的訊息格式。
 //
@@ -45,7 +53,7 @@ type DailyDigest struct {
 // Format 產生摘要訊息。
 func (d DailyDigest) Format() string {
 	var b strings.Builder
-	b.WriteString("📊 <b>AutoRepair OS 每日摘要</b>\n")
+	b.WriteString("📊 <b>" + appName() + " 每日摘要</b>\n")
 	b.WriteString("<code>" + escapeHTML(d.Date) + "</code>\n\n")
 	b.WriteString(fmt.Sprintf("新工單　　<b>%d</b> 張\n", d.NewOrders))
 	b.WriteString(fmt.Sprintf("待結帳　　<b>%d</b> 張\n", d.PendingPay))

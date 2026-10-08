@@ -11,6 +11,7 @@ type Config struct {
 	EnableWAL         bool
 	SessionSecret     string
 	RunSeed           bool
+	AppName           string
 	DefaultOwner      string
 	DefaultOwnerPwd   string
 	DefaultCounter    string
@@ -43,12 +44,18 @@ func Load() *Config {
 	runSeedStr := os.Getenv("RUN_SEED")
 	runSeed := runSeedStr == "true" || runSeedStr == "1"
 
+	appName := os.Getenv("APP_NAME")
+	if appName == "" {
+		appName = "AutoRepair OS"
+	}
+
 	return &Config{
 		Port:              port,
 		DBPath:            dbPath,
 		EnableWAL:         enableWAL,
 		SessionSecret:     sessionSecret,
 		RunSeed:           runSeed,
+		AppName:           appName,
 		DefaultOwner:      "owner",
 		DefaultOwnerPwd:   "Owner001!",
 		DefaultCounter:    "counter",

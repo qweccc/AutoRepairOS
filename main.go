@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"log"
 	"net/http"
 
@@ -44,9 +45,14 @@ func main() {
 	// 總覽
 	mux.HandleFunc("GET /{$}", handler.AllStaff(handler.IndexHandler))
 
-	// 首頁靜態（index.html 字面檔，需登入才能取得）
+	// 首頁（index.html 用 template 注入 APP_NAME，需登入才能取得）
 	mux.HandleFunc("GET /index.html", handler.RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.StripPrefix("/index.html", http.FileServer(http.Dir("web"))).ServeHTTP(w, r)
+		tmpl, err := template.ParseFiles("web/index.html")
+		if err != nil {
+			http.Error(w, "template parse error", http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, map[string]string{"AppName": cfg.AppName})
 	})))
 
 	// 客戶
@@ -162,6 +168,6 @@ func main() {
 		defer scheduler.Stop()
 	}
 
-	log.Printf("AutoRepair OS 啟動中，監聽 port: %s", port)
+	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }

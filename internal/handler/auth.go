@@ -69,13 +69,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<title>登入 - AutoRepair OS</title>
+<title>登入 - ` + appName() + `</title>
 <style>` + loginStyle + `</style>
 </head>
 <body>
   <div class="wrap">
     <form class="login" method="POST" action="/login">
-      <h2>🔧 AutoRepair OS</h2>
+      <h2>🔧 ` + appName() + `</h2>
       <label>帳號<input type="text" name="username" required autofocus></label>
       <label>密碼<input type="password" name="password" required></label>
       <button type="submit">登入</button>

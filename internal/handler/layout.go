@@ -5,6 +5,7 @@ import (
 	"html"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -141,19 +142,29 @@ func nav(active string) string {
 	return b.String()
 }
 
+// appName 取得軟體名稱。handler 套件不依賴 config（避免循環），
+// 直接讀環境變數；未設定時沿用預設值。
+func appName() string {
+	if v := strings.TrimSpace(os.Getenv("APP_NAME")); v != "" {
+		return v
+	}
+	return "AutoRepair OS"
+}
+
 func renderPage(w http.ResponseWriter, title, active, username, role, body string) {
+	app := appName()
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(`<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>` + html.EscapeString(title) + ` - AutoRepair OS</title>
+<title>` + html.EscapeString(title) + ` - ` + html.EscapeString(app) + `</title>
 <style>` + pageStyle + `</style>
 </head>
 <body>
   <header>
-    <h1>🔧 AutoRepair OS</h1>
+    <h1>🔧 ` + html.EscapeString(app) + `</h1>
     <div class="user">登入中：<code>` + html.EscapeString(username) + `</code> <span class="badge">` + html.EscapeString(role) + `</span>
     <a href="/logout" class="logout">登出</a>
     </div>

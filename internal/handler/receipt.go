@@ -69,7 +69,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 	receipt := `
   <div class="sheet">
     <div class="rpt-head">
-      <h1>🔧 AutoRepair OS</h1>
+      <h1>🔧 ` + appName() + `</h1>
       <p>車行維修估價單 / 收據</p>
     </div>
 
