@@ -107,6 +107,13 @@ func main() {
 	mux.HandleFunc("GET /maintenance-templates", handler.AllStaff(handler.ListMaintenanceTemplates))
 	mux.HandleFunc("GET /expenses", handler.CounterUpPage(handler.ListExpenses))
 
+	// 收款沖銷（CAR35 Customer Pay，90,762 筆）——
+	// 財務頁面，用 CounterUpPage 讓技師看不到（handler 內另有一次 canSeeMoney 檢查）。
+	mux.HandleFunc("GET /receivables", handler.CounterUpPage(handler.ListReceivables))
+	mux.HandleFunc("GET /receivables/new", handler.CounterUpPage(handler.NewReceivableForm))
+	mux.HandleFunc("POST /receivables", handler.CounterUp(handler.CreateReceivable))
+	mux.HandleFunc("GET /receivables/{id}/void", handler.OwnerOnly(handler.VoidReceivable))
+
 	// 保險公司（CAR35 P0-1：Company 表，理賠案件歸屬對象）
 	mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 	mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))

@@ -350,6 +350,9 @@ class Migrator:
         self.user_id = {}       # Staff.No     → users.id
         self.inv_id = {}        # Material.No  → inventory_items.id
         self.wo_id = {}         # Maintain Header index → work_orders.id
+        # 舊單號 → work_orders.id。收款沖銷靠這個關聯工單
+        # （work_orders 本身沒有存舊單號，必須在遷移當下記下）。
+        self.wo_by_legacy_no = {}
 
         # 客戶解析器（notes 精確 + 姓名 fallback），見 _build_customer_resolver
         self.no2name = {}       # Customer.No  → Customer.Name
@@ -1141,6 +1144,12 @@ class Migrator:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, values)
             self.wo_id[i] = self.cur.lastrowid
+            # 舊單號 → work_orders.id。
+            # 收款沖銷（Customer Pay.Maintain No）用舊單號關聯工單，
+            # 而 work_orders 沒有存舊單號，所以必須在遷移當下就記下對照。
+            no = clean_str(col(t, 'No', i))
+            if no:
+                self.wo_by_legacy_no[no] = self.wo_id[i]
 
         if self.dry_run:
             print(f"  [DRY-RUN] 將新增 {len(self.wo_id)} 筆工單")
@@ -1466,6 +1475,107 @@ class Migrator:
         self.stats['maintenance_template_items'] = len(item_rows)
 
     # ---------- 11. 零用金／雜支支出 ----------
+    # ---------- 12. 收款沖銷 ----------
+    def migrate_receivables(self):
+        """Customer Pay → receivables（90,762 筆）。
+
+        舊系統的「應收帳款沖銷作業」。這是金額最大的缺口：
+        現金 3.48 億、刷卡 4,417 萬、支票 714 萬。
+
+        金額單位是「元」（實測 Cash Total 500 = 500 元，與工單同級），
+        不是「分」—— 這點與 Spend List 不同，勿混淆。
+
+        對應關係：
+          customer_id    ← Customer No（用 resolve_customer，含姓名 fallback）
+          vehicle_id     ← Car No
+          work_order_id  ← Maintain No（90,759 筆可對到工單）
+          voided         ← Delete Flag（9 筆作廢）
+          source         = 'legacy'（讓日後能只清舊帳重跑）
+        """
+        print("\n[12] 收款沖銷 (Customer Pay → receivables)")
+        t = self.data.get('Customer Pay')
+        if not t:
+            print("  無 Customer Pay 表，跳過")
+            return
+        if not self.dry_run and self._guard_append_only('receivables', len(t['No'])):
+            return
+
+        # 車牌 → vehicle id
+        plate_map = {}
+        self.cur.execute("SELECT id, plate_number FROM vehicles")
+        for vid, plate in self.cur.fetchall():
+            plate_map[plate] = vid
+
+        # 舊工單號 → work_orders.id
+        #
+        # work_orders 沒有存舊系統的單號，所以對照表是在 migrate_work_orders
+        # 寫入時順手記下的（見該函式的 wo_by_legacy_no）。這裡只取用。
+        # 對不到就留空 —— 收款紀錄本身仍有價值（金額與客戶都對得上），
+        # 硬猜一個工單反而會把錢記到錯的帳上。
+        wo_map = self.wo_by_legacy_no
+
+        rows = []
+        skip_no_cust = 0
+        no_wo = 0
+        for i in range(len(t['No'])):
+            cust_no = clean_str(col(t, 'Customer No', i))
+            cid = self.resolve_customer(cust_no)
+            if cid is None:
+                skip_no_cust += 1
+                continue
+
+            plate = clean_str(col(t, 'Car No', i))
+            vid = plate_map.get(plate)
+
+            legacy_wo = clean_str(col(t, 'Maintain No', i))
+            wid = wo_map.get(legacy_wo)
+            if legacy_wo and wid is None:
+                no_wo += 1
+
+            rows.append((
+                clean_str(col(t, 'No', i)) or '',                 # voucher_no
+                cid,                                              # customer_id
+                vid,                                              # vehicle_id
+                wid,                                              # work_order_id
+                # pay_date 是 NOT NULL，但舊資料有 5 筆空值 →
+                # convert_roc_date 會回 None，直接塞會違反約束。留空字串。
+                convert_roc_date(col(t, 'Pay Date', i)) or '',    # pay_date
+                clean_num(col(t, 'Detail Total', i)),             # detail_total
+                clean_num(col(t, 'Real Total', i)),               # real_total
+                clean_num(col(t, 'Discount Price', i)),           # discount
+                clean_num(col(t, 'Tax Price', i)),                # tax
+                clean_num(col(t, 'Pay Total', i)),                # pay_total
+                clean_num(col(t, 'Cash Total', i)),               # cash
+                clean_num(col(t, 'Card Total', i)),               # card
+                clean_num(col(t, 'Check Total', i)),              # check_amount
+                clean_str(col(t, 'Card No', i)),                  # card_no
+                clean_str(col(t, 'Check No', i)),                 # check_no
+                # 舊資料的 Check Date 是 '1000131'（無分隔符），
+                # convert_roc_date 解析不了會回 None；此欄可空，沒問題。
+                convert_roc_date(col(t, 'Check Date', i)) or '',  # check_date
+                clean_str(col(t, 'Bank Class', i)),               # bank
+                clean_str(col(t, 'Pay Remark', i)),               # notes
+                1 if clean_bool(col(t, 'Delete Flag', i)) else 0,  # voided
+                clean_str(col(t, 'No', i)) or '',                 # legacy_no
+            ))
+
+        if self.dry_run:
+            print(f"  [DRY-RUN] 將新增 {len(rows):,} 筆收款"
+                  f"（{skip_no_cust} 筆無客戶、{no_wo} 筆無對應工單）")
+        else:
+            self.cur.executemany("""
+                INSERT INTO receivables
+                  (voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
+                   detail_total, real_total, discount, tax, pay_total,
+                   cash, card, check_amount, card_no, check_no, check_date, bank,
+                   notes, voided, source, legacy_no)
+                VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?,?, ?,?,'legacy',?)
+            """, rows)
+            self.conn.commit()
+            print(f"  新增 {len(rows):,} 筆收款"
+                  f"（{skip_no_cust} 筆無客戶、{no_wo} 筆無對應工單）")
+        self.stats['receivables'] = len(rows)
+
     def migrate_expenses(self):
         """Spend List → expenses（3,390 筆）。
 
@@ -1558,6 +1668,7 @@ class Migrator:
         self.migrate_vehicle_inspections()
         self.migrate_maintenance_templates()
         self.migrate_expenses()
+        self.migrate_receivables()
         if lookups_path:
             self.export_lookups(lookups_path)
 

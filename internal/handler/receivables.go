@@ -1,0 +1,511 @@
+package handler
+
+import (
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+)
+
+// 收款沖銷（應收帳款收款紀錄）。
+//
+// 對應舊系統 CAR35 的「應收帳款沖銷作業」（Customer Pay，90,762 筆）——
+// 這是舊系統金額最大的缺口：現金 3.48 億、刷卡 4,417 萬、支票 714 萬。
+// 在這一頁出現之前，新系統結帳只能把工單狀態改成 paid，
+// 看不出「收了多少、用什麼方式收、有沒有折讓、票什麼時候到期」。
+//
+// 為什麼收款是獨立實體而不是 work_orders 上的欄位：
+//   1. 一張工單可以分次收款（舊資料 90,762 筆對 87,625 張工單）
+//   2. 一次收款可以沖銷多張工單（月結客戶）
+//   3. 收款單有獨立單號，需單獨查詢與列印
+// 因此 work_order_id 可空 —— 手動收款不必綁特定工單。
+
+const receivableCols = `r.id, r.voucher_no, r.customer_id, COALESCE(c.name,''),
+	COALESCE(r.vehicle_id,0), COALESCE(v.plate_number,''),
+	COALESCE(r.work_order_id,0),
+	COALESCE(r.pay_date,''), r.detail_total, r.real_total,
+	r.discount, r.tax, r.pay_total,
+	r.cash, r.card, r.check_amount,
+	COALESCE(r.card_no,''), COALESCE(r.check_no,''), COALESCE(r.check_date,''),
+	COALESCE(r.bank,''), COALESCE(r.notes,''), r.voided, r.source`
+
+const receivableFrom = ` FROM receivables r
+	JOIN customers c ON c.id = r.customer_id
+	LEFT JOIN vehicles v ON v.id = r.vehicle_id`
+
+type receivable struct {
+	ID           int64
+	VoucherNo    string
+	CustomerID   int64
+	CustomerName string
+	VehicleID    int64
+	PlateNumber  string
+	WorkOrderID  int64
+	PayDate      string
+	DetailTotal  float64
+	RealTotal    float64
+	Discount     float64
+	Tax          float64
+	PayTotal     float64
+	Cash         float64
+	Card         float64
+	CheckAmount  float64
+	CardNo       string
+	CheckNo      string
+	CheckDate    string
+	Bank         string
+	Notes        string
+	Voided       int
+	Source       string
+}
+
+func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, error) {
+	var r receivable
+	err := rows.Scan(&r.ID, &r.VoucherNo, &r.CustomerID, &r.CustomerName,
+		&r.VehicleID, &r.PlateNumber, &r.WorkOrderID,
+		&r.PayDate, &r.DetailTotal, &r.RealTotal,
+		&r.Discount, &r.Tax, &r.PayTotal,
+		&r.Cash, &r.Card, &r.CheckAmount,
+		&r.CardNo, &r.CheckNo, &r.CheckDate,
+		&r.Bank, &r.Notes, &r.Voided, &r.Source)
+	return r, err
+}
+
+// payMethod 判斷這筆收款的主要付款方式，用於列表標籤。
+//
+// 舊系統同一筆可同時記現金與刷卡（實測 83,094 筆現金中有部分是混合），
+// 因此這裡是「顯示用」的分類，不是互斥的真實欄位。
+func payMethod(r receivable) (string, string) {
+	hasCash := r.Cash > 0
+	hasCard := r.Card > 0
+	hasCheck := r.CheckAmount > 0
+	switch {
+	case hasCash && !hasCard && !hasCheck:
+		return "現金", "p-completed"
+	case hasCard && !hasCash && !hasCheck:
+		return "信用卡", "p-apprpend"
+	case hasCheck && !hasCash && !hasCard:
+		return "票據", "p-waitparts"
+	case !hasCash && !hasCard && !hasCheck:
+		return "未收款", "p-apprno"
+	default:
+		return "混合", "p-apprpend"
+	}
+}
+
+// ListReceivables 收款列表 + 新增表單。
+func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
+	// 財務數字屬店內機密，與報表一致：技師不可看。
+	if !canSeeMoney(user) {
+		http.Error(w, "權限不足：收款紀錄僅限櫃檯人員與系統管理員使用", http.StatusForbidden)
+		return
+	}
+
+	qv := r.URL.Query()
+	q := strings.TrimSpace(qv.Get("q"))
+	method := strings.TrimSpace(qv.Get("method"))
+	from := strings.TrimSpace(qv.Get("from"))
+	to := strings.TrimSpace(qv.Get("to"))
+	showVoided := qv.Get("voided") == "1"
+	page := pageNo(r)
+	size := pageSize(r)
+
+	where := ` WHERE 1=1`
+	var args []interface{}
+	// 作廢的預設隱藏（帳務清單不該被作廢單干擾），但要能查。
+	if !showVoided {
+		where += ` AND r.voided = 0`
+	}
+	if q != "" {
+		where += ` AND (r.voucher_no LIKE ? OR c.name LIKE ? OR c.phone LIKE ?
+			OR COALESCE(v.plate_number,'') LIKE ? OR COALESCE(r.check_no,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like, like, like)
+	}
+	// 付款方式篩選。舊資料同一筆可並存多種金額，所以用「> 0」判斷而非等於。
+	switch method {
+	case "cash":
+		where += ` AND r.cash > 0`
+	case "card":
+		where += ` AND r.card > 0`
+	case "check":
+		where += ` AND r.check_amount > 0`
+	}
+	// 日期區間。舊資料是 '100/03/11'（民國），新資料是 ISO，
+	// 先用 normDateSQL 正規化再比對，兩種格式都能篩。
+	if from != "" {
+		where += ` AND ` + normDateSQL("r.pay_date") + ` >= date(?)`
+		args = append(args, from)
+	}
+	if to != "" {
+		where += ` AND ` + normDateSQL("r.pay_date") + ` <= date(?)`
+		args = append(args, to)
+	}
+
+	total := countRows(`SELECT COUNT(1)`+receivableFrom+where, args...)
+
+	// 合計（不受分頁影響）：這是這一頁最主要的用途 —— 知道收了多少錢。
+	var sumCash, sumCard, sumCheck, sumPay float64
+	db.DB.QueryRow(`SELECT COALESCE(SUM(r.cash),0), COALESCE(SUM(r.card),0),
+		COALESCE(SUM(r.check_amount),0), COALESCE(SUM(r.pay_total),0)`+
+		receivableFrom+where, args...).Scan(&sumCash, &sumCard, &sumCheck, &sumPay)
+
+	query := `SELECT ` + receivableCols + receivableFrom + where +
+		` ORDER BY ` + normDateSQL("r.pay_date") + ` DESC, r.id DESC LIMIT ? OFFSET ?`
+	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
+
+	rows, err := db.DB.Query(query, pageArgs...)
+	if err != nil {
+		fail(w, "查詢收款紀錄失敗")
+		return
+	}
+	defer rows.Close()
+
+	var tb strings.Builder
+	tb.WriteString(`<table><tr><th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th>` +
+		`<th>方式</th><th class="num">現金</th><th class="num">刷卡</th>` +
+		`<th class="num">票額</th><th class="num">合計</th><th>關聯工單</th></tr>`)
+	n := 0
+	for rows.Next() {
+		rec, err := scanReceivable(rows)
+		if err != nil {
+			continue
+		}
+		n++
+		label, cls := payMethod(rec)
+		if rec.Voided != 0 {
+			label, cls = "已作廢", "p-apprno"
+		}
+		woCell := `<span style="color:#475569">—</span>`
+		if rec.WorkOrderID > 0 {
+			woCell = `<a href="/work-orders/` + strconv.FormatInt(rec.WorkOrderID, 10) + `">#` +
+				strconv.FormatInt(rec.WorkOrderID, 10) + `</a>`
+		}
+		legacy := ""
+		if rec.Source == "legacy" {
+			legacy = ` <span style="color:#64748b;font-size:11px">舊帳</span>`
+		}
+		tb.WriteString(`<tr><td><code style="font-size:12px">` + htmlEsc(rec.VoucherNo) + `</code>` + legacy +
+			`</td><td style="font-size:12.5px">` + orDash(normDate(rec.PayDate)) +
+			`</td><td>` + htmlEsc(rec.CustomerName) +
+			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(rec.PlateNumber)) +
+			`</td><td><span class="pill ` + cls + `">` + label + `</span></td>` +
+			`<td class="num">` + moneyIf(rec.Cash) + `</td>` +
+			`<td class="num">` + moneyIf(rec.Card) + `</td>` +
+			`<td class="num">` + moneyIf(rec.CheckAmount) + `</td>` +
+			`<td class="num"><b>` + money(rec.PayTotal) + `</b></td>` +
+			`<td style="font-size:12.5px">` + woCell + `</td></tr>`)
+	}
+	tb.WriteString(`</table>`)
+
+	table := tb.String()
+	if n == 0 {
+		table = `<div class="empty">沒有符合條件的收款紀錄</div>`
+	}
+
+	// 付款方式分頁籤
+	var tabs strings.Builder
+	tabDef := []struct{ key, label string }{
+		{"", "全部"}, {"cash", "現金"}, {"card", "信用卡"}, {"check", "票據"},
+	}
+	for _, t := range tabDef {
+		u := url.Values{}
+		for _, k := range []string{"q", "from", "to", "voided"} {
+			if v := qv.Get(k); v != "" {
+				u.Set(k, v)
+			}
+		}
+		if t.key != "" {
+			u.Set("method", t.key)
+		}
+		href := "/receivables"
+		if s := u.Encode(); s != "" {
+			href += "?" + s
+		}
+		tabs.WriteString(`<a class="btn ` + btnIf(method == t.key, "btn-p", "btn-s") + `" href="` + href + `">` + t.label + `</a> `)
+	}
+
+	voidNote := ""
+	if showVoided {
+		voidNote = ` <a href="/receivables" style="font-size:13px">（隱藏作廢）</a>`
+	}
+
+	body := flash(r) + `
+    <div class="card">
+      <h2>收款紀錄（符合條件 ` + strconv.Itoa(total) + ` 筆）` + voidNote + `</h2>
+      <div style="margin-bottom:14px">
+        <div class="stat"><b>` + money(sumPay) + `</b><span>收款合計</span></div>
+        <div class="stat"><b>` + money(sumCash) + `</b><span>現金</span></div>
+        <div class="stat"><b>` + money(sumCard) + `</b><span>信用卡</span></div>
+        <div class="stat"><b>` + money(sumCheck) + `</b><span>票據</span></div>
+      </div>
+      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+        對應舊系統「應收帳款沖銷作業」。上方合計為<b>目前篩選條件的全部筆數</b>（不受分頁影響）。
+        標「舊帳」者為從舊系統遷移的歷史紀錄。
+      </p>
+      <div style="margin-bottom:12px">` + tabs.String() + `</div>
+      <div style="margin-bottom:12px">
+        <a class="btn btn-p" href="/receivables/new">＋ 新增收款</a>
+      </div>
+      <form method="GET" action="/receivables" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋單號 / 客戶 / 電話 / 車牌 / 票號" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+        <input type="hidden" name="method" value="` + htmlEsc(method) + `">
+        <label style="font-size:12.5px;color:#94a3b8">日期從
+          <input type="date" name="from" value="` + htmlEsc(from) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+        </label>
+        <label style="font-size:12.5px;color:#94a3b8">到
+          <input type="date" name="to" value="` + htmlEsc(to) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+        </label>
+        <label style="font-size:12.5px;color:#94a3b8"><input type="checkbox" name="voided" value="1"` + chkIf(showVoided) + `> 含作廢</label>
+        <button class="btn btn-p" type="submit">搜尋</button>
+        <a class="btn btn-s" href="/receivables">清除</a>
+      </form>` + table + pager("/receivables", qv, total, page, size) +
+		`<div style="margin-top:6px">` + perPageSel("/receivables", qv, size) + `</div>
+    </div>`
+
+	renderPage(w, "收款紀錄", "/receivables", user.Username, user.Role, body)
+}
+
+// NewReceivableForm 新增收款表單。
+func NewReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	if !canSeeMoney(user) {
+		http.Error(w, "權限不足", http.StatusForbidden)
+		return
+	}
+	renderPage(w, "新增收款", "/receivables", user.Username, user.Role, receivableFormBody(receivable{}, "", ""))
+}
+
+// receivableFormBody 收款表單（新增與編輯共用）。
+func receivableFormBody(rec receivable, action, errMsg string) string {
+	sel := func(v float64) string {
+		if v == 0 {
+			return ""
+		}
+		return money(v)
+	}
+	return flash0(errMsg) + `
+    <div class="card">
+      <h2>收款紀錄</h2>
+      <form class="frm" method="POST" action="` + action + `">
+        <label>收款單號<input name="voucher_no" value="` + htmlEsc(rec.VoucherNo) + `" placeholder="留空自動產生"></label>
+        <label>收款日期<input name="pay_date" type="date" value="` + htmlEsc(normDate(rec.PayDate)) + `" required></label>
+        <label>客戶
+          <input name="customer_q" value="` + htmlEsc(rec.CustomerName) + `" placeholder="姓名 / 電話 / 車牌" required>
+          <input type="hidden" name="customer_id" value="` + strconv.FormatInt(rec.CustomerID, 10) + `">
+        </label>
+        <label>關聯工單
+          <input name="work_order_id" value="` + intOrEmpty(rec.WorkOrderID) + `" placeholder="工單編號，可留空">
+        </label>
+
+        <div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px">
+          <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">
+            付款方式可並存（例如現金 3,000 + 刷卡 2,000）。金額請填實收金額。
+          </p>
+        </div>
+        <label>現金<input name="cash" type="number" min="0" step="1" value="` + sel(rec.Cash) + `"></label>
+        <label>信用卡<input name="card" type="number" min="0" step="1" value="` + sel(rec.Card) + `"></label>
+        <label>卡號<input name="card_no" value="` + htmlEsc(rec.CardNo) + `"></label>
+        <label>票據金額<input name="check_amount" type="number" min="0" step="1" value="` + sel(rec.CheckAmount) + `"></label>
+        <label>票號<input name="check_no" value="` + htmlEsc(rec.CheckNo) + `"></label>
+        <label>票據到期日<input name="check_date" type="date" value="` + htmlEsc(normDate(rec.CheckDate)) + `"></label>
+        <label>行庫<input name="bank" value="` + htmlEsc(rec.Bank) + `"></label>
+
+        <div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px">
+          <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">
+            金額拆分（選填）。收款合計 = 現金 + 信用卡 + 票據；若留空會自動加總。
+          </p>
+        </div>
+        <label>明細合計<input name="detail_total" type="number" min="0" step="1" value="` + sel(rec.DetailTotal) + `"></label>
+        <label>折扣<input name="discount" type="number" min="0" step="1" value="` + sel(rec.Discount) + `"></label>
+        <label>稅額<input name="tax" type="number" min="0" step="1" value="` + sel(rec.Tax) + `"></label>
+        <label>本次應收<input name="pay_total" type="number" min="0" step="1" value="` + sel(rec.PayTotal) + `"></label>
+        <label class="full">備註<textarea name="notes">` + htmlEsc(rec.Notes) + `</textarea></label>
+        <div class="full">
+          <button class="btn btn-p" type="submit">儲存</button>
+          <a class="btn btn-s" href="/receivables">取消</a>
+        </div>
+      </form>
+    </div>`
+}
+
+// CreateReceivable 建立收款紀錄。
+func CreateReceivable(w http.ResponseWriter, r *http.Request) {
+	// 表單送的是可讀的 customer_q（姓名/電話/車牌），沒帶 customer_id 時
+	// 用既有的 resolveCustomerID 找一次，避免櫃檯必須先查 id。
+	// 為了重用，把 customer_q 複製成該函式認得的 customer_query。
+	r.Form = func() url.Values {
+		r.ParseForm()
+		v := r.Form
+		if v.Get("customer_query") == "" && v.Get("customer_q") != "" {
+			v.Set("customer_query", v.Get("customer_q"))
+		}
+		return v
+	}()
+	customerID, msg := resolveCustomerID(r)
+	if customerID <= 0 {
+		redirectMsg(w, r, "/receivables/new", "找不到客戶："+msg)
+		return
+	}
+
+	payDate := strings.TrimSpace(r.FormValue("pay_date"))
+	if payDate == "" {
+		payDate = today()
+	}
+
+	cash := atofDefault(r.FormValue("cash"), 0)
+	card := atofDefault(r.FormValue("card"), 0)
+	checkAmt := atofDefault(r.FormValue("check_amount"), 0)
+	payTotal := atofDefault(r.FormValue("pay_total"), 0)
+	// 合計留空時自動加總，避免櫃檯填了方式卻忘了填合計。
+	if payTotal == 0 {
+		payTotal = cash + card + checkAmt
+	}
+	if cash+card+checkAmt == 0 && payTotal == 0 {
+		redirectMsg(w, r, "/receivables/new", "請至少填一種付款方式或收款合計")
+		return
+	}
+
+	voucher := strings.TrimSpace(r.FormValue("voucher_no"))
+	if voucher == "" {
+		voucher = nextVoucherNo(payDate)
+	}
+
+	// 關聯工單（可空）。有帶就把該工單的車輛一起記下來，列表才能顯示車牌。
+	woID := mustInt(r.FormValue("work_order_id"))
+	var woArg, vehicleArg interface{}
+	if woID > 0 {
+		var vid int64
+		if db.DB.QueryRow("SELECT vehicle_id FROM work_orders WHERE id = ?", woID).Scan(&vid) == nil {
+			vehicleArg = vid
+		}
+		woArg = woID
+	}
+
+	// created_by：用自己的身分寫入（與 inventory 調庫同樣做法）
+	var actor interface{}
+	if u, uerr := currentUser(r); uerr == nil {
+		actor = u.ID
+	}
+
+	_, err := db.DB.Exec(`INSERT INTO receivables
+		(voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
+		 detail_total, real_total, discount, tax, pay_total,
+		 cash, card, check_amount, card_no, check_no, check_date, bank,
+		 notes, source, created_by)
+		VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?,?, ?, 'manual', ?)`,
+		voucher, customerID, vehicleArg, woArg, payDate,
+		atofDefault(r.FormValue("detail_total"), 0),
+		atofDefault(r.FormValue("real_total"), 0),
+		atofDefault(r.FormValue("discount"), 0),
+		atofDefault(r.FormValue("tax"), 0),
+		payTotal,
+		cash, card, checkAmt,
+		nullStr(r.FormValue("card_no")), nullStr(r.FormValue("check_no")),
+		normDate(r.FormValue("check_date")), nullStr(r.FormValue("bank")),
+		nullStr(r.FormValue("notes")), actor)
+	if err != nil {
+		redirectMsg(w, r, "/receivables/new", "新增收款失敗："+err.Error())
+		return
+	}
+
+	// 收款完成 → 對應工單標記為已結帳。
+	// 這是舊系統「沖銷」的核心語意：收到錢就把帳結掉。
+	if woID > 0 {
+		db.DB.Exec(`UPDATE work_orders SET status = 'paid',
+			updated_at = datetime('now','localtime') WHERE id = ? AND status <> 'paid'`, woID)
+	}
+
+	redirectMsg(w, r, "/receivables", "收款已記錄："+voucher+"（"+money(payTotal)+"）")
+}
+
+// VoidReceivable 作廢收款（軟刪除）。
+//
+// 為什麼不真刪：帳務紀錄需要留痕。舊系統也是用 Delete Flag 標記（9 筆），
+// 真刪會讓對帳金額對不上、也無法追查是誰改的。
+func VoidReceivable(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	if id <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+	res, err := db.DB.Exec(`UPDATE receivables SET voided = 1 WHERE id = ? AND voided = 0`, id)
+	if err != nil {
+		fail(w, "作廢失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		redirectMsg(w, r, "/receivables", "該筆不存在或已作廢")
+		return
+	}
+	redirectMsg(w, r, "/receivables", "已作廢該筆收款（紀錄保留，可用「含作廢」查回）")
+}
+
+// nextVoucherNo 產生收款單號：RCV-YYYYMMDD-NNN。
+//
+// 舊系統的單號格式很雜（'.0003001'、'+9/00001'），新單號另立格式，
+// 讓「舊帳」與「新收」一眼可辨。
+func nextVoucherNo(payDate string) string {
+	day := strings.ReplaceAll(normDate(payDate), "-", "")
+	if day == "" {
+		day = strings.ReplaceAll(today(), "-", "")
+	}
+	prefix := "RCV-" + day + "-"
+	var n int
+	db.DB.QueryRow(`SELECT COUNT(1) FROM receivables WHERE voucher_no LIKE ?`,
+		prefix+"%").Scan(&n)
+	return prefix + pad3(n+1)
+}
+
+func pad3(n int) string {
+	s := strconv.Itoa(n)
+	for len(s) < 3 {
+		s = "0" + s
+	}
+	return s
+}
+
+// moneyIf 金額為 0 時顯示破折號，避免一整排 0 蓋掉真正的數字。
+func moneyIf(f float64) string {
+	if f == 0 {
+		return `<span style="color:#475569">—</span>`
+	}
+	return money(f)
+}
+
+func intOrEmpty(n int64) string {
+	if n <= 0 {
+		return ""
+	}
+	return strconv.FormatInt(n, 10)
+}
+
+// normDateSQL 產生「日期欄位正規化為 YYYY-MM-DD」的 SQL 片段。
+//
+// 舊系統的日期是民國年 '100/03/11'，新資料是 ISO '2026-10-07'。
+// SQLite 的 date() 不吃斜線格式（date('100/03/11') 回 NULL），
+// 直接比對會讓所有舊資料被篩掉，所以要先轉換。
+// 與 normDate() 的規則保持一致。
+func normDateSQL(col string) string {
+	// 民國年 → 西元：斜線格式且首段 <= 200 者視為民國年，+1911。
+	// 用 CASE 在 SQL 裡做，避免為了排序把整表撈出來。
+	return `date(CASE
+		WHEN ` + col + ` LIKE '%/%/%' AND CAST(substr(` + col + `,1,instr(` + col + `,'/')-1) AS INTEGER) BETWEEN 1 AND 200
+		THEN (CAST(substr(` + col + `,1,instr(` + col + `,'/')-1) AS INTEGER) + 1911) || '-' ||
+			substr(` + col + `, instr(` + col + `,'/')+1, instr(substr(` + col + `, instr(` + col + `,'/')+1), '/') - 1) || '-' ||
+			substr(` + col + `, instr(substr(` + col + `, instr(` + col + `,'/')+1), '/') + instr(` + col + `,'/') + 1)
+		WHEN ` + col + ` LIKE '%/%/%'
+		THEN replace(` + col + `, '/', '-')
+		ELSE ` + col + `
+	END)`
+}
+
+// flash0 把錯誤訊息直接渲染在頁面上（表單驗證失敗時用，不經 redirect）。
+func flash0(msg string) string {
+	if msg == "" {
+		return ""
+	}
+	return `<div class="msg msg-err">` + htmlEsc(msg) + `</div>`
+}
