@@ -1,3 +1,4 @@
+// Package handler 提供 AutoRepairOS 的 HTTP 端點與頁面渲染。
 package handler
 
 import (
@@ -10,6 +11,7 @@ import (
 )
 
 // ReportsHome 報表總覽：營收、工單、庫存、技師績效。
+// 營收卡、狀態分布、熱門項目皆按保險/自費分欄顯示；技師/庫存與保險無關,保持合併。
 func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 技師不看營收報表（財務數字屬店內機密）。
 	if !canSeeMoney(user) {
@@ -26,62 +28,125 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		to = today()
 	}
 
-	// 營收（已結帳工單）
-	var revenue, orderCount, avgTicket float64
-	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1), COALESCE(AVG(total_amount),0)
-		FROM work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
-		Scan(&revenue, &orderCount, &avgTicket)
+	// 保險 / 自費 分欄標記：is_insurance=1 為保險單,0 為自費單。
+	insLabel := "保險"
+	selfLabel := "自費"
 
-	// 工單狀態分布
-	statusRows, _ := db.DB.Query(`SELECT status, COUNT(1) FROM work_orders
-		WHERE date(created_at) BETWEEN ? AND ? GROUP BY status`, from, to)
-	statusCounts := make(map[string]int)
+	// ============ 營收卡（保險 / 自費分欄）============
+	// 營收 = SUM(total_amount) WHERE status='paid'。
+	// 純 filter 拆兩組:保險 = SUM(total_amount WHERE is_insurance=1),自費 = SUM(total_amount WHERE is_insurance=0)。
+	//
+	// TODO(業務): 保險營收要不要扣免額?
+	//   目前保險營收 = SUM(total_amount)(修理成本視角)。
+	//   若會計定義為「保險公司實際拿到的」,則應 = SUM(total_amount) - SUM(deductible_amount)。
+	//   免額的會計歸屬待 owner 確認後再決定(不影響分欄結構)。
+	var insRevenue, selfRevenue float64
+	var insCount, selfCount int
+	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM work_orders
+		WHERE status='paid' AND is_insurance=1 AND date(created_at) BETWEEN ? AND ?`, from, to).
+		Scan(&insRevenue, &insCount)
+	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM work_orders
+		WHERE status='paid' AND is_insurance=0 AND date(created_at) BETWEEN ? AND ?`, from, to).
+		Scan(&selfRevenue, &selfCount)
+
+	// 兩組並列的營收卡(左右各一)。
+	revenueCard := strings.Builder{}
+	revenueCard.WriteString(`<div style="display:flex;gap:28px;flex-wrap:wrap">`)
+	revenueCard.WriteString(`<div class="stat"><b>` + money(insRevenue) + `</b><span>` + insLabel + `營收</span></div>`)
+	revenueCard.WriteString(`<div class="stat"><b>` + money(selfRevenue) + `</b><span>` + selfLabel + `營收</span></div>`)
+	revenueCard.WriteString(`</div>`)
+	revenueCard.WriteString(`<div style="margin-top:8px;color:#64748b;font-size:12px">已結帳工單：` +
+		`<b>` + strconv.Itoa(insCount) + `</b> ` + insLabel + ` / <b>` + strconv.Itoa(selfCount) + `</b> ` + selfLabel + `</div>`)
+
+	// ============ 狀態分布（保險 / 自費分欄）============
+	// GROUP BY is_insurance, status 產生兩個並排表。
+	statusRows, _ := db.DB.Query(`SELECT is_insurance, status, COUNT(1) FROM work_orders
+		WHERE date(created_at) BETWEEN ? AND ?
+		GROUP BY is_insurance, status`, from, to)
+	statusCounts := map[int]map[string]int{}
 	if statusRows != nil {
 		for statusRows.Next() {
+			var ins int
 			var s string
 			var n int
-			if statusRows.Scan(&s, &n) == nil {
-				statusCounts[s] = n
+			if statusRows.Scan(&ins, &s, &n) == nil {
+				if statusCounts[ins] == nil {
+					statusCounts[ins] = map[string]int{}
+				}
+				statusCounts[ins][s] = n
 			}
 		}
 		statusRows.Close()
 	}
-
-	var sb strings.Builder
-	sb.WriteString(`<table><tr><th>狀態</th><th class="num">數量</th></tr>`)
-	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
-		sb.WriteString(`<tr><td><span class="pill ` + statusPill[s] + `">` + workOrderStatusLabel[s] +
-			`</span></td><td class="num">` + strconv.Itoa(statusCounts[s]) + `</td></tr>`)
+	buildStatusBlock := func(ins bool) string {
+		sb := strings.Builder{}
+		lbl := selfLabel
+		if ins {
+			lbl = insLabel
+		}
+		sb.WriteString(`<table><tr><th>` + lbl + `工單狀態</th><th class="num">數量</th></tr>`)
+		for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
+			n := statusCounts[0][s]
+			if ins {
+				n = statusCounts[1][s]
+			}
+			sb.WriteString(`<tr><td><span class="pill ` + statusPill[s] + `">` + workOrderStatusLabel[s] +
+				`</span></td><td class="num">` + strconv.Itoa(n) + `</td></tr>`)
+		}
+		sb.WriteString(`</table>`)
+		return sb.String()
 	}
-	sb.WriteString(`</table>`)
+	statusBlocks := []string{buildStatusBlock(false), buildStatusBlock(true)}
 
-	// 熱門服務項目
-	itemRows, _ := db.DB.Query(`SELECT description, COALESCE(SUM(quantity),0), COALESCE(SUM(subtotal),0)
-		FROM work_order_items GROUP BY description
-		ORDER BY SUM(subtotal) DESC LIMIT 10`)
-	var ib strings.Builder
-	ib.WriteString(`<table><tr><th>項目</th><th class="num">數量</th><th class="num">營收</th></tr>`)
+	// ============ 熱門項目（保險 / 自費分欄）============
+	// work_order_items 沒有 created_at，日期要用所屬工單的建立日，
+	// 否則 SQL 直接報 no such column，整個熱門項目區塊會靜默變空。
+	// 每張表只放一列（GROUP BY 讓每個 description 一列），所以要分組累積。
+	itemRows, _ := db.DB.Query(`SELECT wo.is_insurance, woi.description,
+		COALESCE(SUM(woi.quantity),0), COALESCE(SUM(woi.subtotal),0)
+		FROM work_order_items woi
+		JOIN work_orders wo ON wo.id = woi.work_order_id
+		WHERE date(wo.created_at) BETWEEN ? AND ?
+		GROUP BY wo.is_insurance, woi.description
+		ORDER BY wo.is_insurance, SUM(woi.subtotal) DESC`, from, to)
+	itemRowsByIns := map[int][]string{}
 	itemCount := 0
 	if itemRows != nil {
 		for itemRows.Next() {
+			var ins int
 			var desc string
 			var qty int
 			var sub float64
-			if itemRows.Scan(&desc, &qty, &sub) == nil {
-				ib.WriteString(`<tr><td>` + htmlEsc(desc) + `</td><td class="num">` + strconv.Itoa(qty) +
-					`</td><td class="num">` + money(sub) + `</td></tr>`)
-				itemCount++
+			if itemRows.Scan(&ins, &desc, &qty, &sub) != nil {
+				continue
 			}
+			itemRowsByIns[ins] = append(itemRowsByIns[ins], `<tr><td>`+htmlEsc(desc)+
+				`</td><td class="num">`+strconv.Itoa(qty)+`</td><td class="num">`+money(sub)+`</td></tr>`)
+			itemCount++
 		}
 		itemRows.Close()
 	}
-	ib.WriteString(`</table>`)
-	itemTable := ib.String()
-	if itemCount == 0 {
-		itemTable = `<div class="empty">尚無工單項目</div>`
+	buildItemBlock := func(ins bool) string {
+		lbl := selfLabel
+		idx := 0
+		if ins {
+			lbl = insLabel
+			idx = 1
+		}
+		rows := itemRowsByIns[idx]
+		// 只取前 10 名（SQL 不截斷，讓兩個分欄各自都有完整的 Top 10）
+		if len(rows) > 10 {
+			rows = rows[:10]
+		}
+		if len(rows) == 0 {
+			return `<div class="empty">尚無` + lbl + `工單項目</div>`
+		}
+		return `<table><tr><th>` + lbl + `熱門項目</th><th class="num">數量</th><th class="num">營收</th></tr>` +
+			strings.Join(rows, "") + `</table>`
 	}
+	itemBlocks := []string{buildItemBlock(false), buildItemBlock(true)}
 
-	// 技師績效
+	// ============ 技師績效（不動）============
 	techRows, _ := db.DB.Query(`SELECT COALESCE(u.name,'-'), COUNT(wl.id),
 		COALESCE(SUM(wl.hours),0), COALESCE(SUM(wl.commission_amount),0)
 		FROM technician_worklogs wl JOIN users u ON u.id = wl.technician_id
@@ -109,7 +174,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		techTable = `<div class="empty">尚無技師工時紀錄</div>`
 	}
 
-	// 庫存低水位
+	// ============ 庫存低水位（不動）============
 	lowRows, _ := db.DB.Query(`SELECT part_number, name, stock_quantity, min_safety_stock
 		FROM inventory_items WHERE stock_quantity <= min_safety_stock ORDER BY stock_quantity ASC LIMIT 10`)
 	var lb strings.Builder
@@ -152,19 +217,24 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
       </form>
 
       <div style="margin-bottom:14px">
-        <div class="stat"><b>` + money(revenue) + `</b><span>營收總額</span></div>
-        <div class="stat"><b>` + money(orderCount) + `</b><span>已結帳工單</span></div>
-        <div class="stat"><b>` + money(avgTicket) + `</b><span>平均客單</span></div>
+        <div class="stat"><b>` + money(insRevenue+selfRevenue) + `</b><span>營收總額</span></div>
+        <div class="stat"><b>` + money(insRevenue) + `</b><span>` + insLabel + `營收</span></div>
+        <div class="stat"><b>` + money(selfRevenue) + `</b><span>` + selfLabel + `營收</span></div>
+        <div class="stat"><b>` + strconv.Itoa(insCount+selfCount) + `</b><span>已結帳工單</span></div>
+        <div class="stat"><b>` + strconv.Itoa(insCount) + `</b><span>` + insLabel + `件</span></div>
+        <div class="stat"><b>` + strconv.Itoa(selfCount) + `</b><span>` + selfLabel + `件</span></div>
       </div>
+      <p style="color:#64748b;font-size:12.5px">營收 = 已結帳工單金額合計；區間以工單建立日為準。
+        保險件佔比 ` + pctText(insRevenue, insRevenue+selfRevenue) + `。</p>
       <p style="color:#64748b;font-size:12.5px">統計區間：` + htmlEsc(from) + ` ~ ` + htmlEsc(to) + `</p>
     </div>
 
     <div class="card">
-      <h2>工單狀態分布</h2>` + sb.String() + `
+      <h2>工單狀態分布（` + insLabel + ` / ` + selfLabel + `）</h2>` + strings.Join(statusBlocks, "<br>") + `
     </div>
 
     <div class="card">
-      <h2>熱門項目 Top 10</h2>` + itemTable + `
+      <h2>熱門項目 Top 10（` + insLabel + ` / ` + selfLabel + `）</h2>` + strings.Join(itemBlocks, "<br>") + `
     </div>
 
     <div class="card">

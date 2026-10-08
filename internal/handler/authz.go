@@ -38,6 +38,23 @@ func AllStaff(fn func(http.ResponseWriter, *http.Request, model.User)) http.Hand
 	}
 }
 
+// CounterUpPage 給需要「櫃檯以上」且要拿到登入者身分的頁面 handler。
+// AllStaff 讓技師也能看，但開立工單屬於櫃檯業務，因此另給一個帶 user 的版本。
+func CounterUpPage(fn func(http.ResponseWriter, *http.Request, model.User)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := currentUser(r)
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		if user.Role != "owner" && user.Role != "counter" {
+			http.Error(w, "權限不足：開立工單僅限 櫃檯人員、系統管理員 使用", http.StatusForbidden)
+			return
+		}
+		fn(w, r, user)
+	}
+}
+
 // Actor 是目前登入者的最小身分資訊，給需要「用自己的身分寫入」的 handler。
 type Actor struct {
 	ID   int64
