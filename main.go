@@ -174,6 +174,10 @@ func main() {
 	mux.HandleFunc("GET /notifications/{id}/cancel", handler.OwnerOnly(handler.CancelNotification))
 	mux.HandleFunc("GET /reports", handler.AllStaff(handler.ReportsHome))
 
+	// 經營分析（SRS 5.12）：KPI、損益分拆、留存、方案成效、死頭料、CSV 匯出
+	mux.HandleFunc("GET /analytics", handler.CounterUpPage(handler.AnalyticsHome))
+	mux.HandleFunc("GET /analytics/export", handler.CounterUp(handler.AnalyticsExport))
+
 	// 預約排程（SRS 5.9）
 	mux.HandleFunc("GET /appointments", handler.AllStaff(handler.ListAppointments))
 	mux.HandleFunc("POST /appointments", handler.CounterUp(handler.CreateAppointment))

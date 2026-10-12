@@ -22,13 +22,14 @@ import (
 
 const supplierCols = `s.id, s.name, COALESCE(s.phone,''), COALESCE(s.contact_person,''),
 	COALESCE(s.address,''), COALESCE(s.notes,''), COALESCE(s.vendor_type,'material'),
+	COALESCE(s.payment_terms,''),
 	COALESCE(s.active,1), s.created_at`
 
 func scanSupplier(rows interface{ Scan(...interface{}) error }) (model.Supplier, error) {
 	var s model.Supplier
 	var createdAt string
 	err := rows.Scan(&s.ID, &s.Name, &s.Phone, &s.ContactPerson, &s.Address,
-		&s.Notes, &s.VendorType, &s.Active, &createdAt)
+		&s.Notes, &s.VendorType, &s.PaymentTerms, &s.Active, &createdAt)
 	s.CreatedAt = parseFlexTime(createdAt)
 	return s, err
 }
@@ -37,6 +38,47 @@ var vendorTypeLabel = map[string]string{
 	"material": "材料商",
 	"vendor":   "協力廠商",
 	"other":    "其他",
+}
+
+// 付款條件（FR-SUP-02）：現結 / 月結 / 期票，供 AP 模組引用。
+// 存值是小寫代碼，畫面顯示中文，報表依代碼分組才不會因打字差異分家。
+var paymentTermsList = []struct{ code, label string }{
+	{"cash", "現結"},
+	{"monthly", "月結"},
+	{"check30", "30 天期票"},
+	{"check60", "60 天期票"},
+}
+
+func normPaymentTerms(v string) string {
+	v = strings.TrimSpace(strings.ToLower(v))
+	for _, p := range paymentTermsList {
+		if p.code == v {
+			return p.code
+		}
+	}
+	return ""
+}
+
+func paymentTermsLabel(v string) string {
+	for _, p := range paymentTermsList {
+		if p.code == v {
+			return p.label
+		}
+	}
+	return ""
+}
+
+func paymentTermsOptions(selected string) string {
+	var b strings.Builder
+	b.WriteString(`<option value="">未設定</option>`)
+	for _, p := range paymentTermsList {
+		sel := ""
+		if p.code == selected {
+			sel = " selected"
+		}
+		b.WriteString(`<option value="` + p.code + `"` + sel + `>` + p.label + `</option>`)
+	}
+	return b.String()
 }
 
 func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
@@ -85,7 +127,7 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 	venCount := countRows(`SELECT COUNT(1) FROM suppliers WHERE vendor_type='vendor'`)
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>名稱</th><th>狀態</th><th>型態</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th><th>操作</th></tr>`)
+	tb.WriteString(`<table><tr><th>名稱</th><th>狀態</th><th>型態</th><th>付款條件</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th><th>操作</th></tr>`)
 	for _, s := range list {
 		label := vendorTypeLabel[s.VendorType]
 		cls := "background:#1e3a5f;color:#bae6fd"   // 材料商：藍
@@ -100,7 +142,8 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 			editBtn = `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/reactivate">復用</a>`
 		}
 		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td>` + statusCell + `</td><td><span class="pill" style="` + cls + `">` +
-			label + `</span></td><td>` + orDash(htmlEsc(s.Phone)) + `</td><td>` + orDash(htmlEsc(s.ContactPerson)) +
+			label + `</span></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(paymentTermsLabel(s.PaymentTerms)) +
+ `</td><td>` + orDash(htmlEsc(s.Phone)) + `</td><td>` + orDash(htmlEsc(s.ContactPerson)) +
 			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(s.Address)) +
 			`</td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(note)) + `</td><td>` + editBtn + `</td></tr>`)
 	}
@@ -145,6 +188,7 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>電話<input name="phone"></label>
         <label>聯絡人<input name="contact_person"></label>
         <label>地址<input name="address"></label>
+        <label>付款條件<select name="payment_terms">` + paymentTermsOptions("") + `</select></label>
         <label class="full">備註<textarea name="notes"></textarea></label>
         <div class="full"><button class="btn btn-p" type="submit">新增</button></div>
       </form>
@@ -188,10 +232,11 @@ func CreateSupplier(w http.ResponseWriter, r *http.Request) {
 	if vtype != "material" && vtype != "vendor" {
 		vtype = "material"
 	}
-	_, err := db.DB.Exec(`INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type)
-		VALUES (?,?,?,?,?,?)`,
+	_, err := db.DB.Exec(`INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type, payment_terms)
+		VALUES (?,?,?,?,?,?,?)`,
 		name, nullStr(r.FormValue("phone")), nullStr(r.FormValue("contact_person")),
-		nullStr(r.FormValue("address")), nullStr(r.FormValue("notes")), vtype)
+		nullStr(r.FormValue("address")), nullStr(r.FormValue("notes")), vtype,
+		normPaymentTerms(r.FormValue("payment_terms")))
 	if err != nil {
 		fail(w, "新增供應商失敗")
 		return
@@ -204,9 +249,11 @@ func EditSupplierForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
 	var s model.Supplier
 	err := db.DB.QueryRow(`SELECT id, name, COALESCE(phone,''), COALESCE(contact_person,''),
-		COALESCE(address,''), COALESCE(notes,''), COALESCE(vendor_type,'material'), COALESCE(active,1)
+		COALESCE(address,''), COALESCE(notes,''), COALESCE(vendor_type,'material'),
+		COALESCE(payment_terms,''), COALESCE(active,1)
 		FROM suppliers WHERE id = ?`, id).Scan(
-		&s.ID, &s.Name, &s.Phone, &s.ContactPerson, &s.Address, &s.Notes, &s.VendorType, &s.Active)
+		&s.ID, &s.Name, &s.Phone, &s.ContactPerson, &s.Address, &s.Notes, &s.VendorType,
+		&s.PaymentTerms, &s.Active)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -223,6 +270,7 @@ func EditSupplierForm(w http.ResponseWriter, r *http.Request, user model.User) {
           <option value="material"` + selIf(s.VendorType == "material") + `>材料商</option>
           <option value="vendor"` + selIf(s.VendorType == "vendor") + `>協力廠商</option>
         </select></label>
+        <label>付款條件<select name="payment_terms">` + paymentTermsOptions(s.PaymentTerms) + `</select></label>
         <label class="full">備註<textarea name="notes">` + htmlEsc(s.Notes) + `</textarea></label>
         <div class="full">
           <button class="btn btn-p" type="submit">儲存</button>
@@ -245,9 +293,10 @@ func UpdateSupplier(w http.ResponseWriter, r *http.Request) {
 	if vtype != "material" && vtype != "vendor" {
 		vtype = "material"
 	}
-	_, err := db.DB.Exec(`UPDATE suppliers SET name=?, phone=?, contact_person=?, address=?, notes=?, vendor_type=? WHERE id=?`,
+	_, err := db.DB.Exec(`UPDATE suppliers SET name=?, phone=?, contact_person=?, address=?, notes=?, vendor_type=?, payment_terms=? WHERE id=?`,
 		name, nullStr(r.FormValue("phone")), nullStr(r.FormValue("contact_person")),
-		nullStr(r.FormValue("address")), nullStr(r.FormValue("notes")), vtype, id)
+		nullStr(r.FormValue("address")), nullStr(r.FormValue("notes")), vtype,
+		normPaymentTerms(r.FormValue("payment_terms")), id)
 	if err != nil {
 		fail(w, "更新失敗")
 		return

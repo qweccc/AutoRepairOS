@@ -19,6 +19,7 @@ type Supplier struct {
 	Address       string    `json:"address,omitempty"`
 	Notes         string    `json:"notes,omitempty"`
 	VendorType    string    `json:"vendor_type"` // material 材料商 / vendor 協力廠商
+	PaymentTerms  string    `json:"payment_terms,omitempty"`
 	Active        int       `json:"active"`
 	CreatedAt     time.Time `json:"created_at"`
 }
@@ -68,6 +69,8 @@ type Customer struct {
 	Address          string    `json:"address,omitempty"`
 	NotificationPref string    `json:"notification_preference"`
 	Notes            string    `json:"notes,omitempty"`
+	Tags             string    `json:"tags,omitempty"`
+	CampaignCode     string    `json:"campaign_code,omitempty"`
 	TotalSpent       float64   `json:"total_spent"`
 	UnpaidAmount     float64   `json:"unpaid_amount"`
 	CreatedAt        time.Time `json:"created_at"`

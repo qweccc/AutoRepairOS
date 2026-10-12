@@ -127,6 +127,7 @@ var appRoutes = []struct {
 	{"/technicians/commissions", "技師佣金"},
 	{"/expenses", "支出"},
 	{"/reports", "報表"},
+	{"/analytics", "經營分析"},
 	{"/lookup", "代碼對照"},
 	{"/scheduled-tasks", "排程"},
 	{"/appointments", "預約"},
