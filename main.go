@@ -51,6 +51,9 @@ func main() {
 		log.Fatalf("Migration 執行失敗: %v", err)
 	}
 
+	// 檢查 lookup 分頁籤與資料是否配套（只 log 警告，不中斷啟動）。
+	handler.CheckLookupCategories()
+
 	if cfg.RunSeed {
 		if err := seed.Run(cfg); err != nil {
 			log.Fatalf("Seed 執行失敗: %v", err)

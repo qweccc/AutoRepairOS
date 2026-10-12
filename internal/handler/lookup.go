@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -27,6 +28,44 @@ var lookupCategoryLabel = map[string]string{
 	"branch":          "部門",
 	"vehicle_model":   "車輛品牌車型",
 	"vehicle_type":    "車輛車種",
+}
+
+// CheckLookupCategories 啟動時檢查每個分頁籤的 category 是否真的有資料。
+//
+// 為什麼需要：新增一個 lookup category 要動兩處 —— migration 灌資料 +
+// lookupCategoryLabel 加標籤。只做一半就會出現「半成品」：
+//   - 有標籤沒資料 → 分頁籤點進去是空白（曾發生在 insurance_company）
+//   - 有資料沒標籤 → 資料進得去卻沒有維護入口（曾發生在 vehicle_type）
+// 兩種都不會報錯，只會讓人以為功能壞了，很難查到原因。
+//
+// 這個檢查只 log 警告、不會中斷啟動：空的 category 不該讓服務起不來，
+// 但要讓它出現在 log 裡能被發現。
+func CheckLookupCategories() {
+	for cat, label := range lookupCategoryLabel {
+		if countRows(`SELECT COUNT(1) FROM lookup_items WHERE category = ?`, cat) == 0 {
+			log.Printf("[lookup] 警告：分頁籤「%s」（category=%s）沒有任何資料。"+
+				"新增 lookup category 需要同時做兩件事：migration 灌資料 + "+
+				"lookupCategoryLabel 加標籤，目前只有後者。此分頁會顯示空白。",
+				label, cat)
+		}
+	}
+
+	// 反向檢查：DB 有資料但沒有分頁籤 → 沒有維護入口。
+	rows, err := db.DB.Query(`SELECT DISTINCT category FROM lookup_items`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cat string
+		if rows.Scan(&cat) != nil {
+			continue
+		}
+		if _, ok := lookupCategoryLabel[cat]; !ok {
+			log.Printf("[lookup] 警告：資料表有 category=%s 的資料，但 lookupCategoryLabel "+
+				"沒有對應標籤，代碼對照頁因此沒有維護入口。", cat)
+		}
+	}
 }
 
 // ListLookupItems 代码对照表列表 + 新增/编辑。
