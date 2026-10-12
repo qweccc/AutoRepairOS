@@ -205,6 +205,10 @@ func main() {
 	mux.HandleFunc("POST /appointments/{id}", handler.CounterUp(handler.UpdateAppointment))
 	mux.HandleFunc("GET /appointments/{id}/delete", handler.OwnerOnly(handler.DeleteAppointment))
 
+	// 車輛里程履歷（FR-VH-03）：進廠工單自動帶入，也可手動登錄
+	mux.HandleFunc("GET /vehicles/{id}/mileage/new", handler.CounterUpPage(handler.AddVehicleMileageForm))
+	mux.HandleFunc("POST /vehicles/{id}/mileage", handler.CounterUp(handler.CreateVehicleMileage))
+
 	// 外包加工（SRS 5.11）
 	mux.HandleFunc("GET /subcontracts", handler.AllStaff(handler.ListSubcontracts))
 	mux.HandleFunc("POST /subcontracts", handler.CounterUp(handler.CreateSubcontract))

@@ -352,8 +352,15 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
         <a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">＋ 開立工單</a>
         <a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯車輛</a>
         <a class="btn btn-s" href="/work-orders?q=` + url.QueryEscape(v.PlateNumber) + `">在工單列表查詢</a>
+        <a class="btn btn-p" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/mileage/new">＋ 記錄里程</a>
         <a class="btn btn-s" href="/vehicles">回車輛列表</a>
       </div>
+    </div>
+    <div class="card"><h2>里程履歷</h2>
+      <p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
+        進廠工單會自動記錄里程（來源「進廠工單」）；非進廠的更新用「＋ 記錄里程」手動登錄。
+        里程比前一筆小時會標示「回退」，請在備註說明原因（如更換碼表）。
+      </p>` + mileageHistory(v.ID, 50) + `
     </div>
     <div class="card"><h2>維修紀錄（最近 200 筆）</h2>` + ordersTable + `</div>` + partsTable
 

@@ -311,9 +311,11 @@ func woTabURL(qv url.Values, status string) string {
 // woTechFilterOptions 工單列表的技師篩選下拉。
 //
 // 與 technicianOptions() 分開，因為用途不同：
-//   technicianOptions()     指派技師 —— 只列「現在會動手的人」（排除行政/眷屬/廠商）
-//   woTechFilterOptions()   查歷史  —— 要能查到已離職或轉行政者做的舊單，
-//                                      否則 2016 年那張單會永遠找不到人。
+//
+//	technicianOptions()     指派技師 —— 只列「現在會動手的人」（排除行政/眷屬/廠商）
+//	woTechFilterOptions()   查歷史  —— 要能查到已離職或轉行政者做的舊單，
+//	                                   否則 2016 年那張單會永遠找不到人。
+//
 // 兩者都排除 role='technician' 以外的帳號。
 func woTechFilterOptions(selected string) string {
 	rows, err := db.DB.Query(`SELECT u.id, u.name, COALESCE(u.username,''), COALESCE(u.staff_branch,'')
@@ -469,6 +471,12 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := res.LastInsertId()
+
+	// 里程履歷（FR-VH-03）：進廠工單的里程自動帶入履歷，
+	// 來源標記 work_order 供追溯。寫入失敗不擋開單——里程是輔助資訊，
+	// 工單本身才是主記錄。
+	RecordMileage(vehicleID, mileage, "work_order", id, "", 0)
+
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "工單已建立")
 }
 
@@ -1002,13 +1010,14 @@ func approvalOptions(current string) string {
 // technicianOptions 技師下拉選單。
 //
 // 只列「真的會動手的人」，三層過濾缺一不可：
-//   staff_kind='employee' —— 舊系統的 Staff 表混了協力廠商（上上汽車、元發電機）
-//                            與眷屬（車行家族），協力廠商請到「廠商」頁。
-//   staff_branch NOT IN ('E','G','H') —— E 是行政、G 是眷屬、H 是廠商。
-//                            舊資料有 40 個眷屬編號（G001…G038）在遷移時被判成
-//                            employee，只靠 staff_kind 擋不掉，會讓行政與眷屬
-//                            出現在技師選單裡，污染技師產值與佣金統計。
-//   active=1 —— 離職技師不該出現在指派選單（migration 014 加入）。
+//
+//	staff_kind='employee' —— 舊系統的 Staff 表混了協力廠商（上上汽車、元發電機）
+//	                         與眷屬（車行家族），協力廠商請到「廠商」頁。
+//	staff_branch NOT IN ('E','G','H') —— E 是行政、G 是眷屬、H 是廠商。
+//	                         舊資料有 40 個眷屬編號（G001…G038）在遷移時被判成
+//	                         employee，只靠 staff_kind 擋不掉，會讓行政與眷屬
+//	                         出現在技師選單裡，污染技師產值與佣金統計。
+//	active=1 —— 離職技師不該出現在指派選單（migration 014 加入）。
 func technicianOptions() string {
 	rows, err := db.DB.Query(`SELECT u.id, u.name, u.username, COALESCE(u.staff_branch,'')
 		FROM users u

@@ -190,6 +190,7 @@ type Appointment struct {
 	AppointmentDate string    `json:"appointment_date"`
 	AppointmentTime string    `json:"appointment_time,omitempty"`
 	ServiceType     string    `json:"service_type,omitempty"`
+	Bay             string    `json:"bay,omitempty"` // 工位（頂高機／鈑金／烤漆…）
 	Status          string    `json:"status"`
 	Notes           string    `json:"notes,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`

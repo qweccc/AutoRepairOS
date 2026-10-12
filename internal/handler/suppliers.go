@@ -143,7 +143,7 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td>` + statusCell + `</td><td><span class="pill" style="` + cls + `">` +
 			label + `</span></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(paymentTermsLabel(s.PaymentTerms)) +
- `</td><td>` + orDash(htmlEsc(s.Phone)) + `</td><td>` + orDash(htmlEsc(s.ContactPerson)) +
+			`</td><td>` + orDash(htmlEsc(s.Phone)) + `</td><td>` + orDash(htmlEsc(s.ContactPerson)) +
 			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(s.Address)) +
 			`</td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(note)) + `</td><td>` + editBtn + `</td></tr>`)
 	}
