@@ -33,9 +33,15 @@ if (-not (Test-Path -LiteralPath (Join-Path $webSource "index.html"))) {
 
 Write-Host "正在建置 Windows 執行檔：$output"
 Write-Host "版本標籤：$label"
-Write-Host "建置時間：$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-Write-Host "Git 修訂：$(git rev-parse --short HEAD 2>$null)"
-& go build -trimpath -ldflags "-X main.buildTime=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -X main.gitCommit=$(git rev-parse --short HEAD 2>$null)" -o $output .
+$stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$rev = (git rev-parse --short HEAD 2>$null)
+if (-not $rev) { $rev = "unknown" }
+Write-Host "建置時間：$stamp"
+Write-Host "Git 修訂：$rev"
+# 注入建置時間與 git 修訂，讓啟動 log 能顯示跑的是哪一版。
+# buildTime 含空格，必須用單引號包住整個 -X 值，否則 go 會把它拆成兩個
+# 參數而讓 linker 報 usage 錯誤。git commit 是 hex 不需引號。
+& go build -trimpath -ldflags "-X 'main.buildTime=$stamp' -X main.gitCommit=$rev" -o $output .
 if ($LASTEXITCODE -ne 0) {
     throw "Go 建置失敗（exit code $LASTEXITCODE）。"
 }
@@ -53,6 +59,13 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot "release-start.cmd") -Destinatio
 $settingsFile = Join-Path $releaseDir ".env"
 $settingsExample = Join-Path $releaseDir ".env.example"
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "release.env.example") -Destination $settingsExample -Force
+# 只在不存在時才建立 .env：這個檔是給部署者填機密的，每次建置都覆蓋會把
+# 人家填好的密碼沖掉。
+#
+# 注意：也因此 release/.env 可能是很久以前複製的，其中的非機密設定
+# （如 DB_ENABLE_WAL）會停留在當時的預設值。改預設值時要一併更新
+# scripts/release.env.example 與既有的 release/.env，否則 release 版會
+# 靜默跑在舊預設上 —— 這個坑在把 DB_ENABLE_WAL 預設改為 true 時就踩到了。
 if (-not (Test-Path -LiteralPath $settingsFile)) {
     Copy-Item -LiteralPath $settingsExample -Destination $settingsFile
 }
