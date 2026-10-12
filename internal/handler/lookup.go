@@ -27,6 +27,7 @@ var lookupCategoryLabel = map[string]string{
 	"branch":            "部門",
 	"insurance_company": "保險公司",
 	"vehicle_model":     "車輛品牌車型",
+	"vehicle_type":      "車輛車種",
 }
 
 // ListLookupItems 代码对照表列表 + 新增/编辑。
