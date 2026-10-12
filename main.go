@@ -170,6 +170,17 @@ func main() {
 	// 估價單（FR-PRINT-01）：?paper=a4|thermal。與結帳收據刻意分開——
 	// 估價單有有效期與客戶簽名欄，收據是收款憑證，兩者用途不同。
 	mux.HandleFunc("GET /work-orders/{id}/quotation", handler.CounterUpPage(handler.PrintWorkOrderQuotation))
+	// 完工證明（FR-PRINT-02）：交車時給客戶的「做了什麼」證明，不含金額。
+	mux.HandleFunc("GET /work-orders/{id}/completion", handler.AllStaff(handler.PrintWorkOrderCompletion))
+
+	// 收款明細含稅版（FR-PRINT-03）：財務用，支付方式與稅額分列。
+	mux.HandleFunc("GET /receivables/{id}/print", handler.CounterUp(handler.PrintReceiptWithTax))
+	// AR 催款單（FR-PRINT-04）
+	mux.HandleFunc("GET /customers/{id}/ar-statement", handler.CounterUpPage(handler.PrintARStatement))
+	// AP 月結對帳單（FR-PRINT-05）
+	mux.HandleFunc("GET /suppliers/{id}/ap-statement", handler.CounterUpPage(handler.PrintAPStatement))
+	// 日結報表（FR-PRINT-06）
+	mux.HandleFunc("GET /reports/daily", handler.CounterUpPage(handler.PrintDailyReport))
 
 	// Phase 2: 照片上傳
 	mux.HandleFunc("GET /work-orders/{id}/photos", handler.AllStaff(handler.ListWorkOrderPhotos))

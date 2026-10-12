@@ -256,6 +256,8 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
         <input name="to" value="` + htmlEsc(to) + `" placeholder="YYYY-MM-DD"
                style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
         <button class="btn btn-p" type="submit">查詢</button>
+        <a class="btn btn-p" href="/reports/daily">📅 日結報表</a>
+        <a class="btn btn-s" href="/analytics">經營分析</a>
       </form>
 
       <div style="margin-bottom:14px">

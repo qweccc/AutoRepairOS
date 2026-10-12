@@ -572,6 +572,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
           <a class="btn btn-p" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/receipt">🧾 收據列印</a>
           <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/quotation?paper=a4">📋 估價單列印</a>
+          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/completion">✅ 完工證明</a>
           <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/worklogs">⏱ 技師工時</a>
           <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/photos">📷 車損照片</a>
         </div>

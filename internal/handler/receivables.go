@@ -240,7 +240,8 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 			`<td style="font-size:12.5px">` + woCell + `</td>` +
 			`<td class="num">` + receivedCell + `</td>` +
 			`<td class="num">` + unpaidCell + `</td>` +
-			`<td><a class="btn btn-s" href="/receivables/` + strconv.FormatInt(rec.ID, 10) + `/edit">編輯</a></td></tr>`)
+			`<td><a class="btn btn-s" href="/receivables/` + strconv.FormatInt(rec.ID, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-s" href="/receivables/` + strconv.FormatInt(rec.ID, 10) + `/print">明細列印</a></td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 

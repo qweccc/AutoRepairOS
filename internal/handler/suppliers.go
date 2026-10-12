@@ -136,7 +136,8 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		note := s.Notes
 		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">啟用</span>`
-		editBtn := `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a>`
+		editBtn := `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/ap-statement">對帳單</a>`
 		if s.Active == 0 {
 			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>`
 			editBtn = `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/reactivate">復用</a>`

@@ -71,6 +71,7 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 			`</td><td><a class="btn btn-p" href="/work-orders/new?customer=` + strconv.FormatInt(c.ID, 10) + `">開工單</a> ` +
 			`<a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/edit">編輯</a> ` +
 			`<a class="btn btn-o" href="/vehicles?customer=` + strconv.FormatInt(c.ID, 10) + `">車輛</a> ` +
+			`<a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/ar-statement">催款單</a> ` +
 			`<a class="btn btn-d" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/delete" onclick="return confirm('確定刪除這位客戶？')">刪除</a></td></tr>`)
 	}
 	tb.WriteString(`</table>`)
