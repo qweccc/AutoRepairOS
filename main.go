@@ -12,8 +12,35 @@ import (
 	"autorepairos/internal/seed"
 )
 
+// 建置資訊，由 build-release.ps1 以 -ldflags -X 注入。
+// 本地 go run / go build 沒有注入時保持空字串，頁面顯示「開發版」。
+var (
+	buildTime = ""
+	gitCommit = ""
+)
+
+// versionText 回傳「版本 + 建置時間 + Git 修訂」的顯示字串。
+// 用在啟動訊息與頁尾，讓現場回報問題時能直接說出跑的是哪一版。
+func versionText() string {
+	if buildTime == "" && gitCommit == "" {
+		return "開發版"
+	}
+	s := ""
+	if buildTime != "" {
+		s = "建置 " + buildTime
+	}
+	if gitCommit != "" {
+		if s != "" {
+			s += " / "
+		}
+		s += "git " + gitCommit
+	}
+	return s
+}
+
 func main() {
 	cfg := config.Load()
+	log.Printf("AutoRepairOS 啟動：%s", versionText())
 
 	if err := db.Init(cfg); err != nil {
 		log.Fatalf("資料庫初始化失敗: %v", err)

@@ -12,7 +12,9 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
-    $label = Get-Date -Format "yyyy-MM-dd"
+    # 預設版本號含日期與時間：同一天可能建置多次（例如修完 bug 重跑），
+    # 只有日期會讓後者覆蓋前者，無法區別「這個 exe 是幾點建的」。
+    $label = Get-Date -Format "yyyy-MM-dd_HHmmss"
 } else {
     $label = $Version.Trim()
     if ($label -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$') {
@@ -30,7 +32,10 @@ if (-not (Test-Path -LiteralPath (Join-Path $webSource "index.html"))) {
 }
 
 Write-Host "正在建置 Windows 執行檔：$output"
-& go build -trimpath -o $output .
+Write-Host "版本標籤：$label"
+Write-Host "建置時間：$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+Write-Host "Git 修訂：$(git rev-parse --short HEAD 2>$null)"
+& go build -trimpath -ldflags "-X main.buildTime=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -X main.gitCommit=$(git rev-parse --short HEAD 2>$null)" -o $output .
 if ($LASTEXITCODE -ne 0) {
     throw "Go 建置失敗（exit code $LASTEXITCODE）。"
 }

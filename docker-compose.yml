@@ -35,10 +35,12 @@ services:
       - ./web:/app/web
     environment:
       - PORT=8080
-      # DB_ENABLE_WAL 由 internal/db/db.go 讀取。named volume 可安全使用 WAL，
-      # 但本機開發環境先維持關閉，避免並行寫入時的鎖競爭。
+      # DB_ENABLE_WAL 由 internal/db/db.go 以 PRAGMA 設定。DSN 的 _journal_mode
+      # 對 modernc.org/sqlite 是無效參數（實測會被靜默忽略），必須靠 PRAGMA。
+      # named volume 可安全使用 WAL；預設開啟，config.Load 的 fallback 也是 true。
+      # WAL 讓讀寫不互斥，車廠同時有櫃檯開單、技師記工時、報表查詢時特別有感。
       - DB_PATH=file:/app/data/autorepair.db?_busy_timeout=5000
-      - DB_ENABLE_WAL=${DB_ENABLE_WAL:-false}
+      - DB_ENABLE_WAL=${DB_ENABLE_WAL:-true}
       # 首次初始化必須由 .env 提供管理員密碼；避免使用公開可猜測的預設密碼。
       - RUN_SEED=${RUN_SEED:-false}
       - DEFAULT_OWNER_USERNAME=${DEFAULT_OWNER_USERNAME:-owner}

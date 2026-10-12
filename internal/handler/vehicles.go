@@ -12,7 +12,8 @@ import (
 )
 
 const vehicleCols = `v.id, v.customer_id, COALESCE(c.name,''), v.plate_number, v.brand_model,
-	COALESCE(v.manufacture_year,0), COALESCE(v.vin,''), COALESCE(v.engine_number,''),
+	COALESCE(v.vehicle_type,''), COALESCE(v.driver_name,''), COALESCE(v.driver_phone,''),
+	COALESCE(v.color,''), COALESCE(v.door_count,0), COALESCE(v.manufacture_year,0), COALESCE(v.vin,''), COALESCE(v.engine_number,''),
 	COALESCE(v.inspection_due_date,''), COALESCE(v.next_maintenance_date,''),
 	COALESCE(v.next_maintenance_mileage,0),
 	COALESCE(v.last_maintenance_date,''), COALESCE(v.last_maintenance_mileage,0),
@@ -21,10 +22,14 @@ const vehicleCols = `v.id, v.customer_id, COALESCE(c.name,''), v.plate_number, v
 func scanVehicle(rows interface{ Scan(...interface{}) error }) (model.Vehicle, error) {
 	var v model.Vehicle
 	err := rows.Scan(&v.ID, &v.CustomerID, &v.CustomerName, &v.PlateNumber, &v.BrandModel,
+		&v.VehicleType, &v.DriverName, &v.DriverPhone, &v.Color, &v.DoorCount,
 		&v.ManufactureYear, &v.VIN, &v.EngineNumber, &v.InspectionDueDate,
 		&v.NextMaintenanceDate, &v.NextMaintenanceMileage,
 		&v.LastMaintenanceDate, &v.LastMaintenanceMileage,
 		&v.MaintIntervalMonths, &v.MaintIntervalKm)
+	if v.VehicleType != "" {
+		v.VehicleTypeLabel = lookupLabel("vehicle_type", v.VehicleType)
+	}
 	return v, err
 }
 
@@ -143,14 +148,17 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>年份</th><th>業主</th>` +
+	tb.WriteString(`<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>車種</th><th>年份</th><th>業主</th>` +
 		`<th>下次保養日</th><th>下次保養里程</th><th>操作</th></tr>`)
 	for _, v := range list {
-		// 最近里程：抓該車工單的最大里程，才能算「還差多少公里」
 		curKm := lastMileageOf(v.ID)
 		dateCell, kmCell := maintDueText(v, curKm)
+		typeCell := `<span style="color:#64748b">-</span>`
+		if v.VehicleTypeLabel != "" {
+			typeCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + htmlEsc(v.VehicleTypeLabel) + `</span>`
+		}
 		tb.WriteString(`<tr><td>` + strconv.FormatInt(v.ID, 10) + `</td><td><b>` + htmlEsc(v.PlateNumber) + `</b></td><td>` +
-			htmlEsc(v.BrandModel) + `</td><td>` + yearText(v.ManufactureYear) + `</td><td>` +
+			htmlEsc(v.BrandModel) + `</td><td>` + typeCell + `</td><td>` + yearText(v.ManufactureYear) + `</td><td>` +
 			htmlEsc(v.CustomerName) + `</td><td>` + dateCell + `</td><td>` + kmCell + `</td><td>` +
 			`<a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">開工單</a> ` +
 			`<a class="btn btn-o" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `">履歷</a> ` +
@@ -182,6 +190,12 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
         <label id="brandModelOtherWrap" style="display:none">其他車型
           <input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型，例：Porsche 911">
         </label>
+        <label>車種類別<select name="vehicle_type">` +
+			lookupOptions("vehicle_type", "") + `</select></label>
+        <label>駕駛人<input name="driver_name" placeholder="例：陳小姐"></label>
+        <label>駕駛人電話<input name="driver_phone" placeholder="例：0963-176677"></label>
+        <label>顏色<input name="color" placeholder="例：白色"></label>
+        <label>車門數<input name="door_count" type="number" min="0" max="10" placeholder="例：4"></label>
         <label>出廠年份<input name="manufacture_year" type="number" min="1900" max="2100"></label>
         <label>VIN<input name="vin"></label>
         <label>引擎號碼<input name="engine_number"></label>
@@ -400,6 +414,7 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 	customerID, errMsg := resolveCustomerID(r)
 	plate := strings.TrimSpace(r.FormValue("plate_number"))
 	model_ := normVehicleModel(r.FormValue("brand_model"))
+	vehicleType := strings.TrimSpace(r.FormValue("vehicle_type"))
 
 	if errMsg != "" {
 		fail(w, errMsg)
@@ -411,12 +426,15 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.DB.Exec(`INSERT INTO vehicles
-		(customer_id, plate_number, brand_model, manufacture_year, vin, engine_number,
+		(customer_id, plate_number, brand_model, vehicle_type, driver_name, driver_phone,
+		 color, door_count, manufacture_year, vin, engine_number,
 		 inspection_due_date, next_maintenance_date, next_maintenance_mileage,
 		 last_maintenance_date, last_maintenance_mileage,
 		 next_maintenance_interval_months, next_maintenance_interval_km)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-		customerID, plate, model_,
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		customerID, plate, model_, vehicleType,
+		nullStr(r.FormValue("driver_name")), nullStr(r.FormValue("driver_phone")),
+		nullStr(r.FormValue("color")), atoiDefault(r.FormValue("door_count"), 0),
 		atoiDefault(r.FormValue("manufacture_year"), 0), nullStr(r.FormValue("vin")),
 		nullStr(r.FormValue("engine_number")),
 		nullDate(r.FormValue("inspection_due_date")),
@@ -435,7 +453,6 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 有保養基準就立刻推算下次保養（日期 + 里程），讓清單馬上可用
 	if vid := lastInsertID("vehicles"); vid > 0 {
 		recalcNextMaintenance(vid)
 	}
@@ -518,11 +535,17 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>車牌號碼<input name="plate_number" value="` + htmlEsc(v.PlateNumber) + `" required></label>
         <label>品牌車型
           <select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">` +
-		vehicleModelOptions(v.BrandModel) + `</select>
+			vehicleModelOptions(v.BrandModel) + `</select>
         </label>
         <label id="brandModelOtherWrap" style="display:none">其他車型
           <input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型">
         </label>
+        <label>車種類別<select name="vehicle_type">` +
+			lookupOptions("vehicle_type", v.VehicleType) + `</select></label>
+        <label>駕駛人<input name="driver_name" value="` + htmlEsc(v.DriverName) + `" placeholder="例：陳小姐"></label>
+        <label>駕駛人電話<input name="driver_phone" value="` + htmlEsc(v.DriverPhone) + `" placeholder="例：0963-176677"></label>
+        <label>顏色<input name="color" value="` + htmlEsc(v.Color) + `" placeholder="例：白色"></label>
+        <label>車門數<input name="door_count" type="number" min="0" max="10" value="` + intOrBlank(v.DoorCount) + `"></label>
         <label>出廠年份<input name="manufacture_year" type="number" value="` + strconv.Itoa(v.ManufactureYear) + `" min="1900" max="2100"></label>
         <label>VIN<input name="vin" value="` + htmlEsc(v.VIN) + `"></label>
         <label>引擎號碼<input name="engine_number" value="` + htmlEsc(v.EngineNumber) + `"></label>
@@ -572,10 +595,13 @@ func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := db.DB.Exec(`UPDATE vehicles SET customer_id=?, plate_number=?, brand_model=?,
+		vehicle_type=?, driver_name=?, driver_phone=?, color=?, door_count=?,
 		manufacture_year=?, vin=?, engine_number=?, inspection_due_date=?,
 		last_maintenance_date=?, last_maintenance_mileage=?,
 		next_maintenance_interval_months=?, next_maintenance_interval_km=? WHERE id=?`,
-		customerID, plate, model_,
+		customerID, plate, model_, strings.TrimSpace(r.FormValue("vehicle_type")),
+		nullStr(r.FormValue("driver_name")), nullStr(r.FormValue("driver_phone")),
+		nullStr(r.FormValue("color")), atoiDefault(r.FormValue("door_count"), 0),
 		atoiDefault(r.FormValue("manufacture_year"), 0), nullStr(r.FormValue("vin")),
 		nullStr(r.FormValue("engine_number")),
 		nullDate(r.FormValue("inspection_due_date")),

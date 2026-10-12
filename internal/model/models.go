@@ -82,6 +82,12 @@ type Vehicle struct {
 	CustomerName          string    `json:"customer_name,omitempty"`
 	PlateNumber           string    `json:"plate_number"`
 	BrandModel            string    `json:"brand_model"`
+	VehicleType           string    `json:"vehicle_type,omitempty"`
+	VehicleTypeLabel      string    `json:"vehicle_type_label,omitempty"`
+	DriverName            string    `json:"driver_name,omitempty"`
+	DriverPhone           string    `json:"driver_phone,omitempty"`
+	Color                 string    `json:"color,omitempty"`
+	DoorCount             int       `json:"door_count,omitempty"`
 	ManufactureYear       int       `json:"manufacture_year,omitempty"`
 	VIN                   string    `json:"vin,omitempty"`
 	EngineNumber          string    `json:"engine_number,omitempty"`
