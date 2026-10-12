@@ -150,6 +150,9 @@ func main() {
 
 	// Phase 2: 收據列印
 	mux.HandleFunc("GET /work-orders/{id}/receipt", handler.AllStaff(handler.PrintWorkOrderReceipt))
+	// 估價單（FR-PRINT-01）：?paper=a4|thermal。與結帳收據刻意分開——
+	// 估價單有有效期與客戶簽名欄，收據是收款憑證，兩者用途不同。
+	mux.HandleFunc("GET /work-orders/{id}/quotation", handler.CounterUpPage(handler.PrintWorkOrderQuotation))
 
 	// Phase 2: 照片上傳
 	mux.HandleFunc("GET /work-orders/{id}/photos", handler.AllStaff(handler.ListWorkOrderPhotos))
