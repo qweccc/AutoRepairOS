@@ -21,13 +21,12 @@ import (
 //   所有代码对照都在一个页面维护。
 
 var lookupCategoryLabel = map[string]string{
-	"bank":              "銀行",
-	"category":          "零件類別",
-	"insurance_class":   "保險險種",
-	"branch":            "部門",
-	"insurance_company": "保險公司",
-	"vehicle_model":     "車輛品牌車型",
-	"vehicle_type":      "車輛車種",
+	"bank":            "銀行",
+	"category":        "零件類別",
+	"insurance_class": "保險險種",
+	"branch":          "部門",
+	"vehicle_model":   "車輛品牌車型",
+	"vehicle_type":    "車輛車種",
 }
 
 // ListLookupItems 代码对照表列表 + 新增/编辑。
@@ -249,3 +248,13 @@ func lookupOptions(category, selected string) string {
 	}
 	return b.String()
 }
+
+// 保險公司刻意不在這個對照表裡。
+//
+// 它有自己的完整維護頁 /insurance-companies（代碼、公司名稱、統編、客服電話、
+// 聯絡人、地址、停用），欄位遠比 lookup 的 code/label 兩欄豐富。放進來會變成
+// 兩份真相：在保險公司頁改了名字，lookup 這份不會同步，而保單與工單都參照
+// insurance_companies.id。
+//
+// 曾經在 lookupCategoryLabel 裡掛了一個 insurance_company 分頁籤，但沒有任何
+// migration 灌過這個 category 的資料，點進去只會看到「共 0 筆」的空頁。
