@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.AppName}}</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+       background: #0f172a; color: #e2e8f0; }
+.wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.card { background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+        padding: 36px 40px; width: 380px; text-align: center; }
+.card h1 { margin: 0 0 8px; font-size: 22px; }
+.card p { color: #94a3b8; font-size: 13.5px; line-height: 1.7; margin: 0 0 20px; }
+.card a { color: #38bdf8; text-decoration: none; font-weight: 700; }
+.card a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🔧 {{.AppName}}</h1>
+      <p>歡迎回來。此為首頁佔位頁。<br>點擊下方前往總覽。</p>
+      <p><a href="/">前往總覽 →</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -82,6 +82,29 @@ const pageStyle = `
   .pmeta { color: #64748b; font-size: 11.5px; }
   .pnote { color: #94a3b8; font-size: 12px; margin-top: 5px; font-style: italic; }
   .pcard .btn { margin-top: 8px; }
+  @media (max-width: 768px) {
+    header { padding: 10px 14px; }
+    header h1 { font-size: 16px; }
+    .user { font-size: 11px; }
+    nav { padding: 0 8px; overflow-x: auto; flex-wrap: nowrap; }
+    nav a { padding: 9px 10px; font-size: 12px; white-space: nowrap; }
+    main { padding: 14px 10px; }
+    .card { padding: 14px; margin-bottom: 12px; }
+    .card h2 { font-size: 15px; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 4px; font-size: 12px; }
+    .stat { display: block; margin: 0 0 12px 0; }
+    .stat b { font-size: 20px; }
+    .btn { padding: 5px 10px; font-size: 12px; }
+    .frm { grid-template-columns: 1fr; }
+    .frm .full { grid-column: 1; }
+    .pgrid { grid-template-columns: 1fr 1fr; }
+    .pcard img { height: 100px; }
+  }
+  @media (max-width: 480px) {
+    nav a { padding: 8px 8px; font-size: 11px; }
+    .pgrid { grid-template-columns: 1fr; }
+  }
 `
 
 // appRoutes 定義側邊導覽；active 為目前頁面。

@@ -30,6 +30,9 @@ services:
       # 資料不在 ./data，查看方式：docker compose exec autorepairos ls -la /app/data
       # 取回備份：docker compose cp autorepairos:/app/data/autorepair.db ./autorepair.db
       - autorepairos-data:/app/data
+      # web/ 掛載進容器，讓 exe 與 docker 共用同一份前端檔案。
+      # 改 web/ 內容兩邊立即生效，不用重新 build。
+      - ./web:/app/web
     environment:
       - PORT=8080
       # DB_ENABLE_WAL 由 internal/db/db.go 讀取。named volume 可安全使用 WAL，

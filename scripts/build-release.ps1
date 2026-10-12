@@ -26,12 +26,7 @@ $output = Join-Path $releaseDir "AutoRepairOS-$label.exe"
 $webOutput = Join-Path $releaseDir "web"
 $webSource = Join-Path $repoRoot "web"
 if (-not (Test-Path -LiteralPath (Join-Path $webSource "index.html"))) {
-    if (Test-Path -LiteralPath (Join-Path $webOutput "index.html")) {
-        Write-Warning "原始碼 web\index.html 不存在；沿用 release\web 中既有的執行資產。"
-        $webSource = $webOutput
-    } else {
-        throw "找不到 web\index.html；請先還原必要的 runtime UI 資產，不能產生完整 release 套件。"
-    }
+    throw "找不到 web\index.html。release\web 只是建置時複製出去的產物，不是來源；請在 web\ 維護前端檔案後重新建置（不可沿用 release\web 的舊檔，否則會打包過期內容）。"
 }
 
 Write-Host "正在建置 Windows 執行檔：$output"
