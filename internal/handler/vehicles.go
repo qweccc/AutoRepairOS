@@ -175,7 +175,13 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
       <form class="frm" method="POST" action="/vehicles">
         <label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required placeholder="例：王小明 或 0912345678 或 1234"></label>
         <label>車牌號碼<input name="plate_number" required></label>
-        <label>品牌車型<input name="brand_model" required></label>
+        <label>品牌車型
+          <select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">` +
+		vehicleModelOptions("") + `</select>
+        </label>
+        <label id="brandModelOtherWrap" style="display:none">其他車型
+          <input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型，例：Porsche 911">
+        </label>
         <label>出廠年份<input name="manufacture_year" type="number" min="1900" max="2100"></label>
         <label>VIN<input name="vin"></label>
         <label>引擎號碼<input name="engine_number"></label>
@@ -184,6 +190,29 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="5000"></label>
         <div class="full"><button class="btn btn-p" type="submit">建立車輛</button></div>
       </form>
+      <p style="color:#64748b;font-size:12.5px;margin-top:10px">
+        車型清單可在「代碼對照 → 車輛品牌車型」維護；選單沒有的車款選「其他」手動輸入。
+        統一的車型寫法能讓「高頻維修車款」等分析正確分組（同款車不會被算成三台）。
+      </p>
+      <script>
+      function toggleModelOther(){
+        var sel = document.getElementById('brandModelSel');
+        var wrap = document.getElementById('brandModelOtherWrap');
+        var other = document.getElementById('brandModelOther');
+        if (!sel || !wrap) return;
+        var isOther = sel.value === '__OTHER__';
+        wrap.style.display = isOther ? '' : 'none';
+        if (other) other.disabled = !isOther;
+        // 選「其他」時把 select 的名稱移除，讓送出的是文字欄位而非佔位值。
+        if (isOther) {
+          sel.removeAttribute('name');
+          if (other) { other.setAttribute('name','brand_model'); other.required = true; }
+        } else {
+          sel.setAttribute('name','brand_model');
+          if (other) { other.removeAttribute('name'); other.required = false; }
+        }
+      }
+      </script>
     </div>
     <div class="card">
       <h2>車輛列表（符合條件 ` + strconv.Itoa(total) + ` 筆）` + filterNote + `</h2>
@@ -370,14 +399,14 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 	customerID, errMsg := resolveCustomerID(r)
 	plate := strings.TrimSpace(r.FormValue("plate_number"))
-	model_ := strings.TrimSpace(r.FormValue("brand_model"))
+	model_ := normVehicleModel(r.FormValue("brand_model"))
 
 	if errMsg != "" {
 		fail(w, errMsg)
 		return
 	}
 	if plate == "" || model_ == "" {
-		fail(w, "車牌、車型為必填")
+		fail(w, "車牌、車型為必填（若選了「其他」請輸入車型）")
 		return
 	}
 
@@ -487,7 +516,13 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
       <form class="frm" method="POST" action="/vehicles/` + strconv.FormatInt(v.ID, 10) + `">
         <label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" value="` + htmlEsc(v.CustomerName) + `" required></label>
         <label>車牌號碼<input name="plate_number" value="` + htmlEsc(v.PlateNumber) + `" required></label>
-        <label>品牌車型<input name="brand_model" value="` + htmlEsc(v.BrandModel) + `" required></label>
+        <label>品牌車型
+          <select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">` +
+		vehicleModelOptions(v.BrandModel) + `</select>
+        </label>
+        <label id="brandModelOtherWrap" style="display:none">其他車型
+          <input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型">
+        </label>
         <label>出廠年份<input name="manufacture_year" type="number" value="` + strconv.Itoa(v.ManufactureYear) + `" min="1900" max="2100"></label>
         <label>VIN<input name="vin" value="` + htmlEsc(v.VIN) + `"></label>
         <label>引擎號碼<input name="engine_number" value="` + htmlEsc(v.EngineNumber) + `"></label>
@@ -498,6 +533,24 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="` + strconv.Itoa(v.MaintIntervalKm) + `"></label>
         <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/vehicles">取消</a></div>
       </form>
+      <script>
+      function toggleModelOther(){
+        var sel = document.getElementById('brandModelSel');
+        var wrap = document.getElementById('brandModelOtherWrap');
+        var other = document.getElementById('brandModelOther');
+        if (!sel || !wrap) return;
+        var isOther = sel.value === '__OTHER__';
+        wrap.style.display = isOther ? '' : 'none';
+        if (other) other.disabled = !isOther;
+        if (isOther) {
+          sel.removeAttribute('name');
+          if (other) { other.setAttribute('name','brand_model'); other.required = true; }
+        } else {
+          sel.setAttribute('name','brand_model');
+          if (other) { other.removeAttribute('name'); other.required = false; }
+        }
+      }
+      </script>
     </div>`
 
 	renderPage(w, "編輯車輛", "/vehicles", user.Username, user.Role, body)
@@ -507,14 +560,14 @@ func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	customerID, errMsg := resolveCustomerID(r)
 	plate := strings.TrimSpace(r.FormValue("plate_number"))
-	model_ := strings.TrimSpace(r.FormValue("brand_model"))
+	model_ := normVehicleModel(r.FormValue("brand_model"))
 
 	if errMsg != "" {
 		fail(w, errMsg)
 		return
 	}
 	if plate == "" || model_ == "" {
-		fail(w, "車牌、車型為必填")
+		fail(w, "車牌、車型為必填（若選了「其他」請輸入車型）")
 		return
 	}
 
@@ -680,4 +733,65 @@ func yearText(y int) string {
 		return "-"
 	}
 	return strconv.Itoa(y)
+}
+
+// vehicleModelOther 是下拉的「其他」哨兵值。
+//
+// 用 __OTHER__ 而非空字串或 "其他"：空字串會被 required 擋下，
+// "其他" 則是 migration 裡真實存在的選項（label「其他（手動輸入）」），
+// 兩者都會與真正的自由輸入混淆。前後加底劃線的常值不會是合法車型。
+const vehicleModelOther = "__OTHER__"
+
+// vehicleModelOptions 車輛品牌車型下拉（lookup category='vehicle_model'）。
+//
+// selected 為該車現有的 brand_model：
+//   - 在清單內 → 標示 selected，使用者看到目前值
+//   - 不在清單內（舊資料或自由輸入過）→ 額外附一個「（現有值）」選項並
+//     設為 selected，避免一進編輯頁就被靜默改寫成清單第一項
+//   - 最後固定附「其他（手動輸入）」
+func vehicleModelOptions(selected string) string {
+	selected = strings.TrimSpace(selected)
+	rows, err := db.DB.Query(`SELECT code, label FROM lookup_items
+		WHERE category = 'vehicle_model' AND active = 1
+		ORDER BY sort_order, code`)
+	if err != nil {
+		return ""
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	known := false
+	for rows.Next() {
+		var code, label string
+		if rows.Scan(&code, &label) != nil {
+			continue
+		}
+		sel := ""
+		if code == selected {
+			sel = " selected"
+			known = true
+		}
+		b.WriteString(`<option value="` + htmlEsc(code) + `"` + sel + `>` + htmlEsc(label) + `</option>`)
+	}
+	// 現有值不在清單內：保留它，讓使用者自己決定是否正規化。
+	if selected != "" && !known {
+		b.WriteString(`<option value="` + htmlEsc(selected) + `" selected>` +
+			htmlEsc(selected) + `（現有值）</option>`)
+	}
+	b.WriteString(`<option value="` + vehicleModelOther + `">其他（手動輸入）</option>`)
+	return b.String()
+}
+
+// normVehicleModel 正規化車型輸入。
+//
+// 擋下 __OTHER__ 哨兵值：前端在選「其他」時會把 select 的 name 移除、
+// 只送出文字欄位；但若使用者停用 JavaScript，哨兵值會直接送出而被存進
+// brand_model，之後所有分析都會看到一台名為「__OTHER__」的車。
+// 後端一律當成未填，讓必填檢查擋下。
+func normVehicleModel(v string) string {
+	v = strings.TrimSpace(v)
+	if v == vehicleModelOther {
+		return ""
+	}
+	return v
 }

@@ -21,11 +21,12 @@ import (
 //   所有代码对照都在一个页面维护。
 
 var lookupCategoryLabel = map[string]string{
-	"bank":             "銀行",
-	"category":         "零件類別",
-	"insurance_class":  "保險險種",
-	"branch":           "部門",
+	"bank":              "銀行",
+	"category":          "零件類別",
+	"insurance_class":   "保險險種",
+	"branch":            "部門",
 	"insurance_company": "保險公司",
+	"vehicle_model":     "車輛品牌車型",
 }
 
 // ListLookupItems 代码对照表列表 + 新增/编辑。
