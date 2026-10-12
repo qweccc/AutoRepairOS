@@ -52,7 +52,12 @@ func ListMaintenanceTemplates(w http.ResponseWriter, r *http.Request, user model
 		tb.WriteString(`<tr><td><code>` + htmlEsc(t.Code) + `</code></td><td><b>` + htmlEsc(t.Name) +
 			`</b></td><td class="num">` + strconv.Itoa(t.ItemCount) +
 			`</td><td><a class="btn btn-s" href="/maintenance-templates?id=` +
-			strconv.FormatInt(t.ID, 10) + `">查看項目</a></td></tr>`)
+			strconv.FormatInt(t.ID, 10) + `">查看項目</a> ` +
+			`<a class="btn btn-p" href="/maintenance-templates/` +
+			strconv.FormatInt(t.ID, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-d" href="/maintenance-templates/` +
+			strconv.FormatInt(t.ID, 10) + `/delete" onclick="return confirm('確定刪除套餐「` +
+			htmlEsc(t.Code) + `」？已開出的工單不受影響。')">刪除</a></td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
@@ -78,6 +83,7 @@ func ListMaintenanceTemplates(w http.ResponseWriter, r *http.Request, user model
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋代碼 / 名稱" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
         <button class="btn btn-p" type="submit">搜尋</button>
         <a class="btn btn-s" href="/maintenance-templates">清除</a>
+        <a class="btn btn-p" href="/maintenance-templates/new">＋ 新增套餐</a>
       </form>` + table + `
     </div>` + detail
 

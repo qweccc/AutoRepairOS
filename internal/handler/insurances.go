@@ -64,7 +64,7 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 
 	var tb strings.Builder
 	tb.WriteString(`<table><tr><th>車牌</th><th>車主</th><th>保險公司</th><th>險種</th>` +
-		`<th>發照日</th><th>保險卡號</th><th>保額／備註</th></tr>`)
+		`<th>發照日</th><th>保險卡號</th><th>保額／備註</th><th>操作</th></tr>`)
 	n := 0
 	for rows.Next() {
 		var id, vid, compID int64
@@ -78,12 +78,15 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 		if clsName != "" {
 			clsCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + htmlEsc(clsName) + `</span>`
 		}
+		ops := `<a class="btn btn-s" href="/insurances/` + strconv.FormatInt(id, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-d" href="/insurances/` + strconv.FormatInt(id, 10) +
+			`/delete" onclick="return confirm('確定刪除這筆投保紀錄？')">刪除</a>`
 		tb.WriteString(`<tr><td><a href="/vehicles/` + strconv.FormatInt(vid, 10) + `"><b>` +
 			htmlEsc(plate) + `</b></a></td><td style="font-size:12.5px">` + htmlEsc(custName) +
 			`</td><td>` + orDash(htmlEsc(compName)) + `</td><td>` + clsCell +
 			`</td><td style="font-size:12.5px">` + orDash(normDate(date)) +
 			`</td><td><code style="font-size:12px">` + orDash(htmlEsc(card)) +
-			`</code></td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(amount)) + `</td></tr>`)
+			`</td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(amount)) + `</td><td>` + ops + `</td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
@@ -129,6 +132,7 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
         ` + hiddenInputs(qv, "q", "page", "per") + `
         <button class="btn btn-p" type="submit">搜尋</button>
         <a class="btn btn-s" href="/insurances">清除</a>
+        <a class="btn btn-p" href="/insurances/new">＋ 新增投保</a>
         <a class="btn btn-s" href="/inspections">定檢排程</a>
       </form>` + table + pager("/insurances", qv, total, page, size) +
 		`<div style="margin-top:6px">` + perPageSel("/insurances", qv, size) + `</div>
@@ -178,7 +182,7 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
 
 	today := today()
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>車牌</th><th>車主</th><th>排定日</th><th>完成日</th><th>狀態</th></tr>`)
+	tb.WriteString(`<table><tr><th>車牌</th><th>車主</th><th>排定日</th><th>完成日</th><th>狀態</th><th>操作</th></tr>`)
 	n := 0
 	for rows.Next() {
 		var id, vid int64
@@ -196,11 +200,14 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
 				status = `<span class="pill p-waitparts">待檢驗</span>`
 			}
 		}
+		ops := `<a class="btn btn-s" href="/inspections/` + strconv.FormatInt(id, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-d" href="/inspections/` + strconv.FormatInt(id, 10) +
+			`/delete" onclick="return confirm('確定刪除這筆定檢排程？')">刪除</a>`
 		tb.WriteString(`<tr><td><a href="/vehicles/` + strconv.FormatInt(vid, 10) + `"><b>` +
 			htmlEsc(plate) + `</b></a></td><td style="font-size:12.5px">` + htmlEsc(custName) +
 			`</td><td style="font-size:12.5px">` + orDash(normDate(orderDate)) +
 			`</td><td style="font-size:12.5px">` + orDash(normDate(checkDate)) +
-			`</td><td>` + status + `</td></tr>`)
+			`</td><td>` + status + `</td><td>` + ops + `</td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
@@ -227,6 +234,7 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
         <label style="font-size:13px;margin-left:10px"><input type="checkbox" name="pending" value="1"` + chkIf(pendingOnly) + `> 只看未完成</label>
         <button class="btn btn-p" type="submit">搜尋</button>
         <a class="btn btn-s" href="/inspections">清除</a>
+        <a class="btn btn-p" href="/inspections/new">＋ 新增排程</a>
         <a class="btn btn-s" href="/insurances">投保紀錄</a>
       </form>` + table + pager("/inspections", qv, total, page, size) +
 		`<div style="margin-top:6px">` + perPageSel("/inspections", qv, size) + `</div>

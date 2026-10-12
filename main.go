@@ -120,8 +120,25 @@ func main() {
 
 	// 舊系統補遷移：車輛投保紀錄 / 定檢排程 / 保養套餐 / 零用金
 	mux.HandleFunc("GET /insurances", handler.AllStaff(handler.ListVehicleInsurances))
+	mux.HandleFunc("GET /insurances/new", handler.CounterUpPage(handler.NewVehicleInsuranceForm))
+	mux.HandleFunc("POST /insurances", handler.CounterUp(handler.CreateVehicleInsurance))
+	mux.HandleFunc("GET /insurances/{id}/edit", handler.CounterUpPage(handler.EditVehicleInsuranceForm))
+	mux.HandleFunc("POST /insurances/{id}", handler.CounterUp(handler.UpdateVehicleInsurance))
+	mux.HandleFunc("GET /insurances/{id}/delete", handler.CounterUp(handler.DeleteVehicleInsurance))
 	mux.HandleFunc("GET /inspections", handler.AllStaff(handler.ListVehicleInspections))
+	mux.HandleFunc("GET /inspections/new", handler.CounterUpPage(handler.NewVehicleInspectionForm))
+	mux.HandleFunc("POST /inspections", handler.CounterUp(handler.CreateVehicleInspection))
+	mux.HandleFunc("GET /inspections/{id}/edit", handler.CounterUpPage(handler.EditVehicleInspectionForm))
+	mux.HandleFunc("POST /inspections/{id}", handler.CounterUp(handler.UpdateVehicleInspection))
+	mux.HandleFunc("GET /inspections/{id}/delete", handler.CounterUp(handler.DeleteVehicleInspection))
 	mux.HandleFunc("GET /maintenance-templates", handler.AllStaff(handler.ListMaintenanceTemplates))
+	// 保養套餐範本 CRUD（項目整批重寫）
+	mux.HandleFunc("GET /maintenance-templates/new", handler.CounterUpPage(handler.NewMaintenanceTemplateForm))
+	mux.HandleFunc("POST /maintenance-templates", handler.CounterUp(handler.CreateMaintenanceTemplate))
+	mux.HandleFunc("GET /maintenance-templates/{id}/edit", handler.CounterUpPage(handler.EditMaintenanceTemplateForm))
+	mux.HandleFunc("POST /maintenance-templates/{id}", handler.CounterUp(handler.UpdateMaintenanceTemplate))
+	mux.HandleFunc("POST /maintenance-templates/{id}/items", handler.CounterUp(handler.ReplaceMaintenanceTemplateItems))
+	mux.HandleFunc("GET /maintenance-templates/{id}/delete", handler.CounterUp(handler.DeleteMaintenanceTemplate))
 	mux.HandleFunc("GET /expenses", handler.CounterUpPage(handler.ListExpenses))
 
 	// 收款沖銷（CAR35 Customer Pay，90,762 筆）——
