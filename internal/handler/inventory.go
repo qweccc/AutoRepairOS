@@ -425,7 +425,7 @@ func DeleteInventoryItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func supplierOptions() string {
-	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name")
+	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name LIMIT 300")
 	if err != nil {
 		return ""
 	}
@@ -444,7 +444,7 @@ func supplierOptions() string {
 }
 
 func supplierOptionsSel(selected int64) string {
-	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name")
+	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name LIMIT 300")
 	if err != nil {
 		return ""
 	}

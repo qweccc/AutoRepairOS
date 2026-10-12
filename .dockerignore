@@ -1,16 +1,29 @@
 # Binary artifacts
 *.exe
 *.test
+release/
 
 # Local data
-data/
-*.db
-*.db-wal
-*.db-shm
+data*/
+unpublished/
+*.db*
+.env*
+*.log
+*.txt
 
 # Git
 .git/
 .gitignore
+.github/
+
+# Build inputs are copied explicitly by Dockerfile.
+scripts/
+tools/
+docs/
+doc/
+car35-plan/
+.hermes/
+**/*_test.go
 
 # IDE
 .vscode/

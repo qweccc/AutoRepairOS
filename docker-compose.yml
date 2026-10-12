@@ -1,10 +1,13 @@
+# 每家車廠使用不同的專案名稱，Compose 會替容器與 named volume 加上此前綴。
+name: ${COMPOSE_PROJECT_NAME:-autorepairos}
+
 services:
   autorepairos:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8090:8080"
+      - "${HOST_PORT:-8090}:8080"
     # ===== 憑證用 .env（已 .gitignore 排除，不進版控）=====
     # 1) 建一個 .env.example 放範例（可進版控）：
     #    LINE_CHANNEL_ID=你的 Channel ID
@@ -32,9 +35,24 @@ services:
       # DB_ENABLE_WAL 由 internal/db/db.go 讀取。named volume 可安全使用 WAL，
       # 但本機開發環境先維持關閉，避免並行寫入時的鎖競爭。
       - DB_PATH=file:/app/data/autorepair.db?_busy_timeout=5000
-      - DB_ENABLE_WAL=false
-      - SESSION_SECRET=autorepair-dev-secret-change-in-production
-      - RUN_SEED=true
+      - DB_ENABLE_WAL=${DB_ENABLE_WAL:-false}
+      # 首次初始化必須由 .env 提供管理員密碼；避免使用公開可猜測的預設密碼。
+      - RUN_SEED=${RUN_SEED:-false}
+      - DEFAULT_OWNER_USERNAME=${DEFAULT_OWNER_USERNAME:-owner}
+      - DEFAULT_OWNER_PASSWORD=${DEFAULT_OWNER_PASSWORD:-}
+      - DEFAULT_COUNTER_USERNAME=${DEFAULT_COUNTER_USERNAME:-counter}
+      - DEFAULT_COUNTER_PASSWORD=${DEFAULT_COUNTER_PASSWORD:-}
+      - DEFAULT_TECH_USERNAME=${DEFAULT_TECH_USERNAME:-tech}
+      - DEFAULT_TECH_PASSWORD=${DEFAULT_TECH_PASSWORD:-}
+      - APP_NAME=${APP_NAME:-AutoRepair OS}
+      # LINE、Telegram 憑證來自 .env；空值時對應整合維持停用/Mock。
+      - LINE_CHANNEL_ID=${LINE_CHANNEL_ID:-}
+      - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET:-}
+      - LINE_CHANNEL_TOKEN=${LINE_CHANNEL_TOKEN:-}
+      - LINE_BASE_URL=${LINE_BASE_URL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - TELEGRAM_BASE_URL=${TELEGRAM_BASE_URL:-}
 
       # ===== LINE webhook（要對外推播才解開，先留註解）=====
       # LINE_CHANNEL_ID=<你的 Channel ID      例: channel-xxxxxxxxxxxxxxxx>

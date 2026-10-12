@@ -115,10 +115,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
   <div class="no-print">
     <button class="btn btn-p" onclick="window.print()">🖨 列印</button>
     <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">返回工單</a>
-    <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/status" style="display:inline">
-      <input type="hidden" name="status" value="paid">
-      <button class="btn btn-d">標記為已結帳</button>
-    </form>
+    <a class="btn btn-p" href="/receivables/new?work_order=` + strconv.FormatInt(wo.ID, 10) + `">收款結帳</a>
   </div>`
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

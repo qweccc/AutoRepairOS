@@ -110,11 +110,20 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	from := strings.TrimSpace(qv.Get("from"))
 	to := strings.TrimSpace(qv.Get("to"))
 	showVoided := qv.Get("voided") == "1"
+	unpaidOnly := qv.Get("unpaid") == "1"
 	page := pageNo(r)
 	size := pageSize(r)
 
 	where := ` WHERE 1=1`
 	var args []interface{}
+	if unpaidOnly {
+		// 待收款：工单已结帐但收款合计不足
+		where += ` AND r.work_order_id IN (
+			SELECT wo.id FROM work_orders wo
+			WHERE wo.status = 'completed'
+			AND COALESCE((SELECT SUM(r2.pay_total) FROM receivables r2 WHERE r2.work_order_id = wo.id AND r2.voided = 0), 0) < wo.total_amount
+		)`
+	}
 	// 作廢的預設隱藏（帳務清單不該被作廢單干擾），但要能查。
 	if !showVoided {
 		where += ` AND r.voided = 0`
@@ -153,6 +162,25 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(SUM(r.check_amount),0), COALESCE(SUM(r.pay_total),0)`+
 		receivableFrom+where, args...).Scan(&sumCash, &sumCard, &sumCheck, &sumPay)
 
+	// 計算每張工單的已收金額（用於部分收款追蹤）
+	woReceived := make(map[int64]float64)
+	woTotal := make(map[int64]float64)
+	woRows, _ := db.DB.Query(`SELECT r.work_order_id, COALESCE(r.pay_total,0), COALESCE(wo.total_amount,0)
+		FROM receivables r
+		JOIN work_orders wo ON wo.id = r.work_order_id
+		WHERE r.voided = 0 AND r.work_order_id > 0`)
+	if woRows != nil {
+		for woRows.Next() {
+			var woID int64
+			var received, total float64
+			if woRows.Scan(&woID, &received, &total) == nil {
+				woReceived[woID] += received
+				woTotal[woID] = total
+			}
+		}
+		woRows.Close()
+	}
+
 	query := `SELECT ` + receivableCols + receivableFrom + where +
 		` ORDER BY ` + normDateSQL("r.pay_date") + ` DESC, r.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
@@ -167,7 +195,7 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	var tb strings.Builder
 	tb.WriteString(`<table><tr><th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th>` +
 		`<th>方式</th><th class="num">現金</th><th class="num">刷卡</th>` +
-		`<th class="num">票額</th><th class="num">合計</th><th>關聯工單</th></tr>`)
+		`<th class="num">票額</th><th class="num">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th></tr>`)
 	n := 0
 	for rows.Next() {
 		rec, err := scanReceivable(rows)
@@ -180,9 +208,21 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 			label, cls = "已作廢", "p-apprno"
 		}
 		woCell := `<span style="color:#475569">—</span>`
+		receivedCell := `<span style="color:#475569">—</span>`
+		unpaidCell := `<span style="color:#475569">—</span>`
 		if rec.WorkOrderID > 0 {
 			woCell = `<a href="/work-orders/` + strconv.FormatInt(rec.WorkOrderID, 10) + `">#` +
 				strconv.FormatInt(rec.WorkOrderID, 10) + `</a>`
+			if total, ok := woTotal[rec.WorkOrderID]; ok {
+				received := woReceived[rec.WorkOrderID]
+				unpaid := total - received
+				receivedCell = money(received)
+				if unpaid > 0 {
+					unpaidCell = `<span style="color:#f87171">` + money(unpaid) + `</span>`
+				} else {
+					unpaidCell = `<span style="color:#86efac">0</span>`
+				}
+			}
 		}
 		legacy := ""
 		if rec.Source == "legacy" {
@@ -197,7 +237,10 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 			`<td class="num">` + moneyIf(rec.Card) + `</td>` +
 			`<td class="num">` + moneyIf(rec.CheckAmount) + `</td>` +
 			`<td class="num"><b>` + money(rec.PayTotal) + `</b></td>` +
-			`<td style="font-size:12.5px">` + woCell + `</td></tr>`)
+			`<td style="font-size:12.5px">` + woCell + `</td>` +
+			`<td class="num">` + receivedCell + `</td>` +
+			`<td class="num">` + unpaidCell + `</td>` +
+			`<td><a class="btn btn-s" href="/receivables/` + strconv.FormatInt(rec.ID, 10) + `/edit">編輯</a></td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
@@ -206,36 +249,42 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 		table = `<div class="empty">沒有符合條件的收款紀錄</div>`
 	}
 
-	// 付款方式分頁籤
+	// 付款方式分頁籤（待收款模式下不顯示，因為篩選條件已不同）
 	var tabs strings.Builder
-	tabDef := []struct{ key, label string }{
-		{"", "全部"}, {"cash", "現金"}, {"card", "信用卡"}, {"check", "票據"},
-	}
-	for _, t := range tabDef {
-		u := url.Values{}
-		for _, k := range []string{"q", "from", "to", "voided"} {
-			if v := qv.Get(k); v != "" {
-				u.Set(k, v)
+	if !unpaidOnly {
+		tabDef := []struct{ key, label string }{
+			{"", "全部"}, {"cash", "現金"}, {"card", "信用卡"}, {"check", "票據"},
+		}
+		for _, t := range tabDef {
+			u := url.Values{}
+			for _, k := range []string{"q", "from", "to", "voided"} {
+				if v := qv.Get(k); v != "" {
+					u.Set(k, v)
+				}
 			}
+			if t.key != "" {
+				u.Set("method", t.key)
+			}
+			href := "/receivables"
+			if s := u.Encode(); s != "" {
+				href += "?" + s
+			}
+			tabs.WriteString(`<a class="btn ` + btnIf(method == t.key, "btn-p", "btn-s") + `" href="` + href + `">` + t.label + `</a> `)
 		}
-		if t.key != "" {
-			u.Set("method", t.key)
-		}
-		href := "/receivables"
-		if s := u.Encode(); s != "" {
-			href += "?" + s
-		}
-		tabs.WriteString(`<a class="btn ` + btnIf(method == t.key, "btn-p", "btn-s") + `" href="` + href + `">` + t.label + `</a> `)
 	}
 
 	voidNote := ""
 	if showVoided {
 		voidNote = ` <a href="/receivables" style="font-size:13px">（隱藏作廢）</a>`
 	}
+	unpaidNote := ""
+	if unpaidOnly {
+		unpaidNote = ` <a href="/receivables" style="font-size:13px">（顯示全部）</a>`
+	}
 
 	body := flash(r) + `
     <div class="card">
-      <h2>收款紀錄（符合條件 ` + strconv.Itoa(total) + ` 筆）` + voidNote + `</h2>
+      <h2>收款紀錄（符合條件 ` + strconv.Itoa(total) + ` 筆）` + voidNote + unpaidNote + `</h2>
       <div style="margin-bottom:14px">
         <div class="stat"><b>` + money(sumPay) + `</b><span>收款合計</span></div>
         <div class="stat"><b>` + money(sumCash) + `</b><span>現金</span></div>
@@ -249,10 +298,12 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
       <div style="margin-bottom:12px">` + tabs.String() + `</div>
       <div style="margin-bottom:12px">
         <a class="btn btn-p" href="/receivables/new">＋ 新增收款</a>
+        <a class="btn btn-s" href="/receivables?unpaid=1">待收款</a>
       </div>
       <form method="GET" action="/receivables" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋單號 / 客戶 / 電話 / 車牌 / 票號" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
         <input type="hidden" name="method" value="` + htmlEsc(method) + `">
+        <input type="hidden" name="unpaid" value="` + htmlEsc(qv.Get("unpaid")) + `">
         <label style="font-size:12.5px;color:#94a3b8">日期從
           <input type="date" name="from" value="` + htmlEsc(from) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
         </label>
@@ -263,7 +314,7 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
         <button class="btn btn-p" type="submit">搜尋</button>
         <a class="btn btn-s" href="/receivables">清除</a>
       </form>` + table + pager("/receivables", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/receivables", qv, size) + `</div>
+	      `<div style="margin-top:6px">` + perPageSel("/receivables", qv, size) + `</div>
     </div>`
 
 	renderPage(w, "收款紀錄", "/receivables", user.Username, user.Role, body)
@@ -419,6 +470,109 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectMsg(w, r, "/receivables", "收款已記錄："+voucher+"（"+money(payTotal)+"）")
+}
+
+// EditReceivableForm 編輯收款表單。
+func EditReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	if !canSeeMoney(user) {
+		http.Error(w, "權限不足", http.StatusForbidden)
+		return
+	}
+	id := mustInt(r.PathValue("id"))
+
+	var rec receivable
+	err := db.DB.QueryRow(`SELECT `+receivableCols+` FROM receivables r
+		JOIN customers c ON c.id = r.customer_id
+		LEFT JOIN vehicles v ON v.id = r.vehicle_id
+		WHERE r.id = ?`, id).Scan(
+		&rec.ID, &rec.VoucherNo, &rec.CustomerID, &rec.CustomerName,
+		&rec.VehicleID, &rec.PlateNumber, &rec.WorkOrderID,
+		&rec.PayDate, &rec.DetailTotal, &rec.RealTotal,
+		&rec.Discount, &rec.Tax, &rec.PayTotal,
+		&rec.Cash, &rec.Card, &rec.CheckAmount,
+		&rec.CardNo, &rec.CheckNo, &rec.CheckDate,
+		&rec.Bank, &rec.Notes, &rec.Voided, &rec.Source)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	action := "/receivables/" + strconv.FormatInt(id, 10)
+	renderPage(w, "編輯收款", "/receivables", user.Username, user.Role, receivableFormBody(rec, action, ""))
+}
+
+// UpdateReceivable 更新收款紀錄。
+func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+
+	var oldRec receivable
+	err := db.DB.QueryRow(`SELECT work_order_id, pay_total, voided FROM receivables WHERE id = ?`, id).
+		Scan(&oldRec.WorkOrderID, &oldRec.PayTotal, &oldRec.Voided)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if oldRec.Voided != 0 {
+		fail(w, "已作廢的收款不能編輯")
+		return
+	}
+
+	payDate := strings.TrimSpace(r.FormValue("pay_date"))
+	if payDate == "" {
+		payDate = today()
+	}
+
+	cash := atofDefault(r.FormValue("cash"), 0)
+	card := atofDefault(r.FormValue("card"), 0)
+	checkAmt := atofDefault(r.FormValue("check_amount"), 0)
+	payTotal := atofDefault(r.FormValue("pay_total"), 0)
+	if payTotal == 0 {
+		payTotal = cash + card + checkAmt
+	}
+	if cash+card+checkAmt == 0 && payTotal == 0 {
+		fail(w, "請至少填一種付款方式或收款合計")
+		return
+	}
+
+	voucher := strings.TrimSpace(r.FormValue("voucher_no"))
+	if voucher == "" {
+		fail(w, "收款單號不能為空")
+		return
+	}
+
+	res, err := db.DB.Exec(`UPDATE receivables SET
+		voucher_no = ?, pay_date = ?, detail_total = ?, real_total = ?,
+		discount = ?, tax = ?, pay_total = ?,
+		cash = ?, card = ?, check_amount = ?,
+		card_no = ?, check_no = ?, check_date = ?, bank = ?,
+		notes = ?
+		WHERE id = ?`,
+		voucher, payDate,
+		atofDefault(r.FormValue("detail_total"), 0),
+		atofDefault(r.FormValue("real_total"), 0),
+		atofDefault(r.FormValue("discount"), 0),
+		atofDefault(r.FormValue("tax"), 0),
+		payTotal,
+		cash, card, checkAmt,
+		nullStr(r.FormValue("card_no")), nullStr(r.FormValue("check_no")),
+		normDate(r.FormValue("check_date")), nullStr(r.FormValue("bank")),
+		nullStr(r.FormValue("notes")), id)
+	if err != nil {
+		fail(w, "更新收款失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// 如果工單已結帳但收款金額變少，需要把工單狀態改回 completed
+	if oldRec.WorkOrderID > 0 && payTotal < oldRec.PayTotal {
+		db.DB.Exec(`UPDATE work_orders SET status = 'completed',
+			updated_at = datetime('now','localtime') WHERE id = ? AND status = 'paid'`, oldRec.WorkOrderID)
+	}
+
+	redirectMsg(w, r, "/receivables", "收款已更新："+voucher)
 }
 
 // VoidReceivable 作廢收款（軟刪除）。

@@ -22,13 +22,13 @@ import (
 
 const supplierCols = `s.id, s.name, COALESCE(s.phone,''), COALESCE(s.contact_person,''),
 	COALESCE(s.address,''), COALESCE(s.notes,''), COALESCE(s.vendor_type,'material'),
-	s.created_at`
+	COALESCE(s.active,1), s.created_at`
 
 func scanSupplier(rows interface{ Scan(...interface{}) error }) (model.Supplier, error) {
 	var s model.Supplier
 	var createdAt string
 	err := rows.Scan(&s.ID, &s.Name, &s.Phone, &s.ContactPerson, &s.Address,
-		&s.Notes, &s.VendorType, &createdAt)
+		&s.Notes, &s.VendorType, &s.Active, &createdAt)
 	s.CreatedAt = parseFlexTime(createdAt)
 	return s, err
 }
@@ -85,7 +85,7 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 	venCount := countRows(`SELECT COUNT(1) FROM suppliers WHERE vendor_type='vendor'`)
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>名稱</th><th>型態</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th></tr>`)
+	tb.WriteString(`<table><tr><th>名稱</th><th>狀態</th><th>型態</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th><th>操作</th></tr>`)
 	for _, s := range list {
 		label := vendorTypeLabel[s.VendorType]
 		cls := "background:#1e3a5f;color:#bae6fd"   // 材料商：藍
@@ -93,11 +93,16 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 			cls = "background:#4a2f13;color:#fde68a" // 協力廠商：橙
 		}
 		note := s.Notes
-		// 舊編號對技師查詢有用，但不用搶版面
-		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td><span class="pill" style="` + cls + `">` +
+		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">啟用</span>`
+		editBtn := `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a>`
+		if s.Active == 0 {
+			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>`
+			editBtn = `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/reactivate">復用</a>`
+		}
+		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td>` + statusCell + `</td><td><span class="pill" style="` + cls + `">` +
 			label + `</span></td><td>` + orDash(htmlEsc(s.Phone)) + `</td><td>` + orDash(htmlEsc(s.ContactPerson)) +
 			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(s.Address)) +
-			`</td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(note)) + `</td></tr>`)
+			`</td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(note)) + `</td><td>` + editBtn + `</td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
@@ -125,7 +130,28 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 		return `<a class="btn ` + cls + `" href="` + href + `">` + label + `</a>`
 	}
 
-	body := flash(r) + `
+	// 新增表單：只給櫃檯與管理員（技師只看得到列表）。
+	addForm := ``
+	if user.Role == "owner" || user.Role == "counter" {
+		addForm = `
+    <div class="card">
+      <h2>新增廠商</h2>
+      <form class="frm" method="POST" action="/suppliers">
+        <label>名稱<input name="name" required placeholder="如：○○輪胎行"></label>
+        <label>類型<select name="vendor_type">
+          <option value="material">材料商</option>
+          <option value="vendor">協力廠商</option>
+        </select></label>
+        <label>電話<input name="phone"></label>
+        <label>聯絡人<input name="contact_person"></label>
+        <label>地址<input name="address"></label>
+        <label class="full">備註<textarea name="notes"></textarea></label>
+        <div class="full"><button class="btn btn-p" type="submit">新增</button></div>
+      </form>
+    </div>`
+	}
+
+	body := flash(r) + addForm + `
     <div class="card">
       <h2>廠商（符合條件 ` + strconv.Itoa(total) + ` 家）</h2>
       <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
@@ -149,4 +175,96 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
     </div>`
 
 	renderPage(w, "廠商管理", "/suppliers", user.Username, user.Role, body)
+}
+
+// CreateSupplier 新增供應商。
+func CreateSupplier(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		fail(w, "名稱為必填")
+		return
+	}
+	vtype := strings.TrimSpace(r.FormValue("vendor_type"))
+	if vtype != "material" && vtype != "vendor" {
+		vtype = "material"
+	}
+	_, err := db.DB.Exec(`INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type)
+		VALUES (?,?,?,?,?,?)`,
+		name, nullStr(r.FormValue("phone")), nullStr(r.FormValue("contact_person")),
+		nullStr(r.FormValue("address")), nullStr(r.FormValue("notes")), vtype)
+	if err != nil {
+		fail(w, "新增供應商失敗")
+		return
+	}
+	redirectMsg(w, r, "/suppliers", "供應商已新增")
+}
+
+// EditSupplierForm 編輯供應商表單。
+func EditSupplierForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	id := mustInt(r.PathValue("id"))
+	var s model.Supplier
+	err := db.DB.QueryRow(`SELECT id, name, COALESCE(phone,''), COALESCE(contact_person,''),
+		COALESCE(address,''), COALESCE(notes,''), COALESCE(vendor_type,'material'), COALESCE(active,1)
+		FROM suppliers WHERE id = ?`, id).Scan(
+		&s.ID, &s.Name, &s.Phone, &s.ContactPerson, &s.Address, &s.Notes, &s.VendorType, &s.Active)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	body := `
+    <div class="card">
+      <h2>編輯供應商 ` + htmlEsc(s.Name) + `</h2>
+      <form class="frm" method="POST" action="/suppliers/` + strconv.FormatInt(s.ID, 10) + `">
+        <label>名稱<input name="name" value="` + htmlEsc(s.Name) + `" required></label>
+        <label>電話<input name="phone" value="` + htmlEsc(s.Phone) + `"></label>
+        <label>聯絡人<input name="contact_person" value="` + htmlEsc(s.ContactPerson) + `"></label>
+        <label>地址<input name="address" value="` + htmlEsc(s.Address) + `"></label>
+        <label>類型<select name="vendor_type">
+          <option value="material"` + selIf(s.VendorType == "material") + `>材料商</option>
+          <option value="vendor"` + selIf(s.VendorType == "vendor") + `>協力廠商</option>
+        </select></label>
+        <label class="full">備註<textarea name="notes">` + htmlEsc(s.Notes) + `</textarea></label>
+        <div class="full">
+          <button class="btn btn-p" type="submit">儲存</button>
+          <a class="btn btn-s" href="/suppliers">取消</a>
+        </div>
+      </form>
+    </div>`
+	renderPage(w, "編輯供應商", "/suppliers", user.Username, user.Role, body)
+}
+
+// UpdateSupplier 更新供應商。
+func UpdateSupplier(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		fail(w, "名稱為必填")
+		return
+	}
+	vtype := strings.TrimSpace(r.FormValue("vendor_type"))
+	if vtype != "material" && vtype != "vendor" {
+		vtype = "material"
+	}
+	_, err := db.DB.Exec(`UPDATE suppliers SET name=?, phone=?, contact_person=?, address=?, notes=?, vendor_type=? WHERE id=?`,
+		name, nullStr(r.FormValue("phone")), nullStr(r.FormValue("contact_person")),
+		nullStr(r.FormValue("address")), nullStr(r.FormValue("notes")), vtype, id)
+	if err != nil {
+		fail(w, "更新失敗")
+		return
+	}
+	redirectMsg(w, r, "/suppliers", "供應商已更新")
+}
+
+// DeactivateSupplier 停用供應商（軟刪除）。
+func DeactivateSupplier(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	db.DB.Exec(`UPDATE suppliers SET active = 0 WHERE id = ?`, id)
+	redirectMsg(w, r, "/suppliers", "供應商已停用")
+}
+
+// ReactivateSupplier 復用供應商。
+func ReactivateSupplier(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	db.DB.Exec(`UPDATE suppliers SET active = 1 WHERE id = ?`, id)
+	redirectMsg(w, r, "/suppliers", "供應商已復用")
 }

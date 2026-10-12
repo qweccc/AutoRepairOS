@@ -104,7 +104,11 @@ var appRoutes = []struct {
 	{"/technicians/commissions", "技師佣金"},
 	{"/expenses", "支出"},
 	{"/reports", "報表"},
+	{"/lookup", "代碼對照"},
 	{"/scheduled-tasks", "排程"},
+	{"/appointments", "預約"},
+	{"/subcontracts", "外包"},
+	{"/equipment", "設備"},
 }
 
 // RequireAuth 擋未登入者，並把使用者注入給頁面 handler。

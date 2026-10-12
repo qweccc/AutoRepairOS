@@ -80,11 +80,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
       <label>密碼<input type="password" name="password" required></label>
       <button type="submit">登入</button>
       <input type="hidden" name="return_to" value="/">
-      <div class="hint">
-        預設帳號：owner / Owner001!<br>
-        counter / Counter001!<br>
-        tech / Tech001!
-      </div>
     </form>
   </div>
 </body>
@@ -165,23 +160,58 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 // IndexHandler 渲染首頁總覽（統計卡片 + 最近工單）。
 func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 	// href：點卡片就能跳到對應的列表（帶好篩選條件），不必自己找路徑。
-	stats := []struct {
+	var stats []struct {
 		label string
 		query string
 		href  string
-	}{
-		{"待處理工單", "SELECT COUNT(1) FROM work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
-		{"進行中", "SELECT COUNT(1) FROM work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
-		{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
-		{"客戶數", "SELECT COUNT(1) FROM customers", "/customers"},
-		{"車輛數", "SELECT COUNT(1) FROM vehicles", "/vehicles"},
-		{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+	}
+	switch user.Role {
+	case "owner":
+		stats = []struct {
+			label string
+			query string
+			href  string
+		}{
+			{"待收款", "SELECT COUNT(1) FROM work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
+			{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+			{"進行中", "SELECT COUNT(1) FROM work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
+			{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+			{"客戶數", "SELECT COUNT(1) FROM customers", "/customers"},
+			{"車輛數", "SELECT COUNT(1) FROM vehicles", "/vehicles"},
+		}
+	case "counter":
+		stats = []struct {
+			label string
+			query string
+			href  string
+		}{
+			{"待處理工單", "SELECT COUNT(1) FROM work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
+			{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+			{"待收款", "SELECT COUNT(1) FROM work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
+			{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+		}
+	default: // technician
+		stats = []struct {
+			label string
+			query string
+			href  string
+		}{
+			{"我的工單", "SELECT COUNT(1) FROM work_orders WHERE technician_id = ? AND status IN ('pending','in_progress','waiting_parts')", "/work-orders?mine=1"},
+			{"進行中", "SELECT COUNT(1) FROM work_orders WHERE technician_id = ? AND status = 'in_progress'", "/work-orders?mine=1&status=in_progress"},
+			{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE technician_id = ? AND status = 'completed'", "/work-orders?mine=1&status=completed"},
+		}
 	}
 
 	var sh strings.Builder
 	for _, s := range stats {
+		n := 0
+		if strings.Contains(s.query, "?") {
+			db.DB.QueryRow(s.query, user.ID).Scan(&n)
+		} else {
+			n = countRows(s.query)
+		}
 		sh.WriteString(`<a class="stat" href="` + s.href + `"><b>` +
-			strconv.Itoa(countRows(s.query)) + `</b><span>` + s.label + `</span></a>`)
+			strconv.Itoa(n) + `</b><span>` + s.label + `</span></a>`)
 	}
 
 	var recent string

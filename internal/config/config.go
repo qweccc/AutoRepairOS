@@ -9,7 +9,6 @@ type Config struct {
 	Port              string
 	DBPath            string
 	EnableWAL         bool
-	SessionSecret     string
 	RunSeed           bool
 	AppName           string
 	DefaultOwner      string
@@ -31,11 +30,6 @@ func Load() *Config {
 		dbPath = "file:data/autorepair.db?_busy_timeout=5000"
 	}
 
-	sessionSecret := os.Getenv("SESSION_SECRET")
-	if sessionSecret == "" {
-		sessionSecret = "autorepair-dev-secret-change-in-production"
-	}
-
 	// DB_ENABLE_WAL 明確 opt-in。預設關閉：Windows bind-mount 下 WAL 會讓
 	// SQLite 直接 disk I/O error (4618)，而 DSN 的 _journal_mode 參數不會生效，
 	// 只會造成「設定看起來是 WAL、實際不是」的誤解。
@@ -53,16 +47,22 @@ func Load() *Config {
 		Port:              port,
 		DBPath:            dbPath,
 		EnableWAL:         enableWAL,
-		SessionSecret:     sessionSecret,
 		RunSeed:           runSeed,
 		AppName:           appName,
-		DefaultOwner:      "owner",
-		DefaultOwnerPwd:   "Owner001!",
-		DefaultCounter:    "counter",
-		DefaultCounterPwd: "Counter001!",
-		DefaultTech:       "tech",
-		DefaultTechPwd:    "Tech001!",
+		DefaultOwner:      envOrDefault("DEFAULT_OWNER_USERNAME", "owner"),
+		DefaultOwnerPwd:   os.Getenv("DEFAULT_OWNER_PASSWORD"),
+		DefaultCounter:    envOrDefault("DEFAULT_COUNTER_USERNAME", "counter"),
+		DefaultCounterPwd: os.Getenv("DEFAULT_COUNTER_PASSWORD"),
+		DefaultTech:       envOrDefault("DEFAULT_TECH_USERNAME", "tech"),
+		DefaultTechPwd:   os.Getenv("DEFAULT_TECH_PASSWORD"),
 	}
+}
+
+func envOrDefault(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
 }
 
 func (c *Config) PortInt() int {

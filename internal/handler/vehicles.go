@@ -649,7 +649,7 @@ func customerOptions() string {
 
 func vehicleOptions() string {
 	rows, err := db.DB.Query(`SELECT v.id, v.plate_number, v.brand_model, COALESCE(c.name,'')
-		FROM vehicles v JOIN customers c ON c.id = v.customer_id ORDER BY v.plate_number`)
+		FROM vehicles v JOIN customers c ON c.id = v.customer_id ORDER BY v.plate_number LIMIT 300`)
 	if err != nil {
 		return ""
 	}

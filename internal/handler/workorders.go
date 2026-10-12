@@ -63,13 +63,18 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	q := strings.TrimSpace(qv.Get("q"))
 	from := strings.TrimSpace(qv.Get("from"))
 	to := strings.TrimSpace(qv.Get("to"))
-	tech := strings.TrimSpace(qv.Get("tech")) // 技師篩選（users.id，'0' = 未指派）
-	part := strings.TrimSpace(qv.Get("part")) // 零件篩選：料號或名稱的文字查詢
+	tech := strings.TrimSpace(qv.Get("tech")) // 技师筛选（users.id，'0' = 未指派）
+	part := strings.TrimSpace(qv.Get("part")) // 零件筛选：料号或名称的文字查询
+	mine := qv.Get("mine") == "1"             // 技师只看自己的工单
 	page := pageNo(r)
 	size := pageSize(r)
 
 	where := ` WHERE 1=1`
 	var args []interface{}
+	if mine {
+		where += ` AND wo.technician_id = ?`
+		args = append(args, user.ID)
+	}
 	if status != "" {
 		if _, ok := workOrderStatusLabel[status]; ok {
 			where += ` AND wo.status = ?`
@@ -222,7 +227,16 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// 狀態分頁籤（保留搜尋與日期條件）
 	var tabs strings.Builder
-	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(status == "", "btn-p", "btn-s") + `">全部</a> `)
+	// 技師「我的工單」入口
+	if user.Role == "technician" {
+		mineActive := mine
+		mineURL := "/work-orders?mine=1"
+		if q != "" {
+			mineURL += "&q=" + url.QueryEscape(q)
+		}
+		tabs.WriteString(`<a href="` + mineURL + `" class="btn ` + btnIf(mineActive, "btn-p", "btn-s") + `">我的工單</a> `)
+	}
+	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(status == "" && !mine, "btn-p", "btn-s") + `">全部</a> `)
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
 		tabs.WriteString(`<a href="` + woTabURL(qv, s) + `" class="btn ` + btnIf(status == s, "btn-p", "btn-s") + `">` +
 			workOrderStatusLabel[s] + `</a> `)
@@ -508,9 +522,35 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 			<th></th><td></td></tr>`
 	}
 
+	// 狀態進度條：pending → in_progress → waiting_parts → completed → paid
+	statusFlow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"}
+	currentIdx := 0
+	for i, s := range statusFlow {
+		if s == wo.Status {
+			currentIdx = i
+			break
+		}
+	}
+	var progressBar strings.Builder
+	progressBar.WriteString(`<div style="display:flex;gap:4px;margin:10px 0">`)
+	for i, s := range statusFlow {
+		stepCls := "background:#334155;color:#64748b" // 未到達
+		if i < currentIdx {
+			stepCls = "background:#1e3a5f;color:#93c5fd" // 已過
+		} else if i == currentIdx {
+			stepCls = "background:#1d4ed8;color:#fff" // 目前
+		}
+		progressBar.WriteString(`<span class="pill" style="` + stepCls + `">` + workOrderStatusLabel[s] + `</span>`)
+		if i < len(statusFlow)-1 {
+			progressBar.WriteString(`<span style="color:#475569;align-self:center">→</span>`)
+		}
+	}
+	progressBar.WriteString(`</div>`)
+
 	body := flash(r) + `
     <div class="card">
       <h2>工單 #` + strconv.FormatInt(wo.ID, 10) + ` — ` + htmlEsc(wo.PlateNumber) + `</h2>
+      ` + progressBar.String() + `
       <table>
         <tr><th style="width:130px">車型</th><td>` + htmlEsc(wo.BrandModel) + `</td><th style="width:130px">進廠里程</th><td>` + strconv.Itoa(wo.CurrentMileage) + ` km</td></tr>
         <tr><th>客戶</th><td>` + htmlEsc(wo.CustomerName) + ` / ` + htmlEsc(wo.CustomerPhone) + `</td><th>技師</th><td>` + htmlEsc(orDash(wo.TechnicianName)) + `</td></tr>
@@ -640,7 +680,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 				fail(w, "結帳時庫存不足："+strconv.FormatInt(d.invID, 10)+" 僅剩 "+strconv.Itoa(avail)+"，需要 "+strconv.Itoa(d.qty))
 				return
 			}
-			if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ? WHERE id = ?", d.qty, d.invID); err != nil {
+			if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ?, reserved_quantity = MAX(COALESCE(reserved_quantity,0) - ?, 0) WHERE id = ?", d.qty, d.qty, d.invID); err != nil {
 				fail(w, "扣減庫存失敗")
 				return
 			}
@@ -814,10 +854,17 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 零件不於此處扣庫存。
-	// 扣料統一在結帳（status=paid）時才執行，好處是未成交的工單不會佔用庫存、
-	// 也不會在技師改單時需要回補。結帳路徑會先檢查足額再扣，避免超賣。
-	// 庫存不足的即時回饋交由 UI 顯示預估可扣量，不阻擋加入工單。
+	// 零件預扣：工單加入零件時 reserved_quantity += qty，
+	// 可用庫存 = stock_quantity - reserved_quantity，避免多工單並行搶料。
+	// 實際扣料仍在結帳（status=paid）時執行（見 UpdateWorkOrderStatus）。
+	if itemType == "part" && invID > 0 {
+		if _, err := tx.Exec(`UPDATE inventory_items
+			SET reserved_quantity = COALESCE(reserved_quantity,0) + ?
+			WHERE id = ?`, qty, invID); err != nil {
+			fail(w, "更新預扣量失敗")
+			return
+		}
+	}
 
 	if err := recalcWorkOrderTotal(tx, woID); err != nil {
 		fail(w, "重算金額失敗")
@@ -826,6 +873,18 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 
 	if err := tx.Commit(); err != nil {
 		fail(w, "提交失敗")
+		return
+	}
+
+	// AJAX 請求：回傳 JSON 供前端局部更新，不跳頁
+	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+		var newTotal float64
+		db.DB.QueryRow("SELECT COALESCE(total_amount,0) FROM work_orders WHERE id = ?", woID).Scan(&newTotal)
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "wo_id": woID, "total": newTotal,
+			"desc": desc, "qty": qty, "unit_price": unitPrice,
+			"subtotal": float64(qty) * unitPrice, "item_type": itemType,
+		})
 		return
 	}
 
@@ -848,10 +907,12 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	// 讀取項目（僅用於校驗存在性；扣料在結帳時才發生，故此處不回補庫存）
+	// 讀取項目（用於校驗存在性與回補預扣量）
 	var itemType string
-	err = tx.QueryRow("SELECT item_type FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
-		Scan(&itemType)
+	var invID int64
+	var qty int
+	err = tx.QueryRow("SELECT item_type, COALESCE(inventory_item_id,0), quantity FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
+		Scan(&itemType, &invID, &qty)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -867,6 +928,13 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	if _, err := tx.Exec("DELETE FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID); err != nil {
 		fail(w, "刪除項目失敗")
 		return
+	}
+
+	// 回補預扣量（刪除零件項目時）
+	if itemType == "part" && invID > 0 {
+		tx.Exec(`UPDATE inventory_items
+			SET reserved_quantity = MAX(COALESCE(reserved_quantity,0) - ?, 0)
+			WHERE id = ?`, qty, invID)
 	}
 
 	if err := recalcWorkOrderTotal(tx, woID); err != nil {
@@ -932,22 +1000,21 @@ func approvalOptions(current string) string {
 
 // technicianOptions 技師下拉選單。
 //
-// 只列「真的會動手的人」，兩層過濾缺一不可：
+// 只列「真的會動手的人」，三層過濾缺一不可：
 //   staff_kind='employee' —— 舊系統的 Staff 表混了協力廠商（上上汽車、元發電機）
 //                            與眷屬（車行家族），協力廠商請到「廠商」頁。
 //   staff_branch NOT IN ('E','G','H') —— E 是行政、G 是眷屬、H 是廠商。
 //                            舊資料有 40 個眷屬編號（G001…G038）在遷移時被判成
 //                            employee，只靠 staff_kind 擋不掉，會讓行政與眷屬
 //                            出現在技師選單裡，污染技師產值與佣金統計。
-//
-// 註：users 表沒有「在職」欄位（舊系統的到職/離職日未遷），所以擋不掉已離職者。
-// 要處理得先加欄位，不在本次範圍。
+//   active=1 —— 離職技師不該出現在指派選單（migration 014 加入）。
 func technicianOptions() string {
 	rows, err := db.DB.Query(`SELECT u.id, u.name, u.username, COALESCE(u.staff_branch,'')
 		FROM users u
 		WHERE u.role = 'technician'
 		  AND COALESCE(u.staff_kind,'employee') = 'employee'
 		  AND UPPER(COALESCE(u.staff_branch,'')) NOT IN ('E','G','H')
+		  AND COALESCE(u.active,1) = 1
 		ORDER BY u.staff_branch, u.name`)
 	if err != nil {
 		return ""
@@ -970,27 +1037,10 @@ func technicianOptions() string {
 	return b.String()
 }
 
-// branchLabel CAR35 部門代碼 → 中文（舊系統 Branch 表）。
+// branchLabel CAR35 部門代碼 → 中文（查 lookup_items 表，category='branch'）。
+// 找不到時回傳空字串（由呼叫端決定降級顯示）。
 func branchLabel(code string) string {
-	switch strings.ToUpper(strings.TrimSpace(code)) {
-	case "A":
-		return "引擎"
-	case "B":
-		return "電機"
-	case "C":
-		return "鈑金"
-	case "D":
-		return "烤漆"
-	case "E":
-		return "行政"
-	case "F":
-		return "零件"
-	case "G":
-		return "眷屬"
-	case "H":
-		return "廠商"
-	}
-	return ""
+	return lookupLabel("branch", strings.ToUpper(strings.TrimSpace(code)))
 }
 
 func techName(id int64) string {
@@ -1059,7 +1109,7 @@ func addItemForm(wo model.WorkOrder, canEdit bool) string {
 	}
 
 	return `
-      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
+      <form class="frm" id="addItemForm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
         <label>類型<select name="item_type">
           <option value="labor">工資</option>
           <option value="part">零件</option>
@@ -1072,8 +1122,42 @@ func addItemForm(wo model.WorkOrder, canEdit bool) string {
         <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required></label>
         <label>主技師<select name="primary_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
         <label>助手<select name="assistant_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
-      </form>`
+        <div class="full"><button class="btn btn-p" type="submit" id="addItemBtn">加入項目</button></div>
+      </form>
+      <script>
+      (function(){
+        var form = document.getElementById('addItemForm');
+        if (!form) return;
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          var btn = document.getElementById('addItemBtn');
+          btn.disabled = true; btn.textContent = '送出中…';
+          var data = new FormData(form);
+          fetch(form.action, {method:'POST', body:data, headers:{'X-Requested-With':'XMLHttpRequest'}})
+            .then(function(r){ return r.json(); })
+            .then(function(j){
+              if (j.ok) {
+                var tbl = document.querySelector('table');
+                if (tbl) {
+                  var tr = document.createElement('tr');
+                  var typeLabel = {labor:'工資', part:'零件', subcontract:'外包'}[j.item_type] || j.item_type;
+                  tr.innerHTML = '<td><span class="pill p-progress">'+typeLabel+'</span></td><td>'+j.desc+'</td><td class="num">'+j.qty+'</td><td class="num">'+j.unit_price+'</td><td class="num">'+j.subtotal+'</td><td>-</td><td>-</td><td>-</td>';
+                  tbl.appendChild(tr);
+                }
+                var totalEl = document.querySelector('.rpt-total .grand b');
+                if (totalEl) totalEl.textContent = j.total;
+                form.reset();
+                var qty = form.querySelector('[name="quantity"]'); if(qty) qty.value = 1;
+                var price = form.querySelector('[name="unit_price"]'); if(price) price.value = 0;
+              } else {
+                alert(j.error || '加入失敗');
+              }
+            })
+            .catch(function(){ alert('網路錯誤'); })
+            .finally(function(){ btn.disabled = false; btn.textContent = '加入項目'; });
+        });
+      })();
+      </script>`
 }
 
 func sopToggleLabel(done bool) string {

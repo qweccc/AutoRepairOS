@@ -33,6 +33,13 @@ func Run(cfg *config.Config) error {
 			log.Printf("使用者已存在，略過: %s", u.username)
 			continue
 		}
+		if u.password == "" {
+			if u.role == "owner" {
+				return fmt.Errorf("尚未建立管理員帳號；請設定 DEFAULT_OWNER_PASSWORD 後再執行初始化")
+			}
+			log.Printf("未設定密碼，略過建立使用者: %s", u.username)
+			continue
+		}
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(u.password), bcrypt.DefaultCost)
 		if err != nil {

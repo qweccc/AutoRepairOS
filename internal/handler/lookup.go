@@ -1,0 +1,249 @@
+package handler
+
+import (
+	"net/http"
+	"strconv"
+	"strings"
+
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+)
+
+// 代码对照表维护。
+//
+// 为什么需要：
+//   旧系统迁移过来的资料使用代码（如保险 company_no='07'、部门 branch='A'），
+//   但新系统没有统一的代码对照表，导致投保纪录显示「07」而非「富邦」、
+//   部门名称硬编码在 Go 代码里、银行/零件类别/险种等自由文字无法统计。
+//
+// 设计：
+//   统一的 lookup_items 表，用 category 区分不同类型，
+//   所有代码对照都在一个页面维护。
+
+var lookupCategoryLabel = map[string]string{
+	"bank":             "銀行",
+	"category":         "零件類別",
+	"insurance_class":  "保險險種",
+	"branch":           "部門",
+	"insurance_company": "保險公司",
+}
+
+// ListLookupItems 代码对照表列表 + 新增/编辑。
+func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
+	qv := r.URL.Query()
+	category := strings.TrimSpace(qv.Get("category"))
+	if category == "" {
+		category = "branch"
+	}
+
+	// 筛选
+	where := ` WHERE category = ?`
+	var args []interface{}
+	args = append(args, category)
+
+	total := countRows(`SELECT COUNT(1) FROM lookup_items`+where, args...)
+
+	query := `SELECT id, category, code, label, sort_order, active
+		FROM lookup_items` + where + ` ORDER BY sort_order, code`
+	rows, err := db.DB.Query(query, args...)
+	if err != nil {
+		fail(w, "查詢代碼對照表失敗")
+		return
+	}
+	defer rows.Close()
+
+	var list []model.LookupItem
+	for rows.Next() {
+		var li model.LookupItem
+		if err := rows.Scan(&li.ID, &li.Category, &li.Code, &li.Label, &li.SortOrder, &li.Active); err != nil {
+			continue
+		}
+		list = append(list, li)
+	}
+
+	var tb strings.Builder
+	tb.WriteString(`<table><tr><th>代碼</th><th>名稱</th><th>排序</th><th>狀態</th><th>操作</th></tr>`)
+	for _, li := range list {
+		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">啟用</span>`
+		editBtn := `<a class="btn btn-s" href="/lookup/` + strconv.FormatInt(li.ID, 10) + `/edit">編輯</a>`
+		if li.Active == 0 {
+			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>`
+			editBtn = `<a class="btn btn-s" href="/lookup/` + strconv.FormatInt(li.ID, 10) + `/reactivate">復用</a>`
+		}
+		tb.WriteString(`<tr><td><code>` + htmlEsc(li.Code) + `</code></td><td>` + htmlEsc(li.Label) +
+			`</td><td class="num">` + strconv.Itoa(li.SortOrder) + `</td><td>` + statusCell +
+			`</td><td>` + editBtn + `</td></tr>`)
+	}
+	tb.WriteString(`</table>`)
+
+	table := tb.String()
+	if len(list) == 0 {
+		table = `<div class="empty">尚無代碼對照資料</div>`
+	}
+
+	// 分类筛选签
+	var tabs strings.Builder
+	for key, label := range lookupCategoryLabel {
+		cls := "btn-s"
+		if category == key {
+			cls = "btn-p"
+		}
+		tabs.WriteString(`<a class="btn ` + cls + `" href="/lookup?category=` + key + `">` + label + `</a> `)
+	}
+
+	body := flash(r) + `
+    <div class="card">
+      <h2>代碼對照表（` + lookupCategoryLabel[category] + `，共 ` + strconv.Itoa(total) + ` 筆）</h2>
+      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+        統一維護系統內所有代碼與名稱的對應關係。修改後即時生效，不需重新編譯。
+      </p>
+      <div style="margin-bottom:12px">` + tabs.String() + `</div>
+      <div style="margin-bottom:12px">
+        <a class="btn btn-p" href="/lookup/new?category=` + category + `">＋ 新增代碼</a>
+      </div>
+      ` + table + `
+    </div>`
+
+	renderPage(w, "代碼對照表", "/lookup", user.Username, user.Role, body)
+}
+
+// NewLookupItemForm 新增代码对照表单项表单。
+func NewLookupItemForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	category := strings.TrimSpace(r.URL.Query().Get("category"))
+	if category == "" {
+		category = "branch"
+	}
+	body := `
+    <div class="card">
+      <h2>新增代碼（` + lookupCategoryLabel[category] + `）</h2>
+      <form class="frm" method="POST" action="/lookup">
+        <input type="hidden" name="category" value="` + htmlEsc(category) + `">
+        <label>代碼<input name="code" required placeholder="例：07 或 A 或 引擎"></label>
+        <label>名稱<input name="label" required placeholder="例：富邦 或 引擎 或 強制險"></label>
+        <label>排序<input name="sort_order" type="number" value="0"></label>
+        <div class="full">
+          <button class="btn btn-p" type="submit">新增</button>
+          <a class="btn btn-s" href="/lookup?category=` + category + `">取消</a>
+        </div>
+      </form>
+    </div>`
+	renderPage(w, "新增代碼", "/lookup", user.Username, user.Role, body)
+}
+
+// CreateLookupItem 新增代码对照表单项。
+func CreateLookupItem(w http.ResponseWriter, r *http.Request) {
+	category := strings.TrimSpace(r.FormValue("category"))
+	code := strings.TrimSpace(r.FormValue("code"))
+	label := strings.TrimSpace(r.FormValue("label"))
+	if category == "" || code == "" || label == "" {
+		fail(w, "分類、代碼、名稱為必填")
+		return
+	}
+	_, err := db.DB.Exec(`INSERT INTO lookup_items (category, code, label, sort_order) VALUES (?,?,?,?)`,
+		category, code, label, atoiDefault(r.FormValue("sort_order"), 0))
+	if err != nil {
+		fail(w, "新增失敗")
+		return
+	}
+	redirectMsg(w, r, "/lookup?category="+category, "代碼已新增")
+}
+
+// EditLookupItemForm 编辑代码对照表单项表单。
+func EditLookupItemForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	id := mustInt(r.PathValue("id"))
+	var li model.LookupItem
+	err := db.DB.QueryRow(`SELECT id, category, code, label, sort_order, active FROM lookup_items WHERE id = ?`, id).
+		Scan(&li.ID, &li.Category, &li.Code, &li.Label, &li.SortOrder, &li.Active)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	body := `
+    <div class="card">
+      <h2>編輯代碼 ` + htmlEsc(li.Code) + `</h2>
+      <form class="frm" method="POST" action="/lookup/` + strconv.FormatInt(li.ID, 10) + `">
+        <label>代碼<input name="code" value="` + htmlEsc(li.Code) + `" required></label>
+        <label>名稱<input name="label" value="` + htmlEsc(li.Label) + `" required></label>
+        <label>排序<input name="sort_order" type="number" value="` + strconv.Itoa(li.SortOrder) + `"></label>
+        <div class="full">
+          <button class="btn btn-p" type="submit">儲存</button>
+          <a class="btn btn-s" href="/lookup?category=` + li.Category + `">取消</a>
+        </div>
+      </form>
+    </div>`
+	renderPage(w, "編輯代碼", "/lookup", user.Username, user.Role, body)
+}
+
+// UpdateLookupItem 更新代码对照表单项。
+func UpdateLookupItem(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	code := strings.TrimSpace(r.FormValue("code"))
+	label := strings.TrimSpace(r.FormValue("label"))
+	if code == "" || label == "" {
+		fail(w, "代碼、名稱為必填")
+		return
+	}
+	var category string
+	db.DB.QueryRow(`SELECT category FROM lookup_items WHERE id = ?`, id).Scan(&category)
+	_, err := db.DB.Exec(`UPDATE lookup_items SET code=?, label=?, sort_order=? WHERE id=?`,
+		code, label, atoiDefault(r.FormValue("sort_order"), 0), id)
+	if err != nil {
+		fail(w, "更新失敗")
+		return
+	}
+	redirectMsg(w, r, "/lookup?category="+category, "代碼已更新")
+}
+
+// DeactivateLookupItem 停用代码对照表单项。
+func DeactivateLookupItem(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	var category string
+	db.DB.QueryRow(`SELECT category FROM lookup_items WHERE id = ?`, id).Scan(&category)
+	db.DB.Exec(`UPDATE lookup_items SET active = 0 WHERE id = ?`, id)
+	redirectMsg(w, r, "/lookup?category="+category, "代碼已停用")
+}
+
+// ReactivateLookupItem 复用代码对照表单项。
+func ReactivateLookupItem(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	var category string
+	db.DB.QueryRow(`SELECT category FROM lookup_items WHERE id = ?`, id).Scan(&category)
+	db.DB.Exec(`UPDATE lookup_items SET active = 1 WHERE id = ?`, id)
+	redirectMsg(w, r, "/lookup?category="+category, "代碼已復用")
+}
+
+// lookupLabel 查代码对照表的名称。
+// 找不到时回传代码本身（降级显示）。
+func lookupLabel(category, code string) string {
+	if code == "" {
+		return ""
+	}
+	var label string
+	err := db.DB.QueryRow(`SELECT label FROM lookup_items WHERE category = ? AND code = ? AND active = 1`, category, code).Scan(&label)
+	if err != nil {
+		return code
+	}
+	return label
+}
+
+// lookupOptions 产生代码对照表的下拉选单 HTML。
+func lookupOptions(category, selected string) string {
+	rows, err := db.DB.Query(`SELECT code, label FROM lookup_items WHERE category = ? AND active = 1 ORDER BY sort_order, code`, category)
+	if err != nil {
+		return ""
+	}
+	defer rows.Close()
+	var b strings.Builder
+	for rows.Next() {
+		var code, label string
+		if rows.Scan(&code, &label) != nil {
+			continue
+		}
+		sel := ""
+		if code == selected {
+			sel = " selected"
+		}
+		b.WriteString(`<option value="` + htmlEsc(code) + `"` + sel + `>` + htmlEsc(label) + `</option>`)
+	}
+	return b.String()
+}

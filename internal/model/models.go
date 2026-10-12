@@ -19,6 +19,7 @@ type Supplier struct {
 	Address       string    `json:"address,omitempty"`
 	Notes         string    `json:"notes,omitempty"`
 	VendorType    string    `json:"vendor_type"` // material 材料商 / vendor 協力廠商
+	Active        int       `json:"active"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 
@@ -63,6 +64,7 @@ type Customer struct {
 	Name             string    `json:"name"`
 	Phone            string    `json:"phone"`
 	LineUserID       string    `json:"line_user_id,omitempty"`
+	TelegramUserID   string    `json:"telegram_user_id,omitempty"`
 	Address          string    `json:"address,omitempty"`
 	NotificationPref string    `json:"notification_preference"`
 	Notes            string    `json:"notes,omitempty"`
@@ -159,9 +161,82 @@ type WorkOrderItem struct {
 	PhotoURL            string  `json:"photo_url,omitempty"`
 }
 
+type LookupItem struct {
+	ID        int64  `json:"id"`
+	Category  string `json:"category"`
+	Code      string `json:"code"`
+	Label     string `json:"label"`
+	SortOrder int    `json:"sort_order"`
+	Active    int    `json:"active"`
+}
+
 type SimpleResponse struct {
 	Success bool        `json:"success"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
+}
+
+// Appointment 預約排程（SRS 5.9）。
+type Appointment struct {
+	ID              int64     `json:"id"`
+	CustomerID      int64     `json:"customer_id"`
+	CustomerName    string    `json:"customer_name,omitempty"`
+	VehicleID       int64     `json:"vehicle_id"`
+	PlateNumber     string    `json:"plate_number,omitempty"`
+	AppointmentDate string    `json:"appointment_date"`
+	AppointmentTime string    `json:"appointment_time,omitempty"`
+	ServiceType     string    `json:"service_type,omitempty"`
+	Status          string    `json:"status"`
+	Notes           string    `json:"notes,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// Subcontract 外包加工（SRS 5.11）。
+type Subcontract struct {
+	ID            int64     `json:"id"`
+	WorkOrderID   int64     `json:"work_order_id"`
+	SupplierID    int64     `json:"supplier_id,omitempty"`
+	SupplierName  string    `json:"supplier_name,omitempty"`
+	Description   string    `json:"description"`
+	CostAmount    float64   `json:"cost_amount"`
+	ChargeAmount  float64   `json:"charge_amount"`
+	Status        string    `json:"status"`
+	ExpectedDate  string    `json:"expected_date,omitempty"`
+	CompletedDate string    `json:"completed_date,omitempty"`
+	Notes         string    `json:"notes,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+// Equipment 設備基本資料（SRS 5.11）。
+type Equipment struct {
+	ID             int64     `json:"id"`
+	Name           string    `json:"name"`
+	Model          string    `json:"model,omitempty"`
+	SerialNumber   string    `json:"serial_number,omitempty"`
+	Location       string    `json:"location,omitempty"`
+	PurchaseDate   string    `json:"purchase_date,omitempty"`
+	WarrantyExpiry string    `json:"warranty_expiry,omitempty"`
+	Status         string    `json:"status"`
+	Notes          string    `json:"notes,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// EquipmentMaintenance 設備保養紀錄（SRS 5.11）。
+type EquipmentMaintenance struct {
+	ID                 int64     `json:"id"`
+	EquipmentID        int64     `json:"equipment_id"`
+	EquipmentName      string    `json:"equipment_name,omitempty"`
+	MaintenanceDate    string    `json:"maintenance_date"`
+	MaintenanceType    string    `json:"maintenance_type,omitempty"`
+	Description        string    `json:"description,omitempty"`
+	Cost               float64   `json:"cost"`
+	NextMaintenanceDate string   `json:"next_maintenance_date,omitempty"`
+	TechnicianID       int64     `json:"technician_id,omitempty"`
+	TechnicianName     string    `json:"technician_name,omitempty"`
+	Notes              string    `json:"notes,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
 }

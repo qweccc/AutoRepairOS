@@ -5,10 +5,12 @@ autorepairos
 *.exe~
 *.test
 /server
+/release/
 
 # Local data
 data/
 **/data/
+unpublished/
 _trash/
 _verify/
 *.db
@@ -58,4 +60,3 @@ cookies.txt
 
 # 瀏覽器除錯殘留
 _trash_browser_*/
-

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -203,6 +204,47 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		lowTable = `<div class="empty">庫存水位充足</div>`
 	}
 
+	// ============ 應收帳齡分析 (AR Aging) ============
+	// 已結帳但收款合計不足的工單，依結帳日（updated_at）距今天數分桶
+	agingCounts := map[string]int{"0-30": 0, "31-60": 0, "61-90": 0, "90+": 0}
+	agingAmounts := map[string]float64{"0-30": 0, "31-60": 0, "61-90": 0, "90+": 0}
+	agingTotalCount := 0
+	agingTotalAmount := 0.0
+	agingRows, _ := db.DB.Query(`SELECT wo.id, wo.total_amount, COALESCE(wo.updated_at, wo.created_at),
+		COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0)
+		FROM work_orders wo WHERE wo.status = 'completed'`)
+	if agingRows != nil {
+		for agingRows.Next() {
+			var total, received float64
+			var updatedAt string
+			if agingRows.Scan(new(int64), &total, &updatedAt, &received) != nil {
+				continue
+			}
+			unpaid := total - received
+			if unpaid <= 0 {
+				continue
+			}
+			days := 0
+			if t := parseFlexTime(updatedAt); !t.IsZero() {
+				days = int(time.Since(t).Hours() / 24)
+			}
+			bucket := "0-30"
+			switch {
+			case days > 90:
+				bucket = "90+"
+			case days > 60:
+				bucket = "61-90"
+			case days > 30:
+				bucket = "31-60"
+			}
+			agingCounts[bucket]++
+			agingAmounts[bucket] += unpaid
+			agingTotalCount++
+			agingTotalAmount += unpaid
+		}
+		agingRows.Close()
+	}
+
 	body := `
     <div class="card">
       <h2>報表總覽</h2>
@@ -239,6 +281,21 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 
     <div class="card">
       <h2>技師績效</h2>` + techTable + `
+    </div>
+
+    <div class="card">
+      <h2>應收帳齡分析 (AR Aging)</h2>
+      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+        已結帳但尚未收款的工單，依結帳日（或建立日）計算帳齡分級。
+      </p>
+      <table>
+        <tr><th>帳齡區間</th><th class="num">工單數</th><th class="num">應收金額</th></tr>
+        <tr><td>0–30 天</td><td class="num">` + strconv.Itoa(agingCounts["0-30"]) + `</td><td class="num">` + money(agingAmounts["0-30"]) + `</td></tr>
+        <tr><td>31–60 天</td><td class="num">` + strconv.Itoa(agingCounts["31-60"]) + `</td><td class="num">` + money(agingAmounts["31-60"]) + `</td></tr>
+        <tr><td>61–90 天</td><td class="num">` + strconv.Itoa(agingCounts["61-90"]) + `</td><td class="num">` + money(agingAmounts["61-90"]) + `</td></tr>
+        <tr><td>90+ 天</td><td class="num" style="color:#f87171">` + strconv.Itoa(agingCounts["90+"]) + `</td><td class="num" style="color:#f87171">` + money(agingAmounts["90+"]) + `</td></tr>
+        <tr><td><b>合計</b></td><td class="num"><b>` + strconv.Itoa(agingTotalCount) + `</b></td><td class="num"><b>` + money(agingTotalAmount) + `</b></td></tr>
+      </table>
     </div>
 
     <div class="card">

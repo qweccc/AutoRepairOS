@@ -61,6 +61,18 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 	techTotals := make(map[string][2]float64) // name -> {hours, commission}
 	var totalHours, totalLabor, totalCommission float64
 
+	// 取工單狀態、總額、保險件別、建立日
+	var woStatus string
+	var woTotal float64
+	var woIsInsurance int
+	var woCreatedAt string
+	db.DB.QueryRow(`SELECT status, COALESCE(total_amount,0), COALESCE(is_insurance,0), COALESCE(created_at,'') FROM work_orders WHERE id = ?`, woID).Scan(&woStatus, &woTotal, &woIsInsurance, &woCreatedAt)
+	// 工時表單日期預設成工單建立日（補舊工單時不用手改）
+	woDateDefault := today()
+	if len(woCreatedAt) >= 10 {
+		woDateDefault = woCreatedAt[:10]
+	}
+
 	for rows.Next() {
 		var lg techWorklog
 		var techName, plate string
@@ -87,7 +99,9 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 			`</td><td class="num">` + trimNum(lg.Hours) + `</td><td class="num">` + money(lg.HourlyRate) +
 			`</td><td class="num">` + money(lg.LaborAmount) + `</td><td class="num">` + trimNum(lg.CommissionRate) +
 			`%</td><td class="num">` + money(lg.CommissionAmount) + `</td><td>` + htmlEsc(orDash(lg.Notes)) +
-			`</td><td><a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(woID, 10) +
+			`</td><td><a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) +
+			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/edit">編輯</a> ` +
+			`<a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(woID, 10) +
 			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr>`)
 	}
 	b.WriteString(`</table>`)
@@ -109,14 +123,28 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 		techSummary = `<div class="empty">尚無技師資料</div>`
 	}
 
+	// 工單狀態標籤
+	statusLabel := workOrderStatusLabel[woStatus]
+	if statusLabel == "" {
+		statusLabel = woStatus
+	}
+	insuranceLabel := "自費件"
+	if woIsInsurance == 1 {
+		insuranceLabel = "保險件"
+	}
+
 	body := flash(r) + `
     <div class="card">
       <h2>技師工時與佣金</h2>
       <table>
-        <tr><th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td>
-            <th style="width:130px">總工資</th><td class="num">` + money(totalLabor) + `</td></tr>
-        <tr><th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(totalCommission) + `</td>
-            <th>紀錄筆數</th><td class="num">` + strconv.Itoa(len(list)) + `</td></tr>
+        <tr><th style="width:130px">工單狀態</th><td><span class="pill ` + statusPill[woStatus] + `">` + statusLabel + `</span></td>
+            <th style="width:130px">保險件別</th><td>` + insuranceLabel + `</td></tr>
+        <tr><th style="width:130px">工單總額</th><td class="num">` + money(woTotal) + `</td>
+            <th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td></tr>
+        <tr><th>總工資</th><td class="num">` + money(totalLabor) + `</td>
+            <th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(totalCommission) + `</td></tr>
+        <tr><th>紀錄筆數</th><td class="num">` + strconv.Itoa(len(list)) + `</td>
+            <th></th><td></td></tr>
       </table>
     </div>
 
@@ -124,7 +152,7 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
       <h2>工時明細</h2>` + tbl + `
       <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) + `/worklogs" style="margin-top:18px">
         <label>技師<select name="technician_id" required><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <label>工作日期<input name="work_date" type="date" value="` + today() + `" required></label>
+        <label>工作日期<input name="work_date" type="date" value="` + woDateDefault + `" required></label>
         <label>工時（小時）<input name="hours" type="number" step="0.5" min="0" value="1" required></label>
         <label>時薪<input name="hourly_rate" type="number" step="1" min="0" value="0" required></label>
         <label>佣金率（%）<input name="commission_rate" type="number" step="0.1" min="0" value="0" required></label>
@@ -204,6 +232,92 @@ func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 	}
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs", "已新增工時紀錄")
+}
+
+// EditTechnicianWorklogForm 編輯工時紀錄頁。
+func EditTechnicianWorklogForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	woID := mustInt(r.PathValue("id"))
+	logID := mustInt(r.PathValue("log_id"))
+
+	if err := requireOrderMutable(woID); err != nil {
+		fail(w, err.Error())
+		return
+	}
+
+	var lg techWorklog
+	var techName string
+	err := db.DB.QueryRow(`SELECT `+techWorklogCols+`, u.name`+techWorklogFrom+
+		`WHERE wl.id = ? AND wl.work_order_id = ?`, logID, woID).Scan(
+		&lg.ID, &lg.WorkOrderID, &lg.TechnicianID, &lg.WorkDate,
+		&lg.Hours, &lg.HourlyRate, &lg.LaborAmount,
+		&lg.CommissionRate, &lg.CommissionAmount, &lg.Notes, &techName)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	body := `
+    <div class="card">
+      <h2>編輯工時紀錄</h2>
+      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) + `/worklogs/` + strconv.FormatInt(logID, 10) + `">
+        <label>技師<input value="` + htmlEsc(techName) + `" disabled></label>
+        <label>工作日期<input name="work_date" type="date" value="` + htmlEsc(lg.WorkDate) + `" required></label>
+        <label>工時（小時）<input name="hours" type="number" step="0.5" min="0" value="` + trimNum(lg.Hours) + `" required></label>
+        <label>時薪<input name="hourly_rate" type="number" step="1" min="0" value="` + trimNum(lg.HourlyRate) + `" required></label>
+        <label>佣金率（%）<input name="commission_rate" type="number" step="0.1" min="0" value="` + trimNum(lg.CommissionRate) + `" required></label>
+        <label>備註<input name="notes" value="` + htmlEsc(lg.Notes) + `"></label>
+        <div class="full">
+          <button class="btn btn-p" type="submit">儲存</button>
+          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) + `/worklogs">取消</a>
+        </div>
+      </form>
+    </div>`
+
+	renderPage(w, "編輯工時", "/work-orders", user.Username, user.Role, body)
+}
+
+// UpdateTechnicianWorklog 更新工時紀錄，重算工資與佣金。
+func UpdateTechnicianWorklog(w http.ResponseWriter, r *http.Request) {
+	woID := mustInt(r.PathValue("id"))
+	logID := mustInt(r.PathValue("log_id"))
+
+	if err := requireOrderMutable(woID); err != nil {
+		fail(w, err.Error())
+		return
+	}
+
+	workDate := strings.TrimSpace(r.FormValue("work_date"))
+	if _, err := timeParseDate(workDate); err != nil {
+		fail(w, "工作日期格式錯誤")
+		return
+	}
+
+	hours := atofDefault(r.FormValue("hours"), 0)
+	if hours <= 0 {
+		fail(w, "工時必須大於 0")
+		return
+	}
+	hourlyRate := atofDefault(r.FormValue("hourly_rate"), 0)
+	commRate := atofDefault(r.FormValue("commission_rate"), 0)
+	labor := hours * hourlyRate
+	commission := labor * commRate / 100
+
+	res, err := db.DB.Exec(`UPDATE technician_worklogs SET
+		work_date = ?, hours = ?, hourly_rate = ?, labor_amount = ?,
+		commission_rate = ?, commission_amount = ?, notes = ?
+		WHERE id = ? AND work_order_id = ?`,
+		workDate, hours, hourlyRate, labor, commRate, commission,
+		nullStr(r.FormValue("notes")), logID, woID)
+	if err != nil {
+		fail(w, "更新工時紀錄失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs", "已更新工時紀錄")
 }
 
 // DeleteTechnicianWorklog 刪除單筆工時紀錄。

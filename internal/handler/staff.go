@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
 )
@@ -34,6 +36,7 @@ type staffRow struct {
 	InsuranceEnd   string
 	DependentOf    int64
 	DepOfName      string
+	Active         int
 }
 
 var staffKindLabel = map[string]string{
@@ -69,7 +72,8 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(u.staff_branch,''), COALESCE(u.staff_kind,'employee'),
 		COALESCE(u.national_id,''), COALESCE(u.birthday,''),
 		COALESCE(u.insurance_start,''), COALESCE(u.insurance_end,''),
-		COALESCE(u.dependent_of,0), COALESCE(p.name,'')
+		COALESCE(u.dependent_of,0), COALESCE(p.name,''),
+		COALESCE(u.active,1)
 		FROM users u
 		LEFT JOIN users p ON p.id = u.dependent_of` + where +
 		` ORDER BY COALESCE(u.staff_kind,'employee'), u.staff_branch, u.username
@@ -88,7 +92,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		var s staffRow
 		if err := rows.Scan(&s.ID, &s.Username, &s.Name, &s.Role, &s.Branch, &s.Kind,
 			&s.NationalID, &s.Birthday, &s.InsuranceStart, &s.InsuranceEnd,
-			&s.DependentOf, &s.DepOfName); err != nil {
+			&s.DependentOf, &s.DepOfName, &s.Active); err != nil {
 			continue
 		}
 		list = append(list, s)
@@ -100,13 +104,18 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		AND COALESCE(insurance_end,'')='' AND COALESCE(insurance_start,'')<>''`)
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>姓名</th><th>編號</th><th>身分</th><th>部門</th>` +
-		`<th>依附</th><th>身分證號</th><th>生日</th><th>加保日</th><th>退保日</th></tr>`)
+	tb.WriteString(`<table><tr><th>姓名</th><th>編號</th><th>狀態</th><th>身分</th><th>部門</th>` +
+		`<th>依附</th><th>身分證號</th><th>生日</th><th>加保日</th><th>退保日</th><th>操作</th></tr>`)
 	for _, s := range list {
 		kindText := staffKindLabel[s.Kind]
 		cls := "background:#1e3a5f;color:#bae6fd" // 員工：藍
 		if s.Kind == "dependent" || s.Kind == "family" {
 			cls = "background:#3b2f13;color:#fde68a" // 眷屬：黃
+		}
+		// 狀態欄：active=1 在職，active=0 離職
+		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">在職</span>`
+		if s.Active == 0 {
+			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">離職</span>`
 		}
 		// 退保日有值 = 已退保，標示出來
 		endCell := orDash(normDate(s.InsuranceEnd))
@@ -117,14 +126,20 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		if s.DependentOf > 0 {
 			depCell = htmlEsc(s.DepOfName)
 		}
+		// 編輯按鈕：限員工（眷屬不能改基本資料，避免冒用）
+		editBtn := ``
+		if s.Kind == "employee" || s.Kind == "family" {
+			editBtn = `<a class="btn btn-s" href="/staff/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a>`
+		}
 		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td><code>` + htmlEsc(s.Username) +
-			`</code></td><td><span class="pill" style="` + cls + `">` + kindText +
+			`</code></td><td>` + statusCell +
+			`</td><td><span class="pill" style="` + cls + `">` + kindText +
 			`</span></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(branchLabel(s.Branch)) +
 			`</td><td style="font-size:12.5px">` + depCell +
 			`</td><td><code style="font-size:12px">` + orDash(htmlEsc(s.NationalID)) +
 			`</code></td><td style="font-size:12.5px">` + orDash(normDate(s.Birthday)) +
 			`</td><td style="font-size:12.5px">` + orDash(normDate(s.InsuranceStart)) +
-			`</td><td style="font-size:12.5px">` + endCell + `</td></tr>`)
+			`</td><td style="font-size:12.5px">` + endCell + `</td><td>` + editBtn + `</td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 
@@ -152,7 +167,37 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		return `<a class="btn ` + cls + `" href="` + href + `">` + label + `</a>`
 	}
 
-	body := flash(r) + `
+	// 新增表單：只給櫃檯與管理員（技師只看得到列表）。
+	// 角色選項：非管理員看不到「系統管理員」，避免自建高權帳號。
+	roleOpts := `<option value="technician">技師</option><option value="counter">櫃檯人員</option>`
+	if user.Role == "owner" {
+		roleOpts = `<option value="counter">櫃檯人員</option>` + roleOpts +
+			`<option value="owner">系統管理員</option>`
+	}
+	addForm := ``
+	if user.Role == "owner" || user.Role == "counter" {
+		addForm = `
+    <div class="card">
+      <h2>新增員工 / 健保眷屬</h2>
+      <form class="frm" method="POST" action="/staff">
+        <label>姓名<input name="name" required></label>
+        <label>帳號<input name="username" required></label>
+        <label>密碼<input name="password" type="password" required placeholder="首次登入後請改密碼"></label>
+        <label>角色<select name="role">` + roleOpts + `</select></label>
+        <label>身分<select name="staff_kind">
+          <option value="employee">員工</option>
+          <option value="dependent">健保眷屬</option>
+        </select></label>
+        <label>部門<select name="staff_branch">` + lookupOptions("branch", "") + `</select></label>
+        <div class="full"><button class="btn btn-p" type="submit">新增</button></div>
+      </form>
+      <p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
+        身分證號、生日、加保/退保日請在新增後按「編輯」補上（避免冒用資料）。
+      </p>
+    </div>`
+	}
+
+	body := flash(r) + addForm + `
     <div class="card">
       <h2>員工與健保資料</h2>
       <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
@@ -182,4 +227,210 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
     </div>`
 
 	renderPage(w, "員工與健保", "/staff", user.Username, user.Role, body)
+}
+
+// CreateStaff 新增員工（或健保眷屬）。
+//
+// 權限：櫃檯以上可新增，但只有系統管理員能建立 owner 帳號
+// （否則櫃檯可自建管理員，等於自己升權）。
+func CreateStaff(w http.ResponseWriter, r *http.Request, user model.User) {
+	username := strings.TrimSpace(r.FormValue("username"))
+	password := strings.TrimSpace(r.FormValue("password"))
+	name := strings.TrimSpace(r.FormValue("name"))
+	role := strings.TrimSpace(r.FormValue("role"))
+	staffKind := strings.TrimSpace(r.FormValue("staff_kind"))
+	staffBranch := strings.TrimSpace(r.FormValue("staff_branch"))
+
+	if username == "" || password == "" || name == "" {
+		fail(w, "帳號、密碼、姓名為必填")
+		return
+	}
+	if role != "owner" && role != "counter" && role != "technician" {
+		role = "technician"
+	}
+	// 只有系統管理員能建立管理員帳號（櫃檯自建 owner = 自己升權）。
+	if role == "owner" && user.Role != "owner" {
+		fail(w, "權限不足：只有系統管理員能建立管理員帳號")
+		return
+	}
+	if staffKind != "employee" && staffKind != "dependent" {
+		staffKind = "employee"
+	}
+
+	// 驗證部門（查 lookup_items 表）
+	if staffBranch != "" {
+		var validBranch int
+		db.DB.QueryRow(`SELECT COUNT(1) FROM lookup_items WHERE category = 'branch' AND code = ? AND active = 1`, staffBranch).Scan(&validBranch)
+		if validBranch == 0 {
+			staffBranch = ""
+		}
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		fail(w, "密碼加密失敗")
+		return
+	}
+
+	_, err = db.DB.Exec(`INSERT INTO users (username, password, role, name, staff_kind, staff_branch, active)
+		VALUES (?,?,?,?,?,?,1)`,
+		username, string(hashedPassword), role, name, staffKind, staffBranch)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE") {
+			fail(w, "帳號已存在")
+			return
+		}
+		fail(w, "新增員工失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/staff", "員工已新增")
+}
+
+// EditStaffForm 編輯員工資料頁。
+//
+// 可編輯欄位：
+//   - national_id（身分證號）
+//   - birthday（生日）
+//   - insurance_start（加保日）
+//   - insurance_end（退保日）
+//   - staff_kind（身分：員工/眷屬）
+//   - staff_branch（部門：A~H）
+//   - active（在职/離職）
+//
+// 不可編輯：
+//   - username（帳號，改了會斷登入）
+//   - name（姓名，改了會影響歷史工單顯示）
+//   - role（角色，改了會變權限）
+func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
+	id := mustInt(r.PathValue("id"))
+
+	var s staffRow
+	err := db.DB.QueryRow(`SELECT u.id, u.username, COALESCE(u.name,''), u.role,
+		COALESCE(u.staff_branch,''), COALESCE(u.staff_kind,'employee'),
+		COALESCE(u.national_id,''), COALESCE(u.birthday,''),
+		COALESCE(u.insurance_start,''), COALESCE(u.insurance_end,''),
+		COALESCE(u.dependent_of,0), COALESCE(p.name,''),
+		COALESCE(u.active,1)
+		FROM users u
+		LEFT JOIN users p ON p.id = u.dependent_of
+		WHERE u.id = ?`, id).Scan(
+		&s.ID, &s.Username, &s.Name, &s.Role, &s.Branch, &s.Kind,
+		&s.NationalID, &s.Birthday, &s.InsuranceStart, &s.InsuranceEnd,
+		&s.DependentOf, &s.DepOfName, &s.Active)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// 部門下拉（查 lookup_items 表，可在「代碼對照」頁維護）
+	branchSel := `<select name="staff_branch">` + lookupOptions("branch", s.Branch) + `</select>`
+
+	// 身分別下拉
+	kindOpts := []struct{ code, label string }{
+		{"employee", "員工"}, {"dependent", "健保眷屬"},
+	}
+	kindSel := `<select name="staff_kind">`
+	for _, k := range kindOpts {
+		sel := ""
+		if s.Kind == k.code {
+			sel = " selected"
+		}
+		kindSel += `<option value="` + k.code + `"` + sel + `>` + k.label + `</option>`
+	}
+	kindSel += `</select>`
+
+	// 狀態下拉
+	statusSel := `<select name="active">
+		<option value="1"` + selIf(s.Active == 1) + `>在職</option>
+		<option value="0"` + selIf(s.Active == 0) + `>離職</option>
+	</select>`
+
+	body := `
+    <div class="card">
+      <h2>編輯員工 ` + htmlEsc(s.Name) + `</h2>
+      <form class="frm" method="POST" action="/staff/` + strconv.FormatInt(s.ID, 10) + `">
+        <label>姓名<input value="` + htmlEsc(s.Name) + `" disabled style="opacity:0.6"></label>
+        <label>帳號<input value="` + htmlEsc(s.Username) + `" disabled style="opacity:0.6"></label>
+        <label>狀態` + statusSel + `</label>
+        <label>身分` + kindSel + `</label>
+        <label>部門` + branchSel + `</label>
+        <label>身分證號<input name="national_id" value="` + htmlEsc(s.NationalID) + `"></label>
+        <label>生日<input name="birthday" type="date" value="` + htmlEsc(s.Birthday) + `"></label>
+        <label>加保日<input name="insurance_start" type="date" value="` + htmlEsc(s.InsuranceStart) + `"></label>
+        <label>退保日<input name="insurance_end" type="date" value="` + htmlEsc(s.InsuranceEnd) + `"></label>
+        <div class="full">
+          <button class="btn btn-p" type="submit">儲存</button>
+          <a class="btn btn-s" href="/staff">取消</a>
+        </div>
+      </form>
+    </div>`
+
+	renderPage(w, "編輯員工", "/staff", user.Username, user.Role, body)
+}
+
+// UpdateStaff 更新員工資料。
+func UpdateStaff(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+
+	nationalID := strings.TrimSpace(r.FormValue("national_id"))
+	birthday := strings.TrimSpace(r.FormValue("birthday"))
+	insuranceStart := strings.TrimSpace(r.FormValue("insurance_start"))
+	insuranceEnd := strings.TrimSpace(r.FormValue("insurance_end"))
+	staffKind := strings.TrimSpace(r.FormValue("staff_kind"))
+	staffBranch := strings.TrimSpace(r.FormValue("staff_branch"))
+	active := 1
+	if r.FormValue("active") == "0" {
+		active = 0
+	}
+
+	// 驗證身分別
+	if staffKind != "employee" && staffKind != "dependent" {
+		staffKind = "employee"
+	}
+
+	// 驗證部門
+	validBranches := map[string]bool{"A": true, "B": true, "C": true, "D": true, "E": true, "F": true, "G": true, "H": true}
+	if !validBranches[staffBranch] {
+		staffBranch = ""
+	}
+
+	_, err := db.DB.Exec(`UPDATE users SET
+		national_id = ?, birthday = ?, insurance_start = ?, insurance_end = ?,
+		staff_kind = ?, staff_branch = ?, active = ?, updated_at = datetime('now','localtime')
+		WHERE id = ?`,
+		nullStr(nationalID), nullStr(birthday), nullStr(insuranceStart), nullStr(insuranceEnd),
+		staffKind, staffBranch, active, id)
+	if err != nil {
+		fail(w, "更新失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/staff", "員工資料已更新")
+}
+
+// DeactivateStaff 停用員工（軟刪除，標記為離職）。
+func DeactivateStaff(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+
+	_, err := db.DB.Exec(`UPDATE users SET active = 0, updated_at = datetime('now','localtime') WHERE id = ?`, id)
+	if err != nil {
+		fail(w, "停用失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/staff", "員工已標記為離職")
+}
+
+// ReactivateStaff 復職（active=1）。
+func ReactivateStaff(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+
+	_, err := db.DB.Exec(`UPDATE users SET active = 1, updated_at = datetime('now','localtime') WHERE id = ?`, id)
+	if err != nil {
+		fail(w, "復職失敗")
+		return
+	}
+
+	redirectMsg(w, r, "/staff", "員工已復職")
 }

@@ -166,6 +166,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
           <noscript>
             <select name="vehicle_id_fallback" required style="margin-top:8px">` + fallback.String() + `</select>
           </noscript>
+          <button type="button" class="btn btn-s" style="margin-top:8px" onclick="openQuickModal()">⚡ 查無車牌？快速建立客戶與車輛</button>
         </label>
         <label>進廠里程<input name="current_mileage" type="number" min="0" value="` + htmlEsc(mileage) + `" required></label>
         <label>技師<select name="technician_id"><option value="0">未指派</option>` + technicianOptions() + `</select></label>
@@ -224,9 +225,136 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
     </script>
 
     <link rel="stylesheet" href="/static/vehicle-search.css">
-    <script src="/static/vehicle-search.js" defer></script>`
+    <script src="/static/vehicle-search.js" defer></script>
+    <div id="quickModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>⚡ 快速建立客戶與車輛</h3>
+          <button type="button" class="close-btn" onclick="closeQuickModal()">✕</button>
+        </div>
+        <form id="quickForm" onsubmit="submitQuickVehicle(event)">
+          <div class="frm">
+            <label>車牌號碼<input name="plate_number" id="quickPlate" required></label>
+            <label>廠牌車型<input name="brand_model" placeholder="例：Toyota RAV4" required></label>
+            <label>車主姓名<input name="customer_name" required></label>
+            <label>聯絡電話<input name="customer_phone" required></label>
+            <label>目前里程<input name="current_mileage" type="number" min="0" required></label>
+          </div>
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-p">建立並帶入工單</button>
+            <button type="button" class="btn btn-s" onclick="closeQuickModal()">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>
+      function openQuickModal() {
+        document.getElementById('quickModal').classList.remove('hidden');
+        document.getElementById('quickPlate').focus();
+      }
+      function closeQuickModal() {
+        document.getElementById('quickModal').classList.add('hidden');
+        document.getElementById('quickForm').reset();
+      }
+      function submitQuickVehicle(e) {
+        e.preventDefault();
+        var f = document.getElementById('quickForm');
+        var data = new FormData(f);
+        fetch('/api/quick-vehicle', {method:'POST', body:data})
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            if (j.ok) {
+              closeQuickModal();
+              var input = document.getElementById('vehicle_id');
+              input.value = j.vehicle_id;
+              var vs = document.querySelector('.vs-input');
+              if (vs) vs.value = j.label;
+              var hint = document.querySelector('[name="current_mileage"]');
+              if (hint) hint.value = j.mileage || '';
+              var btn = document.querySelector('.btn-p');
+              if (btn) btn.focus();
+            } else {
+              alert(j.error || '建立失敗');
+            }
+          })
+          .catch(function(){ alert('網路錯誤'); });
+      }
+      document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });
+    </script>`
 
 	renderPage(w, "開立工單", "/work-orders", user.Username, user.Role, body)
+}
+
+// QuickVehicle 開單頁快速建立客戶與車輛（AJAX）。
+//
+// 為什麼需要：櫃檯開單時若查無車牌，傳統流程要跳出頁面先到 /customers
+// 與 /vehicles 建檔再回來，新客新車被迫中斷。此 API 讓 Modal 在同一
+// 頁面完成建立並回傳 vehicle id，前端直接帶入工單表單。
+func QuickVehicle(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if _, err := currentUser(r); err != nil {
+		writeJSON(w, http.StatusUnauthorized, map[string]interface{}{"ok": false, "error": "未登入"})
+		return
+	}
+
+	plate := strings.TrimSpace(r.FormValue("plate_number"))
+	brand := strings.TrimSpace(r.FormValue("brand_model"))
+	name := strings.TrimSpace(r.FormValue("customer_name"))
+	phone := strings.TrimSpace(r.FormValue("customer_phone"))
+	mileage := strings.TrimSpace(r.FormValue("current_mileage"))
+
+	if plate == "" || brand == "" || name == "" || phone == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "車牌、廠牌、姓名、電話為必填"})
+		return
+	}
+
+	// 同車牌已存在：直接回傳既有 vehicle，不重複建立
+	var existingID int64
+	if err := db.DB.QueryRow(`SELECT id FROM vehicles WHERE UPPER(plate_number) = UPPER(?)`, plate).Scan(&existingID); err == nil {
+		var label string
+		db.DB.QueryRow(`SELECT v.plate_number || ' / ' || COALESCE(v.brand_model,'') || ' / ' || COALESCE(c.name,'')
+			FROM vehicles v JOIN customers c ON c.id = v.customer_id WHERE v.id = ?`, existingID).Scan(&label)
+		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "vehicle_id": existingID, "label": label, "mileage": ""})
+		return
+	}
+
+	tx, err := db.DB.Begin()
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "建立失敗"})
+		return
+	}
+	defer tx.Rollback()
+
+	// 客戶：同電話不重複建立
+	var customerID int64
+	err = tx.QueryRow(`SELECT id FROM customers WHERE phone = ?`, phone).Scan(&customerID)
+	if err != nil {
+		res, cerr := tx.Exec(`INSERT INTO customers (name, phone) VALUES (?, ?)`, name, phone)
+		if cerr != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "建立客戶失敗"})
+			return
+		}
+		customerID, _ = res.LastInsertId()
+	}
+
+	res, err := tx.Exec(`INSERT INTO vehicles (customer_id, plate_number, brand_model, current_mileage)
+		VALUES (?, ?, ?, ?)`, customerID, plate, brand, atoiDefault(mileage, 0))
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "建立車輛失敗"})
+		return
+	}
+	vehicleID, _ := res.LastInsertId()
+
+	if err := tx.Commit(); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "建立失敗"})
+		return
+	}
+
+	label := plate + " / " + brand + " / " + name
+	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "vehicle_id": vehicleID, "label": label, "mileage": mileage})
 }
 
 // selAttr 產生 data-picked 屬性，讓 JS 知道已經有預選車輛。
