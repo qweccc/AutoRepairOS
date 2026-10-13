@@ -8,12 +8,8 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"autorepairos/web/components"
-)
-
 // LoginPage 登入頁。
-// 獨立版面（無 nav），置中表單。與全站共用 PageStyle 的深色主題。
+// 獨立版面（無 nav），置中表單。與全站共用 /static/app.css 深色主題。
 func LoginPage(appName, errMsg, returnTo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -42,70 +38,62 @@ func LoginPage(appName, errMsg, returnTo string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 15, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 11, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = components.PageStyle().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<style>\n\t\t\t\t.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }\n\t\t\t\tform.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;\n\t\t\t\t             padding: 32px; width: 340px; max-width: 100%; }\n\t\t\t\tform.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;\n\t\t\t\t                   border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 14px; }\n\t\t\t\tform.login button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;\n\t\t\t\t                    border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }\n\t\t\t\tform.login button:hover { background: #0ea5e9; }\n\t\t\t\t.login-err { background: #7f1d1d; color: #fecaca; padding: 10px 12px; border-radius: 8px;\n\t\t\t\t             font-size: 13px; margin-bottom: 16px; }\n\t\t\t</style></head><body><div class=\"wrap\"><form class=\"login\" method=\"POST\" action=\"/login\"><h2 style=\"text-align:center;margin:0 0 24px;color:#38bdf8\">🔧 ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/app.css\"><style>\n\t\t\t\t.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }\n\t\t\t\tform.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;\n\t\t\t\t             padding: 32px; width: 340px; max-width: 100%; }\n\t\t\t\tform.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;\n\t\t\t\t                   border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 14px; }\n\t\t\t\tform.login button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;\n\t\t\t\t                    border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }\n\t\t\t\tform.login button:hover { background: #0ea5e9; }\n\t\t\t\t.login-err { background: #7f1d1d; color: #fecaca; padding: 10px 12px; border-radius: 8px;\n\t\t\t\t             font-size: 13px; margin-bottom: 16px; }\n\t\t\t</style></head><body><div class=\"wrap\"><form class=\"login\" method=\"POST\" action=\"/login\"><h2 style=\"text-align:center;margin:0 0 24px;color:#38bdf8\">🔧 ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(appName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 33, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 29, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if errMsg != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"login-err\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"login-err\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(errMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 35, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 31, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<label style=\"font-size:13px;color:#94a3b8\">帳號 <input type=\"text\" name=\"username\" required autofocus autocomplete=\"username\"></label> <label style=\"font-size:13px;color:#94a3b8\">密碼 <input type=\"password\" name=\"password\" required autocomplete=\"current-password\"></label> <button type=\"submit\">登入</button> <input type=\"hidden\" name=\"return_to\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<label style=\"font-size:13px;color:#94a3b8\">帳號 <input type=\"text\" name=\"username\" required autofocus autocomplete=\"username\"></label> <label style=\"font-size:13px;color:#94a3b8\">密碼 <input type=\"password\" name=\"password\" required autocomplete=\"current-password\"></label> <button type=\"submit\">登入</button> <input type=\"hidden\" name=\"return_to\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(returnTo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 44, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/login.templ`, Line: 40, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"></form></div></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"></form></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

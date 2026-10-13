@@ -29,6 +29,13 @@ func RegisterStatic(mux *http.ServeMux) {
 			serveStatic(w, r, sub, name)
 		})))
 	}
+	// 公開靜態資源（登入頁就要載入，不可 RequireLogin）：
+	// app.css 全站樣式、htmx.min.js 互動函式庫。二者無敏感資料，公開安全。
+	for _, name := range []string{"app.css", "htmx.min.js"} {
+		mux.Handle("GET /static/"+name, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			serveStatic(w, r, sub, name)
+		}))
+	}
 	// 其餘靜態資源（web/static 下的其他檔案）由 sub 直接掛載完整路徑。
 	// 需包成 http.HandlerFunc：sub 是 fs.FS，不是 http.FileSystem，所以要手動 Open 轉成 http.File。
 	mux.HandleFunc("/static/", RequireLogin(func(w http.ResponseWriter, r *http.Request) {

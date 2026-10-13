@@ -1,11 +1,7 @@
 package pages
 
-import (
-	"autorepairos/web/components"
-)
-
 // LoginPage 登入頁。
-// 獨立版面（無 nav），置中表單。與全站共用 PageStyle 的深色主題。
+// 獨立版面（無 nav），置中表單。與全站共用 /static/app.css 深色主題。
 templ LoginPage(appName, errMsg, returnTo string) {
 	<!DOCTYPE html>
 	<html lang="zh-Hant">
@@ -13,7 +9,7 @@ templ LoginPage(appName, errMsg, returnTo string) {
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>登入 - { appName }</title>
-			@components.PageStyle()
+			<link rel="stylesheet" href="/static/app.css"/>
 			<style>
 				.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
 				form.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;

@@ -66,5 +66,18 @@ services:
       # LINE_BASE_URL=<預設官方, 不用改 例: https://api.line.me>
     restart: unless-stopped
 
+  # SQLite 網頁管理介面（sqlite-web）：http://localhost:8091
+  # 給管理者直接用瀏覽器看 DB、跑 SQL。與 autorepairos 共用同一個 named volume 的 DB。
+  # 注意：sqlite-web 是開發/除錯工具，正式環境若不需要可移除本服務。
+  sqlite-web:
+    image: coleifer/sqlite-web:latest
+    ports:
+      - "8091:8080"
+    volumes:
+      - autorepairos-data:/data
+    # 只讀掛載 DB，避免誤改正式資料；需要寫入時把 :ro 移除。
+    command: ["sqlite_web", "/data/autorepair.db", "--host", "0.0.0.0", "--port", "8080", "--read-only"]
+    restart: unless-stopped
+
 volumes:
   autorepairos-data:
