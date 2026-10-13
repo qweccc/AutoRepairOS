@@ -238,7 +238,33 @@ type Subcontract struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-// Equipment 設備基本資料（SRS 5.11）。
+// PurchaseOrder 進貨單主檔：記錄向供應商進貨，核心是「總共要給廠商多少錢」。
+type PurchaseOrder struct {
+	ID           int64   `json:"id"`
+	SupplierID   int64   `json:"supplier_id"`
+	SupplierName string  `json:"supplier_name,omitempty"`
+	WorkOrderID  int64   `json:"work_order_id,omitempty"` // 0 = 一般進貨；>0 = 為此工單叫的料
+	OrderDate    string  `json:"order_date,omitempty"`
+	Status       string  `json:"status"` // draft / received
+	TotalAmount  float64 `json:"total_amount"`
+	Notes        string  `json:"notes,omitempty"`
+	ItemCount    int     `json:"item_count,omitempty"`
+	CreatedAt    string  `json:"created_at,omitempty"`
+	ReceivedAt   string  `json:"received_at,omitempty"`
+}
+
+// PurchaseOrderItem 進貨單品項：數量 × 進貨單價 = 小計。
+type PurchaseOrderItem struct {
+	ID              int64   `json:"id"`
+	OrderID         int64   `json:"order_id"`
+	InventoryItemID int64   `json:"inventory_item_id,omitempty"`
+	Description     string  `json:"description"`
+	PartNumber      string  `json:"part_number,omitempty"`
+	Quantity        float64 `json:"quantity"`
+	UnitCost        float64 `json:"unit_cost"`
+	Subtotal        float64 `json:"subtotal"`
+}
+
 type Equipment struct {
 	ID             int64     `json:"id"`
 	Name           string    `json:"name"`

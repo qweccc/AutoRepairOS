@@ -295,6 +295,16 @@ func main() {
 	mux.HandleFunc("POST /equipment/{id}/maintenance", handler.CounterUp(handler.CreateEquipmentMaintenance))
 	mux.HandleFunc("GET /equipment/{id}/maintenance/{maint_id}/delete", handler.OwnerOnly(handler.DeleteEquipmentMaintenance))
 
+	// 進貨單（採購進貨：品項 + 應付總額）
+	mux.HandleFunc("GET /purchase-orders", handler.AllStaff(handler.ListPurchaseOrders))
+	mux.HandleFunc("POST /purchase-orders", handler.CounterUp(handler.CreatePurchaseOrder))
+	mux.HandleFunc("GET /purchase-orders/new", handler.CounterUpPage(handler.NewPurchaseOrderForm))
+	mux.HandleFunc("GET /purchase-orders/{id}", handler.AllStaff(handler.ShowPurchaseOrder))
+	mux.HandleFunc("POST /purchase-orders/{id}/items", handler.CounterUp(handler.AddPurchaseOrderItem))
+	mux.HandleFunc("DELETE /purchase-orders/{id}/items/{itemId}", handler.CounterUp(handler.DeletePurchaseOrderItem))
+	mux.HandleFunc("GET /purchase-orders/{id}/receive", handler.CounterUp(handler.ReceivePurchaseOrder))
+	mux.HandleFunc("GET /purchase-orders/{id}/delete", handler.CounterUp(handler.DeletePurchaseOrder))
+
 	port := cfg.Port
 	if port == "" {
 		port = "8080"
