@@ -851,4 +851,37 @@ type SelectOption struct {
 	Selected bool
 }
 
+// PlateScanUI 行照/車牌拍照辨識 UI。
+// 載入 scan.js + html5-qrcode，插入「📷 拍照辨識行照」按鈕與隱藏 file input，
+// 辨識成功後依 fieldMap 回填表單空欄（不覆蓋已輸入）。
+// fieldMap 為「API 欄位 -> 表單 input name」的 JSON（由各頁面傳入）。
+func PlateScanUI(fieldMapJSON string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var46 == nil {
+			templ_7745c5c3_Var46 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<script src=\"/static/scan.js\"></script><div class=\"full\" style=\"grid-column:1/-1;margin-bottom:4px\"><button type=\"button\" class=\"btn btn-o\" id=\"plateScanBtn\">📷 拍照辨識行照</button> <input type=\"file\" id=\"plateScanInput\" accept=\"image/*\" capture=\"environment\" style=\"display:none\"> <span style=\"color:#64748b;font-size:12px;margin-left:8px\">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span></div><script>\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\n\t\t\tif (window.initPlateScan) {\n\t\t\t\twindow.initPlateScan({\n\t\t\t\t\tbuttonId: \"plateScanBtn\",\n\t\t\t\t\tinputId: \"plateScanInput\",\n\t\t\t\t\tfieldMap: { fieldMapJSON }\n\t\t\t\t});\n\t\t\t}\n\t\t});\n\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
 var _ = templruntime.GeneratedTemplate

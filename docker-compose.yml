@@ -58,6 +58,12 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - TELEGRAM_BASE_URL=${TELEGRAM_BASE_URL:-}
+      # 視覺辨識（行照/車牌 OCR）：見 .env.example 的 VISION_* 設定。
+      - VISION_MODE=${VISION_MODE:-cloud}
+      - VISION_API_URL=${VISION_API_URL:-}
+      - VISION_API_KEY=${VISION_API_KEY:-}
+      - VISION_MODEL=${VISION_MODEL:-}
+      - VISION_LOCAL_URL=${VISION_LOCAL_URL:-}
 
       # ===== LINE webhook（要對外推播才解開，先留註解）=====
       # LINE_CHANNEL_ID=<你的 Channel ID      例: channel-xxxxxxxxxxxxxxxx>

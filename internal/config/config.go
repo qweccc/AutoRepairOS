@@ -19,6 +19,16 @@ type Config struct {
 	DefaultCounterPwd string
 	DefaultTech       string
 	DefaultTechPwd    string
+
+	// 視覺辨識（行照/車牌 OCR）：分層混合策略。
+	// VisionMode = "cloud" 走外部 AI Vision API（預設，準確率最高）；
+	//             "local" 走區網本地 API（完全離線，車廠自架 Ollama/PaddleOCR 等）。
+	// VisionAPIKey 只給 cloud 用；VisionLocalURL 給 local 用。兩者皆空則功能停用。
+	VisionMode     string
+	VisionAPIURL   string
+	VisionAPIKey   string
+	VisionModel    string
+	VisionLocalURL string
 }
 
 // loadDotEnv 從 .env 補讀「尚未設定」的變數，讓本機 exe 與 Docker 用同一份設定檔。
@@ -141,7 +151,21 @@ func Load() *Config {
 		DefaultCounterPwd: os.Getenv("DEFAULT_COUNTER_PASSWORD"),
 		DefaultTech:       envOrDefault("DEFAULT_TECH_USERNAME", "tech"),
 		DefaultTechPwd:    os.Getenv("DEFAULT_TECH_PASSWORD"),
+
+		VisionMode:     envOrDefault("VISION_MODE", "cloud"),
+		VisionAPIURL:   os.Getenv("VISION_API_URL"),
+		VisionAPIKey:   os.Getenv("VISION_API_KEY"),
+		VisionModel:    os.Getenv("VISION_MODEL"),
+		VisionLocalURL: os.Getenv("VISION_LOCAL_URL"),
 	}
+}
+
+// VisionEnabled 視覺辨識是否已設定（有 cloud key 或 local url 任一即可用）。
+func (c *Config) VisionEnabled() bool {
+	if c.VisionMode == "local" {
+		return c.VisionLocalURL != ""
+	}
+	return c.VisionAPIURL != "" && c.VisionAPIKey != ""
 }
 
 func envOrDefault(key, fallback string) string {

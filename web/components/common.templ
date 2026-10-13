@@ -113,3 +113,27 @@ type SelectOption struct {
 	Label    string
 	Selected bool
 }
+
+// PlateScanUI 行照/車牌拍照辨識 UI。
+// 載入 scan.js + html5-qrcode，插入「📷 拍照辨識行照」按鈕與隱藏 file input，
+// 辨識成功後依 fieldMap 回填表單空欄（不覆蓋已輸入）。
+// fieldMap 為「API 欄位 -> 表單 input name」的 JSON（由各頁面傳入）。
+templ PlateScanUI(fieldMapJSON string) {
+	<script src="/static/scan.js"></script>
+	<div class="full" style="grid-column:1/-1;margin-bottom:4px">
+		<button type="button" class="btn btn-o" id="plateScanBtn">📷 拍照辨識行照</button>
+		<input type="file" id="plateScanInput" accept="image/*" capture="environment" style="display:none">
+		<span style="color:#64748b;font-size:12px;margin-left:8px">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span>
+	</div>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			if (window.initPlateScan) {
+				window.initPlateScan({
+					buttonId: "plateScanBtn",
+					inputId: "plateScanInput",
+					fieldMap: { fieldMapJSON }
+				});
+			}
+		});
+	</script>
+}

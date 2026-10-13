@@ -9,6 +9,7 @@ import (
 	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
 	"autorepairos/internal/handler"
+	"autorepairos/internal/integration/vision"
 	"autorepairos/internal/seed"
 )
 
@@ -54,6 +55,15 @@ func main() {
 	// 檢查 lookup 分頁籤與資料是否配套（只 log 警告，不中斷啟動）。
 	handler.CheckLookupCategories()
 
+	// 視覺辨識（行照/車牌 OCR）：依 config 建立 client，未設定則為 nil（功能停用）。
+	if vc := vision.NewClient(cfg.VisionMode, cfg.VisionAPIURL, cfg.VisionAPIKey,
+		cfg.VisionModel, cfg.VisionLocalURL); vc != nil {
+		handler.SetVisionClient(vc)
+		log.Printf("視覺辨識已啟用：模式=%s", vc.Mode)
+	} else {
+		log.Printf("視覺辨識未啟用（.env 未設定 VISION_API_URL/VISION_API_KEY 或 VISION_LOCAL_URL）")
+	}
+
 	if cfg.RunSeed {
 		if err := seed.Run(cfg); err != nil {
 			log.Fatalf("Seed 執行失敗: %v", err)
@@ -67,6 +77,8 @@ func main() {
 	mux.HandleFunc("POST /login", handler.LoginHandler)
 	mux.HandleFunc("GET /logout", handler.LogoutHandler)
 	mux.HandleFunc("GET /api/me", handler.MeHandler)
+	mux.HandleFunc("GET /api/vision/status", handler.RequireLogin(handler.VisionStatus))
+	mux.HandleFunc("POST /api/vision/recognize", handler.CounterUp(handler.RecognizePlate))
 	mux.HandleFunc("GET /api/parts", handler.RequireLogin(handler.SearchPartsAPI))
 	mux.HandleFunc("GET /api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
 	mux.HandleFunc("GET /api/inventory/search", handler.RequireLogin(handler.SearchInventoryAPI))
