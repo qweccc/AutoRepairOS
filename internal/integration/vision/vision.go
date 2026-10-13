@@ -117,7 +117,14 @@ func (c *Client) recognizeCloud(ctx context.Context, imageBase64 string) (*Readi
 	body, _ := json.Marshal(payload)
 
 	url := strings.TrimRight(c.APIURL, "/")
-	if !strings.Contains(url, "/chat/completions") {
+	switch {
+	case strings.Contains(url, "/chat/completions"):
+		// 已是完整端點，直接用
+	case strings.HasSuffix(url, "/v1"):
+		// 已含 /v1（如 http://host/v1 或 .../v1beta/openai），只補 /chat/completions
+		url += "/chat/completions"
+	default:
+		// 只給了 base（如 http://host:8080），補完整路徑
 		url += "/v1/chat/completions"
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
@@ -138,10 +145,13 @@ func (c *Client) recognizeCloud(ctx context.Context, imageBase64 string) (*Readi
 	}
 
 	// 解析 OpenAI 形狀：choices[0].message.content 是模型回的文字（內含 JSON）。
+	// 有些推理模型（如 llama.cpp 的 ornith、QwQ）把答案放在 reasoning_content、
+	// content 只放最終 JSON 或甚至空白。這裡兩個都收，取「含 JSON」的那個。
 	var chat struct {
 		Choices []struct {
 			Message struct {
-				Content string `json:"content"`
+				Content          string `json:"content"`
+				ReasoningContent string `json:"reasoning_content"`
 			} `json:"message"`
 		} `json:"choices"`
 	}
@@ -151,8 +161,15 @@ func (c *Client) recognizeCloud(ctx context.Context, imageBase64 string) (*Readi
 	if len(chat.Choices) == 0 {
 		return nil, fmt.Errorf("vision api: no choices in response")
 	}
-	content := chat.Choices[0].Message.Content
-	return parseReadingJSON(content), nil
+	msg := chat.Choices[0].Message
+	// 優先 content（正式輸出），content 沒有 JSON 才退回 reasoning_content。
+	reading := parseReadingJSON(msg.Content)
+	if reading.empty() {
+		if alt := parseReadingJSON(msg.ReasoningContent); !alt.empty() {
+			reading = alt
+		}
+	}
+	return reading, nil
 }
 
 // recognizeLocal 轉發到區網本地 API。
@@ -182,6 +199,15 @@ func (c *Client) recognizeLocal(ctx context.Context, imageBase64 string) (*Readi
 	}
 	r.RawText = string(raw)
 	return &r, nil
+}
+
+// empty 判斷是否完全沒辨識到任何欄位（全空字串）。
+// 用來在 content/reasoning_content 之間選擇「有內容」的那個。
+func (r *Reading) empty() bool {
+	return r.PlateNumber == "" && r.BrandModel == "" && r.VIN == "" &&
+		r.EngineNumber == "" && r.OwnerName == "" && r.OwnerAddress == "" &&
+		r.OwnerIDNumber == "" && r.FuelType == "" && r.Displacement == "" &&
+		r.ManufactureDate == "" && r.LicenseIssueDate == "" && r.SeatingCapacity == ""
 }
 
 // parseReadingJSON 從模型回傳文字中抽出 JSON 並解析成 Reading。
