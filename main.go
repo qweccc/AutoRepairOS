@@ -4,6 +4,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"autorepairos/internal/config"
 	"autorepairos/internal/cron"
@@ -57,9 +60,14 @@ func main() {
 
 	// 視覺辨識（行照/車牌 OCR）：依 config 建立 client，未設定則為 nil（功能停用）。
 	if vc := vision.NewClient(cfg.VisionMode, cfg.VisionAPIURL, cfg.VisionAPIKey,
-		cfg.VisionModel, cfg.VisionLocalURL); vc != nil {
+		cfg.VisionModel, cfg.VisionLocalURL, cfg.VisionAutoStart, cfg.VisionIdleMin,
+		cfg.VisionHFModel, cfg.VisionModelPath, cfg.VisionMmprojPath, cfg.VisionLocalProtocol); vc != nil {
 		handler.SetVisionClient(vc)
-		log.Printf("視覺辨識已啟用：模式=%s", vc.Mode)
+		if vc.Mode == "local" && vc.AutoStart {
+			log.Printf("視覺辨識已啟用：模式=local（自動管理 llama-server，閒置 %d 分鐘自動關閉）", vc.IdleMin)
+		} else {
+			log.Printf("視覺辨識已啟用：模式=%s", vc.Mode)
+		}
 	} else {
 		log.Printf("視覺辨識未啟用（.env 未設定 VISION_API_URL/VISION_API_KEY 或 VISION_LOCAL_URL）")
 	}
@@ -320,6 +328,22 @@ func main() {
 		scheduler.Start()
 		defer scheduler.Stop()
 	}
+
+	// 關閉時清理自動管理的視覺服務（llama-server 孤兒程序）。
+	// Go 的 Ctrl+C/終止訊號預設不跑 defer，必須顯式接訊號觸發 graceful shutdown；
+	// 被工作管理員強殺時則靠 vision client 的 Job Object（父死子亡）兜底。
+	defer handler.StopVisionClient()
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigCh
+		log.Printf("收到關閉訊號，正在清理…")
+		handler.StopVisionClient()
+		if scheduler != nil {
+			scheduler.Stop()
+		}
+		os.Exit(0)
+	}()
 
 	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))

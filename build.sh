@@ -9,6 +9,12 @@ echo "Building AutoRepairOS ${VERSION}..."
 go build -o "release/autorepair_${VERSION}.exe" .
 echo "EXE: release/autorepair_${VERSION}.exe"
 
+# 單機版（exe）在 release/ 目錄下執行，start.ps1 會檢查 web\index.html，
+# 故每次 release 必須把最新 web/ 同步進 release/web（不然車廠跑舊前端）。
+mkdir -p release/web
+cp -r web/. release/web/
+echo "WEB: release/web synced ($(find web -type f | wc -l) files)"
+
 docker compose build
 docker tag autorepairos-autorepairos:latest "autorepairos-autorepairos:${VERSION}"
 echo "Docker: autorepairos-autorepairos:${VERSION}"

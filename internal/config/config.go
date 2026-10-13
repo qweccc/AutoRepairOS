@@ -24,11 +24,19 @@ type Config struct {
 	// VisionMode = "cloud" 走外部 AI Vision API（預設，準確率最高）；
 	//             "local" 走區網本地 API（完全離線，車廠自架 Ollama/PaddleOCR 等）。
 	// VisionAPIKey 只給 cloud 用；VisionLocalURL 給 local 用。兩者皆空則功能停用。
-	VisionMode     string
-	VisionAPIURL   string
-	VisionAPIKey   string
-	VisionModel    string
-	VisionLocalURL string
+	// VisionAutoStart=true 時，local 模式的服務沒開會由後端自動啟動 llama-server，
+	// 閒置 VisionIdleMinutes 分鐘後自動關閉（車行人員不必手動管理 LLM）。
+	VisionMode      string
+	VisionAPIURL    string
+	VisionAPIKey    string
+	VisionModel     string
+	VisionLocalURL  string
+	VisionAutoStart bool
+	VisionIdleMin   int
+	VisionHFModel   string
+	VisionModelPath string  // 本地 GGUF 主模型檔（優先於 HFModel；離線部署用）
+	VisionMmprojPath string // 視覺投影檔 mmproj（搭配 ModelPath 使用）
+	VisionLocalProtocol string // local 模式協定：openai（預設，llama-server）或 custom（自訂 /recognize API）
 }
 
 // loadDotEnv 從 .env 補讀「尚未設定」的變數，讓本機 exe 與 Docker 用同一份設定檔。
@@ -157,6 +165,13 @@ func Load() *Config {
 		VisionAPIKey:   os.Getenv("VISION_API_KEY"),
 		VisionModel:    os.Getenv("VISION_MODEL"),
 		VisionLocalURL: os.Getenv("VISION_LOCAL_URL"),
+
+		VisionAutoStart: envBool("VISION_AUTOSTART", false),
+		VisionIdleMin:   envInt("VISION_IDLE_MINUTES", 10),
+		VisionHFModel:   envOrDefault("VISION_HF_MODEL", "unsloth/Qwen2.5-VL-3B-Instruct-GGUF:Q4_K_M"),
+		VisionModelPath:  os.Getenv("VISION_MODEL_PATH"),
+		VisionMmprojPath: os.Getenv("VISION_MMPROJ_PATH"),
+		VisionLocalProtocol: os.Getenv("VISION_LOCAL_PROTOCOL"),
 	}
 }
 
@@ -173,6 +188,28 @@ func envOrDefault(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// envBool 讀取布林環境變數；"true"/"1"（不分大小寫）為 true，其餘為 fallback。
+func envBool(key string, fallback bool) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
+	switch v {
+	case "true", "1":
+		return true
+	case "false", "0":
+		return false
+	default:
+		return fallback
+	}
+}
+
+// envInt 讀取整數環境變數；非數字或 <=0 時回 fallback。
+func envInt(key string, fallback int) int {
+	n, err := strconv.Atoi(strings.TrimSpace(os.Getenv(key)))
+	if err != nil || n <= 0 {
+		return fallback
+	}
+	return n
 }
 
 func (c *Config) PortInt() int {

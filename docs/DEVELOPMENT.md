@@ -19,6 +19,27 @@
 
 **禁止：** 字串拼接 HTML（`strings.Builder` 產 table）、jQuery、前端框架（React/Vue）、任何需要 npm build 的工具鏈。
 
+### 視覺辨識（拍照自動填入）架構
+
+`internal/integration/vision`：分層混合策略，三種辨識方式可切換（`.env` 控制）。
+
+| 模式 | 用途 | 說明 |
+|---|---|---|
+| `VISION_MODE=cloud` | 外部 AI Vision API | OpenAI 相容 `/v1/chat/completions`（Gemini 等），準確率最高，需連網 |
+| `VISION_MODE=local` | 本地 llama-server | Qwen2.5-VL-3B（GGUF），完全離線；`VISION_AUTOSTART=true` 時由後端自動管理程序生命週期 |
+| 條碼掃描 | 前端 html5-qrcode | 零件條碼，零伺服器負擔，純前端 |
+
+**local 模式自動開關（VISION_AUTOSTART）生命週期：**
+1. 辨識請求進來 → `healthOK()` 探測服務（1s timeout）
+2. 沒開 + `VISION_AUTOSTART=true` → `exec.Command("llama-server", "-m <GGUF>", "--mmproj <投影檔>", "--port <從URL取>")` 背景啟動（不彈視窗，`HF_HUB_OFFLINE=1` 不碰網路）
+3. 輪詢 `/health` 直到就緒（最多 150 秒；CPU 上 3B 約 10-60 秒）
+4. 用完啟動閒置看守：超過 `VISION_IDLE_MINUTES`（預設 10）分鐘沒人用 → 自動 Kill
+5. 防孤兒雙保險：正常關閉走 signal handler + `StopVisionClient()`；強制 kill 靠 **Windows Job Object（`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`，父死子亡）**
+
+**離線優先：** `VISION_MODEL_PATH` 有值時直接吃本地 GGUF，不用 `-hf` 規格（`-hf` 開機時會連 HuggingFace 驗證，防火牆/離線環境會卡住）。視覺模型**必須**帶 `VISION_MMPROJ_PATH`（投影檔），否則只當文字模型用。
+
+**跨平台：** `vision_windows.go`（Job Object + HideWindow）與 `vision_unix.go`（stub）以 build tag 分流；動這個目錄務必雙平台 build（`GOOS=linux go build ./...`）。
+
 ---
 
 ## 2. 目錄結構與職責
@@ -45,7 +66,7 @@ AutoRepairOS/
 │   └── integration/         # line、telegram 外部整合
 └── docs/
     ├── SRS.md               # 需求規格
-    └── DEVELOPMENT.md       # 本文件
+    └── DEVELOPMENT.md       # 本文件（含 CSS 設計系統，§9）
 ```
 
 **分工原則：**
@@ -240,6 +261,7 @@ cd AutoRepairOS && bash build.sh
 
 產出：
 - exe：`release/autorepair_vYYYYMMDD-HHMM.exe`（~22 MB，Windows 單機版）
+- **`release/web/` 自動同步最新 `web/`**（`start.ps1` 開頭會檢查 `web\index.html` 存在才啟動，少了會直接報錯；不同步 → 車廠跑舊前端）
 - docker image：`autorepairos-autorepairos:vYYYYMMDD-HHMM`（~48 MB）
 
 ### 部署
@@ -267,24 +289,31 @@ docker compose up -d
 
 ### 本地測試（不動容器）
 ```bash
-go build -o /tmp/ar_smoke.exe .
-DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8091 /tmp/ar_smoke.exe
+go build -o "$LOCALAPPDATA/Temp/ar_smoke.exe" .
+DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Temp/ar_smoke.exe"
 ```
-- 用 8091（8080=llama、8090=正式容器）
-- 測完 `taskkill /F /IM ar_smoke.exe`
+- **測試一律用 8099**（8080=本機 ornith llama、8090=正式容器、8091=sqlite-web、8092=視覺模型 Qwen）
+- **測完一定關掉**：`taskkill /F /IM ar_smoke.exe`
+- 若測視覺辨識（VISION_AUTOSTART=true），app 會自動在 8092 起 llama-server；
+  測完殺 app 時 Job Object 會連帶清掉它（強制 kill 也不會留孤兒）
+- 視覺辨識的冷啟動請求會等模型載入（約 10-60 秒），curl 要給 -m 200 以上
 
 ---
 
 ## 6. 測試流程（每次改動後必做）
 
 1. `go build ./...` — 必須 exit 0
-2. `templ generate` — 改了 `.templ` 一定要跑
-3. 本地 8091 起 smoke test：
+2. `GOOS=linux go build ./...` — 動到 `internal/integration/vision` 時必做（Docker 是 Linux build）
+3. `templ generate` — 改了 `.templ` 一定要跑
+4. 本地 8099 起 smoke test：
    - `curl` 登入（正確密碼 302、錯誤 401）
    - 每個動到的頁面 curl 200
    - 即時搜尋頁確認 `grep -c "hx-get.*search"` > 0
-4. `bash build.sh` — 產 release
-5. `docker compose up -d --force-recreate` — 部署驗證
+   - **長請求寫檔再讀**：冷啟動/辨識這類慢請求，curl 輸出要用 `> file` 重定向，
+     直接接 `| tail` 在 Windows bash 會 exit 23（寫入錯誤）
+5. `taskkill /F /IM ar_smoke.exe` — 測完關掉（視覺服務會被 Job Object 連帶清理）
+6. `bash build.sh` — 產 release
+7. `docker compose up -d --force-recreate` — 部署驗證
 
 **密碼/機密：** 絕不寫進程式碼、絕不 commit。用 `.env`（已 gitignore），`.env.example` 放範本。
 
@@ -320,7 +349,105 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8091 /tmp/ar_smoke.exe
 
 ---
 
-## 9. 給其他 Agent 的檢查清單
+## 9. CSS 設計系統
+
+全站樣式集中在 **`web/static/app.css`**（單一深色主題）。改樣式請改這裡，**勿在個別 templ 內重寫 `<style>`**（login 頁的少量額外樣式除外，僅覆寫表單版面）。
+
+> 靜態檔實際由 `internal/handler/static/app.css` embed 進 binary（`//go:embed`）。
+> 兩處內容相同，修改時**兩邊都要同步**（或改完 `cp web/static/app.css internal/handler/static/app.css`）。
+
+### 9.1 色彩（深色主題）
+
+| 用途 | 色碼 |
+|---|---|
+| 背景 | `#0f172a` |
+| 卡片/Header 底 | `#1e293b` |
+| 邊框/分隔 | `#334155` |
+| 主色（連結、強調、主鈕） | `#38bdf8` |
+| 文字主 | `#e2e8f0` |
+| 文字次/標籤 | `#94a3b8` |
+| 文字弱/佔位 | `#64748b` |
+| hover 列底色 | `#263449` |
+
+### 9.2 類別速查
+
+**版面**
+
+| 類別 | 用途 |
+|---|---|
+| `.card` | 內容卡片（每頁主要區塊） |
+| `.wrap` | 登入頁置中容器 |
+| `.full` | 表單內跨整行的欄位（`grid-column: 1/-1`） |
+
+**按鈕 `.btn` + 修飾**
+
+| 類別 | 用途 | 顏色 |
+|---|---|---|
+| `.btn-p` | 主要動作（新增、開工單） | 藍 |
+| `.btn-s` | 次要動作（編輯、取消、搜尋） | 灰 |
+| `.btn-d` | 危險（刪除、停用） | 紅 |
+| `.btn-o` | 警告（調庫、停用切換） | 橘 |
+
+**狀態標籤 `.pill` + 色彩**
+
+| 類別 | 用途 | 顏色 |
+|---|---|---|
+| `.p-completed` | 完成/啟用/成功 | 綠 |
+| `.p-progress` | 進行中/分類標籤 | 藍 |
+| `.p-pending` | 停用/取消 | 黃 |
+| `.p-waitparts` | 等待/待檢驗 | 橘 |
+| `.p-apprno` | 逾期/失敗/錯誤 | 紅 |
+| `.p-cancelled` | 已取消/中性 | 灰 |
+
+**表單 `.frm`**
+- `.frm` 用 CSS Grid，預設**兩欄**（手機自動單欄）
+- 內部 `label` 為「上下」排版（文字在上、輸入框在下）
+- 需跨整行的欄位加 `.full`
+- 輸入元件：`input`/`select`/`textarea` 已統一深色樣式
+
+**表格**
+- `table`/`th`/`td` 已設深色樣式，`tr:hover` 高亮
+- 數字右對齊：該 `<td>` 加 `.num`
+
+**其他**
+
+| 類別 | 用途 |
+|---|---|
+| `.stat` | 統計數字區塊（大數字 + 小標籤） |
+| `.msg` + `.msg-ok`/`.msg-err` | 提示訊息（成功綠/錯誤紅） |
+| `.empty` | 空狀態提示（置中灰字） |
+| `.badge` | Header 角色標籤 |
+| `code` | 等寬字（料號、單號） |
+
+### 9.3 響應式斷點
+
+| 斷點 | 調整 |
+|---|---|
+| `≤768px` | nav 字體縮小、main/card padding 縮小、表格字體 12px、stat 全寬、表單單欄 |
+| `≤480px` | nav 更窄、字體 11px |
+
+手機操作以「點選」為主，故按鈕與表格都保留足夠點擊面積。
+
+### 9.4 HTMX 函式庫
+
+`web/static/htmx.min.js`（本地，非 CDN）— 離線區網部署也能用。
+在 `components.Layout` 與 `login.templ` 的 `<head>` 以 `<script src="/static/htmx.min.js">` 載入。
+
+**為什麼本地不用 CDN：** 車行是離線區網部署，CDN 斷線互動就全掛。已下載固定版本（2.0.4）內建。
+
+### 9.5 新增頁面該怎麼用
+
+1. 包在 `@components.Layout(...)` 裡 → 自動有 header/nav/app.css/htmx
+2. 內容用 `.card` 區塊
+3. 列表用 `<table>` + 數字欄加 `.num`
+4. 操作鈕依語意選 `.btn-p`/`.btn-s`/`.btn-d`/`.btn-o`
+5. 狀態用 `.pill` + 對應色彩類別
+6. 表單用 `.frm`，跨整行欄位加 `.full`
+7. 需要新樣式 → 加進 `app.css` 並更新本節，勿內嵌 `<style>`
+
+---
+
+## 10. 給其他 Agent 的檢查清單
 
 新增/修改頁面前確認：
 - [ ] 讀過本文件 §1-§8

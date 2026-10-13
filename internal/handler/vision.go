@@ -11,9 +11,16 @@ import (
 // visionClient 由 main 在啟動時依 config 設定。nil 表示未啟用視覺辨識。
 var visionClient *vision.Client
 
-// SetVisionClient 注入視覺辨識 client（main 啟動時呼叫一次）。
+// SetVisionClient 由 main 在啟動時呼叫一次。
 func SetVisionClient(c *vision.Client) {
 	visionClient = c
+}
+
+// StopVisionClient 由 main defer 呼叫：關閉自動管理的 llama-server。
+func StopVisionClient() {
+	if visionClient != nil {
+		visionClient.Stop()
+	}
 }
 
 // RecognizePlate 拍照辨識行照/車牌，回傳結構化 JSON 給前端自動填入表單。
