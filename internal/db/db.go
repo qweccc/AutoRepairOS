@@ -83,8 +83,24 @@ func MustExec(query string, args ...interface{}) {
 	}
 }
 
+// Close 安全關閉資料庫：先嘗試把 WAL 寫回主庫並清空（TRUNCATE 模式），
+// 再關閉連線池。用在服務關閉（Ctrl+C、SIGTERM、docker stop）時。
+//
+// 為什麼顯式 checkpoint：SQLite 在關閉「最後一個連線」時本來就會自動
+// checkpoint，但那是「盡力而為」——若有其他讀取連線還開著（例如排程任務
+// 剛好在跑查詢），關閉時的自動 checkpoint 會被略過，.db-wal 留著舊內容。
+// 顯式執行一次是雙保險：失敗（例如 busy）只記 log 不中斷關閉流程，
+// 資料本身不會丟（WAL 是 crash-safe 的，下次開啟會重放）。
+//
+// 注意：signal handler 裡 os.Exit() 會跳過 defer，所以那邊要顯式呼叫本函式。
 func Close() {
-	if DB != nil {
-		DB.Close()
+	if DB == nil {
+		return
+	}
+	if _, err := DB.Exec(`PRAGMA wal_checkpoint(TRUNCATE);`); err != nil {
+		log.Printf("WAL checkpoint 失敗（不影響資料安全，下次開啟會重放 WAL）: %v", err)
+	}
+	if err := DB.Close(); err != nil {
+		log.Printf("資料庫關閉時發生錯誤: %v", err)
 	}
 }

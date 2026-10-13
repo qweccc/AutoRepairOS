@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"autorepairos/internal/config"
@@ -35,7 +36,9 @@ func Register(t Task) {
 
 // Scheduler 定期檢查並執行到期任務。
 type Scheduler struct {
-	stop chan struct{}
+	stop   chan struct{}
+	once   sync.Once
+	tickWG sync.WaitGroup // 追蹤進行中的 tick；Stop 等它完成，避免關閉時併發存取 DB
 }
 
 // New 建立排程器並把任務同步到 scheduled_tasks 表。
@@ -121,12 +124,16 @@ func (s *Scheduler) Start() {
 		defer ticker.Stop()
 
 		// 啟動時先跑一次到期檢查
+		s.tickWG.Add(1)
 		s.tick()
+		s.tickWG.Done()
 
 		for {
 			select {
 			case <-ticker.C:
+				s.tickWG.Add(1)
 				s.tick()
+				s.tickWG.Done()
 			case <-s.stop:
 				log.Println("排程器已停止")
 				return
@@ -136,9 +143,23 @@ func (s *Scheduler) Start() {
 	log.Printf("排程器已啟動，註冊 %d 個任務", len(registry))
 }
 
-// Stop 停止排程器。
+// Stop 停止排程器：不再啟動新 tick，並等待進行中的 tick（可能正在跑備份）
+// 完成後才返回，避免關閉服務時 DB 被併發存取（VACUUM INTO / checkpoint 撞
+// SQLITE_BUSY）。最多等 60 秒，避免單一任務卡死拖住整個關閉流程。
 func (s *Scheduler) Stop() {
-	close(s.stop)
+	s.once.Do(func() {
+		close(s.stop)
+		done := make(chan struct{})
+		go func() {
+			s.tickWG.Wait()
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(60 * time.Second):
+			log.Println("排程任務未在 60 秒內結束，強制繼續關閉")
+		}
+	})
 }
 
 func (s *Scheduler) tick() {

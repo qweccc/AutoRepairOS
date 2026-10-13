@@ -329,22 +329,37 @@ func main() {
 		defer scheduler.Stop()
 	}
 
-	// 關閉時清理自動管理的視覺服務（llama-server 孤兒程序）。
-	// Go 的 Ctrl+C/終止訊號預設不跑 defer，必須顯式接訊號觸發 graceful shutdown；
-	// 被工作管理員強殺時則靠 vision client 的 Job Object（父死子亡）兜底。
-	defer handler.StopVisionClient()
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sigCh
-		log.Printf("收到關閉訊號，正在清理…")
+	// shutdown 是所有退出路徑共用的清理流程。
+	// 為什麼不能用 defer：本程式所有現實退出路徑都經過 os.Exit——
+	//   (1) signal handler 的 os.Exit(0)（Ctrl+C / SIGTERM / docker stop）
+	//   (2) log.Fatal 的 os.Exit(1)（ListenAndServe 綁定失敗等致命錯誤）
+	//   (3) 被工作管理員強殺（什麼都跑不到，靠 vision 的 Job Object 父死子亡兜底）
+	// os.Exit 一律跳過 defer，所以 defer db.Close() 在實務上不會被執行到；
+	// 清理必須顯式呼叫 shutdown()。db.Close() 內部會先 wal_checkpoint(TRUNCATE)
+	// 把 WAL 寫回主庫，再關連線池（SQLite crash-safe，即使沒跑到資料也不會丟）。
+	shutdown := func() {
+		log.Printf("正在關閉服務，清理資源…")
 		handler.StopVisionClient()
 		if scheduler != nil {
 			scheduler.Stop()
 		}
+		db.Close()
+	}
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigCh
+		log.Printf("收到關閉訊號（Ctrl+C / SIGTERM）…")
+		shutdown()
 		os.Exit(0)
 	}()
 
 	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
+		// 用 log.Printf + shutdown + os.Exit 取代 log.Fatal：
+		// log.Fatal 內部是 os.Exit(1)，同樣會跳過 defer，DB 不會被關閉。
+		log.Printf("HTTP 服務結束: %v", err)
+		shutdown()
+		os.Exit(1)
+	}
 }
