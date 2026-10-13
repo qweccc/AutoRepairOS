@@ -10,6 +10,7 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ListScheduledTasks 顯示排程任務狀態、通知佇列與備份紀錄。
@@ -140,35 +141,11 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		backupTable = `<div class="empty">尚無備份紀錄</div>`
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>排程任務</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-        排程器每分鐘檢查一次到期任務。單一任務失敗不會中斷其他任務。
-      </p>` + tasksTable + `
-      <div style="margin-top:14px">
-        <a class="btn btn-p" href="/scheduled-tasks/backups/run">立即執行備份</a>
-        <a class="btn btn-s" href="/scheduled-tasks/notifications/run">立即處理通知佇列</a>
-        <a class="btn btn-s" href="/scheduled-tasks/maintenance-due/run">立即掃描保養到期</a>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>通知紀錄</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 6px">
-        待處理 ` + strconv.Itoa(len(pending)) + ` 筆，全部 ` + strconv.Itoa(len(recent)) + ` 筆。
-      </p>
-      <p style="font-size:12.5px;margin:0 0 14px">
-        <span class="pill ` + linePill + `">LINE</span>
-        <span style="color:#94a3b8">` + htmlEsc(lineCfg.StatusLine()) + `</span>
-      </p>` + notifTable + `
-    </div>
-
-    <div class="card">
-      <h2>備份紀錄</h2>` + backupTable + `
-    </div>`
-
-	renderPage(w, "排程與備份", "/scheduled-tasks", user.Username, user.Role, body)
+	pages.ListScheduledTasksPage(tasksTable, notifTable, backupTable,
+		strconv.Itoa(len(pending)), strconv.Itoa(len(recent)),
+		linePill, lineCfg.StatusLine(),
+		len(statuses) > 0, len(recent) > 0, backupRows > 0,
+	).Render(r.Context(), w)
 }
 
 // ToggleScheduledTask 啟用或停用排程任務。

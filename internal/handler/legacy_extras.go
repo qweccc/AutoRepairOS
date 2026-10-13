@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 保養套餐範本。
@@ -169,10 +170,7 @@ func ListExpenses(w http.ResponseWriter, r *http.Request, user model.User) {
 	db.DB.QueryRow(`SELECT COALESCE(SUM(amount_in),0), COALESCE(SUM(amount_out),0) FROM expenses`).
 		Scan(&sumIn, &sumOut)
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>日期</th><th>科目／料號</th><th>說明</th>` +
-		`<th class="num">收入</th><th class="num">支出</th></tr>`)
-	n := 0
+	var expRows []pages.ExpenseRow
 	for rows.Next() {
 		var id int64
 		var seq int
@@ -181,48 +179,55 @@ func ListExpenses(w http.ResponseWriter, r *http.Request, user model.User) {
 		if err := rows.Scan(&id, &seq, &date, &amtIn, &amtOut, &part, &notes); err != nil {
 			continue
 		}
-		n++
-		inCell, outCell := "-", "-"
-		if amtIn != 0 {
-			inCell = `<span style="color:#86efac">` + money(amtIn) + `</span>`
-		}
-		if amtOut != 0 {
-			outCell = `<span style="color:#fca5a5">` + money(amtOut) + `</span>`
-		}
-		tb.WriteString(`<tr><td style="font-size:12.5px">` + orDash(normDate(date)) +
-			`</td><td><code style="font-size:12px">` + orDash(htmlEsc(part)) +
-			`</code></td><td style="font-size:12.5px">` + orDash(htmlEsc(notes)) +
-			`</td><td class="num">` + inCell + `</td><td class="num">` + outCell + `</td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if n == 0 {
-		table = `<div class="empty">沒有符合條件的支出紀錄</div>`
+		expRows = append(expRows, pages.ExpenseRow{
+			ID:     id,
+			Date:   normDate(date),
+			Part:   part,
+			Notes:  notes,
+			AmtIn:  amtIn,
+			AmtOut: amtOut,
+		})
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>零用金／雜支支出（符合條件 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <div class="msg msg-err" style="margin-bottom:14px">
-        ⚠ 金額沿用舊系統原始值，<b>單位未確認</b>（疑為「分」，即 20000000 = 200,000 元）。
-        依指示先按原樣遷移，尚未換算。
-      </div>
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + strconv.Itoa(total) + `</b><span>筆數</span></div>
-        <div class="stat"><b style="color:#86efac">` + money(sumIn) + `</b><span>收入合計（原值）</span></div>
-        <div class="stat"><b style="color:#fca5a5">` + money(sumOut) + `</b><span>支出合計（原值）</span></div>
-      </div>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        舊系統「支出明細」表（Spend List）遷移而來，多為零用金、雜支（郵票、菜錢、插座…）。
-      </p>
-      <form method="GET" action="/expenses" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋科目 / 說明" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/expenses">清除</a>
-      </form>` + table + pager("/expenses", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/expenses", qv, size) + `</div>
-    </div>`
+	pages.ListExpensesPage(expRows, total, page, size, q, sumIn, sumOut).Render(r.Context(), w)
+}
 
-	renderPage(w, "零用金支出", "/expenses", user.Username, user.Role, body)
+// SearchExpensesAPI 支出即時搜尋 API（HTMX 用）。
+func SearchExpensesAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (COALESCE(part_number,'') LIKE ? OR COALESCE(notes,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT id, sequence_no, COALESCE(spend_date,''), amount_in, amount_out,
+		COALESCE(part_number,''), COALESCE(notes,'')
+		FROM expenses`+where+` ORDER BY spend_date DESC, id DESC LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.ExpenseRow
+	for rows.Next() {
+		var id int64
+		var seq int
+		var date, part, notes string
+		var amtIn, amtOut float64
+		if err := rows.Scan(&id, &seq, &date, &amtIn, &amtOut, &part, &notes); err != nil {
+			continue
+		}
+		result = append(result, pages.ExpenseRow{
+			ID:     id,
+			Date:   normDate(date),
+			Part:   part,
+			Notes:  notes,
+			AmtIn:  amtIn,
+			AmtOut: amtOut,
+		})
+	}
+	pages.ExpenseSearchRows(result).Render(r.Context(), w)
 }

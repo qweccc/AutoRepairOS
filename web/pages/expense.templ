@@ -1,0 +1,89 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/web/components"
+)
+
+type ExpenseRow struct {
+	ID     int64
+	Date   string
+	Part   string
+	Notes  string
+	AmtIn  float64
+	AmtOut float64
+}
+
+// ListExpensesPage 零用金支出頁（HTMX 即時搜尋）。
+templ ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn, sumOut float64) {
+	@components.Layout("零用金支出", "/expenses", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>零用金／雜支支出（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<div class="msg msg-err" style="margin-bottom:14px">
+				⚠ 金額沿用舊系統原始值，<b>單位未確認</b>（疑為「分」，即 20000000 = 200,000 元）。依指示先按原樣遷移，尚未換算。
+			</div>
+			<div style="margin-bottom:14px">
+				<div class="stat"><b>{ strconv.Itoa(total) }</b><span>筆數</span></div>
+				<div class="stat"><b style="color:#86efac">{ moneyFmt(sumIn) }</b><span>收入合計（原值）</span></div>
+				<div class="stat"><b style="color:#fca5a5">{ moneyFmt(sumOut) }</b><span>支出合計（原值）</span></div>
+			</div>
+			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+				舊系統「支出明細」表遷移而來，多為零用金、雜支（郵票、菜錢、插座…）。
+			</p>
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋科目 / 說明"
+				hx-get="/api/expenses/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#expense-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+			<table>
+				<tr><th>日期</th><th>科目／料號</th><th>說明</th><th class="num">收入</th><th class="num">支出</th></tr>
+				<tbody id="expense-rows">
+					for _, e := range rows {
+						@ExpenseRowContent(e)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的支出紀錄</div>
+			}
+			@components.Pager("/expenses", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ ExpenseRowContent(e ExpenseRow) {
+	<tr>
+		<td style="font-size:12.5px">{ e.Date }</td>
+		<td><code style="font-size:12px">{ orEmpty(e.Part) }</code></td>
+		<td style="font-size:12.5px">{ orEmpty(e.Notes) }</td>
+		<td class="num">
+			if e.AmtIn != 0 {
+				<span style="color:#86efac">{ moneyFmt(e.AmtIn) }</span>
+			}
+			if e.AmtIn == 0 {
+				-
+			}
+		</td>
+		<td class="num">
+			if e.AmtOut != 0 {
+				<span style="color:#fca5a5">{ moneyFmt(e.AmtOut) }</span>
+			}
+			if e.AmtOut == 0 {
+				-
+			}
+		</td>
+	</tr>
+}
+
+// ExpenseSearchRows 支出即時搜尋回傳的純列。
+templ ExpenseSearchRows(rows []ExpenseRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">查無支出紀錄</td></tr>
+	}
+	for _, e := range rows {
+		@ExpenseRowContent(e)
+	}
+}

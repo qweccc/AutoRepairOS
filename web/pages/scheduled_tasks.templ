@@ -1,0 +1,58 @@
+package pages
+
+import (
+	"autorepairos/web/components"
+)
+
+// ListScheduledTasksPage 排程與備份頁。
+// 這頁是多卡片管理面板（排程任務 / 通知紀錄 / 備份紀錄），
+// 子表格由 handler 產生後以 raw HTML 傳入，不套用 HTMX 即時搜尋
+// （管理頁面資料量小且需即時操作按鈕，搜尋價值低）。
+templ ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
+	pendingText, recentText, linePill, lineStatus string,
+	hasTasks, hasNotifs, hasBackups bool) {
+	@components.Layout("排程與備份", "/scheduled-tasks", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>排程任務</h2>
+			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+				排程器每分鐘檢查一次到期任務。單一任務失敗不會中斷其他任務。
+			</p>
+			if hasTasks {
+				@templ.Raw(tasksTable)
+			}
+			if !hasTasks {
+				<div class="empty">尚未註冊任何排程任務</div>
+			}
+			<div style="margin-top:14px">
+				<a class="btn btn-p" href="/scheduled-tasks/backups/run">立即執行備份</a>
+				<a class="btn btn-s" href="/scheduled-tasks/notifications/run">立即處理通知佇列</a>
+				<a class="btn btn-s" href="/scheduled-tasks/maintenance-due/run">立即掃描保養到期</a>
+			</div>
+		</div>
+		<div class="card">
+			<h2>通知紀錄</h2>
+			<p style="color:#64748b;font-size:12.5px;margin:0 0 6px">
+				待處理 { pendingText } 筆，全部 { recentText } 筆。
+			</p>
+			<p style="font-size:12.5px;margin:0 0 14px">
+				<span class={ "pill " + linePill }>LINE</span>
+				<span style="color:#94a3b8">{ lineStatus }</span>
+			</p>
+			if hasNotifs {
+				@templ.Raw(notifTable)
+			}
+			if !hasNotifs {
+				<div class="empty">尚無通知紀錄</div>
+			}
+		</div>
+		<div class="card">
+			<h2>備份紀錄</h2>
+			if hasBackups {
+				@templ.Raw(backupTable)
+			}
+			if !hasBackups {
+				<div class="empty">尚無備份紀錄</div>
+			}
+		</div>
+	}
+}
