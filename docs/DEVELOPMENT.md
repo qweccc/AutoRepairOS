@@ -292,11 +292,12 @@ docker compose up -d
 go build -o "$LOCALAPPDATA/Temp/ar_smoke.exe" .
 DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Temp/ar_smoke.exe"
 ```
-- **測試一律用 8099**（8080=本機 ornith llama、8090=正式容器、8091=sqlite-web、8092=視覺模型 Qwen）
-- **測完一定關掉**：`taskkill /F /IM ar_smoke.exe`
+- **測試一律用 8099**（8080=本機 ornith llama（手動跑的，勿動）、8090=正式服務、8091=sqlite-web、8092=本系統 local LLM 視覺埠）
+- **exe 與 docker 分開測**：測 exe 用 8099，測完 `taskkill /F /IM ar_smoke.exe` 結束；**docker container 測完留著**（正式服務持續運行，不要每次測都重啟）
 - 若測視覺辨識（VISION_AUTOSTART=true），app 會自動在 8092 起 llama-server；
   測完殺 app 時 Job Object 會連帶清掉它（強制 kill 也不會留孤兒）
 - 視覺辨識的冷啟動請求會等模型載入（約 10-60 秒），curl 要給 -m 200 以上
+- release 舊版 exe 會由 build.sh 自動移到 `unpublished/release-exe/`（gitignore，不會上傳）；手動清理時也放那裡，不要放回 release/
 
 ---
 
@@ -311,9 +312,10 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
    - 即時搜尋頁確認 `grep -c "hx-get.*search"` > 0
    - **長請求寫檔再讀**：冷啟動/辨識這類慢請求，curl 輸出要用 `> file` 重定向，
      直接接 `| tail` 在 Windows bash 會 exit 23（寫入錯誤）
-5. `taskkill /F /IM ar_smoke.exe` — 測完關掉（視覺服務會被 Job Object 連帶清理）
-6. `bash build.sh` — 產 release
-7. `docker compose up -d --force-recreate` — 部署驗證
+5. `taskkill /F /IM ar_smoke.exe` — 測完關掉 exe（視覺服務會被 Job Object 連帶清理）；
+   **docker container 不關**（留在背景持續服務）
+6. `bash build.sh` — 產 release（舊版 exe 自動移到 unpublished/release-exe/）
+7. `docker compose up -d --force-recreate` — 只在部署新版時做，不是每次測都重啟
 
 **密碼/機密：** 絕不寫進程式碼、絕不 commit。用 `.env`（已 gitignore），`.env.example` 放範本。
 

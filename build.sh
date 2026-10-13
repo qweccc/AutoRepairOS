@@ -4,6 +4,15 @@ set -e
 STAMP=$(date +%Y%m%d-%H%M)
 VERSION="v${STAMP}"
 mkdir -p release
+
+# 舊版 exe 移到 unpublished/（gitignore，不會上傳）：留最近版即可，舊版留檔不刪。
+# release/ 保持只有最新 exe，車廠/上傳時不會拿到舊檔。
+if ls release/autorepair_v*.exe >/dev/null 2>&1; then
+	mkdir -p unpublished/release-exe
+	mv release/autorepair_v*.exe unpublished/release-exe/
+	echo "OLD EXE: moved to unpublished/release-exe/"
+fi
+
 echo "Building AutoRepairOS ${VERSION}..."
 
 go build -o "release/autorepair_${VERSION}.exe" .
