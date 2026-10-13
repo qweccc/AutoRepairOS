@@ -9,6 +9,7 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
 	"autorepairos/internal/session"
+	"autorepairos/web/pages"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -51,39 +52,26 @@ func currentUser(r *http.Request) (model.User, error) {
 	return user, nil
 }
 
-const loginStyle = pageStyle + `
-  .wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
-  form.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-               padding: 32px; width: 340px; }
-  form.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;
-                     border: 1px solid #334155; background: #0f172a; color: #e2e8f0; }
-  form.login button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;
-                      border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
-  .hint { color: #64748b; font-size: 12px; line-height: 1.7; margin-top: 20px; }
-`
+// loginFail 登入失敗：回傳 Templ 登入頁並帶錯誤訊息（保留輸入的 return_to）。
+func loginFail(w http.ResponseWriter, r *http.Request, errMsg string) {
+	returnTo := r.FormValue("return_to")
+	if returnTo == "" || returnTo == "/login" {
+		returnTo = "/"
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusUnauthorized)
+	pages.LoginPage(appName(), errMsg, returnTo).Render(r.Context(), w)
+}
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
+		returnTo := r.URL.Query().Get("return_to")
+		if returnTo == "" {
+			returnTo = "/"
+		}
+		errMsg := r.URL.Query().Get("error")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write([]byte(`<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<title>登入 - ` + appName() + `</title>
-<style>` + loginStyle + `</style>
-</head>
-<body>
-  <div class="wrap">
-    <form class="login" method="POST" action="/login">
-      <h2>🔧 ` + appName() + `</h2>
-      <label>帳號<input type="text" name="username" required autofocus></label>
-      <label>密碼<input type="password" name="password" required></label>
-      <button type="submit">登入</button>
-      <input type="hidden" name="return_to" value="/">
-    </form>
-  </div>
-</body>
-</html>`))
+		pages.LoginPage(appName(), errMsg, returnTo).Render(r.Context(), w)
 		return
 	}
 
@@ -96,7 +84,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		http.Error(w, "請輸入帳號與密碼", http.StatusBadRequest)
+		loginFail(w, r, "請輸入帳號與密碼")
 		return
 	}
 
@@ -105,12 +93,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, username, password, role, name FROM users WHERE username = ?", username,
 	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name)
 	if err != nil {
-		http.Error(w, "帳號或密碼錯誤", http.StatusUnauthorized)
+		loginFail(w, r, "帳號或密碼錯誤")
 		return
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
-		http.Error(w, "帳號或密碼錯誤", http.StatusUnauthorized)
+		loginFail(w, r, "帳號或密碼錯誤")
 		return
 	}
 

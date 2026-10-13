@@ -1,0 +1,49 @@
+package pages
+
+import (
+	"autorepairos/web/components"
+)
+
+// LoginPage 登入頁。
+// 獨立版面（無 nav），置中表單。與全站共用 PageStyle 的深色主題。
+templ LoginPage(appName, errMsg, returnTo string) {
+	<!DOCTYPE html>
+	<html lang="zh-Hant">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>登入 - { appName }</title>
+			@components.PageStyle()
+			<style>
+				.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+				form.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+				             padding: 32px; width: 340px; max-width: 100%; }
+				form.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;
+				                   border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 14px; }
+				form.login button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;
+				                    border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }
+				form.login button:hover { background: #0ea5e9; }
+				.login-err { background: #7f1d1d; color: #fecaca; padding: 10px 12px; border-radius: 8px;
+				             font-size: 13px; margin-bottom: 16px; }
+			</style>
+		</head>
+		<body>
+			<div class="wrap">
+				<form class="login" method="POST" action="/login">
+					<h2 style="text-align:center;margin:0 0 24px;color:#38bdf8">🔧 { appName }</h2>
+					if errMsg != "" {
+						<div class="login-err">{ errMsg }</div>
+					}
+					<label style="font-size:13px;color:#94a3b8">帳號
+						<input type="text" name="username" required autofocus autocomplete="username"/>
+					</label>
+					<label style="font-size:13px;color:#94a3b8">密碼
+						<input type="password" name="password" required autocomplete="current-password"/>
+					</label>
+					<button type="submit">登入</button>
+					<input type="hidden" name="return_to" value={ returnTo }/>
+				</form>
+			</div>
+		</body>
+	</html>
+}
