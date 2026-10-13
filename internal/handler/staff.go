@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	"net/url"
+	
 	"strconv"
 	"strings"
 
@@ -10,6 +10,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 員工與健保資料。
@@ -103,130 +104,122 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 	insuredCount := countRows(`SELECT COUNT(1) FROM users WHERE COALESCE(staff_kind,'employee')<>'vendor'
 		AND COALESCE(insurance_end,'')='' AND COALESCE(insurance_start,'')<>''`)
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>姓名</th><th>編號</th><th>狀態</th><th>身分</th><th>部門</th>` +
-		`<th>依附</th><th>身分證號</th><th>生日</th><th>加保日</th><th>退保日</th><th>操作</th></tr>`)
+	var staffRows []pages.StaffRow
 	for _, s := range list {
-		kindText := staffKindLabel[s.Kind]
-		cls := "background:#1e3a5f;color:#bae6fd" // 員工：藍
+		kindCls := "background:#1e3a5f;color:#bae6fd"
 		if s.Kind == "dependent" || s.Kind == "family" {
-			cls = "background:#3b2f13;color:#fde68a" // 眷屬：黃
+			kindCls = "background:#3b2f13;color:#fde68a"
 		}
-		// 狀態欄：active=1 在職，active=0 離職
-		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">在職</span>`
-		if s.Active == 0 {
-			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">離職</span>`
-		}
-		// 退保日有值 = 已退保，標示出來
-		endCell := orDash(normDate(s.InsuranceEnd))
+		endLabel := s.InsuranceEnd
+		endRed := false
 		if s.InsuranceEnd != "" {
-			endCell = `<span style="color:#f87171">` + normDate(s.InsuranceEnd) + ` 已退保</span>`
+			endLabel = s.InsuranceEnd + " 已退保"
+			endRed = true
 		}
-		depCell := `<span style="color:#64748b">本人</span>`
-		if s.DependentOf > 0 {
-			depCell = htmlEsc(s.DepOfName)
-		}
-		// 編輯按鈕：限員工（眷屬不能改基本資料，避免冒用）
-		editBtn := ``
-		if s.Kind == "employee" || s.Kind == "family" {
-			editBtn = `<a class="btn btn-s" href="/staff/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a>`
-		}
-		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td><code>` + htmlEsc(s.Username) +
-			`</code></td><td>` + statusCell +
-			`</td><td><span class="pill" style="` + cls + `">` + kindText +
-			`</span></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(branchLabel(s.Branch)) +
-			`</td><td style="font-size:12.5px">` + depCell +
-			`</td><td><code style="font-size:12px">` + orDash(htmlEsc(s.NationalID)) +
-			`</code></td><td style="font-size:12.5px">` + orDash(normDate(s.Birthday)) +
-			`</td><td style="font-size:12.5px">` + orDash(normDate(s.InsuranceStart)) +
-			`</td><td style="font-size:12.5px">` + endCell + `</td><td>` + editBtn + `</td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的資料</div>`
+		staffRows = append(staffRows, pages.StaffRow{
+			ID:          s.ID,
+			Username:    s.Username,
+			Name:        s.Name,
+			Role:        s.Role,
+			Branch:      branchLabel(s.Branch),
+			Kind:        s.Kind,
+			KindLabel:   staffKindLabel[s.Kind],
+			KindCls:     kindCls,
+			NationalID:  s.NationalID,
+			Birthday:    s.Birthday,
+			InsStart:    s.InsuranceStart,
+			InsEnd:      s.InsuranceEnd,
+			InsEndLabel: endLabel,
+			InsEndRed:   endRed,
+			DepOf:       s.DependentOf,
+			DepOfName:   s.DepOfName,
+			Active:      s.Active,
+			CanEdit:     s.Kind == "employee" || s.Kind == "family",
+		})
 	}
 
-	tab := func(label, key string) string {
-		cls := "btn-s"
-		if kind == key {
-			cls = "btn-p"
-		}
-		u := url.Values{}
-		if q != "" {
-			u.Set("q", q)
-		}
-		if key != "" {
-			u.Set("kind", key)
-		}
-		href := "/staff"
-		if s := u.Encode(); s != "" {
-			href += "?" + s
-		}
-		return `<a class="btn ` + cls + `" href="` + href + `">` + label + `</a>`
-	}
-
-	// 新增表單：只給櫃檯與管理員（技師只看得到列表）。
-	// 角色選項：非管理員看不到「系統管理員」，避免自建高權帳號。
 	roleOpts := `<option value="technician">技師</option><option value="counter">櫃檯人員</option>`
 	if user.Role == "owner" {
 		roleOpts = `<option value="counter">櫃檯人員</option>` + roleOpts +
 			`<option value="owner">系統管理員</option>`
 	}
-	addForm := ``
-	if user.Role == "owner" || user.Role == "counter" {
-		addForm = `
-    <div class="card">
-      <h2>新增員工 / 健保眷屬</h2>
-      <form class="frm" method="POST" action="/staff">
-        <label>姓名<input name="name" required></label>
-        <label>帳號<input name="username" required></label>
-        <label>密碼<input name="password" type="password" required placeholder="首次登入後請改密碼"></label>
-        <label>角色<select name="role">` + roleOpts + `</select></label>
-        <label>身分<select name="staff_kind">
-          <option value="employee">員工</option>
-          <option value="dependent">健保眷屬</option>
-        </select></label>
-        <label>部門<select name="staff_branch">` + lookupOptions("branch", "") + `</select></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增</button></div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
-        身分證號、生日、加保/退保日請在新增後按「編輯」補上（避免冒用資料）。
-      </p>
-    </div>`
+
+	pages.ListStaffPage(staffRows, total, page, size, q, kind, empCount, depCount, insuredCount,
+		user.Role == "owner" || user.Role == "counter", roleOpts, lookupOptions("branch", ""),
+	).Render(r.Context(), w)
+}
+
+// SearchStaffAPI 員工即時搜尋 API（HTMX 用）。
+func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	kind := strings.TrimSpace(r.URL.Query().Get("kind"))
+	where := ` WHERE COALESCE(u.staff_kind,'employee') <> 'vendor'`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (u.name LIKE ? OR u.username LIKE ? OR COALESCE(u.national_id,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
 	}
+	if kind != "" {
+		where += ` AND COALESCE(u.staff_kind,'employee') = ?`
+		args = append(args, kind)
+	}
+	rows, err := db.DB.Query(`SELECT u.id, u.username, COALESCE(u.name,''), u.role,
+		COALESCE(u.staff_branch,''), COALESCE(u.staff_kind,'employee'),
+		COALESCE(u.national_id,''), COALESCE(u.birthday,''),
+		COALESCE(u.insurance_start,''), COALESCE(u.insurance_end,''),
+		COALESCE(u.dependent_of,0), COALESCE(p.name,''),
+		COALESCE(u.active,1)
+		FROM users u
+		LEFT JOIN users p ON p.id = u.dependent_of`+where+
+		` ORDER BY COALESCE(u.staff_kind,'employee'), u.staff_branch, u.username
+		LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-	body := flash(r) + addForm + `
-    <div class="card">
-      <h2>員工與健保資料</h2>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        舊系統把員工與健保眷屬放在同一張表（用編號後綴區分，如
-        <code>E003</code> 王彩秀 / <code>E03-1</code> 嚴一舒）。<br>
-        <b>健保眷屬不是技師</b>，不會出現在技師佣金表，也不會出現在技師指派選單；
-        他們在這裡維護投保資料（身分證號、加保日、退保日）。
-      </p>
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + strconv.Itoa(empCount) + `</b><span>員工</span></div>
-        <div class="stat"><b>` + strconv.Itoa(depCount) + `</b><span>健保眷屬</span></div>
-        <div class="stat"><b>` + strconv.Itoa(insuredCount) + `</b><span>在保中</span></div>
-      </div>
-      <div style="margin-bottom:12px">` +
-		tab("全部 "+strconv.Itoa(empCount+depCount), "") + ` ` +
-		tab("員工 "+strconv.Itoa(empCount), "employee") + ` ` +
-		tab("健保眷屬 "+strconv.Itoa(depCount), "dependent") + `
-      </div>
-      <form method="GET" action="/staff" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋姓名 / 編號 / 身分證號" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        ` + hiddenInputs(qv, "q", "page", "per") + `
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/staff">清除</a>
-        <a class="btn btn-s" href="/technicians/commissions">技師佣金</a>
-      </form>` + table + pager("/staff", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/staff", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "員工與健保", "/staff", user.Username, user.Role, body)
+	var result []pages.StaffRow
+	for rows.Next() {
+		var s staffRow
+		if err := rows.Scan(&s.ID, &s.Username, &s.Name, &s.Role, &s.Branch, &s.Kind,
+			&s.NationalID, &s.Birthday, &s.InsuranceStart, &s.InsuranceEnd,
+			&s.DependentOf, &s.DepOfName, &s.Active); err != nil {
+			continue
+		}
+		kindCls := "background:#1e3a5f;color:#bae6fd"
+		if s.Kind == "dependent" || s.Kind == "family" {
+			kindCls = "background:#3b2f13;color:#fde68a"
+		}
+		endLabel := s.InsuranceEnd
+		endRed := false
+		if s.InsuranceEnd != "" {
+			endLabel = s.InsuranceEnd + " 已退保"
+			endRed = true
+		}
+		result = append(result, pages.StaffRow{
+			ID:          s.ID,
+			Username:    s.Username,
+			Name:        s.Name,
+			Role:        s.Role,
+			Branch:      branchLabel(s.Branch),
+			Kind:        s.Kind,
+			KindLabel:   staffKindLabel[s.Kind],
+			KindCls:     kindCls,
+			NationalID:  s.NationalID,
+			Birthday:    s.Birthday,
+			InsStart:    s.InsuranceStart,
+			InsEnd:      s.InsuranceEnd,
+			InsEndLabel: endLabel,
+			InsEndRed:   endRed,
+			DepOf:       s.DependentOf,
+			DepOfName:   s.DepOfName,
+			Active:      s.Active,
+			CanEdit:     s.Kind == "employee" || s.Kind == "family",
+		})
+	}
+	pages.StaffSearchRows(result).Render(r.Context(), w)
 }
 
 // CreateStaff 新增員工（或健保眷屬）。

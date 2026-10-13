@@ -1,0 +1,108 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type SubcontractRow struct {
+	ID           int64
+	WorkOrderID  int64
+	SupplierName string
+	Description  string
+	CostAmount   float64
+	ChargeAmount float64
+	Status       string
+	StatusLabel  string
+	StatusPill   string
+}
+
+// ListSubcontractsPage 外包加工列表頁（HTMX 即時搜尋）。
+templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, status string,
+	supplierOpts string) {
+	@components.Layout("外包加工", "/subcontracts", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增外包工項</h2>
+			<form class="frm" method="POST" action="/subcontracts">
+				<label>工單 ID<input type="number" name="work_order_id" required></label>
+				<label>協力廠商
+					<select name="supplier_id">
+						<option value="">（未指定）</option>
+						@templ.Raw(supplierOpts)
+					</select>
+				</label>
+				<label class="full">加工內容<input name="description" required></label>
+				<label>成本金額<input type="number" step="0.01" name="cost_amount" value="0"></label>
+				<label>收費金額<input type="number" step="0.01" name="charge_amount" value="0"></label>
+				<label>預計完成日<input type="date" name="expected_date"></label>
+				<label>狀態
+					<select name="status">
+						<option value="pending">待處理</option>
+						<option value="in_progress">進行中</option>
+						<option value="completed">已完成</option>
+					</select>
+				</label>
+				<label class="full">備註<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">新增外包</button></div>
+			</form>
+		</div>
+		<div class="card">
+			<h2>外包清單（共 { strconv.Itoa(total) } 筆）</h2>
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋內容 / 廠商"
+				hx-get="/api/subcontracts/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#subcontract-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px;margin-bottom:12px">
+			<table>
+				<tr>
+					<th>ID</th><th>工單</th><th>外包廠商</th><th>內容</th><th class="num">成本</th>
+					<th class="num">收費</th><th class="num">毛利</th><th>狀態</th><th>操作</th>
+				</tr>
+				<tbody id="subcontract-rows">
+					for _, s := range rows {
+						@SubcontractRowContent(s)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的外包工項</div>
+			}
+			@components.Pager("/subcontracts", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ SubcontractRowContent(s SubcontractRow) {
+	{{ margin := s.ChargeAmount - s.CostAmount }}
+	<tr>
+		<td>{ strconv.FormatInt(s.ID, 10) }</td>
+		<td>#{ strconv.FormatInt(s.WorkOrderID, 10) }</td>
+		<td>{ s.SupplierName }</td>
+		<td>{ s.Description }</td>
+		<td class="num">{ moneyFmt(s.CostAmount) }</td>
+		<td class="num">{ moneyFmt(s.ChargeAmount) }</td>
+		<td class="num">{ moneyFmt(margin) }</td>
+		<td><span class={ "pill " + s.StatusPill }>{ s.StatusLabel }</span></td>
+		<td>
+			<a class="btn btn-s" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-d" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/delete" }
+				data-confirm="確定刪除這筆外包？">刪除</a>
+		</td>
+	</tr>
+}
+
+// SubcontractSearchRows HTMX 即時搜尋回傳的純列。
+templ SubcontractSearchRows(rows []SubcontractRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無外包</td></tr>
+	}
+	for _, s := range rows {
+		@SubcontractRowContent(s)
+	}
+}
+
+var _ = model.Subcontract{}

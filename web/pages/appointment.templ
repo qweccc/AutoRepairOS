@@ -1,0 +1,129 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type AppointmentRow struct {
+	ID              int64
+	AppointmentDate string
+	AppointmentTime string
+	Bay             string
+	BayLabel        string
+	PlateNumber     string
+	CustomerName    string
+	ServiceType     string
+	Status          string
+	StatusLabel     string
+	StatusPill      string
+}
+
+// ListAppointmentsPage 預約排程頁（HTMX 即時搜尋）。
+templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
+	date, status string, customerOpts, vehicleOpts, bayOpts, bayCardHTML string) {
+	@components.Layout("預約排程", "/appointments", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增預約</h2>
+			<form class="frm" method="POST" action="/appointments">
+				<label>客戶
+					<select name="customer_id" required>
+						<option value="">請選擇客戶</option>
+						@templ.Raw(customerOpts)
+					</select>
+				</label>
+				<label>車輛
+					<select name="vehicle_id" required>
+						<option value="">請選擇車輛</option>
+						@templ.Raw(vehicleOpts)
+					</select>
+				</label>
+				<label>預約日期<input type="date" name="appointment_date" required></label>
+				<label>時段<input name="appointment_time" placeholder="例：09:00"></label>
+				<label>工位<select name="bay">@templ.Raw(bayOpts)</select></label>
+				<label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
+				<label class="full">備註<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">建立預約</button></div>
+			</form>
+		</div>
+		<div class="card">
+			<h2>預約列表（共 { strconv.Itoa(total) } 筆）</h2>
+			<form method="GET" action="/appointments" style="margin-bottom:12px">
+				<input type="date" name="date" value={ date } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+					<option value="">全部狀態</option>
+					<option value="booked" selected?={ status == "booked" }>已預約</option>
+					<option value="confirmed" selected?={ status == "confirmed" }>已確認</option>
+					<option value="arrived" selected?={ status == "arrived" }>已進廠</option>
+					<option value="completed" selected?={ status == "completed" }>已完成</option>
+					<option value="cancelled" selected?={ status == "cancelled" }>已取消</option>
+				</select>
+				<button class="btn btn-p" type="submit">篩選</button>
+				<a class="btn btn-s" href="/appointments">清除</a>
+			</form>
+			<input type="search" name="q"
+				placeholder="搜尋車牌 / 客戶 / 服務內容"
+				hx-get="/api/appointments/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#appointment-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+			if bayCardHTML != "" {
+				@templ.Raw(bayCardHTML)
+			}
+			<table>
+				<tr>
+					<th>ID</th><th>日期</th><th>時段</th><th>工位</th><th>車牌</th><th>客戶</th><th>服務內容</th><th>狀態</th><th>操作</th>
+				</tr>
+				<tbody id="appointment-rows">
+					for _, a := range rows {
+						@AppointmentRowContent(a)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的預約</div>
+			}
+			@components.Pager("/appointments", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ AppointmentRowContent(a AppointmentRow) {
+	<tr>
+		<td>{ strconv.FormatInt(a.ID, 10) }</td>
+		<td>{ a.AppointmentDate }</td>
+		<td>{ a.AppointmentTime }</td>
+		<td>
+			if a.BayLabel != "" {
+				<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ a.BayLabel }</span>
+			}
+			if a.BayLabel == "" {
+				<span style="color:#64748b">—</span>
+			}
+		</td>
+		<td>{ a.PlateNumber }</td>
+		<td>{ a.CustomerName }</td>
+		<td>{ a.ServiceType }</td>
+		<td><span class={ "pill " + a.StatusPill }>{ a.StatusLabel }</span></td>
+		<td>
+			<a class="btn btn-s" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-d" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }
+				data-confirm="確定刪除這筆預約？">刪除</a>
+		</td>
+	</tr>
+}
+
+// AppointmentSearchRows HTMX 即時搜尋回傳的純列。
+templ AppointmentSearchRows(rows []AppointmentRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無預約</td></tr>
+	}
+	for _, a := range rows {
+		@AppointmentRowContent(a)
+	}
+}
+
+var _ = model.Appointment{}

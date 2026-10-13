@@ -2,12 +2,12 @@ package handler
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 廠商管理。
@@ -122,104 +122,72 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, s)
 	}
 
-	// 各型態筆數（篩選籤用）
+	var supRows []pages.SupplierRow
+	for _, s := range list {
+		supRows = append(supRows, pages.SupplierRow{
+			ID:            s.ID,
+			Name:          s.Name,
+			VendorType:    s.VendorType,
+			VendorLabel:   vendorTypeLabel[s.VendorType],
+			PaymentTerms:  paymentTermsLabel(s.PaymentTerms),
+			Phone:         s.Phone,
+			ContactPerson: s.ContactPerson,
+			Address:       s.Address,
+			Notes:         s.Notes,
+			Active:        s.Active,
+		})
+	}
+
 	matCount := countRows(`SELECT COUNT(1) FROM suppliers WHERE COALESCE(vendor_type,'material')='material'`)
 	venCount := countRows(`SELECT COUNT(1) FROM suppliers WHERE vendor_type='vendor'`)
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>名稱</th><th>狀態</th><th>型態</th><th>付款條件</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th><th>操作</th></tr>`)
-	for _, s := range list {
-		label := vendorTypeLabel[s.VendorType]
-		cls := "background:#1e3a5f;color:#bae6fd"   // 材料商：藍
-		if s.VendorType == "vendor" {
-			cls = "background:#4a2f13;color:#fde68a" // 協力廠商：橙
-		}
-		note := s.Notes
-		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">啟用</span>`
-		editBtn := `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/ap-statement">對帳單</a>`
-		if s.Active == 0 {
-			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>`
-			editBtn = `<a class="btn btn-s" href="/suppliers/` + strconv.FormatInt(s.ID, 10) + `/reactivate">復用</a>`
-		}
-		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b></td><td>` + statusCell + `</td><td><span class="pill" style="` + cls + `">` +
-			label + `</span></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(paymentTermsLabel(s.PaymentTerms)) +
-			`</td><td>` + orDash(htmlEsc(s.Phone)) + `</td><td>` + orDash(htmlEsc(s.ContactPerson)) +
-			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(s.Address)) +
-			`</td><td style="font-size:12px;color:#94a3b8">` + orDash(htmlEsc(note)) + `</td><td>` + editBtn + `</td></tr>`)
+	pages.ListSuppliersPage(supRows, total, page, size, q, vtype, matCount, venCount,
+		user.Role == "owner" || user.Role == "counter").Render(r.Context(), w)
+}
+
+// SearchSuppliersAPI 廠商即時搜尋 API（HTMX 用）。
+func SearchSuppliersAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	vtype := strings.TrimSpace(r.URL.Query().Get("type"))
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (s.name LIKE ? OR COALESCE(s.phone,'') LIKE ? OR COALESCE(s.contact_person,'') LIKE ? OR COALESCE(s.notes,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like, like)
 	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的廠商</div>`
+	if vtype != "" {
+		where += ` AND COALESCE(s.vendor_type,'material') = ?`
+		args = append(args, vtype)
 	}
-
-	tab := func(label, key string) string {
-		cls := "btn-s"
-		if vtype == key {
-			cls = "btn-p"
-		}
-		u := url.Values{}
-		if q != "" {
-			u.Set("q", q)
-		}
-		if key != "" {
-			u.Set("type", key)
-		}
-		href := "/suppliers"
-		if s := u.Encode(); s != "" {
-			href += "?" + s
-		}
-		return `<a class="btn ` + cls + `" href="` + href + `">` + label + `</a>`
+	rows, err := db.DB.Query(`SELECT `+supplierCols+` FROM suppliers s`+where+
+		` ORDER BY s.vendor_type, s.name LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
 	}
+	defer rows.Close()
 
-	// 新增表單：只給櫃檯與管理員（技師只看得到列表）。
-	addForm := ``
-	if user.Role == "owner" || user.Role == "counter" {
-		addForm = `
-    <div class="card">
-      <h2>新增廠商</h2>
-      <form class="frm" method="POST" action="/suppliers">
-        <label>名稱<input name="name" required placeholder="如：○○輪胎行"></label>
-        <label>類型<select name="vendor_type">
-          <option value="material">材料商</option>
-          <option value="vendor">協力廠商</option>
-        </select></label>
-        <label>電話<input name="phone"></label>
-        <label>聯絡人<input name="contact_person"></label>
-        <label>地址<input name="address"></label>
-        <label>付款條件<select name="payment_terms">` + paymentTermsOptions("") + `</select></label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增</button></div>
-      </form>
-    </div>`
+	var result []pages.SupplierRow
+	for rows.Next() {
+		s, err := scanSupplier(rows)
+		if err != nil {
+			continue
+		}
+		result = append(result, pages.SupplierRow{
+			ID:            s.ID,
+			Name:          s.Name,
+			VendorType:    s.VendorType,
+			VendorLabel:   vendorTypeLabel[s.VendorType],
+			PaymentTerms:  paymentTermsLabel(s.PaymentTerms),
+			Phone:         s.Phone,
+			ContactPerson: s.ContactPerson,
+			Address:       s.Address,
+			Notes:         s.Notes,
+			Active:        s.Active,
+		})
 	}
-
-	body := flash(r) + addForm + `
-    <div class="card">
-      <h2>廠商（符合條件 ` + strconv.Itoa(total) + ` 家）</h2>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        舊系統把材料商與外包廠商混在人員表裡，匯入時已分開：<br>
-        <b>材料商</b>是賣零件給我方的（採購成本歸這裡）；
-        <b>協力廠商</b>是外包施工的（如輪胎行、鈑金廠、烤漆廠）。<br>
-        技師指派只會列出真正的員工，廠商不會出現在技師選單中。
-      </p>
-      <div style="margin-bottom:12px">` +
-		tab("全部 "+strconv.Itoa(matCount+venCount), "") + ` ` +
-		tab("材料商 "+strconv.Itoa(matCount), "material") + ` ` +
-		tab("協力廠商 "+strconv.Itoa(venCount), "vendor") + `
-      </div>
-      <form method="GET" action="/suppliers" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋名稱 / 電話 / 聯絡人" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        ` + hiddenInputs(qv, "q", "page", "per") + `
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/suppliers">清除</a>
-      </form>` + table + pager("/suppliers", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/suppliers", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "廠商管理", "/suppliers", user.Username, user.Role, body)
+	pages.SupplierSearchRows(result).Render(r.Context(), w)
 }
 
 // CreateSupplier 新增供應商。

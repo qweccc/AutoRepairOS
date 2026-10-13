@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 收款沖銷（應收帳款收款紀錄）。
@@ -192,133 +193,115 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	defer rows.Close()
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th>` +
-		`<th>方式</th><th class="num">現金</th><th class="num">刷卡</th>` +
-		`<th class="num">票額</th><th class="num">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th></tr>`)
-	n := 0
+	var recRows []pages.ReceivableRow
 	for rows.Next() {
-		rec, err := scanReceivable(rows)
+		r2, err := scanReceivable(rows)
 		if err != nil {
 			continue
 		}
-		n++
-		label, cls := payMethod(rec)
-		if rec.Voided != 0 {
+		label, cls := payMethod(r2)
+		if r2.Voided != 0 {
 			label, cls = "已作廢", "p-apprno"
 		}
-		woCell := `<span style="color:#475569">—</span>`
-		receivedCell := `<span style="color:#475569">—</span>`
-		unpaidCell := `<span style="color:#475569">—</span>`
-		if rec.WorkOrderID > 0 {
-			woCell = `<a href="/work-orders/` + strconv.FormatInt(rec.WorkOrderID, 10) + `">#` +
-				strconv.FormatInt(rec.WorkOrderID, 10) + `</a>`
-			if total, ok := woTotal[rec.WorkOrderID]; ok {
-				received := woReceived[rec.WorkOrderID]
+		woCell := "-"
+		receivedCell := "-"
+		unpaidCell := "-"
+		unpaidRed := false
+		if r2.WorkOrderID > 0 {
+			woCell = "#" + strconv.FormatInt(r2.WorkOrderID, 10)
+			if total, ok := woTotal[r2.WorkOrderID]; ok {
+				received := woReceived[r2.WorkOrderID]
 				unpaid := total - received
 				receivedCell = money(received)
 				if unpaid > 0 {
-					unpaidCell = `<span style="color:#f87171">` + money(unpaid) + `</span>`
+					unpaidCell = money(unpaid)
+					unpaidRed = true
 				} else {
-					unpaidCell = `<span style="color:#86efac">0</span>`
+					unpaidCell = "0"
 				}
 			}
 		}
-		legacy := ""
-		if rec.Source == "legacy" {
-			legacy = ` <span style="color:#64748b;font-size:11px">舊帳</span>`
+		recRows = append(recRows, pages.ReceivableRow{
+			ID:           r2.ID,
+			VoucherNo:    r2.VoucherNo,
+			PayDate:      normDate(r2.PayDate),
+			CustomerName: r2.CustomerName,
+			PlateNumber:  r2.PlateNumber,
+			MethodLabel:  label,
+			MethodPill:   cls,
+			Cash:         r2.Cash,
+			Card:         r2.Card,
+			CheckAmount:  r2.CheckAmount,
+			PayTotal:     r2.PayTotal,
+			WorkOrderID:  r2.WorkOrderID,
+			WoCell:       woCell,
+			ReceivedCell: receivedCell,
+			UnpaidCell:   unpaidCell,
+			UnpaidRed:    unpaidRed,
+			IsLegacy:     r2.Source == "legacy",
+		})
+	}
+
+	pages.ListReceivablesPage(recRows, total, page, size, q, method, from, to,
+		showVoided, unpaidOnly, sumPay, sumCash, sumCard, sumCheck).Render(r.Context(), w)
+}
+
+// SearchReceivablesAPI 收款即時搜尋 API（HTMX 用）。
+func SearchReceivablesAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	where := ` WHERE r.voided = 0`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (r.voucher_no LIKE ? OR c.name LIKE ? OR c.phone LIKE ?
+			OR COALESCE(v.plate_number,'') LIKE ? OR COALESCE(r.check_no,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT `+receivableCols+receivableFrom+where+
+		` ORDER BY `+normDateSQL("r.pay_date")+` DESC, r.id DESC LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.ReceivableRow
+	for rows.Next() {
+		r2, err := scanReceivable(rows)
+		if err != nil {
+			continue
 		}
-		tb.WriteString(`<tr><td><code style="font-size:12px">` + htmlEsc(rec.VoucherNo) + `</code>` + legacy +
-			`</td><td style="font-size:12.5px">` + orDash(normDate(rec.PayDate)) +
-			`</td><td>` + htmlEsc(rec.CustomerName) +
-			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(rec.PlateNumber)) +
-			`</td><td><span class="pill ` + cls + `">` + label + `</span></td>` +
-			`<td class="num">` + moneyIf(rec.Cash) + `</td>` +
-			`<td class="num">` + moneyIf(rec.Card) + `</td>` +
-			`<td class="num">` + moneyIf(rec.CheckAmount) + `</td>` +
-			`<td class="num"><b>` + money(rec.PayTotal) + `</b></td>` +
-			`<td style="font-size:12.5px">` + woCell + `</td>` +
-			`<td class="num">` + receivedCell + `</td>` +
-			`<td class="num">` + unpaidCell + `</td>` +
-			`<td><a class="btn btn-s" href="/receivables/` + strconv.FormatInt(rec.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-s" href="/receivables/` + strconv.FormatInt(rec.ID, 10) + `/print">明細列印</a></td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if n == 0 {
-		table = `<div class="empty">沒有符合條件的收款紀錄</div>`
-	}
-
-	// 付款方式分頁籤（待收款模式下不顯示，因為篩選條件已不同）
-	var tabs strings.Builder
-	if !unpaidOnly {
-		tabDef := []struct{ key, label string }{
-			{"", "全部"}, {"cash", "現金"}, {"card", "信用卡"}, {"check", "票據"},
+		label, cls := payMethod(r2)
+		if r2.Voided != 0 {
+			label, cls = "已作廢", "p-apprno"
 		}
-		for _, t := range tabDef {
-			u := url.Values{}
-			for _, k := range []string{"q", "from", "to", "voided"} {
-				if v := qv.Get(k); v != "" {
-					u.Set(k, v)
-				}
-			}
-			if t.key != "" {
-				u.Set("method", t.key)
-			}
-			href := "/receivables"
-			if s := u.Encode(); s != "" {
-				href += "?" + s
-			}
-			tabs.WriteString(`<a class="btn ` + btnIf(method == t.key, "btn-p", "btn-s") + `" href="` + href + `">` + t.label + `</a> `)
-		}
+		result = append(result, pages.ReceivableRow{
+			ID:           r2.ID,
+			VoucherNo:    r2.VoucherNo,
+			PayDate:      normDate(r2.PayDate),
+			CustomerName: r2.CustomerName,
+			PlateNumber:  r2.PlateNumber,
+			MethodLabel:  label,
+			MethodPill:   cls,
+			Cash:         r2.Cash,
+			Card:         r2.Card,
+			CheckAmount:  r2.CheckAmount,
+			PayTotal:     r2.PayTotal,
+			WorkOrderID:  r2.WorkOrderID,
+			WoCell:       woCellText(r2.WorkOrderID),
+			ReceivedCell: "-",
+			UnpaidCell:   "-",
+			IsLegacy:     r2.Source == "legacy",
+		})
 	}
+	pages.ReceivableSearchRows(result).Render(r.Context(), w)
+}
 
-	voidNote := ""
-	if showVoided {
-		voidNote = ` <a href="/receivables" style="font-size:13px">（隱藏作廢）</a>`
+func woCellText(woID int64) string {
+	if woID > 0 {
+		return "#" + strconv.FormatInt(woID, 10)
 	}
-	unpaidNote := ""
-	if unpaidOnly {
-		unpaidNote = ` <a href="/receivables" style="font-size:13px">（顯示全部）</a>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>收款紀錄（符合條件 ` + strconv.Itoa(total) + ` 筆）` + voidNote + unpaidNote + `</h2>
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + money(sumPay) + `</b><span>收款合計</span></div>
-        <div class="stat"><b>` + money(sumCash) + `</b><span>現金</span></div>
-        <div class="stat"><b>` + money(sumCard) + `</b><span>信用卡</span></div>
-        <div class="stat"><b>` + money(sumCheck) + `</b><span>票據</span></div>
-      </div>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        對應舊系統「應收帳款沖銷作業」。上方合計為<b>目前篩選條件的全部筆數</b>（不受分頁影響）。
-        標「舊帳」者為從舊系統遷移的歷史紀錄。
-      </p>
-      <div style="margin-bottom:12px">` + tabs.String() + `</div>
-      <div style="margin-bottom:12px">
-        <a class="btn btn-p" href="/receivables/new">＋ 新增收款</a>
-        <a class="btn btn-s" href="/receivables?unpaid=1">待收款</a>
-      </div>
-      <form method="GET" action="/receivables" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋單號 / 客戶 / 電話 / 車牌 / 票號" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        <input type="hidden" name="method" value="` + htmlEsc(method) + `">
-        <input type="hidden" name="unpaid" value="` + htmlEsc(qv.Get("unpaid")) + `">
-        <label style="font-size:12.5px;color:#94a3b8">日期從
-          <input type="date" name="from" value="` + htmlEsc(from) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-        </label>
-        <label style="font-size:12.5px;color:#94a3b8">到
-          <input type="date" name="to" value="` + htmlEsc(to) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-        </label>
-        <label style="font-size:12.5px;color:#94a3b8"><input type="checkbox" name="voided" value="1"` + chkIf(showVoided) + `> 含作廢</label>
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/receivables">清除</a>
-      </form>` + table + pager("/receivables", qv, total, page, size) +
-	      `<div style="margin-top:6px">` + perPageSel("/receivables", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "收款紀錄", "/receivables", user.Username, user.Role, body)
+	return "-"
 }
 
 // NewReceivableForm 新增收款表單。

@@ -1,0 +1,151 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+// EditVehiclePage 車輛編輯頁（對齊台灣行車執照格式）。
+templ EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string) {
+	@components.Layout("編輯車輛 "+v.PlateNumber, "/vehicles", v.CustomerName, "counter", "AutoRepair OS") {
+		<div class="card">
+			<h2>編輯車輛 { v.PlateNumber }</h2>
+			<form class="frm" method="POST" action={ "/vehicles/" + strconv.FormatInt(v.ID, 10) }>
+				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" value={ v.CustomerName } required></label>
+				<label>車牌號碼<input name="plate_number" value={ v.PlateNumber } required></label>
+				<label>品牌車型
+					<select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">
+						@templ.Raw(modelOptions)
+					</select>
+				</label>
+				<label id="brandModelOtherWrap" style="display:none">其他車型
+					<input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型">
+				</label>
+				<label>車種類別<select name="vehicle_type">@templ.Raw(vehicleTypeOptions)</select></label>
+				<label>燃料種類<select name="fuel_type">@templ.Raw(fuelTypeOptions)</select></label>
+				<label>車身式樣<select name="body_style">@templ.Raw(bodyStyleOptions)</select></label>
+				<label>駕駛人<input name="driver_name" value={ v.DriverName } placeholder="例：陳小姐"></label>
+				<label>駕駛人電話<input name="driver_phone" value={ v.DriverPhone } placeholder="例：0963-176677"></label>
+				<label>車輛聯絡人<input name="contact_name" value={ v.ContactName } placeholder="例：王先生"></label>
+				<label>聯絡人電話<input name="contact_phone" value={ v.ContactPhone } placeholder="例：0912-345678"></label>
+				<label>行照車主<input name="owner_name" value={ v.OwnerName } placeholder="行照上的車主姓名"></label>
+				<label>車主地址<input name="owner_address" value={ v.OwnerAddress } placeholder="行照上的車主地址"></label>
+				<label>車主身分證字號<input name="owner_id_number" value={ v.OwnerIDNumber } placeholder="A123456789"></label>
+				<label>行照有效期限<input name="license_expiry_date" type="date" value={ v.LicenseExpiryDate }></label>
+				<label>顏色<input name="color" value={ v.Color } placeholder="例：白色"></label>
+				<label>車門數<input name="door_count" type="number" min="0" max="10" value={ intOrBlank(v.DoorCount) }></label>
+				<label>出廠年月<input name="manufacture_date" placeholder="例：110.04 或 2021-04" value={ v.ManufactureDate }></label>
+				<label>發照日期<input name="license_issue_date" placeholder="例：110.06.29" value={ v.LicenseIssueDate }></label>
+				<label>出廠年份<input name="manufacture_year" type="number" min="0" max="9999" value={ intOrBlank(v.ManufactureYear) }></label>
+				<label>排氣量<input name="displacement" type="number" min="0" placeholder="c.c." value={ intOrBlank(v.Displacement) }></label>
+				<label>座位數<input name="seating_capacity" type="number" min="0" max="99" value={ intOrBlank(v.SeatingCapacity) }></label>
+				<label>空車重量<input name="curb_weight" type="number" min="0" placeholder="kg" value={ intOrBlank(v.CurbWeight) }></label>
+				<label>總重量<input name="gross_weight" type="number" min="0" placeholder="kg" value={ intOrBlank(v.GrossWeight) }></label>
+				<label>輪胎規格<input name="tire_size" placeholder="例：205/55R16" value={ v.TireSize }></label>
+				<label>軸距<input name="wheelbase" type="number" min="0" placeholder="mm" value={ intOrBlank(v.Wheelbase) }></label>
+				<label>VIN<input name="vin" value={ v.VIN }></label>
+				<label>引擎號碼<input name="engine_number" value={ v.EngineNumber }></label>
+				<label>檢驗到期日<input name="inspection_due_date" type="date" value={ v.InspectionDueDate }></label>
+				<label>最後保養日<input name="last_maintenance_date" type="date" value={ v.LastMaintenanceDate }></label>
+				<label>最後保養里程<input name="last_maintenance_mileage" type="number" min="0" value={ intOrBlank(v.LastMaintenanceMileage) }></label>
+				<label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value={ strconv.Itoa(v.MaintIntervalMonths) }></label>
+				<label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value={ strconv.Itoa(v.MaintIntervalKm) }></label>
+				<div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/vehicles">取消</a></div>
+			</form>
+			<script>
+				function toggleModelOther(){
+					var sel = document.getElementById('brandModelSel');
+					var wrap = document.getElementById('brandModelOtherWrap');
+					var other = document.getElementById('brandModelOther');
+					if (!sel || !wrap) return;
+					var isOther = sel.value === '__OTHER__';
+					wrap.style.display = isOther ? '' : 'none';
+					if (other) other.disabled = !isOther;
+					if (isOther) {
+						sel.removeAttribute('name');
+						if (other) { other.setAttribute('name','brand_model'); other.required = true; }
+					} else {
+						sel.setAttribute('name','brand_model');
+						if (other) { other.removeAttribute('name'); other.required = false; }
+					}
+				}
+			</script>
+		</div>
+	}
+}
+
+// NewVehiclePage 車輛新增頁（對齊台灣行車執照格式）。
+templ NewVehiclePage(customerName string, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string) {
+	@components.Layout("新增車輛", "/vehicles", customerName, "counter", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增車輛</h2>
+			<form class="frm" method="POST" action="/vehicles">
+				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required></label>
+				<label>車牌號碼<input name="plate_number" required></label>
+				<label>品牌車型
+					<select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">
+						@templ.Raw(modelOptions)
+					</select>
+				</label>
+				<label id="brandModelOtherWrap" style="display:none">其他車型
+					<input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型">
+				</label>
+				<label>車種類別<select name="vehicle_type">@templ.Raw(vehicleTypeOptions)</select></label>
+				<label>燃料種類<select name="fuel_type">@templ.Raw(fuelTypeOptions)</select></label>
+				<label>車身式樣<select name="body_style">@templ.Raw(bodyStyleOptions)</select></label>
+				<label>駕駛人<input name="driver_name" placeholder="例：陳小姐"></label>
+				<label>駕駛人電話<input name="driver_phone" placeholder="例：0963-176677"></label>
+				<label>車輛聯絡人<input name="contact_name" placeholder="例：王先生"></label>
+				<label>聯絡人電話<input name="contact_phone" placeholder="例：0912-345678"></label>
+				<label>行照車主<input name="owner_name" placeholder="行照上的車主姓名"></label>
+				<label>車主地址<input name="owner_address" placeholder="行照上的車主地址"></label>
+				<label>車主身分證字號<input name="owner_id_number" placeholder="A123456789"></label>
+				<label>行照有效期限<input name="license_expiry_date" type="date"></label>
+				<label>顏色<input name="color" placeholder="例：白色"></label>
+				<label>車門數<input name="door_count" type="number" min="0" max="10" placeholder="例：4"></label>
+				<label>出廠年月<input name="manufacture_date" placeholder="例：110.04 或 2021-04"></label>
+				<label>發照日期<input name="license_issue_date" placeholder="例：110.06.29"></label>
+				<label>出廠年份<input name="manufacture_year" type="number" min="0" max="9999" placeholder="例：2021"></label>
+				<label>排氣量<input name="displacement" type="number" min="0" placeholder="c.c."></label>
+				<label>座位數<input name="seating_capacity" type="number" min="0" max="99" placeholder="例：5"></label>
+				<label>空車重量<input name="curb_weight" type="number" min="0" placeholder="kg"></label>
+				<label>總重量<input name="gross_weight" type="number" min="0" placeholder="kg"></label>
+				<label>輪胎規格<input name="tire_size" placeholder="例：205/55R16"></label>
+				<label>軸距<input name="wheelbase" type="number" min="0" placeholder="mm"></label>
+				<label>VIN<input name="vin" placeholder="車輛識別號碼"></label>
+				<label>引擎號碼<input name="engine_number"></label>
+				<label>檢驗到期日<input name="inspection_due_date" type="date"></label>
+				<label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value="6"></label>
+				<label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="5000"></label>
+				<div class="full"><button class="btn btn-p" type="submit">建立車輛</button> <a class="btn btn-s" href="/vehicles">取消</a></div>
+			</form>
+			<script>
+				function toggleModelOther(){
+					var sel = document.getElementById('brandModelSel');
+					var wrap = document.getElementById('brandModelOtherWrap');
+					var other = document.getElementById('brandModelOther');
+					if (!sel || !wrap) return;
+					var isOther = sel.value === '__OTHER__';
+					wrap.style.display = isOther ? '' : 'none';
+					if (other) other.disabled = !isOther;
+					if (isOther) {
+						sel.removeAttribute('name');
+						if (other) { other.setAttribute('name','brand_model'); other.required = true; }
+					} else {
+						sel.setAttribute('name','brand_model');
+						if (other) { other.removeAttribute('name'); other.required = false; }
+					}
+				}
+			</script>
+		</div>
+	}
+}
+
+func intOrBlank(n int) string {
+	if n == 0 {
+		return ""
+	}
+	return strconv.Itoa(n)
+}

@@ -1,0 +1,143 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/web/components"
+)
+
+type StaffRow struct {
+	ID           int64
+	Username     string
+	Name         string
+	Role         string
+	Branch       string
+	Kind         string
+	KindLabel    string
+	KindCls      string
+	NationalID   string
+	Birthday     string
+	InsStart     string
+	InsEnd       string
+	InsEndLabel  string
+	InsEndRed    bool
+	DepOf        int64
+	DepOfName    string
+	Active       int
+	CanEdit      bool
+}
+
+// ListStaffPage 員工與健保頁（HTMX 即時搜尋）。
+templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
+	empCount, depCount, insuredCount int, showAddForm bool, roleOpts, branchOpts string) {
+	@components.Layout("員工與健保", "/staff", "owner", "owner", "AutoRepair OS") {
+		if showAddForm {
+			<div class="card">
+				<h2>新增員工 / 健保眷屬</h2>
+				<form class="frm" method="POST" action="/staff">
+					<label>姓名<input name="name" required></label>
+					<label>帳號<input name="username" required></label>
+					<label>密碼<input name="password" type="password" required placeholder="首次登入後請改密碼"></label>
+					<label>角色<select name="role">@templ.Raw(roleOpts)</select></label>
+					<label>身分<select name="staff_kind">
+						<option value="employee">員工</option>
+						<option value="dependent">健保眷屬</option>
+					</select></label>
+					<label>部門<select name="staff_branch">@templ.Raw(branchOpts)</select></label>
+					<div class="full"><button class="btn btn-p" type="submit">新增</button></div>
+				</form>
+				<p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
+					身分證號、生日、加保/退保日請在新增後按「編輯」補上（避免冒用資料）。
+				</p>
+			</div>
+		}
+		<div class="card">
+			<h2>員工與健保資料</h2>
+			<div style="margin-bottom:14px">
+				<div class="stat"><b>{ strconv.Itoa(empCount) }</b><span>員工</span></div>
+				<div class="stat"><b>{ strconv.Itoa(depCount) }</b><span>健保眷屬</span></div>
+				<div class="stat"><b>{ strconv.Itoa(insuredCount) }</b><span>在保中</span></div>
+			</div>
+			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+				<a class={ "btn " + btnCls(kind == "") } href="/staff">全部 { strconv.Itoa(empCount+depCount) }</a>
+				<a class={ "btn " + btnCls(kind == "employee") } href="/staff?kind=employee">員工 { strconv.Itoa(empCount) }</a>
+				<a class={ "btn " + btnCls(kind == "dependent") } href="/staff?kind=dependent">健保眷屬 { strconv.Itoa(depCount) }</a>
+			</div>
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋姓名 / 編號 / 身分證號"
+				hx-get="/api/staff/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#staff-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+			<a class="btn btn-s" href="/staff">清除</a>
+			<a class="btn btn-s" href="/technicians/commissions">技師佣金</a>
+			<table>
+				<tr>
+					<th>姓名</th><th>編號</th><th>狀態</th><th>身分</th><th>部門</th>
+					<th>依附</th><th>身分證號</th><th>生日</th><th>加保日</th><th>退保日</th><th>操作</th>
+				</tr>
+				<tbody id="staff-rows">
+					for _, s := range rows {
+						@StaffRowContent(s)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的資料</div>
+			}
+			@components.Pager("/staff", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ StaffRowContent(s StaffRow) {
+	<tr>
+		<td><b>{ s.Name }</b></td>
+		<td><code>{ s.Username }</code></td>
+		<td>
+			if s.Active == 0 {
+				<span class="pill" style="background:#7f1d1d;color:#fca5a5">離職</span>
+			}
+			if s.Active != 0 {
+				<span class="pill" style="background:#14532d;color:#86efac">在職</span>
+			}
+		</td>
+		<td><span class="pill" style={ s.KindCls }>{ s.KindLabel }</span></td>
+		<td style="font-size:12.5px;color:#94a3b8">{ s.Branch }</td>
+		<td style="font-size:12.5px">
+			if s.DepOf > 0 {
+				{ s.DepOfName }
+			}
+			if s.DepOf == 0 {
+				<span style="color:#64748b">本人</span>
+			}
+		</td>
+		<td><code style="font-size:12px">{ s.NationalID }</code></td>
+		<td style="font-size:12.5px">{ s.Birthday }</td>
+		<td style="font-size:12.5px">{ s.InsStart }</td>
+		<td style="font-size:12.5px">
+			if s.InsEndRed {
+				<span style="color:#f87171">{ s.InsEndLabel }</span>
+			}
+			if !s.InsEndRed {
+				{ s.InsEndLabel }
+			}
+		</td>
+		<td>
+			if s.CanEdit {
+				<a class="btn btn-s" href={ "/staff/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>
+			}
+		</td>
+	</tr>
+}
+
+// StaffSearchRows HTMX 即時搜尋回傳的純列。
+templ StaffSearchRows(rows []StaffRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">查無員工</td></tr>
+	}
+	for _, s := range rows {
+		@StaffRowContent(s)
+	}
+}

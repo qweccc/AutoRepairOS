@@ -1,0 +1,325 @@
+package pages
+
+import (
+	"strconv"
+	"time"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+// ShowWorkOrderPage 工單詳情頁。
+// 用 Templ 型別安全產生，HTMX 處理狀態切換與新增項目。
+templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTotal float64,
+	statusLabels map[string]string, statusPill map[string]string, approvalLabels map[string]string, approvalPill map[string]string,
+	techNames map[int64]string, canEdit bool, flashMsg string) {
+
+	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", wo.CustomerName, "counter", "AutoRepair OS") {
+		if flashMsg != "" {
+			<div class="msg msg-ok">{ flashMsg }</div>
+		}
+		<div class="card">
+			<h2>工單 #{ strconv.FormatInt(wo.ID, 10) } — { wo.PlateNumber }</h2>
+			@StatusFlow(wo.Status, statusLabels)
+			<table>
+				<tr>
+					<th style="width:130px">車型</th><td>{ wo.BrandModel }</td>
+					<th style="width:130px">進廠里程</th><td>{ strconv.Itoa(wo.CurrentMileage) } km</td>
+				</tr>
+				<tr>
+					<th>客戶</th><td>{ wo.CustomerName } / { wo.CustomerPhone }</td>
+					<th>技師</th><td>{ wo.TechnicianName }</td>
+				</tr>
+				<tr>
+					<th>狀態</th>
+					<td><span class={ "pill " + statusPill[wo.Status] }>{ statusLabels[wo.Status] }</span></td>
+					<th>核准狀態</th>
+					<td><span class={ "pill " + approvalPill[wo.ApprovalStatus] }>{ approvalLabels[wo.ApprovalStatus] }</span></td>
+				</tr>
+				<tr><th>客戶反映</th><td colspan="3">{ wo.CustomerComplaint }</td></tr>
+				<tr>
+					<th>SOP</th><td>{ yesNo(wo.SOPCompleted) }</td>
+					<th>建立時間</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
+				</tr>
+				@InsuranceRow(wo)
+			</table>
+			<div style="margin-top:16px">
+				@StatusControls(wo, canEdit)
+				<div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
+					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt" }>🧾 收據列印</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/quotation?paper=a4" }>📋 估價單列印</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/completion" }>✅ 完工證明</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/worklogs" }>⏱ 技師工時</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/photos" }>📷 車損照片</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<h2>工單項目</h2>
+			<div id="wo-items">
+				@WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal)
+			</div>
+			if canEdit {
+				@AddItemForm(wo.ID)
+			}
+		</div>
+
+		<div class="card">
+			<h2>合計</h2>
+			<table>
+				<tr><th>項目小計</th><td class="num" id="item-total">{ money(itemTotal) }</td></tr>
+				<tr>
+					<th>工單總額</th>
+					<td class="num" id="wo-total" style="font-size:20px;font-weight:700;color:#38bdf8">{ money(wo.TotalAmount) }</td>
+				</tr>
+			</table>
+			<p style="color:#64748b;font-size:12.5px;margin-top:10px">新增或刪除項目時自動重算工單總額。</p>
+		</div>
+	}
+}
+
+// StatusFlow 狀態進度條。
+templ StatusFlow(current string, labels map[string]string) {
+	{{ flow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} }}
+	<div style="display:flex;gap:4px;margin:10px 0">
+		for i, s := range flow {
+			@StatusStep(s, current, labels[s], i < len(flow)-1)
+		}
+	</div>
+}
+
+templ StatusStep(step, current, label string, showArrow bool) {
+	{{ idx := statusIndex(current) }}
+	{{ curIdx := statusIndex(step) }}
+	<span class="pill" style={ statusStepStyle(curIdx, idx) }>{ label }</span>
+	if showArrow {
+		<span style="color:#475569;align-self:center">→</span>
+	}
+}
+
+// WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
+templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) {
+	if len(items) == 0 {
+		<div class="empty">尚未加入任何工資或零件</div>
+	} else {
+		<table>
+			<tr>
+				<th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th>
+				<th class="num">小計</th><th>主技師</th><th>助手</th><th>操作</th>
+			</tr>
+			for _, it := range items {
+				<tr>
+					<td>@components.Pill(itemTypeLabel(it.ItemType), "p-progress")</td>
+					<td>{ it.Description }</td>
+					<td class="num">{ strconv.Itoa(it.Quantity) }</td>
+					<td class="num">{ money(it.UnitPrice) }</td>
+					<td class="num">{ money(it.Subtotal) }</td>
+					<td>{ techNames[it.PrimaryTechnicianID] }</td>
+					<td>{ techNames[it.AssistantTechID] }</td>
+					if canEdit {
+						<td>
+							<a class="btn btn-d"
+								href={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) + "/delete" }
+								hx-delete={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) }
+								hx-target="#wo-items"
+								hx-swap="innerHTML"
+								hx-confirm="刪除此項目？">刪除</a>
+						</td>
+					} else {
+						<td style="color:#64748b">—</td>
+					}
+				</tr>
+			}
+		</table>
+	}
+}
+
+// AddItemForm 新增工單項目表單（HTMX 無刷新送出）。
+templ AddItemForm(woID int64) {
+	<form
+		hx-post={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items" }
+		hx-target="#wo-items"
+		hx-swap="innerHTML"
+		hx-on::after-request="if(event.detail.successful) this.reset(); document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0';">
+		<label>類型
+			<select name="item_type" id="itemType" hx-on:change="togglePartSearch(this)">
+				<option value="labor">工資</option>
+				<option value="part">零件</option>
+				<option value="subcontract">外包</option>
+			</select>
+		</label>
+		<label class="full" id="partSearchWrap">零件搜尋（輸入零件名稱或料號）
+			<input type="text" id="partSearch" placeholder="例：機油、煞車片、BE071" autocomplete="off">
+			<div id="partResults" style="display:none;border:1px solid #334155;border-radius:7px;margin-top:4px;max-height:200px;overflow-y:auto;background:#0f172a"></div>
+			<input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
+		</label>
+		<label class="full">描述<input name="description" id="itemDesc" required></label>
+		<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
+		<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
+		<label>主技師<input name="primary_technician_id" type="number" min="0" value="0"></label>
+		<label>助手<input name="assistant_technician_id" type="number" min="0" value="0"></label>
+		<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+	</form>
+	@PartSearchScript()
+}
+
+// StatusControls 狀態切換控制（HTMX 無刷新）。
+templ StatusControls(wo model.WorkOrder, canEdit bool) {
+	if canEdit {
+		<form hx-post={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/status" }
+			hx-target="#wo-status"
+			hx-swap="innerHTML"
+			style="display:inline;margin:0 8px">
+			<select name="status" onchange="htmx.trigger(this.closest('form'), 'submit')"
+				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<option value="pending" selected?={ wo.Status == "pending" }>待處理</option>
+				<option value="in_progress" selected?={ wo.Status == "in_progress" }>進行中</option>
+				<option value="waiting_parts" selected?={ wo.Status == "waiting_parts" }>等零件</option>
+				<option value="completed" selected?={ wo.Status == "completed" }>已完成</option>
+				<option value="paid" selected?={ wo.Status == "paid" }>已結帳</option>
+			</select>
+		</form>
+		<form hx-post={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/approval" }
+			hx-target="#wo-approval"
+			hx-swap="innerHTML"
+			style="display:inline;margin:0 8px">
+			<select name="approval_status" onchange="htmx.trigger(this.closest('form'), 'submit')"
+				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<option value="pending" selected?={ wo.ApprovalStatus == "pending" }>待核准</option>
+				<option value="approved" selected?={ wo.ApprovalStatus == "approved" }>已核准</option>
+				<option value="rejected" selected?={ wo.ApprovalStatus == "rejected" }>已駁回</option>
+			</select>
+		</form>
+		<form hx-post={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/sop" }
+			hx-target="#wo-sop"
+			hx-swap="innerHTML"
+			style="display:inline;margin:0 8px">
+			<button class="btn btn-s" type="submit">{ sopLabel(wo.SOPCompleted) }</button>
+		</form>
+	}
+}
+
+// InsuranceRow 保險理賠資訊列。
+templ InsuranceRow(wo model.WorkOrder) {
+	if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
+		<tr><th>件別</th><td><span class="pill p-progress">保險理賠</span></td>
+			<th>保險公司</th><td>{ wo.InsuranceName }</td></tr>
+		<tr><th>理賠編號</th><td>{ wo.ClaimNo }</td>
+			<th>事故日期</th><td>{ wo.AccidentDate }</td></tr>
+		<tr><th>自負額</th><td>{ money(wo.DeductibleAmount) }</td><th></th><td></td></tr>
+	} else {
+		<tr><th>件別</th><td><span class="pill">自費</span></td>
+			<th></th><td></td></tr>
+	}
+}
+
+// PartSearchScript 零件即時搜尋 JS。
+templ PartSearchScript() {
+	<script>
+		function togglePartSearch(sel) {
+			var wrap = document.getElementById('partSearchWrap');
+			if (wrap) wrap.style.display = sel.value === 'part' ? '' : 'none';
+			if (sel.value !== 'part') {
+				document.getElementById('inventoryItemId').value = '0';
+			}
+		}
+		(function(){
+			var search = document.getElementById('partSearch');
+			var results = document.getElementById('partResults');
+			var hidden = document.getElementById('inventoryItemId');
+			var desc = document.getElementById('itemDesc');
+			var price = document.getElementById('unitPrice');
+			var timer;
+			if (!search || !results) return;
+			search.addEventListener('input', function(){
+				clearTimeout(timer);
+				var q = search.value.trim();
+				if (q.length < 1) { results.style.display = 'none'; return; }
+				timer = setTimeout(function(){
+					fetch('/api/parts?q=' + encodeURIComponent(q))
+						.then(function(r){ return r.json(); })
+						.then(function(list){
+							results.innerHTML = '';
+							if (!list || list.length === 0) {
+								results.innerHTML = '<div style="padding:8px;color:#64748b">查無零件</div>';
+								results.style.display = 'block';
+								return;
+							}
+							list.forEach(function(p){
+								var div = document.createElement('div');
+								div.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:13px';
+								div.innerHTML = '<b>' + p.name + '</b> <span style="color:#64748b">' + p.part_number + '</span> <span style="color:#38bdf8">$' + p.price + '</span> <span style="color:#f59e0b">庫存 ' + p.stock + '</span>';
+								div.addEventListener('click', function(){
+									hidden.value = p.id;
+									search.value = p.name + ' / ' + p.part_number;
+									desc.value = p.name;
+									price.value = p.price;
+									results.style.display = 'none';
+								});
+								div.addEventListener('mouseenter', function(){ div.style.background = '#1e293b'; });
+								div.addEventListener('mouseleave', function(){ div.style.background = ''; });
+								results.appendChild(div);
+							});
+							results.style.display = 'block';
+						});
+				}, 300);
+			});
+			document.addEventListener('click', function(e){
+				if (!results.contains(e.target) && e.target !== search) results.style.display = 'none';
+			});
+		})();
+	</script>
+}
+
+// 以下為 templ 內使用的輔助函式（Go 邏輯部分）。
+func statusIndex(s string) int {
+	flow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"}
+	for i, x := range flow {
+		if x == s {
+			return i
+		}
+	}
+	return 0
+}
+
+func statusStepStyle(stepIdx, currentIdx int) string {
+	if stepIdx < currentIdx {
+		return "background:#1e3a5f;color:#93c5fd"
+	} else if stepIdx == currentIdx {
+		return "background:#1d4ed8;color:#fff"
+	}
+	return "background:#334155;color:#64748b"
+}
+
+func itemTypeLabel(t string) string {
+	switch t {
+	case "labor":
+		return "工資"
+	case "part":
+		return "零件"
+	case "subcontract":
+		return "外包"
+	}
+	return t
+}
+
+func yesNo(b bool) string {
+	if b {
+		return "是"
+	}
+	return "否"
+}
+
+func sopLabel(done bool) string {
+	if done {
+		return "取消 SOP"
+	}
+	return "標記 SOP 完成"
+}
+
+func money(f float64) string {
+	return "$" + strconv.FormatFloat(f, 'f', 0, 64)
+}
+
+var _ = time.Now

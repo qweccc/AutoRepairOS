@@ -1,0 +1,118 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+// ShowVehiclePage 車輛履歷頁。
+// ordersTable、mileageTable、partsTable 為預先產生的 HTML 片段（保留原有複雜邏輯）。
+templ ShowVehiclePage(v model.Vehicle,
+	orderCount int, totalSpent, unpaid float64, curKm int,
+	dateCell, kmCell string,
+	mileageTable, ordersTable, partsTable string) {
+
+	@components.Layout("車輛履歷 "+v.PlateNumber, "/vehicles", v.CustomerName, "counter", "AutoRepair OS") {
+		<div class="card">
+			<h2>{ v.PlateNumber } — { v.BrandModel }</h2>
+			<div style="margin-bottom:14px">
+				<div class="stat"><b>{ strconv.Itoa(orderCount) }</b><span>維修次數</span></div>
+				<div class="stat"><b>{ moneyFmt(totalSpent) }</b><span>累計消費</span></div>
+				<div class="stat"><b>{ moneyFmt(unpaid) }</b><span>未結金額</span></div>
+				<div class="stat"><b>{ strconv.Itoa(curKm) }</b><span>最近里程</span></div>
+			</div>
+			<table>
+				<tr>
+					<th>業主</th>
+					<td>
+						{ v.CustomerName }
+						<a href={ "/customers/" + strconv.FormatInt(v.CustomerID, 10) + "/edit" } style="font-size:12.5px">（編輯客戶）</a>
+					</td>
+				</tr>
+				if v.VehicleTypeLabel != "" {
+					<tr><th>車種類別</th><td>{ v.VehicleTypeLabel }</td></tr>
+				}
+				if v.FuelTypeLabel != "" {
+					<tr><th>燃料種類</th><td>{ v.FuelTypeLabel }</td></tr>
+				}
+				if v.BodyStyleLabel != "" {
+					<tr><th>車身式樣</th><td>{ v.BodyStyleLabel }</td></tr>
+				}
+				if v.OwnerName != "" {
+					<tr><th>行照車主</th><td>{ v.OwnerName }</td></tr>
+				}
+				if v.DriverName != "" {
+					<tr><th>駕駛人</th><td>{ v.DriverName } { v.DriverPhone }</td></tr>
+				}
+				if v.ContactName != "" {
+					<tr><th>車輛聯絡人</th><td>{ v.ContactName } { v.ContactPhone }</td></tr>
+				}
+				if v.Color != "" {
+					<tr><th>顏色</th><td>{ v.Color }</td></tr>
+				}
+				<tr><th>出廠年份</th><td>{ intOrBlank(v.ManufactureYear) }</td></tr>
+				if v.ManufactureDate != "" {
+					<tr><th>出廠年月</th><td>{ v.ManufactureDate }</td></tr>
+				}
+				if v.Displacement > 0 {
+					<tr><th>排氣量</th><td>{ strconv.Itoa(v.Displacement) } c.c.</td></tr>
+				}
+				<tr><th>VIN</th><td>{ orEmpty(v.VIN) }</td></tr>
+				<tr><th>引擎號碼</th><td>{ orEmpty(v.EngineNumber) }</td></tr>
+				if v.SeatingCapacity > 0 {
+					<tr><th>座位數</th><td>{ strconv.Itoa(v.SeatingCapacity) }</td></tr>
+				}
+				<tr><th>檢驗到期日</th><td>{ v.InspectionDueDate }</td></tr>
+				<tr>
+					<th>最後保養</th>
+					<td>{ v.LastMaintenanceDate }</td>
+				</tr>
+				<tr>
+					<th>保養間隔</th>
+					<td>每 { strconv.Itoa(v.MaintIntervalMonths) } 個月 或 { strconv.Itoa(v.MaintIntervalKm) } 公里</td>
+				</tr>
+			</table>
+			<div style="margin-top:14px;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:9px">
+				<div style="color:#94a3b8;font-size:12.5px;margin-bottom:8px">
+					下次保養（兩者先到者為準）
+				</div>
+				<table style="margin:0">
+					<tr><th style="width:110px">依日期</th><td>@templ.Raw(dateCell)</td></tr>
+					<tr><th>依里程</th><td>@templ.Raw(kmCell)</td></tr>
+				</table>
+			</div>
+			<div style="margin-top:16px">
+				<a class="btn btn-p" href={ "/work-orders/new?vehicle=" + strconv.FormatInt(v.ID, 10) }>＋ 開立工單</a>
+				<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(v.ID, 10) + "/edit" }>編輯車輛</a>
+				<a class="btn btn-s" href="/work-orders">在工單列表查詢</a>
+				<a class="btn btn-p" href={ "/vehicles/" + strconv.FormatInt(v.ID, 10) + "/mileage/new" }>＋ 記錄里程</a>
+				<a class="btn btn-s" href="/vehicles">回車輛列表</a>
+			</div>
+		</div>
+		<div class="card">
+			<h2>里程履歷</h2>
+			<p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
+				進廠工單會自動記錄里程（來源「進廠工單」）；非進廠的更新用「＋ 記錄里程」手動登錄。
+			</p>
+			@templ.Raw(mileageTable)
+		</div>
+		<div class="card">
+			<h2>維修紀錄（最近 200 筆）</h2>
+			@templ.Raw(ordersTable)
+		</div>
+		@templ.Raw(partsTable)
+	}
+}
+
+func moneyFmt(f float64) string {
+	return "$" + strconv.FormatFloat(f, 'f', 0, 64)
+}
+
+func orEmpty(s string) string {
+	if s == "" {
+		return "-"
+	}
+	return s
+}

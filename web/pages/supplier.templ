@@ -1,0 +1,139 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type SupplierRow struct {
+	ID            int64
+	Name          string
+	VendorType    string
+	VendorLabel   string
+	PaymentTerms  string
+	Phone         string
+	ContactPerson string
+	Address       string
+	Notes         string
+	Active        int
+}
+
+// ListSuppliersPage 廠商列表頁（HTMX 即時搜尋）。
+templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype string,
+	matCount, venCount int, showAddForm bool) {
+	@components.Layout("廠商管理", "/suppliers", "owner", "owner", "AutoRepair OS") {
+		if showAddForm {
+			<div class="card">
+				<h2>新增廠商</h2>
+				<form class="frm" method="POST" action="/suppliers">
+					<label>名稱<input name="name" required placeholder="如：○○輪胎行"></label>
+					<label>類型<select name="vendor_type">
+						<option value="material">材料商</option>
+						<option value="vendor">協力廠商</option>
+					</select></label>
+					<label>電話<input name="phone"></label>
+					<label>聯絡人<input name="contact_person"></label>
+					<label>地址<input name="address"></label>
+					<label>付款條件<select name="payment_terms">
+						<option value="cash">現金</option>
+						<option value="monthly">月結</option>
+						<option value="net30">月結30天</option>
+						<option value="net60">月結60天</option>
+					</select></label>
+					<label class="full">備註<textarea name="notes"></textarea></label>
+					<div class="full"><button class="btn btn-p" type="submit">新增</button></div>
+				</form>
+			</div>
+		}
+		<div class="card">
+			<h2>廠商（符合條件 { strconv.Itoa(total) } 家）</h2>
+			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+				舊系統把材料商與外包廠商混在人員表裡，匯入時已分開。
+			</p>
+			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+				<a class={ "btn " + btnCls(vtype == "") } href="/suppliers">全部 { strconv.Itoa(matCount+venCount) }</a>
+				<a class={ "btn " + btnCls(vtype == "material") } href="/suppliers?type=material">材料商 { strconv.Itoa(matCount) }</a>
+				<a class={ "btn " + btnCls(vtype == "vendor") } href="/suppliers?type=vendor">協力廠商 { strconv.Itoa(venCount) }</a>
+			</div>
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋名稱 / 電話 / 聯絡人"
+				hx-get="/api/suppliers/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#supplier-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+			<a class="btn btn-s" href="/suppliers">清除</a>
+			<table>
+				<tr>
+					<th>名稱</th><th>狀態</th><th>型態</th><th>付款條件</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th><th>操作</th>
+				</tr>
+				<tbody id="supplier-rows">
+					for _, s := range rows {
+						@SupplierRowContent(s)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的廠商</div>
+			}
+			@components.Pager("/suppliers", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+func btnCls(active bool) string {
+	if active {
+		return "btn-p"
+	}
+	return "btn-s"
+}
+
+templ SupplierRowContent(s SupplierRow) {
+	<tr>
+		<td><b>{ s.Name }</b></td>
+		<td>
+			if s.Active == 0 {
+				<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>
+			}
+			if s.Active != 0 {
+				<span class="pill" style="background:#14532d;color:#86efac">啟用</span>
+			}
+		</td>
+		<td>
+			if s.VendorType == "vendor" {
+				<span class="pill" style="background:#4a2f13;color:#fde68a">{ s.VendorLabel }</span>
+			}
+			if s.VendorType != "vendor" {
+				<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ s.VendorLabel }</span>
+			}
+		</td>
+		<td style="font-size:12.5px;color:#94a3b8">{ s.PaymentTerms }</td>
+		<td>{ s.Phone }</td>
+		<td>{ s.ContactPerson }</td>
+		<td style="font-size:12.5px">{ s.Address }</td>
+		<td style="font-size:12px;color:#94a3b8">{ s.Notes }</td>
+		<td>
+			if s.Active == 0 {
+				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }>復用</a>
+			}
+			if s.Active != 0 {
+				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>
+				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/ap-statement" }>對帳單</a>
+			}
+		</td>
+	</tr>
+}
+
+// SupplierSearchRows HTMX 即時搜尋回傳的純列。
+templ SupplierSearchRows(rows []SupplierRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無廠商</td></tr>
+	}
+	for _, s := range rows {
+		@SupplierRowContent(s)
+	}
+}
+
+var _ = model.Supplier{}

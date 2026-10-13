@@ -1,0 +1,145 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type CustomerRow struct {
+	ID              int64
+	Name            string
+	Phone           string
+	Tags            string
+	Address         string
+	Notification    string
+	LineUserID      string
+	TelegramUserID  string
+	TotalSpent      float64
+	UnpaidAmount    float64
+}
+
+// ListCustomersPage 客戶列表頁（HTMX 即時搜尋）。
+templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string) {
+	@components.Layout("客戶管理", "/customers", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增客戶</h2>
+			<form class="frm" method="POST" action="/customers">
+				<label>姓名<input name="name" required></label>
+				<label>電話<input name="phone" required></label>
+				<label>通知偏好
+					<select name="notification_preference">
+						<option value="none" selected>不通知</option>
+						<option value="line">LINE</option>
+						<option value="telegram">Telegram</option>
+						<option value="sms">SMS</option>
+					</select>
+				</label>
+				<label class="full">地址<input name="address"></label>
+				<label class="full">LINE User ID<input name="line_user_id" placeholder="例：U1234567890abcdef"></label>
+				<label class="full">Telegram User ID<input name="telegram_user_id" placeholder="例：123456789"></label>
+				<label class="full">標籤<input name="tags" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
+				<label class="full">行銷活動代碼<input name="campaign_code" placeholder="例：2026Q4-煞車促銷"></label>
+				<label class="full">備註<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">建立客戶</button></div>
+			</form>
+		</div>
+		<div class="card">
+			<h2>客戶列表（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			// HTMX 即時搜尋：輸入後 300ms 自動查詢，無需按送出
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋姓名 / 電話 / 地址"
+				hx-get="/api/customers/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#customer-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+			<a class="btn btn-s" href="/customers">清除</a>
+			<table>
+				<tr>
+					<th>ID</th><th>姓名</th><th>電話</th><th>標籤</th><th>地址</th><th>通知</th>
+					<th>LINE ID</th><th>Telegram ID</th><th class="num">累計消費</th><th class="num">未付</th><th>操作</th>
+				</tr>
+				<tbody id="customer-rows">
+					for _, c := range rows {
+						<tr>
+							<td>{ strconv.FormatInt(c.ID, 10) }</td>
+							<td>{ c.Name }</td>
+							<td>{ c.Phone }</td>
+							<td style="font-size:12.5px">@templ.Raw(tagPillsHTML(c.Tags))</td>
+							<td>{ c.Address }</td>
+							<td>{ c.Notification }</td>
+							<td>{ orEmpty(c.LineUserID) }</td>
+							<td>{ orEmpty(c.TelegramUserID) }</td>
+							<td class="num">{ moneyFmt(c.TotalSpent) }</td>
+							<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
+							<td>
+								<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>開工單</a>
+								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>編輯</a>
+								<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
+								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>催款單</a>
+								<a class="btn btn-d" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
+									data-confirm="確定刪除這位客戶？">刪除</a>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的客戶</div>
+			}
+			@components.Pager("/customers", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+// CustomerSearchRows HTMX 即時搜尋回傳的純列（無 Layout）。
+templ CustomerSearchRows(rows []CustomerRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">查無客戶</td></tr>
+	}
+	for _, c := range rows {
+		<tr>
+			<td>{ strconv.FormatInt(c.ID, 10) }</td>
+			<td>{ c.Name }</td>
+			<td>{ c.Phone }</td>
+			<td style="font-size:12.5px">@templ.Raw(tagPillsHTML(c.Tags))</td>
+			<td>{ c.Address }</td>
+			<td>{ c.Notification }</td>
+			<td>{ orEmpty(c.LineUserID) }</td>
+			<td>{ orEmpty(c.TelegramUserID) }</td>
+			<td class="num">{ moneyFmt(c.TotalSpent) }</td>
+			<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
+			<td>
+				<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>開工單</a>
+				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>編輯</a>
+				<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
+				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>催款單</a>
+				<a class="btn btn-d" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
+					data-confirm="確定刪除這位客戶？">刪除</a>
+			</td>
+		</tr>
+	}
+}
+
+// tagPillsHTML 標籤轉為 HTML pill。
+func tagPillsHTML(tags string) string {
+	if tags == "" {
+		return `<span style="color:#64748b">-</span>`
+	}
+	var b []byte
+	b = append(b, []byte(`<span class="pill" style="background:#1e3a5f;color:#bae6fd;margin-right:4px">`)...)
+	for i, ch := range tags {
+		if ch == ',' {
+			b = append(b, []byte(`</span> <span class="pill" style="background:#1e3a5f;color:#bae6fd;margin-right:4px">`)...)
+			_ = i
+			continue
+		}
+		b = append(b, []byte(string(ch))...)
+	}
+	b = append(b, []byte(`</span>`)...)
+	return string(b)
+}
+
+var _ = model.Customer{}

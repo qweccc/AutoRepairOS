@@ -11,6 +11,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // workOrderCols 的欄位順序必須與 scanWorkOrder 的 Scan 目標完全一致。
@@ -192,49 +193,38 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th><th>零件</th><th class="num">里程</th><th class="num">金額</th><th>日期</th></tr>`)
+	var woRows []pages.WorkOrderRow
 	for _, wo := range list {
-		insTag := ""
-		if wo.IsInsurance {
-			insTag = ` <span class="pill p-waitparts">保險</span>`
-		}
-		// 零件欄：只在有明細時顯示，且彙總同料號的多列。
-		// 一次查詢取回整頁（最多 50 筆）用過的零件，避免每列一次查詢。
-		partCell := `<span style="color:#475569">—</span>`
-		if wo.PartCount > 0 {
-			partCell = htmlEsc(wo.PartSummary)
-			if wo.PartCount > 1 {
-				partCell += ` <span style="color:#64748b;font-size:11.5px">等 ` +
-					strconv.Itoa(wo.PartCount) + ` 項</span>`
-			}
-		}
-		tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">` + strconv.FormatInt(wo.ID, 10) + `</a></td><td><b>` +
-			htmlEsc(wo.PlateNumber) + `</b><br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.BrandModel) + `</span></td><td>` +
-			htmlEsc(wo.CustomerName) + `<br><span style="color:#64748b;font-size:12px">` + htmlEsc(wo.CustomerPhone) + `</span></td><td>` +
-			htmlEsc(wo.TechnicianName) + `</td><td><span class="pill ` + statusPill[wo.Status] + `">` + workOrderStatusLabel[wo.Status] +
-			`</span>` + insTag + `</td><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] +
-			`</span></td><td style="font-size:12.5px;max-width:190px">` + partCell +
-			`</td><td class="num">` + strconv.Itoa(wo.CurrentMileage) + `</td><td class="num">` + money(wo.TotalAmount) +
-			`</td><td style="font-size:12.5px;color:#94a3b8">` + htmlEsc(woCreatedText(wo.CreatedAt)) + `</td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的工單</div>`
+		woRows = append(woRows, pages.WorkOrderRow{
+			ID:             wo.ID,
+			PlateNumber:    wo.PlateNumber,
+			BrandModel:     wo.BrandModel,
+			CustomerName:   wo.CustomerName,
+			CustomerPhone:  wo.CustomerPhone,
+			TechnicianName: wo.TechnicianName,
+			Status:         wo.Status,
+			StatusLabel:    workOrderStatusLabel[wo.Status],
+			StatusPill:     statusPill[wo.Status],
+			ApprovalStatus: wo.ApprovalStatus,
+			ApprovalLabel:  approvalLabel[wo.ApprovalStatus],
+			ApprovalPill:   approvalPill[wo.ApprovalStatus],
+			IsInsurance:    wo.IsInsurance,
+			PartSummary:    wo.PartSummary,
+			PartCount:      wo.PartCount,
+			CurrentMileage: wo.CurrentMileage,
+			TotalAmount:    wo.TotalAmount,
+			CreatedAt:      woCreatedText(wo.CreatedAt),
+		})
 	}
 
 	// 狀態分頁籤（保留搜尋與日期條件）
 	var tabs strings.Builder
-	// 技師「我的工單」入口
 	if user.Role == "technician" {
-		mineActive := mine
 		mineURL := "/work-orders?mine=1"
 		if q != "" {
 			mineURL += "&q=" + url.QueryEscape(q)
 		}
-		tabs.WriteString(`<a href="` + mineURL + `" class="btn ` + btnIf(mineActive, "btn-p", "btn-s") + `">我的工單</a> `)
+		tabs.WriteString(`<a href="` + mineURL + `" class="btn ` + btnIf(mine, "btn-p", "btn-s") + `">我的工單</a> `)
 	}
 	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(status == "" && !mine, "btn-p", "btn-s") + `">全部</a> `)
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
@@ -242,41 +232,80 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 			workOrderStatusLabel[s] + `</a> `)
 	}
 
-	pg := pager("/work-orders", qv, total, page, size)
+	pages.ListWorkOrdersPage(woRows, total, page, size,
+		q, part, status, tech, from, to,
+		tabs.String(), woTechFilterOptions(tech), user.Role == "technician").Render(r.Context(), w)
+}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>工單列表（符合條件 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <a class="btn btn-p" href="/work-orders/new">＋ 開立新工單</a>
-        <span style="color:#64748b;font-size:12.5px">（可搜尋車牌 / 車主 / 電話，並限定日期區間）</span>
-      </div>
-      <div style="margin-bottom:12px">` + tabs.String() + `</div>
-      <form method="GET" action="/work-orders" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 客戶 / 電話" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:240px">
-        <label style="font-size:12.5px;color:#94a3b8">技師
-          <select name="tech" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-            <option value="">全部</option>
-            <option value="0"` + selIf(tech == "0") + `>— 未指派 —</option>` +
-		woTechFilterOptions(tech) + `
-          </select>
-        </label>
-        <label style="font-size:12.5px;color:#94a3b8">零件
-          <input name="part" value="` + htmlEsc(part) + `" placeholder="料號 / 名稱，例：雨刷" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:190px">
-        </label>
-        <input type="hidden" name="status" value="` + htmlEsc(status) + `">
-        <label style="font-size:12.5px;color:#94a3b8">日期從
-          <input type="date" name="from" value="` + htmlEsc(from) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-        </label>
-        <label style="font-size:12.5px;color:#94a3b8">到
-          <input type="date" name="to" value="` + htmlEsc(to) + `" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-        </label>
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/work-orders">清除</a>
-      </form>` + table + pg + `<div style="margin-top:6px">` + perPageSel("/work-orders", qv, size) + `</div>
-    </div>`
+// SearchWorkOrdersAPI 工單即時搜尋 API（HTMX 用）。
+func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	part := strings.TrimSpace(r.URL.Query().Get("part"))
+	status := strings.TrimSpace(r.URL.Query().Get("status"))
+	tech := strings.TrimSpace(r.URL.Query().Get("tech"))
 
-	renderPage(w, "工單管理", "/work-orders", user.Username, user.Role, body)
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	if status != "" {
+		if _, ok := workOrderStatusLabel[status]; ok {
+			where += ` AND wo.status = ?`
+			args = append(args, status)
+		}
+	}
+	if part != "" {
+		where += ` AND EXISTS (SELECT 1 FROM work_order_items i
+			LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+			WHERE i.work_order_id = wo.id
+			  AND (ii.part_number LIKE ? OR ii.name LIKE ? OR i.description LIKE ?))`
+		like := "%" + part + "%"
+		args = append(args, like, like, like)
+	}
+	if tech == "0" {
+		where += ` AND COALESCE(wo.technician_id,0) = 0`
+	} else if n := mustInt(tech); n > 0 {
+		where += ` AND wo.technician_id = ?`
+		args = append(args, n)
+	}
+
+	rows, err := db.DB.Query(`SELECT `+workOrderCols+workOrderFrom+where+
+		` ORDER BY wo.created_at DESC, wo.id DESC LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.WorkOrderRow
+	for rows.Next() {
+		wo, err := scanWorkOrder(rows)
+		if err != nil {
+			continue
+		}
+		result = append(result, pages.WorkOrderRow{
+			ID:             wo.ID,
+			PlateNumber:    wo.PlateNumber,
+			BrandModel:     wo.BrandModel,
+			CustomerName:   wo.CustomerName,
+			CustomerPhone:  wo.CustomerPhone,
+			TechnicianName: wo.TechnicianName,
+			Status:         wo.Status,
+			StatusLabel:    workOrderStatusLabel[wo.Status],
+			StatusPill:     statusPill[wo.Status],
+			ApprovalStatus: wo.ApprovalStatus,
+			ApprovalLabel:  approvalLabel[wo.ApprovalStatus],
+			ApprovalPill:   approvalPill[wo.ApprovalStatus],
+			IsInsurance:    wo.IsInsurance,
+			CurrentMileage: wo.CurrentMileage,
+			TotalAmount:    wo.TotalAmount,
+			CreatedAt:      woCreatedText(wo.CreatedAt),
+		})
+	}
+	pages.WorkOrderSearchRows(result).Render(r.Context(), w)
 }
 
 // woCreatedText 工單日期顯示。
@@ -496,104 +525,24 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	locked := wo.Status == "paid"
 	canEdit := !locked
 
-	var ib strings.Builder
-	ib.WriteString(`<table><tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th><th>主技師</th><th>助手</th><th>操作</th></tr>`)
+	// 技師名稱對照表（供項目表格顯示）。
+	techNames := map[int64]string{}
 	for _, it := range items {
-		typeLabel := map[string]string{"labor": "工資", "part": "零件", "subcontract": "外包"}[it.ItemType]
-		delCell := `<td style="color:#64748b">—</td>`
-		if canEdit {
-			delCell = `<td><a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(id, 10) + `/items/` +
-				strconv.FormatInt(it.ID, 10) + `/delete" onclick="return confirm('刪除此項目？')">刪除</a></td>`
+		if it.PrimaryTechnicianID > 0 {
+			if _, ok := techNames[it.PrimaryTechnicianID]; !ok {
+				techNames[it.PrimaryTechnicianID] = techName(it.PrimaryTechnicianID)
+			}
 		}
-		ib.WriteString(`<tr><td><span class="pill p-progress">` + typeLabel + `</span></td><td>` + htmlEsc(it.Description) +
-			`</td><td class="num">` + strconv.Itoa(it.Quantity) + `</td><td class="num">` + money(it.UnitPrice) +
-			`</td><td class="num">` + money(it.Subtotal) + `</td><td>` + htmlEsc(techName(it.PrimaryTechnicianID)) +
-			`</td><td>` + htmlEsc(techName(it.AssistantTechID)) + `</td>` + delCell + `</tr>`)
-	}
-	ib.WriteString(`</table>`)
-
-	itemsTable := ib.String()
-	if len(items) == 0 {
-		itemsTable = `<div class="empty">尚未加入任何工資或零件</div>`
-	}
-
-	// 保險理賠資訊（CAR35 P0-1，對應 Header.Insurance）
-	insuranceRow := ""
-	if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
-		insuranceRow = `<tr><th>件別</th><td><span class="pill p-progress">保險理賠</span></td>
-			<th>保險公司</th><td>` + htmlEsc(orDash(wo.InsuranceName)) + `</td></tr>
-			<tr><th>理賠編號</th><td>` + htmlEsc(orDash(wo.ClaimNo)) + `</td>
-			<th>事故日期</th><td>` + htmlEsc(orDash(wo.AccidentDate)) + `</td></tr>
-			<tr><th>自負額</th><td>` + money(wo.DeductibleAmount) + `</td><th></th><td></td></tr>`
-	} else {
-		insuranceRow = `<tr><th>件別</th><td><span class="pill">自費</span></td>
-			<th></th><td></td></tr>`
-	}
-
-	// 狀態進度條：pending → in_progress → waiting_parts → completed → paid
-	statusFlow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"}
-	currentIdx := 0
-	for i, s := range statusFlow {
-		if s == wo.Status {
-			currentIdx = i
-			break
+		if it.AssistantTechID > 0 {
+			if _, ok := techNames[it.AssistantTechID]; !ok {
+				techNames[it.AssistantTechID] = techName(it.AssistantTechID)
+			}
 		}
 	}
-	var progressBar strings.Builder
-	progressBar.WriteString(`<div style="display:flex;gap:4px;margin:10px 0">`)
-	for i, s := range statusFlow {
-		stepCls := "background:#334155;color:#64748b" // 未到達
-		if i < currentIdx {
-			stepCls = "background:#1e3a5f;color:#93c5fd" // 已過
-		} else if i == currentIdx {
-			stepCls = "background:#1d4ed8;color:#fff" // 目前
-		}
-		progressBar.WriteString(`<span class="pill" style="` + stepCls + `">` + workOrderStatusLabel[s] + `</span>`)
-		if i < len(statusFlow)-1 {
-			progressBar.WriteString(`<span style="color:#475569;align-self:center">→</span>`)
-		}
-	}
-	progressBar.WriteString(`</div>`)
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>工單 #` + strconv.FormatInt(wo.ID, 10) + ` — ` + htmlEsc(wo.PlateNumber) + `</h2>
-      ` + progressBar.String() + `
-      <table>
-        <tr><th style="width:130px">車型</th><td>` + htmlEsc(wo.BrandModel) + `</td><th style="width:130px">進廠里程</th><td>` + strconv.Itoa(wo.CurrentMileage) + ` km</td></tr>
-        <tr><th>客戶</th><td>` + htmlEsc(wo.CustomerName) + ` / ` + htmlEsc(wo.CustomerPhone) + `</td><th>技師</th><td>` + htmlEsc(orDash(wo.TechnicianName)) + `</td></tr>
-        <tr><th>狀態</th><td><span class="pill ` + statusPill[wo.Status] + `">` + workOrderStatusLabel[wo.Status] + `</span></td>
-            <th>核准狀態</th><td><span class="pill ` + approvalPill[wo.ApprovalStatus] + `">` + approvalLabel[wo.ApprovalStatus] + `</span></td></tr>
-        <tr><th>客戶反映</th><td colspan="3">` + htmlEsc(orDash(wo.CustomerComplaint)) + `</td></tr>
-        <tr><th>SOP</th><td>` + yesNo(wo.SOPCompleted) + `</td><th>建立時間</th><td>` + wo.CreatedAt.Format("2006-01-02 15:04") + `</td></tr>
-        ` + insuranceRow + `
-      </table>
-      <div style="margin-top:16px">` + statusControls(wo, canEdit) + `
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
-          <a class="btn btn-p" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/receipt">🧾 收據列印</a>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/quotation?paper=a4">📋 估價單列印</a>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/completion">✅ 完工證明</a>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/worklogs">⏱ 技師工時</a>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/photos">📷 車損照片</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>工單項目</h2>` + itemsTable + `
-      ` + addItemForm(wo, canEdit) + `
-    </div>
-
-    <div class="card">
-      <h2>合計</h2>
-      <table>
-        <tr><th>項目小計</th><td class="num">` + money(itemTotal) + `</td></tr>
-        <tr><th>工單總額</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(wo.TotalAmount) + `</td></tr>
-      </table>
-      <p style="color:#64748b;font-size:12.5px;margin-top:10px">新增或刪除項目時自動重算工單總額。</p>
-    </div>`
-
-	renderPage(w, "工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user.Username, user.Role, body)
+	pages.ShowWorkOrderPage(wo, items, itemTotal,
+		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
+		techNames, canEdit, flash(r)).Render(r.Context(), w)
 }
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -1121,22 +1070,74 @@ func addItemForm(wo model.WorkOrder, canEdit bool) string {
 
 	return `
       <form class="frm" id="addItemForm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
-        <label>類型<select name="item_type">
+        <label>類型<select name="item_type" id="itemType">
           <option value="labor">工資</option>
           <option value="part">零件</option>
           <option value="subcontract">外包</option>
         </select></label>
-        <label>零件（若為零件類）<select name="inventory_item_id"><option value="0">不使用庫存</option>` +
-		inventoryOptions() + `</select></label>
-        <label class="full">描述<input name="description" required></label>
+        <label class="full">零件搜尋（輸入零件名稱或料號）
+          <input type="text" id="partSearch" placeholder="例：機油、煞車片、BE071" autocomplete="off">
+          <div id="partResults" style="display:none;border:1px solid #334155;border-radius:7px;margin-top:4px;max-height:200px;overflow-y:auto;background:#0f172a"></div>
+          <input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
+        </label>
+        <label class="full">描述<input name="description" id="itemDesc" required></label>
         <label>數量<input name="quantity" type="number" min="1" value="1" required></label>
-        <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required></label>
+        <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
         <label>主技師<select name="primary_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
         <label>助手<select name="assistant_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
         <div class="full"><button class="btn btn-p" type="submit" id="addItemBtn">加入項目</button></div>
       </form>
       <script>
       (function(){
+        var search = document.getElementById('partSearch');
+        var results = document.getElementById('partResults');
+        var hidden = document.getElementById('inventoryItemId');
+        var desc = document.getElementById('itemDesc');
+        var price = document.getElementById('unitPrice');
+        var type = document.getElementById('itemType');
+        var timer;
+        if (!search || !results) return;
+        type.addEventListener('change', function(){
+          var show = type.value === 'part';
+          search.style.display = show ? '' : 'none';
+          if (!show) { hidden.value = '0'; results.style.display = 'none'; }
+        });
+        search.addEventListener('input', function(){
+          clearTimeout(timer);
+          var q = search.value.trim();
+          if (q.length < 1) { results.style.display = 'none'; return; }
+          timer = setTimeout(function(){
+            fetch('/api/parts?q=' + encodeURIComponent(q))
+              .then(function(r){ return r.json(); })
+              .then(function(list){
+                results.innerHTML = '';
+                if (!list || list.length === 0) {
+                  results.innerHTML = '<div style="padding:8px;color:#64748b">查無零件</div>';
+                  results.style.display = 'block';
+                  return;
+                }
+                list.forEach(function(p){
+                  var div = document.createElement('div');
+                  div.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:13px';
+                  div.innerHTML = '<b>' + p.name + '</b> <span style="color:#64748b">' + p.part_number + '</span> <span style="color:#38bdf8">$' + p.price + '</span> <span style="color:#f59e0b">庫存 ' + p.stock + '</span>';
+                  div.addEventListener('click', function(){
+                    hidden.value = p.id;
+                    search.value = p.name + ' / ' + p.part_number;
+                    desc.value = p.name;
+                    price.value = p.price;
+                    results.style.display = 'none';
+                  });
+                  div.addEventListener('mouseenter', function(){ div.style.background = '#1e293b'; });
+                  div.addEventListener('mouseleave', function(){ div.style.background = ''; });
+                  results.appendChild(div);
+                });
+                results.style.display = 'block';
+              });
+          }, 300);
+        });
+        document.addEventListener('click', function(e){
+          if (!results.contains(e.target) && e.target !== search) results.style.display = 'none';
+        });
         var form = document.getElementById('addItemForm');
         if (!form) return;
         form.addEventListener('submit', function(e){
@@ -1159,7 +1160,8 @@ func addItemForm(wo model.WorkOrder, canEdit bool) string {
                 if (totalEl) totalEl.textContent = j.total;
                 form.reset();
                 var qty = form.querySelector('[name="quantity"]'); if(qty) qty.value = 1;
-                var price = form.querySelector('[name="unit_price"]'); if(price) price.value = 0;
+                hidden.value = '0';
+                search.value = '';
               } else {
                 alert(j.error || '加入失敗');
               }

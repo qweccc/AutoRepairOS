@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ListAppointments 顯示預約排程列表（SRS 5.9）。
@@ -64,33 +65,32 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 當天工位佔用總覽（一次查詢，避免每列一次 N+1）
 	bayUsage := baySchedule(date)
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>日期</th><th>時段</th><th>工位</th><th>車牌</th><th>客戶</th><th>服務內容</th><th>狀態</th><th>操作</th></tr>`)
+	var apptRows []pages.AppointmentRow
 	for _, a := range list {
-		bayCell := `<span style="color:#64748b">—</span>`
+		bayLbl := ""
 		if a.Bay != "" {
-			bayCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` +
-				htmlEsc(bayLabel(a.Bay)) + `</span>`
+			bayLbl = bayLabel(a.Bay)
 		}
-		tb.WriteString(`<tr><td>` + strconv.FormatInt(a.ID, 10) + `</td><td>` + htmlEsc(a.AppointmentDate) +
-			`</td><td>` + htmlEsc(a.AppointmentTime) + `</td><td>` + bayCell + `</td><td>` + htmlEsc(a.PlateNumber) +
-			`</td><td>` + htmlEsc(a.CustomerName) + `</td><td>` + htmlEsc(a.ServiceType) +
-			`</td><td><span class="pill ` + appointmentPill(a.Status) + `">` + appointmentLabel(a.Status) + `</span>` +
-			`</td><td><a class="btn btn-s" href="/appointments/` + strconv.FormatInt(a.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-d" href="/appointments/` + strconv.FormatInt(a.ID, 10) + `/delete" onclick="return confirm('確定刪除這筆預約？')">刪除</a></td></tr>`)
+		apptRows = append(apptRows, pages.AppointmentRow{
+			ID:              a.ID,
+			AppointmentDate: a.AppointmentDate,
+			AppointmentTime: a.AppointmentTime,
+			Bay:             a.Bay,
+			BayLabel:        bayLbl,
+			PlateNumber:     a.PlateNumber,
+			CustomerName:    a.CustomerName,
+			ServiceType:     a.ServiceType,
+			Status:          a.Status,
+			StatusLabel:     appointmentLabel(a.Status),
+			StatusPill:      appointmentPill(a.Status),
+		})
 	}
-	tb.WriteString(`</table>`)
 
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的預約</div>`
-	}
-
-	// 工位總覽卡（有篩選日期時才顯示，否則資訊過載）
+	// 工位總覽卡（有篩選日期時才顯示）
 	bayCard := ""
 	if date != "" && len(bayUsage) > 0 {
 		var bb strings.Builder
-		bb.WriteString(`<table><tr><th>工位</th><th>當日占用</th></tr>`)
+		bb.WriteString(`<div class="card"><h2>工位占用（` + htmlEsc(date) + `）</h2><table><tr><th>工位</th><th>當日占用</th></tr>`)
 		for _, b := range bayList {
 			slots := bayUsage[b.code]
 			if len(slots) == 0 {
@@ -100,7 +100,6 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 			bb.WriteString(`<tr><td>` + b.label + `</td><td style="font-size:12.5px">` +
 				strings.Join(slots, "<br>") + `</td></tr>`)
 		}
-		// 非標準工位（舊資料或手動輸入）也要列出
 		for code, slots := range bayUsage {
 			if bayKnown(code) {
 				continue
@@ -108,56 +107,66 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 			bb.WriteString(`<tr><td>` + htmlEsc(code) + `（非標準）</td><td style="font-size:12.5px">` +
 				strings.Join(slots, "<br>") + `</td></tr>`)
 		}
-		bb.WriteString(`</table>`)
-		bayCard = `
-    <div class="card">
-      <h2>工位占用（` + htmlEsc(date) + `）</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
-        同一工位同一時段只能一台車；已取消的預約不佔位。
-      </p>` + bb.String() + `
-    </div>`
+		bb.WriteString(`</table></div>`)
+		bayCard = bb.String()
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增預約</h2>
-      <form class="frm" method="POST" action="/appointments">
-        <label>客戶
-          <select name="customer_id" required>
-            <option value="">請選擇客戶</option>` + customerOptions() + `
-          </select>
-        </label>
-        <label>車輛
-          <select name="vehicle_id" required>
-            <option value="">請選擇車輛</option>` + vehicleOptions() + `
-          </select>
-        </label>
-        <label>預約日期<input type="date" name="appointment_date" required></label>
-        <label>時段<input name="appointment_time" placeholder="例：09:00"></label>
-        <label>工位<select name="bay">` + bayOptions("") + `</select></label>
-        <label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">建立預約</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>預約列表（共 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <form method="GET" action="/appointments" style="margin-bottom:12px">
-        <input type="date" name="date" value="` + htmlEsc(date) + `" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-        <select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-          <option value="">全部狀態</option>
-          <option value="booked"` + selIf(status == "booked") + `>已預約</option>
-          <option value="confirmed"` + selIf(status == "confirmed") + `>已確認</option>
-          <option value="arrived"` + selIf(status == "arrived") + `>已進廠</option>
-          <option value="completed"` + selIf(status == "completed") + `>已完成</option>
-          <option value="cancelled"` + selIf(status == "cancelled") + `>已取消</option>
-        </select>
-        <button class="btn btn-p" type="submit">篩選</button>
-        <a class="btn btn-s" href="/appointments">清除</a>
-      </form>` + bayCard + table + pager("/appointments", qv, total, page, size) + `
-    </div>`
+	pages.ListAppointmentsPage(apptRows, total, page, size, date, status,
+		customerOptions(), vehicleOptions(), bayOptions(""), bayCard).Render(r.Context(), w)
+}
 
-	renderPage(w, "預約排程", "/appointments", user.Username, user.Role, body)
+// SearchAppointmentsAPI 預約即時搜尋 API（HTMX 用）。
+func SearchAppointmentsAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR COALESCE(a.service_type,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT a.id, a.customer_id, COALESCE(c.name,''), a.vehicle_id,
+		COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
+		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,''),
+		a.created_at, a.updated_at
+		FROM appointments a
+		JOIN customers c ON c.id = a.customer_id
+		JOIN vehicles v ON v.id = a.vehicle_id`+where+
+		` ORDER BY a.appointment_date DESC, a.appointment_time ASC LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.AppointmentRow
+	for rows.Next() {
+		var a model.Appointment
+		var createdAt, updatedAt string
+		if err := rows.Scan(&a.ID, &a.CustomerID, &a.CustomerName, &a.VehicleID,
+			&a.PlateNumber, &a.AppointmentDate, &a.AppointmentTime,
+			&a.ServiceType, &a.Bay, &a.Status, &a.Notes, &createdAt, &updatedAt); err != nil {
+			continue
+		}
+		bayLbl := ""
+		if a.Bay != "" {
+			bayLbl = bayLabel(a.Bay)
+		}
+		result = append(result, pages.AppointmentRow{
+			ID:              a.ID,
+			AppointmentDate: a.AppointmentDate,
+			AppointmentTime: a.AppointmentTime,
+			Bay:             a.Bay,
+			BayLabel:        bayLbl,
+			PlateNumber:     a.PlateNumber,
+			CustomerName:    a.CustomerName,
+			ServiceType:     a.ServiceType,
+			Status:          a.Status,
+			StatusLabel:     appointmentLabel(a.Status),
+			StatusPill:      appointmentPill(a.Status),
+		})
+	}
+	pages.AppointmentSearchRows(result).Render(r.Context(), w)
 }
 
 // CreateAppointment 建立預約（SRS 5.9）。

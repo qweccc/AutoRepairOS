@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
@@ -52,8 +53,7 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, c)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>姓名</th><th>電話</th><th>標籤</th><th>地址</th><th>通知</th><th>LINE ID</th><th>Telegram ID</th><th class="num">累計消費</th><th class="num">未付</th><th>操作</th></tr>`)
+	var customerRows []pages.CustomerRow
 	for _, c := range list {
 		notif := "LINE"
 		switch c.NotificationPref {
@@ -64,57 +64,64 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		case "none":
 			notif = "不通知"
 		}
-		tb.WriteString(`<tr><td>` + strconv.FormatInt(c.ID, 10) + `</td><td>` + htmlEsc(c.Name) + `</td><td>` +
-			htmlEsc(c.Phone) + `</td><td style="font-size:12.5px">` + tagPills(c.Tags) + `</td><td>` + htmlEsc(c.Address) + `</td><td>` + notif +
-			`</td><td>` + htmlEsc(orDash(c.LineUserID)) + `</td><td>` + htmlEsc(orDash(c.TelegramUserID)) +
-			`</td><td class="num">` + money(c.TotalSpent) + `</td><td class="num">` + money(c.UnpaidAmount) +
-			`</td><td><a class="btn btn-p" href="/work-orders/new?customer=` + strconv.FormatInt(c.ID, 10) + `">開工單</a> ` +
-			`<a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-o" href="/vehicles?customer=` + strconv.FormatInt(c.ID, 10) + `">車輛</a> ` +
-			`<a class="btn btn-s" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/ar-statement">催款單</a> ` +
-			`<a class="btn btn-d" href="/customers/` + strconv.FormatInt(c.ID, 10) + `/delete" onclick="return confirm('確定刪除這位客戶？')">刪除</a></td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的客戶</div>`
+		customerRows = append(customerRows, pages.CustomerRow{
+			ID:             c.ID,
+			Name:           c.Name,
+			Phone:          c.Phone,
+			Tags:           c.Tags,
+			Address:        c.Address,
+			Notification:   notif,
+			LineUserID:     c.LineUserID,
+			TelegramUserID: c.TelegramUserID,
+			TotalSpent:     c.TotalSpent,
+			UnpaidAmount:   c.UnpaidAmount,
+		})
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增客戶</h2>
-      <form class="frm" method="POST" action="/customers">
-        <label>姓名<input name="name" required></label>
-        <label>電話<input name="phone" required></label>
-        <label>通知偏好
-          <select name="notification_preference">
-            <option value="none" selected>不通知</option>
-            <option value="line">LINE</option>
-            <option value="telegram">Telegram</option>
-            <option value="sms">SMS</option>
-          </select>
-        </label>
-        <label class="full">地址<input name="address"></label>
-        <label class="full">LINE User ID<input name="line_user_id" placeholder="例：U1234567890abcdef（LINE 官方帳號後台取得）"></label>
-        <label class="full">Telegram User ID<input name="telegram_user_id" placeholder="例：123456789（Telegram Bot 對話後台取得）"></label>
-        <label class="full">標籤<input name="tags" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
-        <label class="full">行銷活動代碼<input name="campaign_code" placeholder="例：2026Q4-煞車促銷（供方案成效分析）"></label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">建立客戶</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>客戶列表（符合條件 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <form method="GET" action="/customers" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋姓名 / 電話 / 地址" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/customers">清除</a>
-      </form>` + table + pager("/customers", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/customers", qv, size) + `</div>
-    </div>`
+	pages.ListCustomersPage(customerRows, total, page, size, q).Render(r.Context(), w)
+}
 
-	renderPage(w, "客戶管理", "/customers", user.Username, user.Role, body)
+// SearchCustomersAPI 客戶即時搜尋 API（HTMX 用），回傳純 HTML 列。
+func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		pages.CustomerSearchRows(nil).Render(r.Context(), w)
+		return
+	}
+	like := "%" + q + "%"
+	rows, err := db.DB.Query(`SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
+		COALESCE(address,''), COALESCE(notification_preference,'none'),
+		COALESCE(total_spent,0), COALESCE(unpaid_amount,0)
+		FROM customers
+		WHERE name LIKE ? OR phone LIKE ? OR COALESCE(address,'') LIKE ? OR COALESCE(tags,'') LIKE ?
+		ORDER BY id DESC LIMIT 50`, like, like, like, like)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.CustomerRow
+	for rows.Next() {
+		var c pages.CustomerRow
+		var notifPref string
+		if err := rows.Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.TelegramUserID,
+			&c.Address, &notifPref, &c.TotalSpent, &c.UnpaidAmount); err != nil {
+			continue
+		}
+		switch notifPref {
+		case "telegram":
+			c.Notification = "Telegram"
+		case "sms":
+			c.Notification = "SMS"
+		case "none":
+			c.Notification = "不通知"
+		default:
+			c.Notification = "LINE"
+		}
+		result = append(result, c)
+	}
+	pages.CustomerSearchRows(result).Render(r.Context(), w)
 }
 
 func CreateCustomer(w http.ResponseWriter, r *http.Request) {

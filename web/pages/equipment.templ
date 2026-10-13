@@ -1,0 +1,98 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type EquipmentRow struct {
+	ID           int64
+	Name         string
+	Model        string
+	SerialNumber string
+	Location     string
+	Status       string
+	StatusLabel  string
+	StatusPill   string
+}
+
+// ListEquipmentPage 設備管理頁（HTMX 即時搜尋）。
+templ ListEquipmentPage(rows []EquipmentRow, total, page, size int, q, status string) {
+	@components.Layout("設備管理", "/equipment", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增設備</h2>
+			<form class="frm" method="POST" action="/equipment">
+				<label>設備名稱<input name="name" required></label>
+				<label>型號<input name="model"></label>
+				<label>序號<input name="serial_number"></label>
+				<label>位置<input name="location"></label>
+				<label>購買日期<input type="date" name="purchase_date"></label>
+				<label>保固到期<input type="date" name="warranty_expiry"></label>
+				<label>狀態
+					<select name="status">
+						<option value="active">啟用</option>
+						<option value="maintenance">維修中</option>
+						<option value="retired">報廢</option>
+					</select>
+				</label>
+				<label class="full">備註<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">新增設備</button></div>
+			</form>
+		</div>
+		<div class="card">
+			<h2>設備清單（共 { strconv.Itoa(total) } 台）</h2>
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋名稱 / 型號 / 序號"
+				hx-get="/api/equipment/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#equipment-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px;margin-bottom:12px">
+			<table>
+				<tr>
+					<th>ID</th><th>設備名稱</th><th>型號</th><th>序號</th><th>位置</th><th>狀態</th><th>操作</th>
+				</tr>
+				<tbody id="equipment-rows">
+					for _, e := range rows {
+						@EquipmentRowContent(e)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的設備</div>
+			}
+			@components.Pager("/equipment", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ EquipmentRowContent(e EquipmentRow) {
+	<tr>
+		<td>{ strconv.FormatInt(e.ID, 10) }</td>
+		<td><b>{ e.Name }</b></td>
+		<td>{ e.Model }</td>
+		<td>{ e.SerialNumber }</td>
+		<td>{ e.Location }</td>
+		<td><span class={ "pill " + e.StatusPill }>{ e.StatusLabel }</span></td>
+		<td>
+			<a class="btn btn-s" href={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-o" href={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/maintenance" }>保養</a>
+			<a class="btn btn-d" href={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/delete" }
+				data-confirm="確定刪除這台設備？">刪除</a>
+		</td>
+	</tr>
+}
+
+// EquipmentSearchRows HTMX 即時搜尋回傳的純列。
+templ EquipmentSearchRows(rows []EquipmentRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="7" style="color:#64748b;text-align:center;padding:20px">查無設備</td></tr>
+	}
+	for _, e := range rows {
+		@EquipmentRowContent(e)
+	}
+}
+
+var _ = model.Equipment{}

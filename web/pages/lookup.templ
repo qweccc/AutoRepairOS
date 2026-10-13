@@ -1,0 +1,87 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type LookupRow struct {
+	ID        int64
+	Code      string
+	Label     string
+	SortOrder int
+	Active    int
+}
+
+// ListLookupPage 代碼對照表頁（HTMX 即時搜尋）。
+templ ListLookupPage(rows []LookupRow, category, categoryLabel string, total int,
+	catTabsHTML string) {
+	@components.Layout("代碼對照表", "/lookup", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>代碼對照表（{ categoryLabel }，共 { strconv.Itoa(total) } 筆）</h2>
+			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+				統一維護系統內所有代碼與名稱的對應關係。修改後即時生效，不需重新編譯。
+			</p>
+			<div style="margin-bottom:12px">@templ.Raw(catTabsHTML)</div>
+			<div style="margin-bottom:12px">
+				<a class="btn btn-p" href={ "/lookup/new?category=" + category }>＋ 新增代碼</a>
+			</div>
+			<input type="search" name="q"
+				placeholder="搜尋代碼 / 名稱"
+				hx-get={ "/api/lookup/search?category=" + category }
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#lookup-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+			<table>
+				<tr><th>代碼</th><th>名稱</th><th>排序</th><th>狀態</th><th>操作</th></tr>
+				<tbody id="lookup-rows">
+					for _, li := range rows {
+						@LookupRowContent(li)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">尚無代碼對照資料</div>
+			}
+		</div>
+	}
+}
+
+templ LookupRowContent(li LookupRow) {
+	<tr>
+		<td><code>{ li.Code }</code></td>
+		<td>{ li.Label }</td>
+		<td class="num">{ strconv.Itoa(li.SortOrder) }</td>
+		<td>
+			if li.Active == 0 {
+				<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>
+			}
+			if li.Active != 0 {
+				<span class="pill" style="background:#14532d;color:#86efac">啟用</span>
+			}
+		</td>
+		<td>
+			if li.Active == 0 {
+				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }>復用</a>
+			}
+			if li.Active != 0 {
+				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/edit" }>編輯</a>
+			}
+		</td>
+	</tr>
+}
+
+// LookupSearchRows HTMX 即時搜尋回傳的純列。
+templ LookupSearchRows(rows []LookupRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">查無代碼</td></tr>
+	}
+	for _, li := range rows {
+		@LookupRowContent(li)
+	}
+}
+
+var _ = model.LookupItem{}

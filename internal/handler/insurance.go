@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 保險公司主檔 CRUD。
@@ -86,61 +87,57 @@ func ListInsuranceCompanies(w http.ResponseWriter, r *http.Request, user model.U
 		list = append(list, ic)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>簡稱</th><th>公司名稱</th><th>統編</th><th>客服電話</th><th>聯絡人</th><th>狀態</th><th>操作</th></tr>`)
+	var insRows []pages.InsuranceCompanyRow
 	for _, ic := range list {
-		status := `<span class="pill p-completed">啟用</span>`
-		ops := `<a class="btn btn-s" href="/insurance-companies/` +
-			strconv.FormatInt(ic.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-d" href="/insurance-companies/` +
-			strconv.FormatInt(ic.ID, 10) + `/delete" onclick="return confirm('確定停用這家保險公司？停用後不會出現在工單選單中，但歷史工單仍會保留。')">停用</a>`
-		if ic.Active == 0 {
-			status = `<span class="pill p-cancelled">停用</span>`
-			ops = `<a class="btn btn-s" href="/insurance-companies/` +
-				strconv.FormatInt(ic.ID, 10) + `/edit">編輯</a>`
+		insRows = append(insRows, pages.InsuranceCompanyRow{
+			ID:            ic.ID,
+			Code:          ic.Code,
+			Name:          ic.Name,
+			TaxID:         ic.TaxID,
+			ClaimPhone:    ic.ClaimPhone,
+			ContactPerson: ic.ContactPerson,
+			Active:        ic.Active,
+		})
+	}
+
+	pages.ListInsurancePage(insRows, total, page, size, q).Render(r.Context(), w)
+}
+
+// SearchInsuranceAPI 保險公司即時搜尋 API（HTMX 用）。
+func SearchInsuranceAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (ic.code LIKE ? OR ic.name LIKE ? OR COALESCE(ic.tax_id,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT `+insuranceCols+` FROM insurance_companies ic`+where+
+		` ORDER BY ic.active DESC, ic.code LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.InsuranceCompanyRow
+	for rows.Next() {
+		ic, err := scanInsuranceCompany(rows)
+		if err != nil {
+			continue
 		}
-		tb.WriteString(`<tr><td><b>` + htmlEsc(ic.Code) + `</b></td><td>` + htmlEsc(ic.Name) +
-			`</td><td>` + htmlEsc(ic.TaxID) + `</td><td>` + htmlEsc(ic.ClaimPhone) +
-			`</td><td>` + htmlEsc(ic.ContactPerson) + `</td><td>` + status +
-			`</td><td>` + ops + `</td></tr>`)
+		result = append(result, pages.InsuranceCompanyRow{
+			ID:            ic.ID,
+			Code:          ic.Code,
+			Name:          ic.Name,
+			TaxID:         ic.TaxID,
+			ClaimPhone:    ic.ClaimPhone,
+			ContactPerson: ic.ContactPerson,
+			Active:        ic.Active,
+		})
 	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有保險公司資料</div>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增保險公司</h2>
-      <form class="frm" method="POST" action="/insurance-companies">
-        <label>簡稱<input name="code" placeholder="如：國泰" required></label>
-        <label>公司名稱<input name="name" required></label>
-        <label>統一編號<input name="tax_id"></label>
-        <label>客服電話<input name="claim_phone" placeholder="打報案用"></label>
-        <label>聯絡人<input name="contact_person"></label>
-        <label>地址<input name="address"></label>
-        <label>郵遞區號<input name="postal_code"></label>
-        <label>備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>保險公司（符合條件 ` + strconv.Itoa(total) + ` 家）</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-        保險理賠案件需在此維護對應保險公司，工單開立時才能選擇。
-      </p>
-      <form method="GET" action="/insurance-companies" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋簡稱 / 公司名稱 / 統編"
-               style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/insurance-companies">清除</a>
-      </form>` + table + pager("/insurance-companies", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/insurance-companies", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "保險公司", "/insurance-companies", user.Username, user.Role, body)
+	pages.InsuranceSearchRows(result).Render(r.Context(), w)
 }
 
 // CreateInsuranceCompany 新增保險公司。

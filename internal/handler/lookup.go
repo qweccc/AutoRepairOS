@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 代码对照表维护。
@@ -101,24 +102,15 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, li)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>代碼</th><th>名稱</th><th>排序</th><th>狀態</th><th>操作</th></tr>`)
+	var lookupRows []pages.LookupRow
 	for _, li := range list {
-		statusCell := `<span class="pill" style="background:#14532d;color:#86efac">啟用</span>`
-		editBtn := `<a class="btn btn-s" href="/lookup/` + strconv.FormatInt(li.ID, 10) + `/edit">編輯</a>`
-		if li.Active == 0 {
-			statusCell = `<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>`
-			editBtn = `<a class="btn btn-s" href="/lookup/` + strconv.FormatInt(li.ID, 10) + `/reactivate">復用</a>`
-		}
-		tb.WriteString(`<tr><td><code>` + htmlEsc(li.Code) + `</code></td><td>` + htmlEsc(li.Label) +
-			`</td><td class="num">` + strconv.Itoa(li.SortOrder) + `</td><td>` + statusCell +
-			`</td><td>` + editBtn + `</td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">尚無代碼對照資料</div>`
+		lookupRows = append(lookupRows, pages.LookupRow{
+			ID:        li.ID,
+			Code:      li.Code,
+			Label:     li.Label,
+			SortOrder: li.SortOrder,
+			Active:    li.Active,
+		})
 	}
 
 	// 分类筛选签
@@ -131,20 +123,42 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 		tabs.WriteString(`<a class="btn ` + cls + `" href="/lookup?category=` + key + `">` + label + `</a> `)
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>代碼對照表（` + lookupCategoryLabel[category] + `，共 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        統一維護系統內所有代碼與名稱的對應關係。修改後即時生效，不需重新編譯。
-      </p>
-      <div style="margin-bottom:12px">` + tabs.String() + `</div>
-      <div style="margin-bottom:12px">
-        <a class="btn btn-p" href="/lookup/new?category=` + category + `">＋ 新增代碼</a>
-      </div>
-      ` + table + `
-    </div>`
+	pages.ListLookupPage(lookupRows, category, lookupCategoryLabel[category], total,
+		tabs.String()).Render(r.Context(), w)
+}
 
-	renderPage(w, "代碼對照表", "/lookup", user.Username, user.Role, body)
+// SearchLookupAPI 代碼對照即時搜尋 API（HTMX 用）。
+func SearchLookupAPI(w http.ResponseWriter, r *http.Request) {
+	category := strings.TrimSpace(r.URL.Query().Get("category"))
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if category == "" {
+		category = "branch"
+	}
+	where := ` WHERE category = ?`
+	args := []interface{}{category}
+	if q != "" {
+		where += ` AND (code LIKE ? OR label LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT id, category, code, label, sort_order, active
+		FROM lookup_items`+where+` ORDER BY sort_order, code LIMIT 100`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.LookupRow
+	for rows.Next() {
+		var li pages.LookupRow
+		var cat string
+		if err := rows.Scan(&li.ID, &cat, &li.Code, &li.Label, &li.SortOrder, &li.Active); err != nil {
+			continue
+		}
+		result = append(result, li)
+	}
+	pages.LookupSearchRows(result).Render(r.Context(), w)
 }
 
 // NewLookupItemForm 新增代码对照表单项表单。

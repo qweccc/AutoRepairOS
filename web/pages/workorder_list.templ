@@ -1,0 +1,137 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type WorkOrderRow struct {
+	ID              int64
+	PlateNumber     string
+	BrandModel      string
+	CustomerName    string
+	CustomerPhone   string
+	TechnicianName  string
+	Status          string
+	StatusLabel     string
+	StatusPill      string
+	ApprovalStatus  string
+	ApprovalLabel   string
+	ApprovalPill    string
+	IsInsurance     bool
+	PartSummary     string
+	PartCount       int
+	CurrentMileage  int
+	TotalAmount     float64
+	CreatedAt       string
+}
+
+// ListWorkOrdersPage 工單列表頁（HTMX 即時搜尋）。
+templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
+	q, part, status, tech, from, to string,
+	tabsHTML, techOptionsHTML string, isTechnician bool) {
+	@components.Layout("工單管理", "/work-orders", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>工單列表（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+				<a class="btn btn-p" href="/work-orders/new">＋ 開立新工單</a>
+				<span style="color:#64748b;font-size:12.5px">（可搜尋車牌 / 車主 / 電話，並限定日期區間）</span>
+			</div>
+			<div style="margin-bottom:12px">@templ.Raw(tabsHTML)</div>
+			<form method="GET" action="/work-orders" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+				<input type="search" name="q" value={ q }
+					placeholder="搜尋車牌 / 客戶 / 電話"
+					hx-get="/api/work-orders/search"
+					hx-trigger="keyup changed delay:300ms, search"
+					hx-target="#wo-rows"
+					hx-swap="innerHTML"
+					hx-include="[name='part'],[name='status'],[name='tech']"
+					style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:240px">
+				<label style="font-size:12.5px;color:#94a3b8">技師
+					<select name="tech" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+						<option value="">全部</option>
+						<option value="0" selected?={ tech == "0" }>— 未指派 —</option>
+						@templ.Raw(techOptionsHTML)
+					</select>
+				</label>
+				<label style="font-size:12.5px;color:#94a3b8">零件
+					<input name="part" value={ part } placeholder="料號 / 名稱，例：雨刷"
+						style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:190px">
+				</label>
+				<input type="hidden" name="status" value={ status }>
+				<label style="font-size:12.5px;color:#94a3b8">日期從
+					<input type="date" name="from" value={ from } style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				</label>
+				<label style="font-size:12.5px;color:#94a3b8">到
+					<input type="date" name="to" value={ to } style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				</label>
+				<button class="btn btn-p" type="submit">搜尋</button>
+				<a class="btn btn-s" href="/work-orders">清除</a>
+			</form>
+			<table>
+				<tr>
+					<th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th>
+					<th>零件</th><th class="num">里程</th><th class="num">金額</th><th>日期</th>
+				</tr>
+				<tbody id="wo-rows">
+					for _, wo := range rows {
+						@WorkOrderRowContent(wo)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的工單</div>
+			}
+			@components.Pager("/work-orders", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ WorkOrderRowContent(wo WorkOrderRow) {
+	<tr>
+		<td><a href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
+		<td>
+			<b>{ wo.PlateNumber }</b><br>
+			<span style="color:#64748b;font-size:12px">{ wo.BrandModel }</span>
+		</td>
+		<td>
+			{ wo.CustomerName }<br>
+			<span style="color:#64748b;font-size:12px">{ wo.CustomerPhone }</span>
+		</td>
+		<td>{ wo.TechnicianName }</td>
+		<td>
+			<span class={ "pill " + wo.StatusPill }>{ wo.StatusLabel }</span>
+			if wo.IsInsurance {
+				<span class="pill p-waitparts">保險</span>
+			}
+		</td>
+		<td><span class={ "pill " + wo.ApprovalPill }>{ wo.ApprovalLabel }</span></td>
+		<td style="font-size:12.5px;max-width:190px">
+			if wo.PartCount > 0 {
+				{ wo.PartSummary }
+				if wo.PartCount > 1 {
+					<span style="color:#64748b;font-size:11.5px">等 { strconv.Itoa(wo.PartCount) } 項</span>
+				}
+			} else {
+				<span style="color:#475569">—</span>
+			}
+		</td>
+		<td class="num">{ strconv.Itoa(wo.CurrentMileage) }</td>
+		<td class="num">{ moneyFmt(wo.TotalAmount) }</td>
+		<td style="font-size:12.5px;color:#94a3b8">{ wo.CreatedAt }</td>
+	</tr>
+}
+
+// WorkOrderSearchRows HTMX 即時搜尋回傳的純列。
+templ WorkOrderSearchRows(rows []WorkOrderRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="10" style="color:#64748b;text-align:center;padding:20px">查無工單</td></tr>
+	}
+	for _, wo := range rows {
+		@WorkOrderRowContent(wo)
+	}
+}
+
+var _ = model.WorkOrder{}

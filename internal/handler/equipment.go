@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 設備管理（SRS FR-EQP-01）。
@@ -74,60 +75,61 @@ func ListEquipment(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, e)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>設備名稱</th><th>型號</th><th>序號</th><th>位置</th><th>狀態</th><th>操作</th></tr>`)
+	var eqRows []pages.EquipmentRow
 	for _, e := range list {
-		tb.WriteString(`<tr><td>` + strconv.FormatInt(e.ID, 10) + `</td><td><b>` + htmlEsc(e.Name) + `</b></td><td>` +
-			htmlEsc(e.Model) + `</td><td>` + htmlEsc(e.SerialNumber) + `</td><td>` + htmlEsc(e.Location) +
-			`</td><td><span class="pill ` + equipmentStatusPill[e.Status] + `">` + equipmentStatusLabel[e.Status] + `</span>` +
-			`</td><td><a class="btn btn-s" href="/equipment/` + strconv.FormatInt(e.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-o" href="/equipment/` + strconv.FormatInt(e.ID, 10) + `/maintenance">保養</a> ` +
-			`<a class="btn btn-d" href="/equipment/` + strconv.FormatInt(e.ID, 10) + `/delete" onclick="return confirm('確定刪除這台設備？')">刪除</a></td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的設備</div>`
+		eqRows = append(eqRows, pages.EquipmentRow{
+			ID:           e.ID,
+			Name:         e.Name,
+			Model:        e.Model,
+			SerialNumber: e.SerialNumber,
+			Location:     e.Location,
+			Status:       e.Status,
+			StatusLabel:  equipmentStatusLabel[e.Status],
+			StatusPill:   equipmentStatusPill[e.Status],
+		})
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增設備</h2>
-      <form class="frm" method="POST" action="/equipment">
-        <label>設備名稱<input name="name" required></label>
-        <label>型號<input name="model"></label>
-        <label>序號<input name="serial_number"></label>
-        <label>位置<input name="location"></label>
-        <label>購買日期<input type="date" name="purchase_date"></label>
-        <label>保固到期<input type="date" name="warranty_expiry"></label>
-        <label>狀態
-          <select name="status">
-            <option value="active">啟用</option>
-            <option value="maintenance">維修中</option>
-            <option value="retired">報廢</option>
-          </select>
-        </label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增設備</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>設備清單（共 ` + strconv.Itoa(total) + ` 台）</h2>
-      <form method="GET" action="/equipment" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋名稱 / 型號 / 序號" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px">
-        <select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-          <option value="">全部狀態</option>
-          <option value="active"` + selIf(status == "active") + `>啟用</option>
-          <option value="maintenance"` + selIf(status == "maintenance") + `>維修中</option>
-          <option value="retired"` + selIf(status == "retired") + `>報廢</option>
-        </select>
-        <button class="btn btn-p" type="submit">篩選</button>
-        <a class="btn btn-s" href="/equipment">清除</a>
-      </form>` + table + pager("/equipment", qv, total, page, size) + `
-    </div>`
+	pages.ListEquipmentPage(eqRows, total, page, size, q, status).Render(r.Context(), w)
+}
 
-	renderPage(w, "設備管理", "/equipment", user.Username, user.Role, body)
+// SearchEquipmentAPI 設備即時搜尋 API（HTMX 用）。
+func SearchEquipmentAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (e.name LIKE ? OR COALESCE(e.model,'') LIKE ? OR COALESCE(e.serial_number,'') LIKE ? OR COALESCE(e.location,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT `+equipmentCols+` FROM equipment e`+where+
+		` ORDER BY e.id DESC LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.EquipmentRow
+	for rows.Next() {
+		var e model.Equipment
+		var createdAt string
+		if err := rows.Scan(&e.ID, &e.Name, &e.Model, &e.SerialNumber, &e.Location,
+			&e.PurchaseDate, &e.WarrantyExpiry, &e.Status, &e.Notes, &createdAt); err != nil {
+			continue
+		}
+		result = append(result, pages.EquipmentRow{
+			ID:           e.ID,
+			Name:         e.Name,
+			Model:        e.Model,
+			SerialNumber: e.SerialNumber,
+			Location:     e.Location,
+			Status:       e.Status,
+			StatusLabel:  equipmentStatusLabel[e.Status],
+			StatusPill:   equipmentStatusPill[e.Status],
+		})
+	}
+	pages.EquipmentSearchRows(result).Render(r.Context(), w)
 }
 
 // CreateEquipment 新增設備（SRS FR-EQP-01）。

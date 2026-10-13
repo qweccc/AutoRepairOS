@@ -1,0 +1,159 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+// ListVehiclesPage 車輛列表頁（新增表單 + HTMX 即時搜尋 + 列表）。
+type VehicleRow struct {
+	ID               int64
+	PlateNumber      string
+	BrandModel       string
+	VehicleTypeLabel string
+	ManufactureYear  int
+	CustomerName     string
+	DateCell         string
+	KmCell           string
+	CanEdit          bool
+}
+
+templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
+	q string, filterCustomer int64,
+	newModelOptions, newVehicleTypeOptions, newFuelTypeOptions, newBodyStyleOptions string) {
+	@components.Layout("車輛管理", "/vehicles", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增車輛</h2>
+			<form class="frm" method="POST" action="/vehicles">
+				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required placeholder="例：王小明 或 0912345678 或 1234"></label>
+				<label>車牌號碼<input name="plate_number" required></label>
+				<label>品牌車型
+					<select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">
+						@templ.Raw(newModelOptions)
+					</select>
+				</label>
+				<label id="brandModelOtherWrap" style="display:none">其他車型
+					<input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型，例：Porsche 911">
+				</label>
+				<label>車種類別<select name="vehicle_type">@templ.Raw(newVehicleTypeOptions)</select></label>
+				<label>燃料種類<select name="fuel_type">@templ.Raw(newFuelTypeOptions)</select></label>
+				<label>車身式樣<select name="body_style">@templ.Raw(newBodyStyleOptions)</select></label>
+				<label>駕駛人<input name="driver_name" placeholder="例：陳小姐"></label>
+				<label>駕駛人電話<input name="driver_phone" placeholder="例：0963-176677"></label>
+				<label>車輛聯絡人<input name="contact_name" placeholder="例：王先生"></label>
+				<label>聯絡人電話<input name="contact_phone" placeholder="例：0912-345678"></label>
+				<label>行照車主<input name="owner_name" placeholder="行照上的車主姓名"></label>
+				<label>車主地址<input name="owner_address" placeholder="行照上的車主地址"></label>
+				<label>車主身分證字號<input name="owner_id_number" placeholder="A123456789"></label>
+				<label>行照有效期限<input name="license_expiry_date" type="date"></label>
+				<label>顏色<input name="color" placeholder="例：白色"></label>
+				<label>車門數<input name="door_count" type="number" min="0" max="10" placeholder="例：4"></label>
+				<label>出廠年月<input name="manufacture_date" placeholder="例：110.04 或 2021-04"></label>
+				<label>發照日期<input name="license_issue_date" placeholder="例：110.06.29"></label>
+				<label>出廠年份<input name="manufacture_year" type="number" min="0" max="9999" placeholder="例：2021"></label>
+				<label>排氣量<input name="displacement" type="number" min="0" placeholder="c.c."></label>
+				<label>座位數<input name="seating_capacity" type="number" min="0" max="99" placeholder="例：5"></label>
+				<label>空車重量<input name="curb_weight" type="number" min="0" placeholder="kg"></label>
+				<label>總重量<input name="gross_weight" type="number" min="0" placeholder="kg"></label>
+				<label>輪胎規格<input name="tire_size" placeholder="例：205/55R16"></label>
+				<label>軸距<input name="wheelbase" type="number" min="0" placeholder="mm"></label>
+				<label>VIN<input name="vin" placeholder="車輛識別號碼"></label>
+				<label>引擎號碼<input name="engine_number"></label>
+				<label>檢驗到期日<input name="inspection_due_date" type="date"></label>
+				<label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value="6"></label>
+				<label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="5000"></label>
+				<div class="full"><button class="btn btn-p" type="submit">建立車輛</button></div>
+			</form>
+			<p style="color:#64748b;font-size:12.5px;margin-top:10px">
+				車型清單可在「代碼對照 → 車輛品牌車型」維護；選單沒有的車款選「其他」手動輸入。
+			</p>
+			<script>
+				function toggleModelOther(){
+					var sel = document.getElementById('brandModelSel');
+					var wrap = document.getElementById('brandModelOtherWrap');
+					var other = document.getElementById('brandModelOther');
+					if (!sel || !wrap) return;
+					var isOther = sel.value === '__OTHER__';
+					wrap.style.display = isOther ? '' : 'none';
+					if (other) other.disabled = !isOther;
+					if (isOther) {
+						sel.removeAttribute('name');
+						if (other) { other.setAttribute('name','brand_model'); other.required = true; }
+					} else {
+						sel.setAttribute('name','brand_model');
+						if (other) { other.removeAttribute('name'); other.required = false; }
+					}
+				}
+			</script>
+		</div>
+		<div class="card">
+			<h2>車輛列表（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<form method="GET" action="/vehicles" style="margin-bottom:12px">
+				<input type="search" name="q" value={ q }
+					placeholder="搜尋車牌 / 車型 / VIN / 業主"
+					hx-get="/api/vehicles/search"
+					hx-trigger="keyup changed delay:300ms, search"
+					hx-target="#vehicle-rows"
+					hx-swap="innerHTML"
+					style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:320px">
+				<button class="btn btn-p" type="submit">搜尋</button>
+				<a class="btn btn-s" href="/vehicles">清除</a>
+			</form>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的車輛</div>
+			}
+			if len(rows) > 0 {
+				<table>
+					<tr>
+						<th>ID</th><th>車牌</th><th>車型</th><th>車種</th><th>年份</th><th>業主</th>
+						<th>下次保養日</th><th>下次保養里程</th><th>操作</th>
+					</tr>
+					<tbody id="vehicle-rows">
+						for _, row := range rows {
+							<tr>
+								<td>{ strconv.FormatInt(row.ID, 10) }</td>
+								<td><b>{ row.PlateNumber }</b></td>
+								<td>{ row.BrandModel }</td>
+								<td>
+									if row.VehicleTypeLabel != "" {
+										<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ row.VehicleTypeLabel }</span>
+									}
+									if row.VehicleTypeLabel == "" {
+										<span style="color:#64748b">-</span>
+									}
+								</td>
+								<td>{ intOrBlank(row.ManufactureYear) }</td>
+								<td>{ row.CustomerName }</td>
+								<td>@templ.Raw(row.DateCell)</td>
+								<td>@templ.Raw(row.KmCell)</td>
+								<td>
+									<a class="btn btn-p" href={ "/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10) }>開工單</a>
+									<a class="btn btn-o" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) }>履歷</a>
+									<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit" }>編輯</a>
+									<a class="btn btn-d" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete" }
+										data-confirm="確定刪除這台車？">刪除</a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+			@components.Pager("/vehicles", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+func calcPages(total, size int) int {
+	if size <= 0 {
+		return 1
+	}
+	pages := (total + size - 1) / size
+	if pages < 1 {
+		pages = 1
+	}
+	return pages
+}
+
+var _ = model.Vehicle{}

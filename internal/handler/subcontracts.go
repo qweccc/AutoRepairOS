@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 外包加工管理（SRS FR-SUB-01/02）。
@@ -85,67 +86,63 @@ func ListSubcontracts(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, s)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>工單</th><th>外包廠商</th><th>內容</th><th class="num">成本</th><th class="num">收費</th><th class="num">毛利</th><th>狀態</th><th>操作</th></tr>`)
+	var subRows []pages.SubcontractRow
 	for _, s := range list {
-		margin := s.ChargeAmount - s.CostAmount
-		tb.WriteString(`<tr><td>` + strconv.FormatInt(s.ID, 10) + `</td><td>#` + strconv.FormatInt(s.WorkOrderID, 10) +
-			`</td><td>` + htmlEsc(s.SupplierName) + `</td><td>` + htmlEsc(s.Description) +
-			`</td><td class="num">` + money(s.CostAmount) + `</td><td class="num">` + money(s.ChargeAmount) +
-			`</td><td class="num">` + money(margin) + `</td><td><span class="pill ` + subcontractStatusPill[s.Status] + `">` +
-			subcontractStatusLabel[s.Status] + `</span>` +
-			`</td><td><a class="btn btn-s" href="/subcontracts/` + strconv.FormatInt(s.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-d" href="/subcontracts/` + strconv.FormatInt(s.ID, 10) + `/delete" onclick="return confirm('確定刪除這筆外包？')">刪除</a></td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的外包工項</div>`
+		subRows = append(subRows, pages.SubcontractRow{
+			ID:           s.ID,
+			WorkOrderID:  s.WorkOrderID,
+			SupplierName: s.SupplierName,
+			Description:  s.Description,
+			CostAmount:   s.CostAmount,
+			ChargeAmount: s.ChargeAmount,
+			Status:       s.Status,
+			StatusLabel:  subcontractStatusLabel[s.Status],
+			StatusPill:   subcontractStatusPill[s.Status],
+		})
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增外包工項</h2>
-      <form class="frm" method="POST" action="/subcontracts">
-        <label>工單 ID<input type="number" name="work_order_id" required></label>
-        <label>協力廠商
-          <select name="supplier_id">
-            <value value="">（未指定）</value>` + supplierOptionsSel(0) + `
-          </select>
-        </label>
-        <label class="full">加工內容<input name="description" required></label>
-        <label>成本金額<input type="number" step="0.01" name="cost_amount" value="0"></label>
-        <label>收費金額<input type="number" step="0.01" name="charge_amount" value="0"></label>
-        <label>預計完成日<input type="date" name="expected_date"></label>
-        <label>狀態
-          <select name="status">
-            <option value="pending">待處理</option>
-            <option value="in_progress">進行中</option>
-            <option value="completed">已完成</option>
-          </select>
-        </label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增外包</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>外包清單（共 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <form method="GET" action="/subcontracts" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋內容 / 廠商" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px">
-        <select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-          <option value="">全部狀態</option>
-          <option value="pending"` + selIf(status == "pending") + `>待處理</option>
-          <option value="in_progress"` + selIf(status == "in_progress") + `>進行中</option>
-          <option value="completed"` + selIf(status == "completed") + `>已完成</option>
-          <option value="cancelled"` + selIf(status == "cancelled") + `>已取消</option>
-        </select>
-        <button class="btn btn-p" type="submit">篩選</button>
-        <a class="btn btn-s" href="/subcontracts">清除</a>
-      </form>` + table + pager("/subcontracts", qv, total, page, size) + `
-    </div>`
+	pages.ListSubcontractsPage(subRows, total, page, size, q, status,
+		supplierOptionsSel(0)).Render(r.Context(), w)
+}
 
-	renderPage(w, "外包加工", "/subcontracts", user.Username, user.Role, body)
+// SearchSubcontractsAPI 外包即時搜尋 API（HTMX 用）。
+func SearchSubcontractsAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	where := ` WHERE 1=1`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (sc.description LIKE ? OR COALESCE(sup.name,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT `+subcontractCols+`
+		FROM subcontracts sc LEFT JOIN suppliers sup ON sup.id=sc.supplier_id`+where+
+		` ORDER BY sc.id DESC LIMIT 50`, args...)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var result []pages.SubcontractRow
+	for rows.Next() {
+		s, err := scanSubcontract(rows)
+		if err != nil {
+			continue
+		}
+		result = append(result, pages.SubcontractRow{
+			ID:           s.ID,
+			WorkOrderID:  s.WorkOrderID,
+			SupplierName: s.SupplierName,
+			Description:  s.Description,
+			CostAmount:   s.CostAmount,
+			ChargeAmount: s.ChargeAmount,
+			Status:       s.Status,
+			StatusLabel:  subcontractStatusLabel[s.Status],
+			StatusPill:   subcontractStatusPill[s.Status],
+		})
+	}
+	pages.SubcontractSearchRows(result).Render(r.Context(), w)
 }
 
 // CreateSubcontract 新增外包工項（SRS FR-SUB-01）。

@@ -86,9 +86,27 @@ type Vehicle struct {
 	VehicleTypeLabel      string    `json:"vehicle_type_label,omitempty"`
 	DriverName            string    `json:"driver_name,omitempty"`
 	DriverPhone           string    `json:"driver_phone,omitempty"`
+	ContactName           string    `json:"contact_name,omitempty"`
+	ContactPhone          string    `json:"contact_phone,omitempty"`
+	OwnerName             string    `json:"owner_name,omitempty"`
+	OwnerAddress          string    `json:"owner_address,omitempty"`
+	OwnerIDNumber         string    `json:"owner_id_number,omitempty"`
+	LicenseExpiryDate     string    `json:"license_expiry_date,omitempty"`
 	Color                 string    `json:"color,omitempty"`
 	DoorCount             int       `json:"door_count,omitempty"`
 	ManufactureYear       int       `json:"manufacture_year,omitempty"`
+	ManufactureDate       string    `json:"manufacture_date,omitempty"`
+	LicenseIssueDate      string    `json:"license_issue_date,omitempty"`
+	FuelType              string    `json:"fuel_type,omitempty"`
+	FuelTypeLabel         string    `json:"fuel_type_label,omitempty"`
+	Displacement          int       `json:"displacement,omitempty"`
+	BodyStyle             string    `json:"body_style,omitempty"`
+	BodyStyleLabel        string    `json:"body_style_label,omitempty"`
+	SeatingCapacity       int       `json:"seating_capacity,omitempty"`
+	CurbWeight            int       `json:"curb_weight,omitempty"`
+	GrossWeight           int       `json:"gross_weight,omitempty"`
+	TireSize              string    `json:"tire_size,omitempty"`
+	Wheelbase             int       `json:"wheelbase,omitempty"`
 	VIN                   string    `json:"vin,omitempty"`
 	EngineNumber          string    `json:"engine_number,omitempty"`
 	InspectionDueDate     string    `json:"inspection_due_date,omitempty"`

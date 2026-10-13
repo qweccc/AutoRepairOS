@@ -67,6 +67,19 @@ func main() {
 	mux.HandleFunc("POST /login", handler.LoginHandler)
 	mux.HandleFunc("GET /logout", handler.LogoutHandler)
 	mux.HandleFunc("GET /api/me", handler.MeHandler)
+	mux.HandleFunc("GET /api/parts", handler.RequireLogin(handler.SearchPartsAPI))
+	mux.HandleFunc("GET /api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
+	mux.HandleFunc("GET /api/inventory/search", handler.RequireLogin(handler.SearchInventoryAPI))
+	mux.HandleFunc("GET /api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
+	mux.HandleFunc("GET /api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
+	mux.HandleFunc("GET /api/lookup/search", handler.RequireLogin(handler.SearchLookupAPI))
+	mux.HandleFunc("GET /api/insurance/search", handler.RequireLogin(handler.SearchInsuranceAPI))
+	mux.HandleFunc("GET /api/suppliers/search", handler.RequireLogin(handler.SearchSuppliersAPI))
+	mux.HandleFunc("GET /api/appointments/search", handler.RequireLogin(handler.SearchAppointmentsAPI))
+	mux.HandleFunc("GET /api/subcontracts/search", handler.RequireLogin(handler.SearchSubcontractsAPI))
+	mux.HandleFunc("GET /api/equipment/search", handler.RequireLogin(handler.SearchEquipmentAPI))
+	mux.HandleFunc("GET /api/staff/search", handler.RequireLogin(handler.SearchStaffAPI))
+	mux.HandleFunc("GET /api/receivables/search", handler.RequireLogin(handler.SearchReceivablesAPI))
 
 	// LINE webhook：不用登入，靠 X-Line-Signature 驗簽。
 	// 網址需經 Cloudflare Tunnel 對外公開，例如 https://<hostname>/webhook/line

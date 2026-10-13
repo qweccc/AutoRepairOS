@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 const inventoryCols = `i.id, COALESCE(i.supplier_id,0), COALESCE(s.name,''), i.part_number,
@@ -76,45 +77,22 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	// 技師不看成本價（毛利屬店內機密），但仍需看到售價以便估價。
-	costHead := ``
-	costCell := func(it model.InventoryItem) string { return `` }
-	if showMoney {
-		costHead = `<th class="num">成本</th>`
-		costCell = func(it model.InventoryItem) string {
-			return `<td class="num">` + money(it.CostPrice) + `</td>`
-		}
-	}
-
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th>類別</th><th>庫位</th><th>供應商</th>` + costHead +
-		`<th class="num">售價</th><th class="num">庫存</th><th class="num">安全值</th><th>操作</th></tr>`)
+	var invRows []pages.InventoryRow
 	for _, it := range list {
-		stockCell := strconv.Itoa(it.StockQuantity)
-		if it.LowStock {
-			stockCell = `<b style="color:#f87171">` + stockCell + ` ⚠</b>`
-		}
-		catCell := `<span style="color:#64748b">-</span>`
-		if it.Category != "" {
-			catCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + htmlEsc(it.Category) + `</span>`
-		}
-		// 工資/服務類沒有實體庫存，標記出來避免誤判為缺料
-		kindTag := ""
-		if it.ItemKind == "labor" {
-			kindTag = ` <span style="color:#94a3b8;font-size:11px">(工資)</span>`
-		}
-		tb.WriteString(`<tr><td><code>` + htmlEsc(it.PartNumber) + `</code></td><td>` + htmlEsc(it.Name) + kindTag +
-			`</td><td>` + catCell + `</td><td>` + orDash(htmlEsc(it.BinLocation)) + `</td><td>` + orDash(htmlEsc(it.SupplierName)) +
-			`</td>` + costCell(it) + `<td class="num">` + money(it.SellingPrice) +
-			`</td><td class="num">` + stockCell + `</td><td class="num">` + strconv.Itoa(it.MinSafetyStock) +
-			`</td><td><a class="btn btn-s" href="/inventory/` + strconv.FormatInt(it.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-o" href="/inventory/` + strconv.FormatInt(it.ID, 10) + `/stock">調庫</a> ` +
-			`<a class="btn btn-d" href="/inventory/` + strconv.FormatInt(it.ID, 10) + `/delete" onclick="return confirm('確定刪除此零件？')">刪除</a></td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有零件資料</div>`
+		invRows = append(invRows, pages.InventoryRow{
+			ID:            it.ID,
+			PartNumber:    it.PartNumber,
+			Name:          it.Name,
+			Category:      it.Category,
+			BinLocation:   it.BinLocation,
+			SupplierName:  it.SupplierName,
+			CostPrice:     it.CostPrice,
+			SellingPrice:  it.SellingPrice,
+			StockQuantity: it.StockQuantity,
+			MinSafety:     it.MinSafetyStock,
+			LowStock:      it.LowStock,
+			ItemKind:      it.ItemKind,
+		})
 	}
 
 	// 類別篩選籤（依實際資料的類別列出，附筆數）
@@ -141,59 +119,54 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	lowCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < COALESCE(min_safety_stock,0)")
 	negCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < 0")
-	lowNote := ""
-	if lowOnly {
-		lowNote = ` <a href="/inventory" style="font-size:13px">（顯示全部）</a>`
-	}
 
-	// 負庫存是舊系統匯入的歷史包袱，單獨拉一條提示與入口，
-	// 否則混在「低庫存」裡會被忽略（低庫存是正常營運訊號，負庫存是資料問題）。
 	negBanner := ""
 	if negCount > 0 {
 		negBanner = `<div class="msg msg-err" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-        <span>⚠ 有 <b>` + strconv.Itoa(negCount) + `</b> 個料號庫存為負數（舊系統進貨未登錄造成）。負庫存會讓扣料與報表失準。</span>
+        <span>⚠ 有 <b>` + strconv.Itoa(negCount) + `</b> 個料號庫存為負數（舊系統進貨未登錄造成）。</span>
         <a class="btn btn-p" href="/inventory/negative">前往補正</a>
       </div>`
 	}
 
-	costField := costInput("0")
-	if !showMoney {
-		costField = ""
+	pages.ListInventoryPage(invRows, total, lowCount, negCount, page, size,
+		q, lowOnly, showMoney, catTabs.String(), negBanner).Render(r.Context(), w)
+}
+
+// SearchInventoryAPI 庫存即時搜尋 API（HTMX 用）。
+func SearchInventoryAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		pages.InventorySearchRows(nil, true).Render(r.Context(), w)
+		return
 	}
+	like := "%" + q + "%"
+	rows, err := db.DB.Query(`SELECT i.id, i.name, i.part_number, COALESCE(i.category,''),
+		COALESCE(i.bin_location,''), COALESCE(s.name,''),
+		COALESCE(i.cost_price,0), COALESCE(i.selling_price,0),
+		COALESCE(i.stock_quantity,0), COALESCE(i.min_safety_stock,0),
+		COALESCE(i.stock_quantity,0) < COALESCE(i.min_safety_stock,0),
+		COALESCE(i.item_kind,'')
+		FROM inventory_items i
+		LEFT JOIN suppliers s ON s.id = i.supplier_id
+		WHERE i.name LIKE ? OR i.part_number LIKE ? OR COALESCE(i.barcode,'') LIKE ? OR i.bin_location LIKE ?
+		ORDER BY i.name LIMIT 50`, like, like, like, like)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-	body := flash(r) + negBanner + `
-    <div class="card">
-      <h2>新增零件</h2>
-      <form class="frm" method="POST" action="/inventory">
-        <label>料號<input name="part_number" required></label>
-        <label>名稱<input name="name" required></label>
-        <label>庫位<input name="bin_location" required placeholder="例 A-01-3"></label>
-        <label>條碼<input name="barcode"></label>
-        <label>供應商<select name="supplier_id"><option value="0">無</option>` + supplierOptions() + `</select></label>
-        ` + costField + `
-        <label>售價<input name="selling_price" type="number" min="0" step="1" value="0"></label>
-        <label>庫存數量<input name="stock_quantity" type="number" value="0"></label>
-        <label>安全庫存<input name="min_safety_stock" type="number" min="0" value="5"></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增零件</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>零件列表（符合條件 ` + strconv.Itoa(total) + ` 筆，低庫存 ` + strconv.Itoa(lowCount) + ` 種）` + lowNote + `</h2>
-      <div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        ` + catTabs.String() + `
-      </div>
-      <form method="GET" action="/inventory" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋名稱 / 料號 / 條碼 / 庫位" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px">
-        ` + hiddenInputs(qv, "q", "low", "page", "per") + `
-        <label style="font-size:13px;margin-left:10px"><input type="checkbox" name="low" value="1"` + chkIf(lowOnly) + `> 只看低庫存</label>
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/inventory">清除</a>
-        <a class="btn btn-s" href="/inventory/movements">異動紀錄</a>
-      </form>` + table + pager("/inventory", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/inventory", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "庫存管理", "/inventory", user.Username, user.Role, body)
+	var result []pages.InventoryRow
+	for rows.Next() {
+		var it pages.InventoryRow
+		if err := rows.Scan(&it.ID, &it.Name, &it.PartNumber, &it.Category, &it.BinLocation,
+			&it.SupplierName, &it.CostPrice, &it.SellingPrice, &it.StockQuantity, &it.MinSafety,
+			&it.LowStock, &it.ItemKind); err != nil {
+			continue
+		}
+		result = append(result, it)
+	}
+	pages.InventorySearchRows(result, true).Render(r.Context(), w)
 }
 
 // invTabURL 產生庫存類別篩選連結，保留搜尋與低庫存條件。
@@ -464,7 +437,7 @@ func supplierOptionsSel(selected int64) string {
 
 func inventoryOptions() string {
 	rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(selling_price,0), COALESCE(stock_quantity,0)
-		FROM inventory_items ORDER BY name`)
+		FROM inventory_items ORDER BY name LIMIT 300`)
 	if err != nil {
 		return ""
 	}
@@ -483,6 +456,43 @@ func inventoryOptions() string {
 			` / 售價 ` + money(sell) + ` / 庫存 ` + strconv.Itoa(stock) + `</option>`)
 	}
 	return b.String()
+}
+
+// SearchPartsAPI 零件即時搜尋 API，回傳 JSON。
+// 給工單新增零件時的前端 autocomplete 使用。
+func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		writeJSON(w, http.StatusOK, []interface{}{})
+		return
+	}
+	like := "%" + q + "%"
+	rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(selling_price,0), COALESCE(stock_quantity,0)
+		FROM inventory_items
+		WHERE name LIKE ? OR part_number LIKE ? OR COALESCE(barcode,'') LIKE ?
+		ORDER BY name LIMIT 20`, like, like, like)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, []interface{}{})
+		return
+	}
+	defer rows.Close()
+
+	type partResult struct {
+		ID         int64   `json:"id"`
+		Name       string  `json:"name"`
+		PartNumber string  `json:"part_number"`
+		Price      float64 `json:"price"`
+		Stock      int     `json:"stock"`
+	}
+	var results []partResult
+	for rows.Next() {
+		var p partResult
+		if err := rows.Scan(&p.ID, &p.Name, &p.PartNumber, &p.Price, &p.Stock); err != nil {
+			continue
+		}
+		results = append(results, p)
+	}
+	writeJSON(w, http.StatusOK, results)
 }
 
 // costInput 產生成本價欄位；技師看不到此欄位。

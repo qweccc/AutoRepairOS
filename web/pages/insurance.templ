@@ -1,0 +1,100 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/web/components"
+)
+
+type InsuranceCompanyRow struct {
+	ID            int64
+	Code          string
+	Name          string
+	TaxID         string
+	ClaimPhone    string
+	ContactPerson string
+	Active        int
+}
+
+// ListInsurancePage 保險公司列表頁（HTMX 即時搜尋）。
+templ ListInsurancePage(rows []InsuranceCompanyRow, total, page, size int, q string) {
+	@components.Layout("保險公司", "/insurance-companies", "owner", "owner", "AutoRepair OS") {
+		<div class="card">
+			<h2>新增保險公司</h2>
+			<form class="frm" method="POST" action="/insurance-companies">
+				<label>簡稱<input name="code" placeholder="如：國泰" required></label>
+				<label>公司名稱<input name="name" required></label>
+				<label>統一編號<input name="tax_id"></label>
+				<label>客服電話<input name="claim_phone" placeholder="打報案用"></label>
+				<label>聯絡人<input name="contact_person"></label>
+				<label>地址<input name="address"></label>
+				<label>郵遞區號<input name="postal_code"></label>
+				<label>備註<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">新增</button></div>
+			</form>
+		</div>
+		<div class="card">
+			<h2>保險公司（符合條件 { strconv.Itoa(total) } 家）</h2>
+			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+				保險理賠案件需在此維護對應保險公司，工單開立時才能選擇。
+			</p>
+			<input type="search" name="q" value={ q }
+				placeholder="搜尋簡稱 / 公司名稱 / 統編"
+				hx-get="/api/insurance/search"
+				hx-trigger="keyup changed delay:300ms, search"
+				hx-target="#insurance-rows"
+				hx-swap="innerHTML"
+				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px;margin-bottom:12px">
+			<a class="btn btn-s" href="/insurance-companies">清除</a>
+			<table>
+				<tr>
+					<th>簡稱</th><th>公司名稱</th><th>統編</th><th>客服電話</th><th>聯絡人</th><th>狀態</th><th>操作</th>
+				</tr>
+				<tbody id="insurance-rows">
+					for _, ic := range rows {
+						@InsuranceCompanyRowContent(ic)
+					}
+				</tbody>
+			</table>
+			if len(rows) == 0 {
+				<div class="empty">沒有保險公司資料</div>
+			}
+			@components.Pager("/insurance-companies", page, calcPages(total, size), total)
+		</div>
+	}
+}
+
+templ InsuranceCompanyRowContent(ic InsuranceCompanyRow) {
+	<tr>
+		<td><b>{ ic.Code }</b></td>
+		<td>{ ic.Name }</td>
+		<td>{ ic.TaxID }</td>
+		<td>{ ic.ClaimPhone }</td>
+		<td>{ ic.ContactPerson }</td>
+		<td>
+			if ic.Active == 0 {
+				<span class="pill p-cancelled">停用</span>
+			}
+			if ic.Active != 0 {
+				<span class="pill p-completed">啟用</span>
+			}
+		</td>
+		<td>
+			<a class="btn btn-s" href={ "/insurance-companies/" + strconv.FormatInt(ic.ID, 10) + "/edit" }>編輯</a>
+			if ic.Active != 0 {
+				<a class="btn btn-d" href={ "/insurance-companies/" + strconv.FormatInt(ic.ID, 10) + "/delete" }
+					data-confirm="確定停用這家保險公司？">停用</a>
+			}
+		</td>
+	</tr>
+}
+
+// InsuranceSearchRows HTMX 即時搜尋回傳的純列。
+templ InsuranceSearchRows(rows []InsuranceCompanyRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="7" style="color:#64748b;text-align:center;padding:20px">查無保險公司</td></tr>
+	}
+	for _, ic := range rows {
+		@InsuranceCompanyRowContent(ic)
+	}
+}

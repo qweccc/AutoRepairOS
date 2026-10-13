@@ -1,0 +1,115 @@
+package components
+
+import "strconv"
+
+// Pill 狀態標籤。
+// cls 對應 CSS 的 p-pending / p-progress / p-completed 等。
+templ Pill(label, cls string) {
+	<span class={ "pill " + cls }>{ label }</span>
+}
+
+// Btn 按鈕連結。
+// style: btn-p(主色) / btn-s(次要) / btn-d(刪除) / btn-o(警告)
+templ Btn(href, label, style string) {
+	<a class={ "btn " + style } href={ templ.SafeURL(href) }>{ label }</a>
+}
+
+// BtnConfirm 帶確認對話框的按鈕連結。
+templ BtnConfirm(href, label, style, confirmMsg string) {
+	<a class={ "btn " + style } href={ templ.SafeURL(href) } data-confirm={ confirmMsg }>{ label }</a>
+}
+
+// Card 卡片容器。
+templ Card(title string) {
+	<div class="card">
+		<h2>{ title }</h2>
+		{ children... }
+	</div>
+}
+
+// Empty 空狀態提示。
+templ Empty(msg string) {
+	<div class="empty">{ msg }</div>
+}
+
+// Pager 頁碼導覽。
+// path 如 "/customers"，query 保留既有篩選參數。
+templ Pager(path string, currentPage, totalPages, totalItems int) {
+	if totalPages > 1 {
+		<div style="margin:14px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+			if currentPage > 1 {
+				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=1") }>« 首頁</a>
+				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage-1)) }>‹ 上一頁</a>
+			}
+			@PagerNumbers(path, currentPage, totalPages)
+			if currentPage < totalPages {
+				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage+1)) }>下一頁 ›</a>
+				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(totalPages)) }>末頁 »</a>
+			}
+			<span style="color:#94a3b8;font-size:12.5px;margin-left:10px">
+				第 { strconv.Itoa(currentPage) } / { strconv.Itoa(totalPages) } 頁，共 { strconv.Itoa(totalItems) } 筆
+			</span>
+		</div>
+	}
+}
+
+templ PagerNumbers(path string, currentPage, totalPages int) {
+	{{ s := currentPage - 3 }}
+	{{ if s < 1 { s = 1 } }}
+	{{ e := s + 6 }}
+	{{ if e > totalPages { e = totalPages; s = e - 6; if s < 1 { s = 1 } } }}
+	for p := s; p <= e; p++ {
+		if p == currentPage {
+			<span class="btn btn-p">{ strconv.Itoa(p) }</span>
+		} else {
+			<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(p)) }>{ strconv.Itoa(p) }</a>
+		}
+	}
+}
+
+// FlashMsg 操作成功提示（HTMX 更新後顯示）。
+templ FlashMsg(msg string) {
+	if msg != "" {
+		<div class="msg msg-ok">{ msg }</div>
+	}
+}
+
+// FlashErr 操作失敗提示。
+templ FlashErr(msg string) {
+	if msg != "" {
+		<div class="msg msg-err">{ msg }</div>
+	}
+}
+
+// FormField 表單欄位（label + input）。
+templ FormField(label, name, inputType, placeholder string, required bool) {
+	<label>
+		{ label }
+		<input
+			name={ name }
+			type={ inputType }
+			placeholder={ placeholder }
+			if required {
+				required
+			}
+		/>
+	</label>
+}
+
+// SelectField 下拉選單欄位。
+templ SelectField(label, name string, options []SelectOption) {
+	<label>
+		{ label }
+		<select name={ name }>
+			for _, opt := range options {
+				<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+			}
+		</select>
+	</label>
+}
+
+type SelectOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}

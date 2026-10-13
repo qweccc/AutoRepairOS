@@ -2,18 +2,24 @@ package handler
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 const vehicleCols = `v.id, v.customer_id, COALESCE(c.name,''), v.plate_number, v.brand_model,
 	COALESCE(v.vehicle_type,''), COALESCE(v.driver_name,''), COALESCE(v.driver_phone,''),
-	COALESCE(v.color,''), COALESCE(v.door_count,0), COALESCE(v.manufacture_year,0), COALESCE(v.vin,''), COALESCE(v.engine_number,''),
+	COALESCE(v.contact_name,''), COALESCE(v.contact_phone,''), COALESCE(v.owner_name,''),
+	COALESCE(v.owner_address,''), COALESCE(v.owner_id_number,''), COALESCE(v.license_expiry_date,''),
+	COALESCE(v.color,''), COALESCE(v.door_count,0), COALESCE(v.manufacture_year,0),
+	COALESCE(v.manufacture_date,''), COALESCE(v.license_issue_date,''),
+	COALESCE(v.fuel_type,''), COALESCE(v.displacement,0), COALESCE(v.body_style,''),
+	COALESCE(v.seating_capacity,0), COALESCE(v.curb_weight,0), COALESCE(v.gross_weight,0),
+	COALESCE(v.tire_size,''), COALESCE(v.wheelbase,0), COALESCE(v.vin,''), COALESCE(v.engine_number,''),
 	COALESCE(v.inspection_due_date,''), COALESCE(v.next_maintenance_date,''),
 	COALESCE(v.next_maintenance_mileage,0),
 	COALESCE(v.last_maintenance_date,''), COALESCE(v.last_maintenance_mileage,0),
@@ -22,13 +28,22 @@ const vehicleCols = `v.id, v.customer_id, COALESCE(c.name,''), v.plate_number, v
 func scanVehicle(rows interface{ Scan(...interface{}) error }) (model.Vehicle, error) {
 	var v model.Vehicle
 	err := rows.Scan(&v.ID, &v.CustomerID, &v.CustomerName, &v.PlateNumber, &v.BrandModel,
-		&v.VehicleType, &v.DriverName, &v.DriverPhone, &v.Color, &v.DoorCount,
-		&v.ManufactureYear, &v.VIN, &v.EngineNumber, &v.InspectionDueDate,
+		&v.VehicleType, &v.DriverName, &v.DriverPhone, &v.ContactName, &v.ContactPhone, &v.OwnerName,
+		&v.OwnerAddress, &v.OwnerIDNumber, &v.LicenseExpiryDate,
+		&v.Color, &v.DoorCount, &v.ManufactureYear, &v.ManufactureDate, &v.LicenseIssueDate,
+		&v.FuelType, &v.Displacement, &v.BodyStyle, &v.SeatingCapacity, &v.CurbWeight, &v.GrossWeight,
+		&v.TireSize, &v.Wheelbase, &v.VIN, &v.EngineNumber, &v.InspectionDueDate,
 		&v.NextMaintenanceDate, &v.NextMaintenanceMileage,
 		&v.LastMaintenanceDate, &v.LastMaintenanceMileage,
 		&v.MaintIntervalMonths, &v.MaintIntervalKm)
 	if v.VehicleType != "" {
 		v.VehicleTypeLabel = lookupLabel("vehicle_type", v.VehicleType)
+	}
+	if v.FuelType != "" {
+		v.FuelTypeLabel = lookupLabel("fuel_type", v.FuelType)
+	}
+	if v.BodyStyle != "" {
+		v.BodyStyleLabel = lookupLabel("body_style", v.BodyStyle)
 	}
 	return v, err
 }
@@ -147,99 +162,68 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, v)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>車種</th><th>年份</th><th>業主</th>` +
-		`<th>下次保養日</th><th>下次保養里程</th><th>操作</th></tr>`)
+	var vehicleRows []pages.VehicleRow
 	for _, v := range list {
 		curKm := lastMileageOf(v.ID)
 		dateCell, kmCell := maintDueText(v, curKm)
+		vehicleRows = append(vehicleRows, pages.VehicleRow{
+			ID:               v.ID,
+			PlateNumber:      v.PlateNumber,
+			BrandModel:       v.BrandModel,
+			VehicleTypeLabel: v.VehicleTypeLabel,
+			ManufactureYear:  v.ManufactureYear,
+			CustomerName:     v.CustomerName,
+			DateCell:         dateCell,
+			KmCell:           kmCell,
+			CanEdit:          true,
+		})
+	}
+
+	pages.ListVehiclesPage(vehicleRows, total, page, size, q, filterCustomer,
+		vehicleModelOptions(""),
+		lookupOptions("vehicle_type", ""),
+		lookupOptions("fuel_type", ""),
+		lookupOptions("body_style", ""),
+	).Render(r.Context(), w)
+}
+
+// SearchVehiclesAPI 車輛即時搜尋 API（HTMX 用），回傳純 HTML 列。
+func SearchVehiclesAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		w.Write([]byte(`<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無車輛</td></tr>`))
+		return
+	}
+	like := "%" + q + "%"
+	rows, err := db.DB.Query(`SELECT `+vehicleCols+` FROM vehicles v
+		JOIN customers c ON c.id = v.customer_id
+		WHERE v.plate_number LIKE ? OR v.brand_model LIKE ? OR c.name LIKE ? OR COALESCE(v.vin,'') LIKE ?
+		ORDER BY v.id DESC LIMIT 50`, like, like, like, like)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	for rows.Next() {
+		v, err := scanVehicle(rows)
+		if err != nil {
+			continue
+		}
 		typeCell := `<span style="color:#64748b">-</span>`
 		if v.VehicleTypeLabel != "" {
-			typeCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + htmlEsc(v.VehicleTypeLabel) + `</span>`
+			typeCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + v.VehicleTypeLabel + `</span>`
 		}
-		tb.WriteString(`<tr><td>` + strconv.FormatInt(v.ID, 10) + `</td><td><b>` + htmlEsc(v.PlateNumber) + `</b></td><td>` +
-			htmlEsc(v.BrandModel) + `</td><td>` + typeCell + `</td><td>` + yearText(v.ManufactureYear) + `</td><td>` +
-			htmlEsc(v.CustomerName) + `</td><td>` + dateCell + `</td><td>` + kmCell + `</td><td>` +
+		b.WriteString(`<tr><td>` + strconv.FormatInt(v.ID, 10) + `</td><td><b>` + v.PlateNumber + `</b></td><td>` +
+			v.BrandModel + `</td><td>` + typeCell + `</td><td>` + intOrBlank(v.ManufactureYear) + `</td><td>` +
+			v.CustomerName + `</td><td></td><td></td><td>` +
 			`<a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">開工單</a> ` +
 			`<a class="btn btn-o" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `">履歷</a> ` +
-			`<a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-d" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/delete" onclick="return confirm('確定刪除這台車？')">刪除</a></td></tr>`)
+			`<a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯</a></td></tr>`)
 	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的車輛</div>`
-	}
-
-	filterNote := ""
-	if filterCustomer > 0 {
-		filterNote = ` <a href="/vehicles" style="font-size:13px">（清除客戶篩選）</a>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增車輛</h2>
-      <form class="frm" method="POST" action="/vehicles">
-        <label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required placeholder="例：王小明 或 0912345678 或 1234"></label>
-        <label>車牌號碼<input name="plate_number" required></label>
-        <label>品牌車型
-          <select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">` +
-		vehicleModelOptions("") + `</select>
-        </label>
-        <label id="brandModelOtherWrap" style="display:none">其他車型
-          <input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型，例：Porsche 911">
-        </label>
-        <label>車種類別<select name="vehicle_type">` +
-			lookupOptions("vehicle_type", "") + `</select></label>
-        <label>駕駛人<input name="driver_name" placeholder="例：陳小姐"></label>
-        <label>駕駛人電話<input name="driver_phone" placeholder="例：0963-176677"></label>
-        <label>顏色<input name="color" placeholder="例：白色"></label>
-        <label>車門數<input name="door_count" type="number" min="0" max="10" placeholder="例：4"></label>
-        <label>出廠年份<input name="manufacture_year" type="number" min="1900" max="2100"></label>
-        <label>VIN<input name="vin"></label>
-        <label>引擎號碼<input name="engine_number"></label>
-        <label>檢驗到期日<input name="inspection_due_date" type="date"></label>
-        <label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value="6"></label>
-        <label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="5000"></label>
-        <div class="full"><button class="btn btn-p" type="submit">建立車輛</button></div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin-top:10px">
-        車型清單可在「代碼對照 → 車輛品牌車型」維護；選單沒有的車款選「其他」手動輸入。
-        統一的車型寫法能讓「高頻維修車款」等分析正確分組（同款車不會被算成三台）。
-      </p>
-      <script>
-      function toggleModelOther(){
-        var sel = document.getElementById('brandModelSel');
-        var wrap = document.getElementById('brandModelOtherWrap');
-        var other = document.getElementById('brandModelOther');
-        if (!sel || !wrap) return;
-        var isOther = sel.value === '__OTHER__';
-        wrap.style.display = isOther ? '' : 'none';
-        if (other) other.disabled = !isOther;
-        // 選「其他」時把 select 的名稱移除，讓送出的是文字欄位而非佔位值。
-        if (isOther) {
-          sel.removeAttribute('name');
-          if (other) { other.setAttribute('name','brand_model'); other.required = true; }
-        } else {
-          sel.setAttribute('name','brand_model');
-          if (other) { other.removeAttribute('name'); other.required = false; }
-        }
-      }
-      </script>
-    </div>
-    <div class="card">
-      <h2>車輛列表（符合條件 ` + strconv.Itoa(total) + ` 筆）` + filterNote + `</h2>
-      <form method="GET" action="/vehicles" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋車牌 / 車型 / VIN / 業主" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:320px">
-        ` + hiddenInputs(qv, "q", "page", "per") + `
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/vehicles">清除</a>
-      </form>` + table + pager("/vehicles", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/vehicles", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "車輛管理", "/vehicles", user.Username, user.Role, body)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(b.String()))
 }
 
 // ShowVehicle 車輛履歷：基本資料 + 歷年工單 + 消費統計。
@@ -356,58 +340,11 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	curKm := lastMileageOf(v.ID)
 	dateCell, kmCell := maintDueText(v, curKm)
 
-	body := `
-    <div class="card">
-      <h2>` + htmlEsc(v.PlateNumber) + ` — ` + htmlEsc(v.BrandModel) + `</h2>
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + strconv.Itoa(orderCount) + `</b><span>維修次數</span></div>
-        <div class="stat"><b>` + money(totalSpent) + `</b><span>累計消費</span></div>
-        <div class="stat"><b>` + money(unpaid) + `</b><span>未結金額</span></div>
-        <div class="stat"><b>` + strconv.Itoa(curKm) + `</b><span>最近里程</span></div>
-      </div>
-      <table>
-        <tr><th>業主</th><td>` + htmlEsc(v.CustomerName) + ` <a href="/customers/` +
-		strconv.FormatInt(v.CustomerID, 10) + `/edit" style="font-size:12.5px">（編輯客戶）</a></td></tr>
-        <tr><th>出廠年份</th><td>` + yearText(v.ManufactureYear) + `</td></tr>
-        <tr><th>VIN</th><td>` + orDash(htmlEsc(v.VIN)) + `</td></tr>
-        <tr><th>引擎號碼</th><td>` + orDash(htmlEsc(v.EngineNumber)) + `</td></tr>
-        <tr><th>檢驗到期日</th><td>` + dateText(v.InspectionDueDate) + `</td></tr>
-        <tr><th>最後保養</th><td>` + dateText(normDate(v.LastMaintenanceDate)) +
-		func() string {
-			if v.LastMaintenanceMileage > 0 {
-				return " / " + strconv.Itoa(v.LastMaintenanceMileage) + "km"
-			}
-			return ""
-		}() + `</td></tr>
-        <tr><th>保養間隔</th><td>每 ` + strconv.Itoa(v.MaintIntervalMonths) + ` 個月 或 ` +
-		strconv.Itoa(v.MaintIntervalKm) + ` 公里</td></tr>
-      </table>
-      <div style="margin-top:14px;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:9px">
-        <div style="color:#94a3b8;font-size:12.5px;margin-bottom:8px">
-          下次保養（兩者先到者為準）
-        </div>
-        <table style="margin:0">
-          <tr><th style="width:110px">依日期</th><td>` + dateCell + `</td></tr>
-          <tr><th>依里程</th><td>` + kmCell + `</td></tr>
-        </table>
-      </div>
-      <div style="margin-top:16px">
-        <a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">＋ 開立工單</a>
-        <a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯車輛</a>
-        <a class="btn btn-s" href="/work-orders?q=` + url.QueryEscape(v.PlateNumber) + `">在工單列表查詢</a>
-        <a class="btn btn-p" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/mileage/new">＋ 記錄里程</a>
-        <a class="btn btn-s" href="/vehicles">回車輛列表</a>
-      </div>
-    </div>
-    <div class="card"><h2>里程履歷</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
-        進廠工單會自動記錄里程（來源「進廠工單」）；非進廠的更新用「＋ 記錄里程」手動登錄。
-        里程比前一筆小時會標示「回退」，請在備註說明原因（如更換碼表）。
-      </p>` + mileageHistory(v.ID, 50) + `
-    </div>
-    <div class="card"><h2>維修紀錄（最近 200 筆）</h2>` + ordersTable + `</div>` + partsTable
-
-	renderPage(w, "車輛履歷 "+v.PlateNumber, "/vehicles", user.Username, user.Role, body)
+	pages.ShowVehiclePage(v,
+		orderCount, totalSpent, unpaid, curKm,
+		dateCell, kmCell,
+		mileageHistory(v.ID, 50), ordersTable, partsTable,
+	).Render(r.Context(), w)
 }
 
 func CreateVehicle(w http.ResponseWriter, r *http.Request) {
@@ -427,16 +364,27 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 
 	_, err := db.DB.Exec(`INSERT INTO vehicles
 		(customer_id, plate_number, brand_model, vehicle_type, driver_name, driver_phone,
-		 color, door_count, manufacture_year, vin, engine_number,
+		 contact_name, contact_phone, owner_name, owner_address, owner_id_number, license_expiry_date,
+		 color, door_count, manufacture_year, manufacture_date, license_issue_date,
+		 fuel_type, displacement, body_style, seating_capacity, curb_weight, gross_weight,
+		 tire_size, wheelbase, vin, engine_number,
 		 inspection_due_date, next_maintenance_date, next_maintenance_mileage,
 		 last_maintenance_date, last_maintenance_mileage,
 		 next_maintenance_interval_months, next_maintenance_interval_km)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		customerID, plate, model_, vehicleType,
 		nullStr(r.FormValue("driver_name")), nullStr(r.FormValue("driver_phone")),
+		nullStr(r.FormValue("contact_name")), nullStr(r.FormValue("contact_phone")),
+		nullStr(r.FormValue("owner_name")), nullStr(r.FormValue("owner_address")),
+		nullStr(r.FormValue("owner_id_number")), nullStr(r.FormValue("license_expiry_date")),
 		nullStr(r.FormValue("color")), atoiDefault(r.FormValue("door_count"), 0),
-		atoiDefault(r.FormValue("manufacture_year"), 0), nullStr(r.FormValue("vin")),
-		nullStr(r.FormValue("engine_number")),
+		atoiDefault(r.FormValue("manufacture_year"), 0),
+		nullStr(r.FormValue("manufacture_date")), nullStr(r.FormValue("license_issue_date")),
+		nullStr(r.FormValue("fuel_type")), atoiDefault(r.FormValue("displacement"), 0),
+		nullStr(r.FormValue("body_style")), atoiDefault(r.FormValue("seating_capacity"), 0),
+		atoiDefault(r.FormValue("curb_weight"), 0), atoiDefault(r.FormValue("gross_weight"), 0),
+		nullStr(r.FormValue("tire_size")), atoiDefault(r.FormValue("wheelbase"), 0),
+		nullStr(r.FormValue("vin")), nullStr(r.FormValue("engine_number")),
 		nullDate(r.FormValue("inspection_due_date")),
 		nil, nil,
 		nullDate(r.FormValue("last_maintenance_date")),
@@ -527,56 +475,12 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>編輯車輛 ` + htmlEsc(v.PlateNumber) + `</h2>
-      <form class="frm" method="POST" action="/vehicles/` + strconv.FormatInt(v.ID, 10) + `">
-        <label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" value="` + htmlEsc(v.CustomerName) + `" required></label>
-        <label>車牌號碼<input name="plate_number" value="` + htmlEsc(v.PlateNumber) + `" required></label>
-        <label>品牌車型
-          <select name="brand_model" id="brandModelSel" required onchange="toggleModelOther()">` +
-			vehicleModelOptions(v.BrandModel) + `</select>
-        </label>
-        <label id="brandModelOtherWrap" style="display:none">其他車型
-          <input name="brand_model_other" id="brandModelOther" placeholder="請輸入廠牌與車型">
-        </label>
-        <label>車種類別<select name="vehicle_type">` +
-			lookupOptions("vehicle_type", v.VehicleType) + `</select></label>
-        <label>駕駛人<input name="driver_name" value="` + htmlEsc(v.DriverName) + `" placeholder="例：陳小姐"></label>
-        <label>駕駛人電話<input name="driver_phone" value="` + htmlEsc(v.DriverPhone) + `" placeholder="例：0963-176677"></label>
-        <label>顏色<input name="color" value="` + htmlEsc(v.Color) + `" placeholder="例：白色"></label>
-        <label>車門數<input name="door_count" type="number" min="0" max="10" value="` + intOrBlank(v.DoorCount) + `"></label>
-        <label>出廠年份<input name="manufacture_year" type="number" value="` + strconv.Itoa(v.ManufactureYear) + `" min="1900" max="2100"></label>
-        <label>VIN<input name="vin" value="` + htmlEsc(v.VIN) + `"></label>
-        <label>引擎號碼<input name="engine_number" value="` + htmlEsc(v.EngineNumber) + `"></label>
-        <label>檢驗到期日<input name="inspection_due_date" type="date" value="` + htmlEsc(v.InspectionDueDate) + `"></label>
-        <label>最後保養日<input name="last_maintenance_date" type="date" value="` + htmlEsc(normDate(v.LastMaintenanceDate)) + `"></label>
-        <label>最後保養里程<input name="last_maintenance_mileage" type="number" min="0" value="` + intOrBlank(v.LastMaintenanceMileage) + `"></label>
-        <label>保養間隔（月）<input name="maint_interval_months" type="number" min="1" max="60" value="` + strconv.Itoa(v.MaintIntervalMonths) + `"></label>
-        <label>保養間隔（公里）<input name="maint_interval_km" type="number" min="500" value="` + strconv.Itoa(v.MaintIntervalKm) + `"></label>
-        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/vehicles">取消</a></div>
-      </form>
-      <script>
-      function toggleModelOther(){
-        var sel = document.getElementById('brandModelSel');
-        var wrap = document.getElementById('brandModelOtherWrap');
-        var other = document.getElementById('brandModelOther');
-        if (!sel || !wrap) return;
-        var isOther = sel.value === '__OTHER__';
-        wrap.style.display = isOther ? '' : 'none';
-        if (other) other.disabled = !isOther;
-        if (isOther) {
-          sel.removeAttribute('name');
-          if (other) { other.setAttribute('name','brand_model'); other.required = true; }
-        } else {
-          sel.setAttribute('name','brand_model');
-          if (other) { other.removeAttribute('name'); other.required = false; }
-        }
-      }
-      </script>
-    </div>`
-
-	renderPage(w, "編輯車輛", "/vehicles", user.Username, user.Role, body)
+	pages.EditVehiclePage(v,
+		vehicleModelOptions(v.BrandModel),
+		lookupOptions("vehicle_type", v.VehicleType),
+		lookupOptions("fuel_type", v.FuelType),
+		lookupOptions("body_style", v.BodyStyle),
+	).Render(r.Context(), w)
 }
 
 func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
@@ -595,15 +499,26 @@ func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := db.DB.Exec(`UPDATE vehicles SET customer_id=?, plate_number=?, brand_model=?,
-		vehicle_type=?, driver_name=?, driver_phone=?, color=?, door_count=?,
-		manufacture_year=?, vin=?, engine_number=?, inspection_due_date=?,
+		vehicle_type=?, driver_name=?, driver_phone=?, contact_name=?, contact_phone=?, owner_name=?,
+		owner_address=?, owner_id_number=?, license_expiry_date=?,
+		color=?, door_count=?, manufacture_year=?, manufacture_date=?, license_issue_date=?,
+		fuel_type=?, displacement=?, body_style=?, seating_capacity=?, curb_weight=?, gross_weight=?,
+		tire_size=?, wheelbase=?, vin=?, engine_number=?, inspection_due_date=?,
 		last_maintenance_date=?, last_maintenance_mileage=?,
 		next_maintenance_interval_months=?, next_maintenance_interval_km=? WHERE id=?`,
 		customerID, plate, model_, strings.TrimSpace(r.FormValue("vehicle_type")),
 		nullStr(r.FormValue("driver_name")), nullStr(r.FormValue("driver_phone")),
+		nullStr(r.FormValue("contact_name")), nullStr(r.FormValue("contact_phone")),
+		nullStr(r.FormValue("owner_name")), nullStr(r.FormValue("owner_address")),
+		nullStr(r.FormValue("owner_id_number")), nullStr(r.FormValue("license_expiry_date")),
 		nullStr(r.FormValue("color")), atoiDefault(r.FormValue("door_count"), 0),
-		atoiDefault(r.FormValue("manufacture_year"), 0), nullStr(r.FormValue("vin")),
-		nullStr(r.FormValue("engine_number")),
+		atoiDefault(r.FormValue("manufacture_year"), 0),
+		nullStr(r.FormValue("manufacture_date")), nullStr(r.FormValue("license_issue_date")),
+		nullStr(r.FormValue("fuel_type")), atoiDefault(r.FormValue("displacement"), 0),
+		nullStr(r.FormValue("body_style")), atoiDefault(r.FormValue("seating_capacity"), 0),
+		atoiDefault(r.FormValue("curb_weight"), 0), atoiDefault(r.FormValue("gross_weight"), 0),
+		nullStr(r.FormValue("tire_size")), atoiDefault(r.FormValue("wheelbase"), 0),
+		nullStr(r.FormValue("vin")), nullStr(r.FormValue("engine_number")),
 		nullDate(r.FormValue("inspection_due_date")),
 		nullDate(r.FormValue("last_maintenance_date")),
 		atoiOrNil(r.FormValue("last_maintenance_mileage")),
