@@ -272,6 +272,17 @@ docker compose --env-file .env -p $project logs --tail 100 autorepairos
 - **登入失敗**：確認使用的是 `DEFAULT_OWNER_USERNAME` 與首次初始化設定的密碼。`RUN_SEED` 不會重設已存在帳號的密碼；不要為了解決登入問題刪除資料 volume。
 - **服務無法啟動或資料庫錯誤**：查看 `docker compose ... logs`。不要手動刪除 SQLite 檔案、WAL 檔或 Docker volume；先備份現況，再處理錯誤。
 
+### Docker 模式維運工具速查
+
+| 工具/指令 | 用途 |
+|---|---|
+| `http://localhost:8091`（sqlite-web） | 唯讀看 Docker 內的 SQLite 資料庫（compose 已內建） |
+| `docker exec -it ollama_local ollama run qwen2.5vl:3b` | 進入 ollama 容器跑視覺模型（Docker 模式的地端 LLM） |
+| `docker compose logs -f autorepairos` | 看服務日誌 |
+| `docker compose up -d --force-recreate` | 改程式/`.env` 後重新部署 |
+
+Docker 模式的地端視覺 LLM 由 Ollama 容器提供（`OLLAMA_KEEP_ALIVE=0` 可讓每次回應完自動卸載模型記憶體）；Windows EXE 模式則由系統自動管理 llama-server（見上方「EXE 模式必備工具」）。
+
 ## 8. 網路與個資安全
 
 - `.env`、資料庫、備份和照片都可能含有機密或個人資料，應限制檔案權限並安全保存。
