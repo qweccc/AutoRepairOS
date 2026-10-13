@@ -180,19 +180,24 @@ func (c *Client) recognizeCustomLocal(ctx context.Context, imageBase64 string) (
 }
 
 // healthOK 快速探測本地視覺服務是否在跑（1 秒 timeout）。
+// 依序試 /health 再試 /：llama-server 有 /health；Ollama 沒有 /health
+// 但根路徑回 200（"Ollama is running"）——兩種服務都要認得。
 func (c *Client) healthOK() bool {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.LocalURL, "/")+"/health", nil)
-	if err != nil {
-		return false
+	for _, path := range []string{"/health", "/"} {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.LocalURL, "/")+path, nil)
+		if err == nil {
+			if resp, err := c.HTTP.Do(req); err == nil {
+				resp.Body.Close()
+				if resp.StatusCode == http.StatusOK {
+					cancel()
+					return true
+				}
+			}
+		}
+		cancel()
 	}
-	resp, err := c.HTTP.Do(req)
-	if err != nil {
-		return false
-	}
-	resp.Body.Close()
-	return resp.StatusCode == http.StatusOK
+	return false
 }
 
 // touch 記錄最近使用時間（閒置計時起點）。

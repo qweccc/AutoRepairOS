@@ -64,6 +64,14 @@ services:
       - VISION_API_KEY=${VISION_API_KEY:-}
       - VISION_MODEL=${VISION_MODEL:-}
       - VISION_LOCAL_URL=${VISION_LOCAL_URL:-}
+      # ===== Docker 模式視覺：指向 compose 內的 ollama 服務 =====
+      # 注意用 _DOCKER 後綴的獨立變數：.env 的 VISION_LOCAL_URL 是給 exe 模式
+      # （127.0.0.1:8092 本機 llama-server）用的；直接 interpolate 會把 exe 的
+      # 值帶進容器（容器內的 127.0.0.1 是容器自己，連不到）。
+      # ollama 容器自己管模型生命週期，不需要 autostart。
+      - VISION_LOCAL_URL=${VISION_LOCAL_URL_DOCKER:-http://ollama:11434}
+      - VISION_AUTOSTART=${VISION_AUTOSTART_DOCKER:-false}
+      - VISION_MODEL=${VISION_MODEL_DOCKER:-qwen2.5vl:3b}
 
       # ===== LINE webhook（要對外推播才解開，先留註解）=====
       # LINE_CHANNEL_ID=<你的 Channel ID      例: channel-xxxxxxxxxxxxxxxx>
@@ -85,5 +93,19 @@ services:
     command: ["sqlite_web", "/data/autorepair.db", "--host", "0.0.0.0", "--port", "8080", "--read-only"]
     restart: unless-stopped
 
+  # 視覺辨識本地 LLM（Docker 模式）：Ollama + qwen2.5vl:3b。
+  # 容器名固定 ollama_local（對應使用文件裡的 docker exec -it ollama_local ...）。
+  # 不對外開埠：autorepairos 走 docker 內部網路 http://ollama:11434 存取；
+  # 模型存在 ollama-data named volume，換 autorepairos 版本不會重拉。
+  # 首次使用要拉模型：docker exec -it ollama_local ollama pull qwen2.5vl:3b
+  # 或直接跑：docker exec -it ollama_local ollama run qwen2.5vl:3b
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_local
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   autorepairos-data:
+  ollama-data:

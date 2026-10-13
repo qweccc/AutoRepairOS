@@ -72,6 +72,15 @@ RUN_SEED=false
 
 想手動管理或節省開銷時，可在 `.env` 切換（詳見 `.env.example` 的 VISION 區塊註解）。
 
+### 視覺模型存放位置（兩種模式）
+
+| 模式 | 模型放哪 | 大小 | 換電腦/重灌怎麼辦 |
+|---|---|---|---|
+| Windows exe | HuggingFace 快取：`C:\Users\<你>\.cache\huggingface\hub\models--unsloth--Qwen2.5-VL-3B-Instruct-GGUF\snapshots\<hash>\`（`.env` 的 `VISION_MODEL_PATH`/`VISION_MMPROJ_PATH` 就指到這裡） | 約 3.1GB（主模型 1.8GB + mmproj 投影檔 1.2GB） | 有網路：重跑一次 start-qwen-vision.bat 或讓 autostart 重新拉；無網路的離線環境：把整個 `models--unsloth--Qwen2.5-VL-3B-Instruct-GGUF` 資料夾複製過去 |
+| Docker | `ollama-data` named volume（Docker 管理的磁碟區，**不在專案資料夾裡**；首次要 `docker exec -it ollama_local ollama pull qwen2.5vl:3b`） | 約 3GB | 升級/重建容器不會重拉；只有 `docker compose down -v` 才會刪掉 volume 裡的模型 |
+
+注意：模型是「可以重抓」的資料，日常備份不需要包含它；但離線部署的車廠如果無法重新下載，換機時要連模型資料夾一起搬。
+
 ## 1. 安裝前準備
 
 Windows 11 建議使用 **Docker Desktop + WSL2 backend + Linux containers**。請先安裝並啟動 Docker Desktop，完成首次設定並確認 Docker Desktop 使用 Linux containers。AutoRepairOS 的容器映像是 Linux 映像，不是原生 Windows container。
@@ -277,11 +286,12 @@ docker compose --env-file .env -p $project logs --tail 100 autorepairos
 | 工具/指令 | 用途 |
 |---|---|
 | `http://localhost:8091`（sqlite-web） | 唯讀看 Docker 內的 SQLite 資料庫（compose 已內建） |
-| `docker exec -it ollama_local ollama run qwen2.5vl:3b` | 進入 ollama 容器跑視覺模型（Docker 模式的地端 LLM） |
+| `docker exec -it ollama_local ollama run qwen2.5vl:3b` | 進 ollama 容器互動跑視覺模型（Docker 模式的地端 LLM）|
+| `docker exec -it ollama_local ollama pull qwen2.5vl:3b` | 首次使用先拉模型（約 3GB，只需一次，存在 volume 不會重拉）|
 | `docker compose logs -f autorepairos` | 看服務日誌 |
 | `docker compose up -d --force-recreate` | 改程式/`.env` 後重新部署 |
 
-Docker 模式的地端視覺 LLM 由 Ollama 容器提供（`OLLAMA_KEEP_ALIVE=0` 可讓每次回應完自動卸載模型記憶體）；Windows EXE 模式則由系統自動管理 llama-server（見上方「EXE 模式必備工具」）。
+Docker 模式的地端視覺 LLM 由 compose 內的 `ollama` 容器提供（`ollama_local`，模型 qwen2.5vl:3b）；Windows EXE 模式則由系統自動管理 llama-server（見上方「EXE 模式必備工具」）。兩種模式的視覺設定互相獨立，`.env` 的 VISION_* 只影響 exe。
 
 ## 8. 網路與個資安全
 
