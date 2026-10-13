@@ -11,6 +11,7 @@ RUN go mod download
 
 COPY main.go ./
 COPY internal/ ./internal/
+COPY web/ ./web/
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o server .
 
