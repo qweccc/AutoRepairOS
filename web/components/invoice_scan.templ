@@ -1,0 +1,265 @@
+package components
+
+// InvoiceScanUI 進貨單據拍照辨識 UI（掛在「開立進貨單」表單內）。
+//
+// 流程：櫃檯不用先選供應商 —— 直接拍供應商出貨單/發票，後端辨識出
+// 供應商名稱、日期與每一行品項；這裡把供應商名比對成下拉選單的選項
+// （比對不到就留空並提示手動選）、日期帶入日期欄、品項列成可編輯清單，
+// 最後一起放進表單的 items_json hidden 欄位，按「建立並加入品項」一次送出。
+//
+// 為什麼不自動送出：OCR 的數量與單價是錢，一律要櫃檯眼睛複核後才建立單據。
+templ InvoiceScanUI() {
+	<script src="/static/scan.js"></script>
+	<div class="full" style="margin:4px 0 8px">
+		<button type="button" class="btn btn-o" id="invoiceScanBtn">📷 拍照辨識進貨單</button>
+		<input type="file" id="invoiceScanInput" accept="image/*" capture="environment" style="display:none">
+		<span style="color:#64748b;font-size:12px;margin-left:8px">拍供應商出貨單，自動帶入供應商、日期與品項（數量/單價請複核）</span>
+	</div>
+	<div id="invoiceScanBox" style="display:none;margin:6px 0 12px;border:1px solid #334155;border-radius:8px;overflow:hidden">
+		<div style="padding:8px 10px;background:#1e293b;color:#94a3b8;font-size:12.5px">
+			辨識到 <b id="invoiceScanCount">0</b> 項品項，可直接編輯數量與單價，確認後按下方「建立並加入品項」
+		</div>
+		<div id="invoiceScanSupplier" style="display:none;padding:6px 10px;border-top:1px solid #334155;font-size:13px"></div>
+		<div id="invoiceScanRows"></div>
+	</div>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			var btn = document.getElementById("invoiceScanBtn");
+			var input = document.getElementById("invoiceScanInput");
+			var box = document.getElementById("invoiceScanBox");
+			var rowsBox = document.getElementById("invoiceScanRows");
+			var suppBox = document.getElementById("invoiceScanSupplier");
+			var countEl = document.getElementById("invoiceScanCount");
+			if (!btn || !input || !rowsBox) return;
+
+			var items = []; // 目前清單（可編輯），送出前序列化進 items_json
+
+			btn.addEventListener("click", function () { input.click(); });
+
+			input.addEventListener("change", function () {
+				var file = input.files && input.files[0];
+				if (!file) return;
+				btn.disabled = true;
+				var oldText = btn.textContent;
+				btn.textContent = "辨識中…（單據較大可能等 10-60 秒）";
+
+				var reader = new FileReader();
+				reader.onload = function () {
+					fetch("/api/vision/invoice", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ image: reader.result })
+					})
+						.then(function (r) { return r.json(); })
+						.then(function (j) {
+							if (!j.ok) { alert("辨識失敗：" + (j.error || "未知錯誤")); return; }
+							if (!j.items || j.items.length === 0) {
+								alert("沒有辨識到任何品項（請確認拍的是供應商出貨單/發票，光線充足、畫面不歪）");
+								return;
+							}
+							applyDoc(j);
+						})
+						.catch(function () { alert("辨識請求失敗（網路或伺服器錯誤）"); })
+						.finally(function () {
+							btn.disabled = false;
+							btn.textContent = oldText;
+							input.value = "";
+						});
+				};
+				reader.readAsDataURL(file);
+			});
+
+			// 把辨識結果套用到表單：供應商、日期、品項清單。
+			function applyDoc(j) {
+				matchSupplier(j.supplier_name);
+				if (j.order_date) {
+					var d = document.querySelector('[name="order_date"]');
+					if (d && !d.value) d.value = j.order_date;
+				}
+				items = j.items.map(function (it) {
+					return {
+						description: it.description || "",
+						quantity: it.quantity > 0 ? it.quantity : 1,
+						unit_price: it.unit_price || 0,
+						part_number: it.part_number || "",
+						category: it.guess_category || ""
+					};
+				});
+				renderRows();
+				box.style.display = "block";
+			}
+
+			// 供應商名比對：先精確，再互相包含；比不到就提供「＋ 新增為供應商」。
+			function matchSupplier(name) {
+				suppBox.style.display = "none";
+				if (!name) return;
+				fetch("/api/suppliers")
+					.then(function (r) { return r.json(); })
+					.then(function (j) {
+						if (!j.ok || !j.suppliers) return;
+						var target = normalizeName(name);
+						var best = null;
+						j.suppliers.forEach(function (s) {
+							if (normalizeName(s.name) === target) { best = s; }
+						});
+						if (!best) {
+							j.suppliers.forEach(function (s) {
+								var sn = normalizeName(s.name);
+								if (sn && target && (sn.indexOf(target) >= 0 || target.indexOf(sn) >= 0) && !best) {
+									best = s;
+								}
+							});
+						}
+						var sel = document.querySelector('[name="supplier_id"]');
+						if (best && sel) {
+							sel.value = String(best.id);
+							showSupplierNote("已帶入供應商：" + best.name, "#4ade80");
+						} else {
+							showSupplierNotFound(name);
+						}
+					})
+					.catch(function () { /* 比對失敗不阻斷，使用者手動選 */ });
+			}
+
+			// 找不到供應商：列出「＋ 新增『X』為供應商」按鈕，一鍵建立並帶入下拉選單。
+			function showSupplierNotFound(name) {
+				suppBox.innerHTML = "";
+				suppBox.style.color = "#fbbf24";
+				var label = document.createElement("span");
+				label.textContent = "辨識到供應商「" + name + "」，系統裡找不到相同名稱。";
+				suppBox.appendChild(label);
+				var mk = document.createElement("button");
+				mk.type = "button";
+				mk.className = "btn btn-p";
+				mk.style.cssText = "margin-left:8px;padding:3px 10px;font-size:12.5px";
+				mk.textContent = "＋ 新增為供應商";
+				mk.addEventListener("click", function () {
+					mk.disabled = true;
+					mk.textContent = "建立中…";
+					fetch("/api/suppliers/quick-create", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ name: name })
+					})
+						.then(function (r) { return r.json(); })
+						.then(function (j) {
+							if (!j.ok) { alert("新增供應商失敗：" + (j.error || "未知錯誤")); mk.disabled = false; mk.textContent = "＋ 新增為供應商"; return; }
+							var sel = document.querySelector('[name="supplier_id"]');
+							if (sel) {
+								// 下拉選單加上新選項並選取（有的話直接選）。
+								var opt = document.createElement("option");
+								opt.value = String(j.id);
+								opt.textContent = j.name;
+								sel.appendChild(opt);
+								sel.value = String(j.id);
+							}
+							var note = j.existing
+								? "已帶入既有供應商：" + j.name
+								: (j.similar
+									? "已新增供應商「" + j.name + "」（注意：系統裡已有類似名稱「" + j.similar + "」，請確認是否為同一家）"
+									: "已新增供應商：" + j.name);
+							showSupplierNote(note, j.existing || !j.similar ? "#4ade80" : "#fbbf24");
+						})
+						.catch(function () { alert("新增供應商請求失敗"); mk.disabled = false; mk.textContent = "＋ 新增為供應商"; });
+				});
+				suppBox.appendChild(mk);
+				suppBox.style.display = "block";
+			}
+
+			function showSupplierNote(text, color) {
+				suppBox.textContent = text;
+				suppBox.style.color = color;
+				suppBox.style.display = "block";
+			}
+
+			function normalizeName(s) {
+				return String(s || "").replace(/[\s　]/g, "").replace(/(股份有限公司|有限公司|公司|行|號)$/g, "");
+			}
+
+			// 重繪可編輯品項列（品名/數量/單價/類別可改、可刪、可新增一列空白）。
+			function renderRows() {
+				rowsBox.innerHTML = "";
+				countEl.textContent = String(items.length);
+				items.forEach(function (it, i) {
+					var row = document.createElement("div");
+					row.style.cssText = "padding:8px 10px;border-top:1px solid #334155;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap";
+
+					var desc = document.createElement("input");
+					desc.value = it.description;
+					desc.placeholder = "品項名稱";
+					desc.style.cssText = "flex:1;min-width:150px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0";
+					desc.addEventListener("input", function () { it.description = this.value; });
+
+					// 類別標籤：顯示後端猜到的零件類別（僅提示，進貨單品項表不存類別，
+					// 類別屬於 inventory_items；此處只是讓櫃檯知道系統怎麼歸類）。
+					var cat = document.createElement("span");
+					cat.style.cssText = "color:#94a3b8;font-size:12px;min-width:52px";
+					cat.textContent = it.category ? it.category : "未分類";
+					cat.title = "依品名自動猜測的零件類別";
+
+					var qty = document.createElement("input");
+					qty.type = "number"; qty.step = "0.01"; qty.min = "0.01"; qty.value = it.quantity;
+					qty.style.cssText = "width:70px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0";
+					qty.addEventListener("input", function () { it.quantity = parseFloat(this.value) || 0; });
+
+					var price = document.createElement("input");
+					price.type = "number"; price.min = "0"; price.step = "1"; price.value = Math.round(it.unit_price);
+					price.style.cssText = "width:90px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0";
+					price.addEventListener("input", function () { it.unit_price = parseFloat(this.value) || 0; });
+
+					var sub = document.createElement("span");
+					sub.style.cssText = "color:#38bdf8;min-width:80px;text-align:right";
+					function updSub() { sub.textContent = "$" + (Math.round(it.quantity * it.unit_price * 100) / 100); }
+					qty.addEventListener("input", updSub);
+					price.addEventListener("input", updSub);
+					updSub();
+
+					var del = document.createElement("button");
+					del.type = "button"; del.className = "btn btn-d"; del.textContent = "刪";
+					del.addEventListener("click", function () { items.splice(i, 1); renderRows(); });
+
+					row.appendChild(desc); row.appendChild(cat); row.appendChild(qty); row.appendChild(price);
+					row.appendChild(sub); row.appendChild(del);
+					rowsBox.appendChild(row);
+				});
+
+				var add = document.createElement("div");
+				add.style.cssText = "padding:8px 10px;border-top:1px solid #334155";
+				var addBtn = document.createElement("button");
+				addBtn.type = "button"; addBtn.className = "btn btn-s"; addBtn.textContent = "＋ 手動加一項";
+				addBtn.addEventListener("click", function () {
+					items.push({ description: "", quantity: 1, unit_price: 0, part_number: "", category: "" });
+					renderRows();
+				});
+				add.appendChild(addBtn);
+				rowsBox.appendChild(add);
+
+				syncItemsJson();
+			}
+
+			// 把目前品項寫進表單 hidden 欄位，送出時一起 POST。
+			// category 一併送出（辨識猜到的類別），確認進貨時帶到自動建檔的零件。
+			function syncItemsJson() {
+				var form = document.getElementById("newPurchaseOrderForm");
+				if (!form) return;
+				var hidden = form.querySelector('[name="items_json"]');
+				if (!hidden) {
+					hidden = document.createElement("input");
+					hidden.type = "hidden";
+					hidden.name = "items_json";
+					form.appendChild(hidden);
+				}
+				var cleaned = items.filter(function (it) { return it.description && it.quantity > 0; });
+				hidden.value = cleaned.length ? JSON.stringify(cleaned) : "";
+			}
+
+			// 表單送出前再同步一次（使用者可能最後才改數量）。
+			document.addEventListener("submit", function (e) {
+				var form = document.getElementById("newPurchaseOrderForm");
+				if (form && form === e.target) { syncItemsJson(); }
+			}, true);
+
+			window.__invoiceScanSync = syncItemsJson;
+		});
+	</script>
+}
