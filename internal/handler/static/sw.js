@@ -1,10 +1,29 @@
 // AutoRepair OS Service Worker
 // 快取靜態資源，並在離線時提供應用程式外殼。
 
-const CACHE = 'autorepairos-v1';
+const CACHE = 'autorepairos-v2';
 const SHELL = [
   '/offline.js',
   '/offline.css'
+];
+
+// 會隨版本改變的檔：不做長期快取，一律 network-first（快取只當離線備援）。
+// 為什麼需要這份清單：靜態資源原本是 cache-first，命中快取就永不回伺服器驗證，
+// 結果改了 app.css 之後，F5（軟重整）仍然拿到舊檔、畫面不會變，只有 Shift+F5
+// （繞過 service worker）才看得到新版。車廠人員不會按 Shift+F5，等於功能上線
+// 他們看不到。離線優先的前提是不能把「舊版」當成永久答案。
+//
+// 判斷標準：內容會隨 release 改變的都列進來。純 vendor 函式庫（htmx.min.js、
+// html5-qrcode.min.js）版本固定、內容不變，留在 cache-first 沒有問題。
+const NETWORK_FIRST = [
+  '/static/app.css'
+];
+
+// 純 vendor 靜態檔：版本固定、內容不變，cache-first 沒有 stale 風險，
+// 而且離線時仍要能用（離線區網部署的核心需求）。
+const CACHE_FOREVER = [
+  '/static/htmx.min.js',
+  '/static/html5-qrcode.min.js'
 ];
 
 self.addEventListener('install', (e) => {
@@ -23,6 +42,14 @@ self.addEventListener('activate', (e) => {
       ))
       .then(() => self.clients.claim())
   );
+});
+
+// 頁面按下「立即更新」時的通知：讓等待中的新版本立刻接管，
+// 不必等所有分頁都關閉（預設行為）。少了這段，提示橫幅按了不會有反應。
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (e) => {
@@ -49,7 +76,24 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // 靜態資源：cache-first
+  // 會隨版本改變的檔（app.css 等）：network-first，離線才退回快取。
+  // 這樣改了 CSS 之後一般重整就能看到新版，不必 Shift+F5。
+  if (NETWORK_FIRST.includes(url.pathname)) {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok && res.type === 'basic') {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((r) => r || offlineResponse()))
+    );
+    return;
+  }
+
+  // 純 vendor 靜態檔與離線外殼：cache-first（內容固定，離線區網的核心需求）
   e.respondWith(
     caches.match(req).then((hit) => {
       if (hit) return hit;

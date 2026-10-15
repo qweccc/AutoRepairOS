@@ -290,12 +290,56 @@
 
   // ---------- Service Worker ----------
 
+  // 註冊後主動檢查更新。
+  // 為什麼需要：瀏覽器對 service worker 腳本本身有 24 小時的快取，
+  // 不主動觸發 update() 的話，換了 sw.js 或 app.css 之後舊 SW 會繼續
+  // 攔截請求長達一天，使用者看到的一直是舊版（F5 無效，只有 Shift+F5 有用）。
+  // 每次載入頁面都 update() 一次，成本極低（只比對腳本雜湊），
+  // 但能保證新版本在下次重整就生效。
   function registerSW() {
     if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker.register('/sw.js').then(function (reg) {
       console.log('[sw] 已註冊', reg.scope);
+      reg.update().catch(function () { /* 離線時更新失敗無所謂，下次再試 */ });
+      watchUpdate(reg);
     }).catch(function (e) {
       console.warn('[sw] 註冊失敗', e);
+    });
+  }
+
+  // 新版 SW 就緒時提示使用者重整。
+  // 為什麼需要：新 SW install 完成後，舊的仍然控制著當前頁面（這是 SW 的設計，
+  // 避免半新半舊的頁面），所以畫面不會自己變。若不提示，使用者會以為更新沒生效。
+  // 新版只在「下次載入」生效，所以這裡給一個明確的一鍵重整按鈕。
+  function watchUpdate(reg) {
+    if (!reg || !reg.waiting) {
+      if (reg) reg.addEventListener('updatefound', function () { watchUpdate(reg); });
+      return;
+    }
+    showUpdateBar(reg.waiting);
+  }
+
+  function showUpdateBar(worker) {
+    if (document.getElementById('sw-update-bar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'sw-update-bar';
+    bar.style.cssText = [
+      'position:fixed', 'bottom:0', 'left:0', 'right:0', 'z-index:10000',
+      'padding:10px 16px', 'font-size:13.5px', 'font-weight:600',
+      'background:#1d4ed8', 'color:#dbeafe', 'text-align:center'
+    ].join(';');
+    bar.innerHTML =
+      '<span>已有新版本，重新整理即可套用。</span> ' +
+      '<button type="button" id="sw-update-btn" style="' +
+      'margin-left:10px;padding:5px 14px;border:0;border-radius:6px;' +
+      'background:#38bdf8;color:#0f172a;font-weight:700;cursor:pointer;font-size:13px' +
+      '">立即更新</button>';
+    document.body.appendChild(bar);
+    document.getElementById('sw-update-btn').addEventListener('click', function () {
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      window.location.reload();
     });
   }
 
