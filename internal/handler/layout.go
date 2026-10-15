@@ -84,21 +84,8 @@ const pageStyle = `
     header { padding: 10px 14px; }
     header h1 { font-size: 16px; }
     .user { font-size: 11px; }
-    /* 窄屏：.shell 恢復 flex column 才能讓 nav 的 order:-1 生效（寬屏時 .shell 不是
-       flex 容器，order 無效）；同時把 margin-right 與 fixed 重置，nav 改橫排。 */
-    .shell { margin-right: 0; display: flex; flex-direction: column; }
-    nav { order: -1; position: static; width: auto; height: auto; top: auto; right: auto;
-          border-left: 0; border-top: 1px solid #334155;
-          overflow-x: auto; overflow-y: visible;
-          flex-direction: row; flex-wrap: wrap; padding: 6px 8px; }
-    nav a { padding: 8px 10px; font-size: 12px; white-space: nowrap;
-            border-left: 0; border-bottom: 2px solid transparent; }
-    nav a.on { border-left: 0; border-bottom-color: #38bdf8; }
-    .navgrp { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px;
-              padding: 0 8px; border-top: 0; border-left: 1px solid #334155; }
-    .navgrp:first-child { padding-left: 0; border-left: 0; }
-    .navlbl { font-size: 10px; letter-spacing: 0; padding: 0 4px; }
-    main { padding: 14px 10px; }
+    /* nav/shell/main 的窄屏規則全部由 app.css 負責，這裡不再重複——
+       兩邊各寫一份正是過去「總覽與其他頁選單格式不同」的成因。 */
     .card { padding: 14px; margin-bottom: 12px; }
     .card h2 { font-size: 15px; }
     table { font-size: 12px; }
@@ -112,7 +99,6 @@ const pageStyle = `
     .pcard img { height: 100px; }
   }
   @media (max-width: 480px) {
-    nav a { padding: 8px 8px; font-size: 11px; }
     .pgrid { grid-template-columns: 1fr; }
   }
 `
@@ -158,6 +144,7 @@ func renderPage(w http.ResponseWriter, title, active, username, role, body strin
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>` + html.EscapeString(title) + ` - ` + html.EscapeString(app) + `</title>
+<link rel="stylesheet" href="/static/app.css"/>
 <style>` + pageStyle + `</style>
 </head>
 <body>
