@@ -20,6 +20,8 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -42,6 +44,82 @@ type Reading struct {
 	LicenseIssueDate string `json:"license_issue_date"`
 	SeatingCapacity  string `json:"seating_capacity"`
 	RawText        string `json:"raw_text,omitempty"` // 原始回傳，除錯用
+}
+
+// InvoiceLine 進貨單據（供應商出貨單/發票）拍照辨識出的**單行品項**。
+// 一張單據通常有多行，所以 RecognizeInvoice 回傳的是切片；每行獨立帶入
+// 「加入品項」表單，讓櫃檯人員逐行確認數量與單價（OCR 數字一律要人眼複核）。
+type InvoiceLine struct {
+	Description  string  `json:"description"`           // 品項名稱（例：機油 5W-30）
+	Quantity     float64 `json:"quantity"`              // 數量；模型沒給或不合理時由上層改 1
+	UnitPrice    float64 `json:"unit_price"`            // 進貨單價（給廠商的價）
+	PartNumber   string  `json:"part_number,omitempty"` // 料號（選填）
+	GuessCategory string `json:"guess_category,omitempty"` // 依品名關鍵字猜的零件類別（lookup code）
+	RawText      string  `json:"raw_text,omitempty"`    // 該行原文，除錯用
+}
+
+// categoryKeywords 零件類別關鍵字：品名含任一關鍵字就歸到該類別。
+//
+// 為什麼在程式裡而不靠 lookup：lookup 的 label 只有類別本身（「引擎」、「輪胎」），
+// 單據上的品名是「機油 5W-30」、「煞車皮」這種具體零件，兩者不會字面相符。
+// 這張表就是「零件詞 → 類別」的對照，讓辨識結果能直接帶出類別建議，
+// 櫃檯只要確認或改選，不用每個品項都手動歸類。
+//
+// 維護方式：新增類別或發現猜錯，在這裡加關鍵字即可（不用改 DB）。
+var categoryKeywords = map[string][]string{
+	"引擎": {"機油", "机油", "机油芯", "機油芯", "機油濾", "机油滤", "火星塞", "火星塞", "點火線圈", "点火线圈",
+		"引擎", "引擎修缮", "引擎吊架", "水箱", "水幫浦", "水泵", "節氣門", "进气歧管", "進氣歧管",
+		"排氣管", "触媒", "觸媒", "含氧感知器", "含氧传感器", "正時皮帶", "时规皮带", "時規皮帶",
+		"發電機", "起动马达", "啟動馬達", "起動馬達", "皮带", "皮帶", "引擎腳", "引擎脚"},
+	"電機音響": {"電瓶", "电瓶", "電池", "电池", "蓄電池", "喇叭", "音箱", "主機", "音响", "音響",
+		"雨刷", "雨刷片", "燈泡", "灯泡", "大燈", "大灯", "方向燈", "方向灯", "煞車燈", "刹车灯",
+		" reversing 燈", "倒車燈", "继电器", "繼電器", "保險絲", "保险丝", "點火開關", "点火开关",
+		"車機", "车机", "行車記錄器", "行车记录器", "導航", "导航", "天線", "天线"},
+	"車身鈑金": {"保險桿", "保险杠", "葉子板", "叶子板", "鈑金", "钣金", "車門", "车门",
+		"引擎蓋", "引擎盖", "後行李箱", "后行李箱", "行李廂", "行李厢", "擋泥板", "挡泥板",
+		"飾條", "饰条", "進氣壩", "进气坝", "保桿", "前保", "後保", "後保"},
+	"傳動轉向": {"避震器", "避震", "減震", "减震", "三角架", "三角臂", "拉桿", "拉杆",
+		"球頭", "球头", "連桿", "连杆", "方向機", "方向机", "動力方向機", "動力轉向",
+		"動力转向", "傳動軸", "传动轴", "萬向接頭", "万向接头", "輪軸", "轮轴", "軸承", "轴承"},
+	"變速箱": {"變速箱", "变速箱", "離合器", "离合器", "自排", "自变速箱", "手排", "手变速箱",
+		"排檔", "排档", "变速箱油", "变速箱油", "CVT"},
+	"烤漆": {"烤漆", "塗裝", "涂装", "漆", "塗料", "涂料", "底漆", "面漆", "鈑金烤漆", "喷漆", "噴漆"},
+	"輪胎": {"輪胎", "轮胎", "鋼圈", "钢圈", "鋁圈", "铝圈", "胎", "備胎", "备胎", "氣嘴", "气嘴"},
+}
+
+// GuessCategory 依品名關鍵字猜零件類別（回 lookup 的 code；猜不到回空字串）。
+// 順序：長關鍵字優先（「变速箱油」比「变速箱」具體），全表掃過取第一個命中。
+func GuessCategory(description string) string {
+	desc := strings.ToLower(strings.TrimSpace(description))
+	if desc == "" {
+		return ""
+	}
+	// 關鍵字由長到短比對，避免「機油」先命中而漏掉更精確的「機油濾芯」。
+	type kw struct {
+		word string
+		cat  string
+	}
+	var all []kw
+	for cat, words := range categoryKeywords {
+		for _, w := range words {
+			all = append(all, kw{strings.ToLower(w), cat})
+		}
+	}
+	sort.Slice(all, func(i, j int) bool { return len(all[i].word) > len(all[j].word) })
+	for _, k := range all {
+		if strings.Contains(desc, k.word) {
+			return k.cat
+		}
+	}
+	return ""
+}
+
+// InvoiceDoc 整張進貨單據的辨識結果：供應商、日期與品項列。
+// 用途是「先拍單據再開單」——櫃檯不用先選供應商，拍照後由系統帶出。
+type InvoiceDoc struct {
+	SupplierName string        `json:"supplier_name"` // 供應商名稱（單據抬頭）；辨識不到為空
+	OrderDate    string        `json:"order_date"`    // 單據日期 YYYY-MM-DD；辨識不到為空
+	Items        []InvoiceLine `json:"items"`
 }
 
 // Client 依模式分派到 cloud 或 local。
@@ -116,6 +194,223 @@ func NewClient(mode, apiURL, apiKey, model, localURL string, autoStart bool, idl
 		LocalProtocol: localProtocol,
 		stopWatch:   make(chan struct{}),
 	}
+}
+
+// invoicePrompt 要求模型把單據每一行列成 JSON 陣列，並帶出供應商與日期。
+const invoicePrompt = `You are reading a Taiwan auto parts supplier invoice / delivery note (進貨單/出貨單/送貨單).
+Return ONLY one JSON object:
+{"supplier_name":"","order_date":"","items":[{"description":"","quantity":0,"unit_price":0,"part_number":""}]}
+- supplier_name: the seller/supplier company name printed at the top of the document (抬頭/賣方).
+  If several names appear, prefer the one issuing the invoice. Never invent one.
+- order_date: the document date as YYYY-MM-DD. If it uses ROC year (民國, e.g. 115/10/14),
+  convert to AD by adding 1911 to the year. Empty string if unreadable.
+- items: one entry per line item:
+  - description: the part name as printed (例：機油 5W-30). Never invent a name.
+  - quantity: number of units (bare number, no unit). If unreadable use 1.
+  - unit_price: the price charged to the garage for ONE unit, excluding tax and totals.
+    If the document shows a line total instead of a unit price, divide by quantity.
+  - part_number: the supplier part code if printed, otherwise empty string.
+Skip header rows, subtotal, tax and total lines. Use empty string / 0 for anything you cannot read.`
+
+// RecognizeInvoice 辨識供應商進貨單據，回傳供應商、日期與每一行品項。
+// 圖為 JPEG/PNG base64（不含 data: 前綴）。沒有品項可讀時 Items 為空切片而非錯誤，
+// 讓前端提示「沒辨識到品項」而不是當成系統故障。
+func (c *Client) RecognizeInvoice(ctx context.Context, imageBase64 string) (*InvoiceDoc, error) {
+	var text string
+	var err error
+	if c.Mode == "local" {
+		if strings.EqualFold(c.LocalProtocol, "custom") {
+			// 自訂協定（/recognize）只回行照欄位，沒有單據品項概念。
+			return nil, fmt.Errorf("local 模式的自訂協定（VISION_LOCAL_PROTOCOL=custom）不支援進貨單據辨識，請改用 openai 協定或 cloud 模式")
+		}
+		if err := c.ensureServerUp(ctx); err != nil {
+			return nil, err
+		}
+		text, err = c.chatText(ctx, c.LocalURL, "", c.openAIModel(), invoicePrompt, imageBase64)
+	} else {
+		text, err = c.chatText(ctx, c.APIURL, c.APIKey, c.cloudModel(), invoicePrompt, imageBase64)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return parseInvoiceDoc(text), nil
+}
+
+// cloudModel cloud 模式送給 API 的模型名稱（與 recognizeCloud 同一套 fallback）。
+func (c *Client) cloudModel() string {
+	if c.Model != "" {
+		return c.Model
+	}
+	return "gemini-2.0-flash"
+}
+
+// chatText 打 OpenAI 相容的 vision 端點，回傳模型的**純文字輸出**。
+// Recognize 只要行照欄位所以直接解析成 Reading；單據辨識需要自己解析
+// items 陣列，因此把「拿到文字」這一步抽出來共用。
+func (c *Client) chatText(ctx context.Context, baseURL, apiKey, model, prompt, imageBase64 string) (string, error) {
+	payload := map[string]interface{}{
+		"model": model,
+		"messages": []map[string]interface{}{
+			{
+				"role": "user",
+				"content": []map[string]interface{}{
+					{"type": "text", "text": prompt},
+					{"type": "image_url", "image_url": map[string]string{
+						"url": "data:image/jpeg;base64," + imageBase64,
+					}},
+				},
+			},
+		},
+		"temperature": 0,
+	}
+	body, _ := json.Marshal(payload)
+
+	url := strings.TrimRight(baseURL, "/")
+	switch {
+	case strings.Contains(url, "/chat/completions"):
+	case strings.HasSuffix(url, "/v1"):
+		url += "/chat/completions"
+	default:
+		url += "/v1/chat/completions"
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+	}
+
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("vision api request: %w", err)
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("vision api status %d: %s", resp.StatusCode, truncate(string(raw), 200))
+	}
+
+	// 有些推理模型把答案放在 reasoning_content，content 只放最終 JSON。
+	var chat struct {
+		Choices []struct {
+			Message struct {
+				Content          string `json:"content"`
+				ReasoningContent string `json:"reasoning_content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.Unmarshal(raw, &chat); err != nil {
+		return "", fmt.Errorf("vision api parse: %w", err)
+	}
+	if len(chat.Choices) == 0 {
+		return "", fmt.Errorf("vision api: no choices in response")
+	}
+	msg := chat.Choices[0].Message
+	if strings.Contains(msg.Content, "items") {
+		return msg.Content, nil
+	}
+	if strings.Contains(msg.ReasoningContent, "items") {
+		return msg.ReasoningContent, nil
+	}
+	return msg.Content, nil
+}
+
+// parseInvoiceDoc 從模型輸出抽出整張單據（供應商、日期、品項列）並正規化。
+// 寬容處理：包 ```json 圍欄、加前言、數字給成字串、數量缺漏、民國日期。
+func parseInvoiceDoc(content string) *InvoiceDoc {
+	content = strings.TrimSpace(content)
+	start := strings.Index(content, "{")
+	end := strings.LastIndex(content, "}")
+	if start < 0 || end <= start {
+		return &InvoiceDoc{}
+	}
+	var raw struct {
+		SupplierName string `json:"supplier_name"`
+		OrderDate    string `json:"order_date"`
+		Items        []struct {
+			Description string          `json:"description"`
+			Quantity    json.RawMessage `json:"quantity"`
+			UnitPrice   json.RawMessage `json:"unit_price"`
+			PartNumber  string          `json:"part_number"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal([]byte(content[start:end+1]), &raw); err != nil {
+		return &InvoiceDoc{}
+	}
+	doc := &InvoiceDoc{
+		SupplierName: strings.TrimSpace(raw.SupplierName),
+		OrderDate:    normalizeDate(raw.OrderDate),
+	}
+	for _, it := range raw.Items {
+		desc := strings.TrimSpace(it.Description)
+		if desc == "" {
+			continue // 沒品名的行列對車行沒有意義
+		}
+		q := jsonNumber(it.Quantity)
+		if q <= 0 {
+			q = 1 // 數量不明給 1，讓櫃檯自己改（比 0 好，0 會被表單擋掉）
+		}
+		doc.Items = append(doc.Items, InvoiceLine{
+			Description:   desc,
+			Quantity:      q,
+			UnitPrice:     jsonNumber(it.UnitPrice),
+			PartNumber:    strings.TrimSpace(it.PartNumber),
+			GuessCategory: GuessCategory(desc),
+			RawText:       desc,
+		})
+	}
+	return doc
+}
+
+// normalizeDate 把模型回的日期正規成 YYYY-MM-DD。
+// 模型有時回「115/10/14」（民國）或「2026/10/14」或「2026-10-14」，
+// 這裡寬容地吃掉各種分隔符並把民國年轉成公元；解析不了就回原字串（上層自行處理）。
+func normalizeDate(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	parts := strings.FieldsFunc(s, func(r rune) bool {
+		return r == '/' || r == '-' || r == '.' || r == ' '
+	})
+	if len(parts) != 3 {
+		return s
+	}
+	y, errY := strconv.Atoi(parts[0])
+	m, errM := strconv.Atoi(parts[1])
+	d, errD := strconv.Atoi(parts[2])
+	if errY != nil || errM != nil || errD != nil {
+		return s
+	}
+	if y > 0 && y < 1911 { // 民國年 → 公元
+		y += 1911
+	}
+	if y < 1000 || m < 1 || m > 12 || d < 1 || d > 31 {
+		return s
+	}
+	return fmt.Sprintf("%04d-%02d-%02d", y, m, d)
+}
+
+// jsonNumber 寬容地解析「數字或數字字串」的 JSON 值；不是數字回 0。
+func jsonNumber(raw json.RawMessage) float64 {
+	if len(raw) == 0 {
+		return 0
+	}
+	var n float64
+	if err := json.Unmarshal(raw, &n); err == nil {
+		return n
+	}
+	var s string
+	if err := json.Unmarshal(raw, &s); err == nil {
+		s = strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(s, ",", ""), "NT$", ""))
+		s = strings.TrimPrefix(strings.TrimSpace(s), "$")
+		if n, err := strconv.ParseFloat(strings.TrimSpace(s), 64); err == nil {
+			return n
+		}
+	}
+	return 0
 }
 
 // Recognize 辨識一張行照/車牌圖（JPEG/PNG base64，不含 data: 前綴）。
@@ -365,79 +660,15 @@ func (c *Client) recognizeCloud(ctx context.Context, imageBase64 string) (*Readi
 // baseURL 可只給 base（自動補 /v1/chat/completions）、含 /v1、或完整端點。
 // cloud 模式（Gemini 等）與 local 模式（我們管理的 llama-server）共用。
 func (c *Client) recognizeOpenAI(ctx context.Context, baseURL, apiKey, model, prompt, imageBase64 string) (*Reading, error) {
-	payload := map[string]interface{}{
-		"model": model,
-		"messages": []map[string]interface{}{
-			{
-				"role": "user",
-				"content": []map[string]interface{}{
-					{"type": "text", "text": prompt},
-					{"type": "image_url", "image_url": map[string]string{
-						"url": "data:image/jpeg;base64," + imageBase64,
-					}},
-				},
-			},
-		},
-		"temperature": 0,
-	}
-	body, _ := json.Marshal(payload)
-
-	url := strings.TrimRight(baseURL, "/")
-	switch {
-	case strings.Contains(url, "/chat/completions"):
-		// 已是完整端點，直接用
-	case strings.HasSuffix(url, "/v1"):
-		// 已含 /v1（如 http://host/v1 或 .../v1beta/openai），只補 /chat/completions
-		url += "/chat/completions"
-	default:
-		// 只給了 base（如 http://host:8080），補完整路徑
-		url += "/v1/chat/completions"
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	text, err := c.chatText(ctx, baseURL, apiKey, model, prompt, imageBase64)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	if apiKey != "" {
-		req.Header.Set("Authorization", "Bearer "+apiKey)
-	}
-
-	resp, err := c.HTTP.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("vision api request: %w", err)
-	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("vision api status %d: %s", resp.StatusCode, truncate(string(raw), 200))
-	}
 
 	// 解析 OpenAI 形狀：choices[0].message.content 是模型回的文字（內含 JSON）。
-	// 有些推理模型（如 llama.cpp 的 ornith、QwQ）把答案放在 reasoning_content、
-	// content 只放最終 JSON 或甚至空白。這裡兩個都收，取「含 JSON」的那個。
-	var chat struct {
-		Choices []struct {
-			Message struct {
-				Content          string `json:"content"`
-				ReasoningContent string `json:"reasoning_content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	if err := json.Unmarshal(raw, &chat); err != nil {
-		return nil, fmt.Errorf("vision api parse: %w", err)
-	}
-	if len(chat.Choices) == 0 {
-		return nil, fmt.Errorf("vision api: no choices in response")
-	}
-	msg := chat.Choices[0].Message
-	// 優先 content（正式輸出），content 沒有 JSON 才退回 reasoning_content。
-	reading := parseReadingJSON(msg.Content)
-	if reading.empty() {
-		if alt := parseReadingJSON(msg.ReasoningContent); !alt.empty() {
-			reading = alt
-		}
-	}
-	return reading, nil
+	// 有些推理模型（如 llama.cpp 的 ornith、QwQ）把答案放在 reasoning_content，
+	// content 只放最終 JSON 或甚至空白 —— chatText 已挑好含 JSON 的那一份。
+	return parseReadingJSON(text), nil
 }
 
 // empty 判斷是否完全沒辨識到任何欄位（全空字串）。

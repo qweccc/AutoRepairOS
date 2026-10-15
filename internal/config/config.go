@@ -65,7 +65,7 @@ func loadDotEnv() {
 
 // dotEnvPaths .env 候選路徑：執行檔所在目錄優先，其次 CWD。
 //
-// 執行檔目錄優先是為了 release 版：release/AutoRepairOS-*.exe 會帶著自己的
+// 執行檔目錄優先是為了 release 版：release/autorepair_v*.exe 會帶著自己的
 // .env（build-release.ps1 產生），跑的人不一定在 repo 根啟動。
 // 用 os.Executable() 而非 argv[0]：後者在捷徑或服務啟動時不可靠。
 func dotEnvPaths() []string {
@@ -147,6 +147,13 @@ func Load() *Config {
 		appName = "AutoRepair OS"
 	}
 
+	// 視覺 GGUF 路徑：HF 快取的 snapshot 目錄名是 commit hash，每台機器都不同，
+	// 所以允許 glob/目錄寫法，並在 mmproj 未填時自動在主模型目錄找投影檔。
+	// 解析細節見 vision.go。
+	rawModelPath := os.Getenv("VISION_MODEL_PATH")
+	visionModelPath := resolveVisionGGUF(rawModelPath, "mmproj")
+	visionMmprojPath := resolveVisionMmproj(os.Getenv("VISION_MMPROJ_PATH"), visionModelPath)
+
 	return &Config{
 		Port:              port,
 		DBPath:            dbPath,
@@ -169,8 +176,8 @@ func Load() *Config {
 		VisionAutoStart: envBool("VISION_AUTOSTART", false),
 		VisionIdleMin:   envInt("VISION_IDLE_MINUTES", 10),
 		VisionHFModel:   envOrDefault("VISION_HF_MODEL", "unsloth/Qwen2.5-VL-3B-Instruct-GGUF:Q4_K_M"),
-		VisionModelPath:  os.Getenv("VISION_MODEL_PATH"),
-		VisionMmprojPath: os.Getenv("VISION_MMPROJ_PATH"),
+		VisionModelPath:  visionModelPath,
+		VisionMmprojPath: visionMmprojPath,
 		VisionLocalProtocol: os.Getenv("VISION_LOCAL_PROTOCOL"),
 	}
 }

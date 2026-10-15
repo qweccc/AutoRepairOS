@@ -876,7 +876,20 @@ func PlateScanUI(fieldMapJSON string) templ.Component {
 			templ_7745c5c3_Var46 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<script src=\"/static/scan.js\"></script><div class=\"full\" style=\"grid-column:1/-1;margin-bottom:4px\"><button type=\"button\" class=\"btn btn-o\" id=\"plateScanBtn\">📷 拍照辨識行照</button> <input type=\"file\" id=\"plateScanInput\" accept=\"image/*\" capture=\"environment\" style=\"display:none\"> <span style=\"color:#64748b;font-size:12px;margin-left:8px\">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span></div><script>\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\n\t\t\tif (window.initPlateScan) {\n\t\t\t\twindow.initPlateScan({\n\t\t\t\t\tbuttonId: \"plateScanBtn\",\n\t\t\t\t\tinputId: \"plateScanInput\",\n\t\t\t\t\tfieldMap: { fieldMapJSON }\n\t\t\t\t});\n\t\t\t}\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<script src=\"/static/scan.js\"></script><div class=\"full\" data-fieldmap=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var47 string
+		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(fieldMapJSON)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/common.templ`, Line: 123, Col: 47}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\" style=\"grid-column:1/-1;margin-bottom:4px\"><button type=\"button\" class=\"btn btn-o\" id=\"plateScanBtn\">📷 拍照辨識行照</button> <input type=\"file\" id=\"plateScanInput\" accept=\"image/*\" capture=\"environment\" style=\"display:none\"> <span style=\"color:#64748b;font-size:12px;margin-left:8px\">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span></div><script>\r\n\t\t// fieldMapJSON 由 templ 用屬性插值放在上面 div 的 data-fieldmap，\r\n\t\t// 這裡讀出來再 JSON.parse。\r\n\t\t// 不可寫成 JS 物件字面值 fieldMap: { ... }：templ 不對 <script> 內文\r\n\t\t// 做 {} 插值，會原樣輸出 `fieldMap: { fieldMapJSON }` → SyntaxError，\r\n\t\t// 整段 script 掛掉、按鈕監聽沒綁上（症狀：按了沒反應）。\r\n\t\tvar plateFieldMap = {};\r\n\t\ttry {\r\n\t\t\tvar holder = document.querySelector(\"[data-fieldmap]\");\r\n\t\t\tif (holder && holder.getAttribute(\"data-fieldmap\")) {\r\n\t\t\t\tplateFieldMap = JSON.parse(holder.getAttribute(\"data-fieldmap\"));\r\n\t\t\t}\r\n\t\t} catch (e) { /* 解析失敗就用空 map，按鈕仍可點，只是不回填 */ }\r\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\r\n\t\t\tif (window.initPlateScan) {\r\n\t\t\t\twindow.initPlateScan({\r\n\t\t\t\t\tbuttonId: \"plateScanBtn\",\r\n\t\t\t\t\tinputId: \"plateScanInput\",\r\n\t\t\t\t\tfieldMap: plateFieldMap\r\n\t\t\t\t});\r\n\t\t\t}\r\n\t\t});\r\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

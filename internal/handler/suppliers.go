@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -211,6 +212,56 @@ func CreateSupplier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	redirectMsg(w, r, "/suppliers", "供應商已新增")
+}
+
+// QuickCreateSupplier 開單時就地新增供應商（JSON API，HTMX/fetch 用）。
+//
+// 使用情境：進貨單拍照辨識出供應商名，但系統裡沒有這家廠商 ——
+// 櫃檯不想到「廠商」頁建檔再回來，直接在開單頁一鍵建立並帶入下拉選單。
+// 名稱重複時直接回既有那筆（id + name），不報錯：重複建檔對帳很麻煩，
+// 而 OCR 名稱可能只差一個字，此時回傳 existing=true 讓前端提醒使用者確認。
+func QuickCreateSupplier(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "", http.StatusMethodNotAllowed)
+		return
+	}
+	var body struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
+		return
+	}
+	name := strings.TrimSpace(body.Name)
+	if name == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請輸入供應商名稱"})
+		return
+	}
+
+	// 名稱完全相同 → 直接用既有那筆（existing=true）。
+	var existID int64
+	var existName string
+	err := db.DB.QueryRow(`SELECT id, name FROM suppliers WHERE name = ? LIMIT 1`, name).Scan(&existID, &existName)
+	if err == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "id": existID, "name": existName, "existing": true,
+		})
+		return
+	}
+
+	// 模糊重複提醒（包含關係）：仍可建立，但告訴前端「可能已存在」。
+	similar := ""
+	_ = db.DB.QueryRow(`SELECT name FROM suppliers WHERE name LIKE ? LIMIT 1`, "%"+name+"%").Scan(&similar)
+
+	res, err := db.DB.Exec(`INSERT INTO suppliers (name, vendor_type) VALUES (?, 'material')`, name)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "新增供應商失敗"})
+		return
+	}
+	id, _ := res.LastInsertId()
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"ok": true, "id": id, "name": name, "existing": false, "similar": similar,
+	})
 }
 
 // EditSupplierForm 編輯供應商表單。

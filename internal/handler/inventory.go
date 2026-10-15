@@ -129,7 +129,8 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.ListInventoryPage(invRows, total, lowCount, negCount, page, size,
-		q, lowOnly, showMoney, catTabs.String(), negBanner).Render(r.Context(), w)
+		q, lowOnly, showMoney, catTabs.String(), negBanner,
+		lookupOptions("category", "")).Render(r.Context(), w)
 }
 
 // SearchInventoryAPI 庫存即時搜尋 API（HTMX 用）。
@@ -191,6 +192,7 @@ func CreateInventoryItem(w http.ResponseWriter, r *http.Request) {
 	part := strings.TrimSpace(r.FormValue("part_number"))
 	name := strings.TrimSpace(r.FormValue("name"))
 	bin := strings.TrimSpace(r.FormValue("bin_location"))
+	category := strings.TrimSpace(r.FormValue("category"))
 
 	if part == "" || name == "" || bin == "" {
 		fail(w, "料號、名稱、庫位為必填")
@@ -203,10 +205,10 @@ func CreateInventoryItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.DB.Exec(`INSERT INTO inventory_items
-		(supplier_id, part_number, barcode, name, bin_location, cost_price, selling_price,
+		(supplier_id, part_number, barcode, name, bin_location, category, cost_price, selling_price,
 		 stock_quantity, min_safety_stock)
-		VALUES (?,?,?,?,?,?,?,?,?)`,
-		supArg, part, nullStr(r.FormValue("barcode")), name, bin,
+		VALUES (?,?,?,?,?,?,?,?,?,?)`,
+		supArg, part, nullStr(r.FormValue("barcode")), name, bin, nullStr(category),
 		atofDefault(r.FormValue("cost_price"), 0), atofDefault(r.FormValue("selling_price"), 0),
 		atoiDefault(r.FormValue("stock_quantity"), 0), atoiDefault(r.FormValue("min_safety_stock"), 5))
 	if err != nil {
@@ -243,6 +245,7 @@ func EditInventoryForm(w http.ResponseWriter, r *http.Request, user model.User) 
       <form class="frm" method="POST" action="/inventory/` + strconv.FormatInt(it.ID, 10) + `">
         <label>料號<input name="part_number" value="` + htmlEsc(it.PartNumber) + `" required></label>
         <label>名稱<input name="name" value="` + htmlEsc(it.Name) + `" required></label>
+        <label>類別<select name="category"><option value="">未分類</option>` + lookupOptions("category", it.Category) + `</select></label>
         <label>庫位<input name="bin_location" value="` + htmlEsc(it.BinLocation) + `" required></label>
         <label>條碼<input name="barcode" value="` + htmlEsc(it.Barcode) + `"></label>
         <label>供應商<select name="supplier_id"><option value="0">無</option>` + supplierOptionsSel(it.SupplierID) + `</select></label>
@@ -274,8 +277,8 @@ func UpdateInventoryItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := db.DB.Exec(`UPDATE inventory_items SET supplier_id=?, part_number=?, barcode=?,
-		name=?, bin_location=?, cost_price=?, selling_price=?, min_safety_stock=? WHERE id=?`,
-		supArg, part, nullStr(r.FormValue("barcode")), name, bin,
+		name=?, category=?, bin_location=?, cost_price=?, selling_price=?, min_safety_stock=? WHERE id=?`,
+		supArg, part, nullStr(r.FormValue("barcode")), name, nullStr(r.FormValue("category")), bin,
 		atofDefault(r.FormValue("cost_price"), 0), atofDefault(r.FormValue("selling_price"), 0),
 		atoiDefault(r.FormValue("min_safety_stock"), 5), id)
 	if err != nil {

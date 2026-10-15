@@ -120,18 +120,30 @@ type SelectOption struct {
 // fieldMap 為「API 欄位 -> 表單 input name」的 JSON（由各頁面傳入）。
 templ PlateScanUI(fieldMapJSON string) {
 	<script src="/static/scan.js"></script>
-	<div class="full" style="grid-column:1/-1;margin-bottom:4px">
+	<div class="full" data-fieldmap={ fieldMapJSON } style="grid-column:1/-1;margin-bottom:4px">
 		<button type="button" class="btn btn-o" id="plateScanBtn">📷 拍照辨識行照</button>
 		<input type="file" id="plateScanInput" accept="image/*" capture="environment" style="display:none">
 		<span style="color:#64748b;font-size:12px;margin-left:8px">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span>
 	</div>
 	<script>
+		// fieldMapJSON 由 templ 用屬性插值放在上面 div 的 data-fieldmap，
+		// 這裡讀出來再 JSON.parse。
+		// 不可寫成 JS 物件字面值 fieldMap: { ... }：templ 不對 <script> 內文
+		// 做 {} 插值，會原樣輸出 `fieldMap: { fieldMapJSON }` → SyntaxError，
+		// 整段 script 掛掉、按鈕監聽沒綁上（症狀：按了沒反應）。
+		var plateFieldMap = {};
+		try {
+			var holder = document.querySelector("[data-fieldmap]");
+			if (holder && holder.getAttribute("data-fieldmap")) {
+				plateFieldMap = JSON.parse(holder.getAttribute("data-fieldmap"));
+			}
+		} catch (e) { /* 解析失敗就用空 map，按鈕仍可點，只是不回填 */ }
 		document.addEventListener("DOMContentLoaded", function () {
 			if (window.initPlateScan) {
 				window.initPlateScan({
 					buttonId: "plateScanBtn",
 					inputId: "plateScanInput",
-					fieldMap: { fieldMapJSON }
+					fieldMap: plateFieldMap
 				});
 			}
 		});

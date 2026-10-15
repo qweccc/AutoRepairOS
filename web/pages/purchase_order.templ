@@ -100,7 +100,7 @@ templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) {
 			if errMsg != "" {
 				<div class="msg msg-err">{ errMsg }</div>
 			}
-			<form class="frm" method="POST" action="/purchase-orders">
+			<form class="frm" id="newPurchaseOrderForm" method="POST" action="/purchase-orders">
 				<label>供應商（廠商）
 					<select name="supplier_id" required>
 						<option value="">請選擇供應商</option>
@@ -110,21 +110,29 @@ templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) {
 				<label>進貨日期<input type="date" name="order_date" value={ orderDate }></label>
 				<label>關聯工單（選填）<input name="work_order_id" type="number" min="0" placeholder="工單號碼，例：1153001；留空=一般進貨"></label>
 				<label class="full">備註<textarea name="notes" placeholder="例：本月第二批機油進貨"></textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">建立並加入品項</button>
-					<a class="btn btn-s" href="/purchase-orders">取消</a></div>
-			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:10px">
+				<div class="full">
+					<button class="btn btn-p" type="submit">建立並加入品項</button>
+					<a class="btn btn-s" href="/purchase-orders">取消</a>
+				</div>
+				</form>
+				@components.InvoiceScanUI()
+				<p style="color:#64748b;font-size:12.5px;margin-top:10px">
 				若這批貨是為特定工單特別叫的（客戶指定零件、急件補料），填工單號碼；
 				一般進貨留空即可（僅入庫）。
-			</p>
+				</p>
 		</div>
 	}
 }
 
 // ShowPurchaseOrderPage 進貨單詳情：主檔 + 品項 + 應付總額。
+// flashMsg 是 redirectMsg 留下的訊息（如「已進貨（自動建立 N 個新零件）」）；
+// templ 頁面不像字串拼接頁面有全域 flash()，必須由 handler 取值後傳進來顯示。
 templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderItem,
-	total float64, locked bool, supplierOpts string) {
+	total float64, locked bool, supplierOpts string, partCategoryOptions string, flashMsg string) {
 	@components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", "owner", "owner", "AutoRepair OS") {
+		if flashMsg != "" {
+			<div class="msg msg-ok">{ flashMsg }</div>
+		}
 		<div class="card">
 			<h2>進貨單 #{ strconv.FormatInt(po.ID, 10) } — { po.SupplierName }</h2>
 			<table>
@@ -189,7 +197,7 @@ templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderI
 				@PurchaseOrderItemsTable(po.ID, items, total, locked)
 			</div>
 			if !locked {
-				@AddPurchaseItemForm(po.ID)
+				@AddPurchaseItemForm(po.ID, partCategoryOptions)
 			}
 		</div>
 	}
@@ -203,12 +211,13 @@ templ PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, to
 	if len(items) > 0 {
 		<table>
 			<tr>
-				<th>品項</th><th>料號</th><th class="num">數量</th>
+				<th>品項</th><th>類別</th><th>料號</th><th class="num">數量</th>
 				<th class="num">進貨單價</th><th class="num">小計</th><th>操作</th>
 			</tr>
 			for _, it := range items {
 				<tr>
 					<td>{ it.Description }</td>
+					<td style="font-size:12px;color:#94a3b8">{ orEmpty(it.Category) }</td>
 					<td><code style="font-size:12px">{ orEmpty(it.PartNumber) }</code></td>
 					<td class="num">{ trimQtyF(it.Quantity) }</td>
 					<td class="num">{ moneyFmt(it.UnitCost) }</td>
@@ -228,7 +237,7 @@ templ PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, to
 				</tr>
 			}
 			<tr>
-				<td colspan="4" style="text-align:right"><b>應付總額</b></td>
+				<td colspan="5" style="text-align:right"><b>應付總額</b></td>
 				<td class="num"><b style="color:#38bdf8;font-size:16px">{ moneyFmt(total) }</b></td>
 				<td></td>
 			</tr>
@@ -238,7 +247,9 @@ templ PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, to
 
 // AddPurchaseItemForm 加入品項表單（HTMX 無刷新送出）。
 // 品項可選庫存零件（帶入名稱單價）或手動輸入（未建檔的新品項）。
-templ AddPurchaseItemForm(orderID int64) {
+// partCategoryOptions 是零件類別下拉選項（lookup 的 category 類型）——
+// 手動新增的品項在這裡歸類，確認進貨時會帶到自動建檔的零件。
+templ AddPurchaseItemForm(orderID int64, partCategoryOptions string) {
 	<form class="frm" id="addItemForm"
 		hx-post={ "/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items" }
 		hx-target="#po-items"
@@ -249,6 +260,12 @@ templ AddPurchaseItemForm(orderID int64) {
 			<input name="description" required placeholder="例：機油 5W-30 或 掃描/選擇下方零件帶入">
 		</label>
 		<label>數量<input name="quantity" type="number" step="0.01" min="0.01" value="1" required></label>
+		<label>類別
+			<select name="category">
+				<option value="">未分類</option>
+				@templ.Raw(partCategoryOptions)
+			</select>
+		</label>
 		<label>進貨單價（給廠商的價）<input name="unit_price_f" id="unitPrice" type="number" min="0" step="1" value="0" required></label>
 		<input type="hidden" name="unit_cost" id="unitCost" value="0">
 		<input type="hidden" name="quantity_hidden" id="quantityHidden" value="1">
@@ -257,7 +274,7 @@ templ AddPurchaseItemForm(orderID int64) {
 		<div class="full">
 			<button class="btn btn-p" type="submit">加入品項</button>
 		</div>
-	</form>
+		</form>
 	@PurchaseItemLookup(orderID)
 	<script>
 		// 數量與單價：使用者輸入的是 quantity 與 unit_price_f，

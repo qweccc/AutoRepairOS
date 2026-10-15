@@ -20,6 +20,11 @@ type VehicleRow struct {
 	CanEdit          bool
 }
 
+// vehiclePlateFieldMap 行照 OCR 欄位 → 車輛表單 input name 的對照。
+// 三個車輛表單（列表頁內嵌新增、編輯頁、獨立新增頁）共用同一份 JSON，
+// 避免三處各寫一遍然後漏欄位對不起來。
+const vehiclePlateFieldMap = `{"plate_number":"plate_number","vin":"vin","engine_number":"engine_number","owner_name":"owner_name","owner_address":"owner_address","owner_id_number":"owner_id_number","displacement":"displacement","manufacture_date":"manufacture_date","license_issue_date":"license_issue_date","seating_capacity":"seating_capacity"}`
+
 templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 	q string, filterCustomer int64,
 	newModelOptions, newVehicleTypeOptions, newFuelTypeOptions, newBodyStyleOptions string) {
@@ -27,6 +32,7 @@ templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 		<div class="card">
 			<h2>新增車輛</h2>
 			<form class="frm" method="POST" action="/vehicles">
+				@components.PlateScanUI(vehiclePlateFieldMap)
 				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required placeholder="例：王小明 或 0912345678 或 1234"></label>
 				<label>車牌號碼<input name="plate_number" required></label>
 				<label>品牌車型

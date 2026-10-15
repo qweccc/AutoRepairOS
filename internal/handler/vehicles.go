@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -371,7 +372,7 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		 inspection_due_date, next_maintenance_date, next_maintenance_mileage,
 		 last_maintenance_date, last_maintenance_mileage,
 		 next_maintenance_interval_months, next_maintenance_interval_km)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		customerID, plate, model_, vehicleType,
 		nullStr(r.FormValue("driver_name")), nullStr(r.FormValue("driver_phone")),
 		nullStr(r.FormValue("contact_name")), nullStr(r.FormValue("contact_phone")),
@@ -393,6 +394,7 @@ func CreateVehicle(w http.ResponseWriter, r *http.Request) {
 		atoiDefault(r.FormValue("maint_interval_km"), 5000),
 	)
 	if err != nil {
+		log.Printf("建立車輛失敗（plate=%s）: %v", plate, err)
 		if strings.Contains(err.Error(), "UNIQUE") {
 			fail(w, "車牌號碼已存在")
 			return

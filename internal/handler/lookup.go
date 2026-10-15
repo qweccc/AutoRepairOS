@@ -29,6 +29,8 @@ var lookupCategoryLabel = map[string]string{
 	"branch":          "部門",
 	"vehicle_model":   "車輛品牌車型",
 	"vehicle_type":    "車輛車種",
+	"body_style":      "車身型式",
+	"fuel_type":       "燃油種類",
 }
 
 // CheckLookupCategories 啟動時檢查每個分頁籤的 category 是否真的有資料。

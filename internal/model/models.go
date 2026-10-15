@@ -254,12 +254,14 @@ type PurchaseOrder struct {
 }
 
 // PurchaseOrderItem 進貨單品項：數量 × 進貨單價 = 小計。
+// Category 是拍照辨識時猜到的零件類別（lookup code）；確認進貨自動建檔時帶到新零件。
 type PurchaseOrderItem struct {
 	ID              int64   `json:"id"`
 	OrderID         int64   `json:"order_id"`
 	InventoryItemID int64   `json:"inventory_item_id,omitempty"`
 	Description     string  `json:"description"`
 	PartNumber      string  `json:"part_number,omitempty"`
+	Category        string  `json:"category,omitempty"`
 	Quantity        float64 `json:"quantity"`
 	UnitCost        float64 `json:"unit_cost"`
 	Subtotal        float64 `json:"subtotal"`
