@@ -12,8 +12,13 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	navpkg "autorepairos/internal/nav"
 )
 
+// appRoutes 與 nav() 已移至 internal/nav（單一選單定義來源）。
+// 此處只保留 renderPage 需要的頁面樣式，且不再自帶 nav/shell 版面規則——
+// 字串拼接頁與 templ 頁共用同一份 internal/handler/static/app.css，
+// 避免兩邊版面規則走音（症狀：總覽與其他頁選單格式不同）。
 const pageStyle = `
   * { box-sizing: border-box; }
   body { margin: 0; font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
@@ -27,27 +32,6 @@ const pageStyle = `
            border-radius: 999px; font-weight: 700; font-size: 11px; }
   .logout { margin-left: 14px; padding: 6px 14px; background: #ef4444; color: #fff;
             border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
-  /* 與 internal/handler/static/app.css 的 nav 規則必須一致（右側直排側邊欄）。
-     兩份選單渲染來源（renderPage 字串頁 / templ 頁）共用同一套版面規則，
-     只改一邊的症狀是「總覽與其他頁選單格式不同」。
-     側邊欄用 position:fixed 而非 sticky：sticky 需要 .shell 有足夠高度才黏得住，
-     main 短時 nav 會縮、長時又會多出第二個卷軸；fixed + height:100vh 讓 nav 自己
-     負責垂直空間，整頁只有一個卷軸。nav 脫離排版流，靠 .shell 的 margin-right 讓位
-     （不能靠 main 的 padding，flex 項目 flex:1 會吃掉全寬）。 */
-  .shell { margin-right: 220px; }
-  main { flex: 1; min-width: 0; padding: 24px 28px; }
-  nav { background: #111c33; width: 220px;
-        border-left: 1px solid #334155; display: flex; flex-direction: column;
-        padding: 10px 0; position: fixed; top: 57px; right: 0;
-        height: calc(100vh - 57px); overflow-y: auto; overscroll-behavior: contain; }
-  nav a { padding: 9px 18px; color: #94a3b8; text-decoration: none; font-size: 14px;
-          border-left: 3px solid transparent; white-space: nowrap; }
-  nav a:hover { color: #e2e8f0; background: #1a2740; }
-  nav a.on { color: #38bdf8; background: #1e293b; border-left-color: #38bdf8; font-weight: 700; }
-  .navgrp { display: flex; flex-direction: column; align-items: stretch;
-            padding: 9px 0; border-top: 1px solid #334155; }
-  .navgrp:first-child { padding-top: 0; border-top: 0; }
-  .navlbl { color: #64748b; font-size: 11px; letter-spacing: 1px; padding: 0 18px 5px; }
   .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
           padding: 20px; margin-bottom: 18px; }
   .card h2 { margin: 0 0 14px 0; color: #38bdf8; font-size: 17px; }
@@ -133,40 +117,6 @@ const pageStyle = `
   }
 `
 
-// appRoutes 定義側邊導覽；active 為目前頁面。
-//
-// 分組順序依車行作業節奏排：櫃檯最常用（接車→開單→收款）排最前，
-// 進貨/庫存次之，管理與設定類最後。新增頁面時掛到對應的 Group，
-// Group 標籤會顯示在每組開頭。nil 組 = 不分組（平鋪）。
-var appRoutes = []struct {
-	Path  string
-	Name  string
-	Group string
-}{
-	{"/", "總覽", "日常作業"},
-	{"/customers", "客戶", "日常作業"},
-	{"/vehicles", "車輛", "日常作業"},
-	{"/work-orders", "工單", "日常作業"},
-	{"/appointments", "預約", "日常作業"},
-	{"/receivables", "收款", "日常作業"},
-	{"/inspections", "定檢", "日常作業"},
-	{"/purchase-orders", "進貨單", "進貨庫存"},
-	{"/suppliers", "廠商", "進貨庫存"},
-	{"/inventory", "庫存", "進貨庫存"},
-	{"/maintenance-templates", "保養套餐", "保養保險"},
-	{"/insurances", "投保", "保養保險"},
-	{"/insurance-companies", "保險公司", "保養保險"},
-	{"/staff", "員工", "帳務人事"},
-	{"/technicians/commissions", "技師佣金", "帳務人事"},
-	{"/expenses", "支出", "帳務人事"},
-	{"/reports", "報表", "帳務人事"},
-	{"/analytics", "經營分析", "帳務人事"},
-	{"/lookup", "代碼對照", "後台設定"},
-	{"/scheduled-tasks", "排程", "後台設定"},
-	{"/subcontracts", "外包", "後台設定"},
-	{"/equipment", "設備", "後台設定"},
-}
-
 // RequireAuth 擋未登入者，並把使用者注入給頁面 handler。
 func RequireAuth(fn func(http.ResponseWriter, *http.Request, model.User)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -188,34 +138,6 @@ func RequireLogin(fn http.HandlerFunc) http.HandlerFunc {
 		}
 		fn(w, r)
 	}
-}
-
-func nav(active string) string {
-	var b strings.Builder
-	curGroup := ""
-	openDiv := false
-	for _, rt := range appRoutes {
-		if rt.Group != curGroup {
-			if openDiv {
-				b.WriteString(`</div>`)
-			}
-			curGroup = rt.Group
-			openDiv = rt.Group != ""
-			if openDiv {
-				b.WriteString(`<div class="navgrp"><span class="navlbl">` +
-					html.EscapeString(rt.Group) + `</span>`)
-			}
-		}
-		cls := ""
-		if rt.Path == active {
-			cls = ` class="on"`
-		}
-		fmt.Fprintf(&b, `<a href="%s"%s>%s</a>`, rt.Path, cls, rt.Name)
-	}
-	if openDiv {
-		b.WriteString(`</div>`)
-	}
-	return b.String()
 }
 
 // appName 取得軟體名稱。handler 套件不依賴 config（避免循環），
@@ -247,7 +169,7 @@ func renderPage(w http.ResponseWriter, title, active, username, role, body strin
   </header>
   <div class="shell">
   <main>` + body + `</main>
-  <nav>` + nav(active) + `</nav>
+  <nav>` + navpkg.Render(active) + `</nav>
   </div>
   <script src="/offline.js"></script>
 </body>

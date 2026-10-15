@@ -1,5 +1,9 @@
 package components
 
+import (
+	"autorepairos/internal/nav"
+)
+
 // Layout 全站共用版面：header + nav + main。
 templ Layout(title, active, username, role, appName string) {
 	<!DOCTYPE html>
@@ -34,47 +38,8 @@ templ Layout(title, active, username, role, appName string) {
 
 // NavItems 側邊導覽列。
 //
-// 分組順序依車行作業節奏排：櫃檯最常用（接車→開單→收款）排最前，
-// 進貨/庫存次之，管理與設定類最後。新增頁面時掛到對應的 navgrp。
-// 注意：internal/handler/layout.go 的 appRoutes 是 renderPage（首頁等字串拼接頁）
-// 用的另一份選單，兩邊的分組與項目要同步維護。
+// 選單的單一定義來源是 internal/nav（Routes + Render），renderPage（首頁等
+// 字串拼接頁）與這裡都呼叫它，兩邊不會再走音。新增/調整選單只改 internal/nav。
 templ NavItems(active string) {
-	<div class="navgrp">
-		<span class="navlbl">日常作業</span>
-		<a href="/" class={ templ.KV("on", active == "/") }>總覽</a>
-		<a href="/customers" class={ templ.KV("on", active == "/customers") }>客戶</a>
-		<a href="/vehicles" class={ templ.KV("on", active == "/vehicles") }>車輛</a>
-		<a href="/work-orders" class={ templ.KV("on", active == "/work-orders") }>工單</a>
-		<a href="/appointments" class={ templ.KV("on", active == "/appointments") }>預約</a>
-		<a href="/receivables" class={ templ.KV("on", active == "/receivables") }>收款</a>
-		<a href="/inspections" class={ templ.KV("on", active == "/inspections") }>定檢</a>
-	</div>
-	<div class="navgrp">
-		<span class="navlbl">進貨庫存</span>
-		<a href="/purchase-orders" class={ templ.KV("on", active == "/purchase-orders") }>進貨單</a>
-		<a href="/suppliers" class={ templ.KV("on", active == "/suppliers") }>廠商</a>
-		<a href="/inventory" class={ templ.KV("on", active == "/inventory") }>庫存</a>
-	</div>
-	<div class="navgrp">
-		<span class="navlbl">保養保險</span>
-		<a href="/maintenance-templates" class={ templ.KV("on", active == "/maintenance-templates") }>保養套餐</a>
-		<a href="/insurances" class={ templ.KV("on", active == "/insurances") }>投保</a>
-		<a href="/insurance-companies" class={ templ.KV("on", active == "/insurance-companies") }>保險公司</a>
-	</div>
-	<div class="navgrp">
-		<span class="navlbl">帳務人事</span>
-		<a href="/staff" class={ templ.KV("on", active == "/staff") }>員工</a>
-		<a href="/technicians/commissions" class={ templ.KV("on", active == "/technicians/commissions") }>技師佣金</a>
-		<a href="/expenses" class={ templ.KV("on", active == "/expenses") }>支出</a>
-		<a href="/reports" class={ templ.KV("on", active == "/reports") }>報表</a>
-		<a href="/analytics" class={ templ.KV("on", active == "/analytics") }>經營分析</a>
-	</div>
-	<div class="navgrp">
-		<span class="navlbl">後台設定</span>
-		<a href="/lookup" class={ templ.KV("on", active == "/lookup") }>代碼對照</a>
-		<a href="/scheduled-tasks" class={ templ.KV("on", active == "/scheduled-tasks") }>排程</a>
-		<a href="/subcontracts" class={ templ.KV("on", active == "/subcontracts") }>外包</a>
-		<a href="/equipment" class={ templ.KV("on", active == "/equipment") }>設備</a>
-	</div>
+	@templ.Raw(nav.Render(active))
 }
-
