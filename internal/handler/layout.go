@@ -29,12 +29,17 @@ const pageStyle = `
             border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
   /* 與 internal/handler/static/app.css 的 nav 規則必須一致（右側直排側邊欄）。
      兩份選單渲染來源（renderPage 字串頁 / templ 頁）共用同一套版面規則，
-     只改一邊的症狀是「總覽與其他頁選單格式不同」。 */
-  .shell { display: flex; align-items: flex-start; }
+     只改一邊的症狀是「總覽與其他頁選單格式不同」。
+     側邊欄用 position:fixed 而非 sticky：sticky 需要 .shell 有足夠高度才黏得住，
+     main 短時 nav 會縮、長時又會多出第二個卷軸；fixed + height:100vh 讓 nav 自己
+     負責垂直空間，整頁只有一個卷軸。nav 脫離排版流，靠 .shell 的 margin-right 讓位
+     （不能靠 main 的 padding，flex 項目 flex:1 會吃掉全寬）。 */
+  .shell { margin-right: 220px; }
   main { flex: 1; min-width: 0; padding: 24px 28px; }
-  nav { background: #111c33; width: 220px; flex-shrink: 0;
+  nav { background: #111c33; width: 220px;
         border-left: 1px solid #334155; display: flex; flex-direction: column;
-        padding: 10px 0; position: sticky; top: 0; max-height: 100vh; overflow-y: auto; }
+        padding: 10px 0; position: fixed; top: 57px; right: 0;
+        height: calc(100vh - 57px); overflow-y: auto; overscroll-behavior: contain; }
   nav a { padding: 9px 18px; color: #94a3b8; text-decoration: none; font-size: 14px;
           border-left: 3px solid transparent; white-space: nowrap; }
   nav a:hover { color: #e2e8f0; background: #1a2740; }
@@ -95,11 +100,13 @@ const pageStyle = `
     header { padding: 10px 14px; }
     header h1 { font-size: 16px; }
     .user { font-size: 11px; }
-    .shell { flex-direction: column; }
-    nav { width: auto; flex-shrink: 1; order: -1; border-left: 0;
-          border-top: 1px solid #334155; position: static; max-height: none;
-          overflow-x: auto; overflow-y: visible; flex-direction: row; flex-wrap: wrap;
-          padding: 6px 8px; }
+    /* 窄屏：.shell 恢復 flex column 才能讓 nav 的 order:-1 生效（寬屏時 .shell 不是
+       flex 容器，order 無效）；同時把 margin-right 與 fixed 重置，nav 改橫排。 */
+    .shell { margin-right: 0; display: flex; flex-direction: column; }
+    nav { order: -1; position: static; width: auto; height: auto; top: auto; right: auto;
+          border-left: 0; border-top: 1px solid #334155;
+          overflow-x: auto; overflow-y: visible;
+          flex-direction: row; flex-wrap: wrap; padding: 6px 8px; }
     nav a { padding: 8px 10px; font-size: 12px; white-space: nowrap;
             border-left: 0; border-bottom: 2px solid transparent; }
     nav a.on { border-left: 0; border-bottom-color: #38bdf8; }

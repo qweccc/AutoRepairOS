@@ -31,23 +31,31 @@ header h1 { margin: 0; font-size: 20px; }
 .logout { margin-left: 14px; padding: 6px 14px; background: #ef4444; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
 
 /* ---- 版面：header 橫跨全寬，下方 main（左）+ nav（右）側邊欄 ---- */
-.shell { display: flex; align-items: flex-start; }
+/* 側邊欄固定在視窗右緣、自己垂直捲動，整頁只有一個卷軸（nav 的）。
+   為什麼這樣寫：
+   - nav 用 position:fixed 而不是 sticky：sticky 需要 .shell 有足夠高度才黏得住，
+     而 .shell 的高度取決於 main 內容，main 短時 nav 會跟著縮、長時又會多出第二個
+     卷軸（nav 自己的 overflow-y:auto + body 的），看起來就是「右邊太長導致兩個卷軸」。
+   - nav 用 height:100vh 自己負責所有垂直空間，main 獨立捲動。
+   - nav 脫離排版流後，不能靠 main 的 padding 讓位（flex 項目 flex:1 會吃掉全寬），
+     所以 .shell 改用 margin-right 把整個排版區左推，nav 蓋在右緣留出的空白上。 */
+.shell { margin-right: 220px; }
 main { flex: 1; min-width: 0; padding: 24px 28px; }
 
-/* ---- Nav（右側直排側邊欄）----
-   側邊欄跟隨內容捲動（sticky top:0），項目多時自身可垂直捲動。 */
+/* ---- Nav（右側直排側邊欄）---- */
 nav {
   background: #111c33;
   width: 220px;
-  flex-shrink: 0;
   border-left: 1px solid #334155;
   display: flex;
   flex-direction: column;
   padding: 10px 0;
-  position: sticky;
-  top: 0;
-  max-height: 100vh;
+  position: fixed;
+  top: 57px;
+  right: 0;
+  height: calc(100vh - 57px);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 nav a { padding: 9px 18px; color: #94a3b8; text-decoration: none; font-size: 14px;
         border-left: 3px solid transparent; white-space: nowrap; }
@@ -132,9 +140,11 @@ form.login button:hover { background: #0ea5e9; }
 @media (max-width: 768px) {
   header { padding: 10px 14px; }
   header h1 { font-size: 16px; }
-  .shell { flex-direction: column; }
-  nav { order: -1; width: auto; flex-shrink: 1; border-left: 0;
-        border-top: 1px solid #334155; position: static; max-height: none;
+  /* 窄屏：.shell 恢復 flex column 才能讓 nav 的 order:-1 生效（寬屏時 .shell 不是
+     flex 容器，order 無效）；同時把 margin-right 與 fixed 重置，nav 改橫排。 */
+  .shell { margin-right: 0; display: flex; flex-direction: column; }
+  nav { order: -1; position: static; width: auto; height: auto; top: auto; right: auto;
+        border-left: 0; border-top: 1px solid #334155;
         overflow-x: auto; overflow-y: visible;
         flex-direction: row; flex-wrap: wrap; padding: 6px 8px; }
   nav a { padding: 8px 10px; font-size: 12px; border-left: 0; border-bottom: 2px solid transparent; }
