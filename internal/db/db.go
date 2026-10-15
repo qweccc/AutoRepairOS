@@ -25,9 +25,17 @@ func Init(cfg *config.Config) error {
 	}
 
 	dbPath := cfg.DBPath
-	if !strings.HasPrefix(dbPath, "file:") && !filepath.IsAbs(dbPath) {
-		dbPath = "file:" + filepath.Join(dataDir, "autorepair.db") + "?_journal_mode=WAL&_busy_timeout=5000"
-	} else if !strings.HasPrefix(dbPath, "file:") {
+	switch {
+	case strings.HasPrefix(dbPath, "file:"):
+		// 已是完整 DSN（docker-compose、.env 範本都寫這種），直接用。
+	case filepath.IsAbs(dbPath):
+		// 絕對路徑：補 file: 前綴後照原路徑開檔。
+		// 曾經這裡誤寫成跟相對路徑一樣 join dataDir，導致帶絕對 DB_PATH 的
+		// 執行個體（隔離測試 DB、暫存 DB）全部靜默連到 ./data/autorepair.db，
+		// 隔離測試因此打到正式資料庫上，極難察覺。
+		dbPath = "file:" + dbPath + "?_journal_mode=WAL&_busy_timeout=5000"
+	default:
+		// 相對路徑或未設定：沿用預設資料庫位置 ./data/autorepair.db。
 		dbPath = "file:" + filepath.Join(dataDir, "autorepair.db") + "?_journal_mode=WAL&_busy_timeout=5000"
 	}
 
