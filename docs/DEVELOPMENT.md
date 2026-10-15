@@ -58,6 +58,7 @@ AutoRepairOS/
 │   └── pages/               # 各頁面 Templ（xxx.templ → 自動產生 xxx_templ.go）
 ├── internal/
 │   ├── handler/             # HTTP handler（業務邏輯 + 呼叫 Templ render）
+│   │   └── static/          # 靜態資源唯一來源（CSS/JS，//go:embed 編進 binary）
 │   ├── model/               # struct 定義（DB 欄位對應）
 │   ├── db/                  # DB 連線、migration SQL
 │   ├── session/             # session token 管理
@@ -318,6 +319,27 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
 6. `bash build.sh` — 產 release（舊版 exe 自動移到 unpublished/release-exe/）
 7. `docker compose up -d --force-recreate` — 只在部署新版時做，不是每次測都重啟
 
+**改了前端（CSS/JS/templ）一定要清 service worker 快取再驗**：`offline.js` 會註冊
+`/sw.js`，它把 `app.css`、`htmx.min.js` 等靜態檔快取起來。後端 `serveStatic`
+雖然設了 `Cache-Control: no-cache`，但 **no-cache 只代表「用前要向伺服器驗證」，
+SW 的 Cache Storage 是另一層**，會直接回舊檔、根本不問後端。症狀是「改了 CSS
+重新 build、curl 拿到的也是新檔，瀏覽器卻完全沒變」，用 CDP 讀 `CSS.cssRules`
+會看到舊版規則（缺剛加的屬性），極易誤判成自己寫錯。
+
+清快取（瀏覽器 console）：
+```js
+navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+```
+或直接在網址列加 query（`/purchase-orders?v=<timestamp>`）破快取驗證。
+
+**驗證前端排版要用 computed style，不要目測**：`getComputedStyle(nav)` 的
+`flexDirection / width / order` 加上 `getBoundingClientRect()` 的相對位置，
+才能分辨「真的靠右」與「只是剛好沒溢出」。這套在「選單有兩份渲染來源」
+（`renderPage` 字串頁 vs templ 頁）時特別重要——兩邊版面規則分別寫在
+`internal/handler/layout.go` 的 `pageStyle` 與 `internal/handler/static/app.css`，
+**改一邊只有一半頁面會變**。驗收時兩種頁面（首頁總覽 + 任一 templ 頁）都要量。
+
 **密碼/機密：** 絕不寫進程式碼、絕不 commit。用 `.env`（已 gitignore），`.env.example` 放範本。
 
 ---
@@ -357,6 +379,19 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
 全站樣式集中在 **`internal/handler/static/app.css`**（單一深色主題，`//go:embed` 編進 binary）。改樣式請改這裡，**勿在個別 templ 內重寫 `<style>`**（login 頁的少量額外樣式除外，僅覆寫表單版面）。
 
 > 靜態資源**只有一個來源**：`internal/handler/static/`（`//go:embed all:static` 編進 binary）。`web/static/` 曾是純冗餘副本（沒有任何程式碼或 templ 讀它，templ 全部 link `/static/...` 走 embed），已於 v20261015 整目錄刪除——曾經因為搞錯來源、改了 `web/static/app.css` 但線上沒變。改靜態資源一律只改 `internal/handler/static/`，改完重新 build 即可，**不需要也不該**把檔案複製進 `release/web/`（`release/web/` 只需要 `index.html`）。
+
+**版面結構（v20261015 改為右側側邊欄）：** header 橫跨全寬，下方 `.shell` 是
+`display:flex` 的橫向容器，`main`（`flex:1`）在左、`nav`（固定 220px、`position:sticky`、
+自身可垂直捲動）在右。窄屏（≤768px）時 `.shell` 變 `flex-direction:column` 且
+`nav` 用 `order:-1` 拉回頂部、改橫排——**DOM 順序是 main 在前**，所以橫排必須靠
+`order` 才會顯示在上方，漏了就會跑到內容下面。
+
+選單有**兩份渲染來源，改一邊只有一半頁面會變**（症狀：總覽與其他頁選單格式不同）：
+- `web/components/layout.templ` 的 `NavItems` — templ 頁用（`@components.Layout(...)` 包的多數功能頁）
+- `internal/handler/layout.go` 的 `appRoutes` + `nav()` — `renderPage` 字串拼接頁用（首頁總覽等），版面規則寫在 `pageStyle`
+
+兩邊的**選單項目與版面 CSS 都要同步維護**。判斷某頁走哪份：看 handler 是用
+`pages.XxxPage(...)`（templ）還是 `renderPage(...)`（字串）。
 
 ### 9.1 色彩（深色主題）
 

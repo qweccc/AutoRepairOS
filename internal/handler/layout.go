@@ -27,13 +27,22 @@ const pageStyle = `
            border-radius: 999px; font-weight: 700; font-size: 11px; }
   .logout { margin-left: 14px; padding: 6px 14px; background: #ef4444; color: #fff;
             border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
-  nav { background: #111c33; padding: 0 28px; display: flex; gap: 4px;
-        border-bottom: 1px solid #334155; }
-  nav a { padding: 11px 16px; color: #94a3b8; text-decoration: none;
-          font-size: 14px; border-bottom: 2px solid transparent; }
-  nav a:hover { color: #e2e8f0; }
-  nav a.on { color: #38bdf8; border-bottom-color: #38bdf8; font-weight: 700; }
-  main { padding: 24px 28px; }
+  /* 與 internal/handler/static/app.css 的 nav 規則必須一致（右側直排側邊欄）。
+     兩份選單渲染來源（renderPage 字串頁 / templ 頁）共用同一套版面規則，
+     只改一邊的症狀是「總覽與其他頁選單格式不同」。 */
+  .shell { display: flex; align-items: flex-start; }
+  main { flex: 1; min-width: 0; padding: 24px 28px; }
+  nav { background: #111c33; width: 220px; flex-shrink: 0;
+        border-left: 1px solid #334155; display: flex; flex-direction: column;
+        padding: 10px 0; position: sticky; top: 0; max-height: 100vh; overflow-y: auto; }
+  nav a { padding: 9px 18px; color: #94a3b8; text-decoration: none; font-size: 14px;
+          border-left: 3px solid transparent; white-space: nowrap; }
+  nav a:hover { color: #e2e8f0; background: #1a2740; }
+  nav a.on { color: #38bdf8; background: #1e293b; border-left-color: #38bdf8; font-weight: 700; }
+  .navgrp { display: flex; flex-direction: column; align-items: stretch;
+            padding: 9px 0; border-top: 1px solid #334155; }
+  .navgrp:first-child { padding-top: 0; border-top: 0; }
+  .navlbl { color: #64748b; font-size: 11px; letter-spacing: 1px; padding: 0 18px 5px; }
   .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px;
           padding: 20px; margin-bottom: 18px; }
   .card h2 { margin: 0 0 14px 0; color: #38bdf8; font-size: 17px; }
@@ -86,8 +95,18 @@ const pageStyle = `
     header { padding: 10px 14px; }
     header h1 { font-size: 16px; }
     .user { font-size: 11px; }
-    nav { padding: 0 8px; overflow-x: auto; flex-wrap: nowrap; }
-    nav a { padding: 9px 10px; font-size: 12px; white-space: nowrap; }
+    .shell { flex-direction: column; }
+    nav { width: auto; flex-shrink: 1; order: -1; border-left: 0;
+          border-top: 1px solid #334155; position: static; max-height: none;
+          overflow-x: auto; overflow-y: visible; flex-direction: row; flex-wrap: wrap;
+          padding: 6px 8px; }
+    nav a { padding: 8px 10px; font-size: 12px; white-space: nowrap;
+            border-left: 0; border-bottom: 2px solid transparent; }
+    nav a.on { border-left: 0; border-bottom-color: #38bdf8; }
+    .navgrp { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px;
+              padding: 0 8px; border-top: 0; border-left: 1px solid #334155; }
+    .navgrp:first-child { padding-left: 0; border-left: 0; }
+    .navlbl { font-size: 10px; letter-spacing: 0; padding: 0 4px; }
     main { padding: 14px 10px; }
     .card { padding: 14px; margin-bottom: 12px; }
     .card h2 { font-size: 15px; }
@@ -108,31 +127,37 @@ const pageStyle = `
 `
 
 // appRoutes 定義側邊導覽；active 為目前頁面。
+//
+// 分組順序依車行作業節奏排：櫃檯最常用（接車→開單→收款）排最前，
+// 進貨/庫存次之，管理與設定類最後。新增頁面時掛到對應的 Group，
+// Group 標籤會顯示在每組開頭。nil 組 = 不分組（平鋪）。
 var appRoutes = []struct {
-	Path string
-	Name string
+	Path  string
+	Name  string
+	Group string
 }{
-	{"/", "總覽"},
-	{"/customers", "客戶"},
-	{"/vehicles", "車輛"},
-	{"/work-orders", "工單"},
-	{"/insurance-companies", "保險公司"},
-	{"/receivables", "收款"},
-	{"/inventory", "庫存"},
-	{"/suppliers", "廠商"},
-	{"/staff", "員工"},
-	{"/insurances", "投保"},
-	{"/inspections", "定檢"},
-	{"/maintenance-templates", "保養套餐"},
-	{"/technicians/commissions", "技師佣金"},
-	{"/expenses", "支出"},
-	{"/reports", "報表"},
-	{"/analytics", "經營分析"},
-	{"/lookup", "代碼對照"},
-	{"/scheduled-tasks", "排程"},
-	{"/appointments", "預約"},
-	{"/subcontracts", "外包"},
-	{"/equipment", "設備"},
+	{"/", "總覽", "日常作業"},
+	{"/customers", "客戶", "日常作業"},
+	{"/vehicles", "車輛", "日常作業"},
+	{"/work-orders", "工單", "日常作業"},
+	{"/appointments", "預約", "日常作業"},
+	{"/receivables", "收款", "日常作業"},
+	{"/inspections", "定檢", "日常作業"},
+	{"/purchase-orders", "進貨單", "進貨庫存"},
+	{"/suppliers", "廠商", "進貨庫存"},
+	{"/inventory", "庫存", "進貨庫存"},
+	{"/maintenance-templates", "保養套餐", "保養保險"},
+	{"/insurances", "投保", "保養保險"},
+	{"/insurance-companies", "保險公司", "保養保險"},
+	{"/staff", "員工", "帳務人事"},
+	{"/technicians/commissions", "技師佣金", "帳務人事"},
+	{"/expenses", "支出", "帳務人事"},
+	{"/reports", "報表", "帳務人事"},
+	{"/analytics", "經營分析", "帳務人事"},
+	{"/lookup", "代碼對照", "後台設定"},
+	{"/scheduled-tasks", "排程", "後台設定"},
+	{"/subcontracts", "外包", "後台設定"},
+	{"/equipment", "設備", "後台設定"},
 }
 
 // RequireAuth 擋未登入者，並把使用者注入給頁面 handler。
@@ -160,12 +185,28 @@ func RequireLogin(fn http.HandlerFunc) http.HandlerFunc {
 
 func nav(active string) string {
 	var b strings.Builder
+	curGroup := ""
+	openDiv := false
 	for _, rt := range appRoutes {
+		if rt.Group != curGroup {
+			if openDiv {
+				b.WriteString(`</div>`)
+			}
+			curGroup = rt.Group
+			openDiv = rt.Group != ""
+			if openDiv {
+				b.WriteString(`<div class="navgrp"><span class="navlbl">` +
+					html.EscapeString(rt.Group) + `</span>`)
+			}
+		}
 		cls := ""
 		if rt.Path == active {
 			cls = ` class="on"`
 		}
 		fmt.Fprintf(&b, `<a href="%s"%s>%s</a>`, rt.Path, cls, rt.Name)
+	}
+	if openDiv {
+		b.WriteString(`</div>`)
 	}
 	return b.String()
 }
@@ -197,8 +238,10 @@ func renderPage(w http.ResponseWriter, title, active, username, role, body strin
     <a href="/logout" class="logout">登出</a>
     </div>
   </header>
-  <nav>` + nav(active) + `</nav>
+  <div class="shell">
   <main>` + body + `</main>
+  <nav>` + nav(active) + `</nav>
+  </div>
   <script src="/offline.js"></script>
 </body>
 </html>`))

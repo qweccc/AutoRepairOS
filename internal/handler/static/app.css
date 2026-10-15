@@ -30,22 +30,37 @@ header h1 { margin: 0; font-size: 20px; }
 .badge { background: #38bdf8; color: #0f172a; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 11px; }
 .logout { margin-left: 14px; padding: 6px 14px; background: #ef4444; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
 
-/* ---- Nav ---- */
+/* ---- 版面：header 橫跨全寬，下方 main（左）+ nav（右）側邊欄 ---- */
+.shell { display: flex; align-items: flex-start; }
+main { flex: 1; min-width: 0; padding: 24px 28px; }
+
+/* ---- Nav（右側直排側邊欄）----
+   側邊欄跟隨內容捲動（sticky top:0），項目多時自身可垂直捲動。 */
 nav {
   background: #111c33;
-  padding: 0 28px;
+  width: 220px;
+  flex-shrink: 0;
+  border-left: 1px solid #334155;
   display: flex;
-  gap: 4px;
-  border-bottom: 1px solid #334155;
-  overflow-x: auto;
+  flex-direction: column;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
 }
-nav a { padding: 11px 16px; color: #94a3b8; text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; white-space: nowrap; }
-nav a:hover { color: #e2e8f0; }
-nav a.on { color: #38bdf8; border-bottom-color: #38bdf8; font-weight: 700; }
+nav a { padding: 9px 18px; color: #94a3b8; text-decoration: none; font-size: 14px;
+        border-left: 3px solid transparent; white-space: nowrap; }
+nav a:hover { color: #e2e8f0; background: #1a2740; }
+nav a.on { color: #38bdf8; background: #1e293b; border-left-color: #38bdf8; font-weight: 700; }
+
+/* ---- 選單分組（直排：一組一區塊，組間分隔線）---- */
+.navgrp { display: flex; flex-direction: column; align-items: stretch;
+          padding: 9px 0; border-top: 1px solid #334155; }
+.navgrp:first-child { padding-top: 0; border-top: 0; }
+.navlbl { color: #64748b; font-size: 11px; letter-spacing: 1px; padding: 0 18px 5px; }
 
 /* ---- Layout ---- */
-main { padding: 24px 28px; }
-
 .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 18px; }
 .card h2 { margin: 0 0 14px 0; color: #38bdf8; font-size: 17px; }
 
@@ -112,11 +127,22 @@ form.login button:hover { background: #0ea5e9; }
 .login-err { background: #7f1d1d; color: #fecaca; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
 
 /* ---- Responsive ---- */
+/* 窄屏：側邊欄改回全寬橫排，並用 order 讓它顯示在 main 上方（DOM 順序是 main 先，
+   橫排時選單要回到頂部才符合原來的使用習慣）。 */
 @media (max-width: 768px) {
   header { padding: 10px 14px; }
   header h1 { font-size: 16px; }
-  nav { padding: 0 8px; }
-  nav a { padding: 9px 10px; font-size: 12px; }
+  .shell { flex-direction: column; }
+  nav { order: -1; width: auto; flex-shrink: 1; border-left: 0;
+        border-top: 1px solid #334155; position: static; max-height: none;
+        overflow-x: auto; overflow-y: visible;
+        flex-direction: row; flex-wrap: wrap; padding: 6px 8px; }
+  nav a { padding: 8px 10px; font-size: 12px; border-left: 0; border-bottom: 2px solid transparent; }
+  nav a.on { border-left: 0; border-bottom-color: #38bdf8; }
+  .navgrp { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px;
+            padding: 0 8px; border-top: 0; border-left: 1px solid #334155; }
+  .navgrp:first-child { padding-left: 0; border-left: 0; }
+  .navlbl { font-size: 10px; letter-spacing: 0; padding: 0 4px; }
   main { padding: 14px 10px; }
   .card { padding: 14px; margin-bottom: 12px; }
   table { font-size: 12px; }
@@ -126,6 +152,5 @@ form.login button:hover { background: #0ea5e9; }
 }
 
 @media (max-width: 480px) {
-  nav { padding: 0 8px; }
-  nav a { padding: 8px 8px; font-size: 11px; }
+  nav a { padding: 7px 7px; font-size: 11px; }
 }
