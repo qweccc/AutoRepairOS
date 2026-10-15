@@ -37,14 +37,14 @@ header h1 { margin: 0; font-size: 20px; }
    留一條縫）。用變數後只有一處要改。
    注意：CSS 變數不能從 JS 動態覆寫 header 高度，所以窄屏的 header 變矮時
    由媒體查詢重新指定 --header-h。 */
-:root { --header-h: 57px; }
-.shell { margin-right: 220px; }
+:root { --header-h: 57px; --nav-w: 220px; }
+.shell { margin-right: var(--nav-w); }
 main { flex: 1; min-width: 0; padding: 24px 28px; }
 
 /* ---- Nav（右側直排側邊欄）---- */
 nav {
   background: #111c33;
-  width: 220px;
+  width: var(--nav-w);
   border-left: 1px solid #334155;
   display: flex;
   flex-direction: column;
@@ -134,12 +134,15 @@ form.login button:hover { background: #0ea5e9; }
 .login-err { background: #7f1d1d; color: #fecaca; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
 
 /* ---- Responsive ---- */
-/* 窄屏：側邊欄改回全寬橫排，並用 order 讓它顯示在 main 上方（DOM 順序是 main 先，
-   橫排時選單要回到頂部才符合原來的使用習慣）。 */
-@media (max-width: 768px) {
+/* 側邊欄的橫排時機：只有視窗真的容不下 220px 側邊欄時才改橫排。
+   門檻用 640px 而不是常見的 768px——768px 會讓「筆電視窗拉窄一點」或
+   「Edge 縮放 125%」都掉進橫排，使用者會以為版面壞掉（實際上是正常的窄屏設計）。
+   640px 以下（手機、極窄視窗）側邊欄會擠爆內容，那才該橫排。
+   640–1024px 不改變版面結構，只把側邊欄縮窄（見下方 media query）。 */
+@media (max-width: 640px) {
   header { padding: 10px 14px; }
   header h1 { font-size: 16px; }
-  /* 窄屏：.shell 恢復 flex column 才能讓 nav 的 order:-1 生效（寬屏時 .shell 不是
+  /* .shell 恢復 flex column 才能讓 nav 的 order:-1 生效（寬屏時 .shell 不是
      flex 容器，order 無效）；同時把 margin-right 與 fixed 重置，nav 改橫排。 */
   /* header 在這裡也變矮（padding 10px + 16px 字級），所以 --header-h 要一起更新；
      nav 雖然已改 static 用不到 top，但保持一致避免日後改回去時錯位。 */
@@ -163,6 +166,11 @@ form.login button:hover { background: #0ea5e9; }
   .frm { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 480px) {
-  nav a { padding: 7px 7px; font-size: 11px; }
+/* 中等寬度（641–1024px）：維持右側側邊欄結構，只縮窄它與主要內容的留白，
+   避免側邊欄把工作區壓太小。結構不變就不會有「版面突然跑掉」的感覺。 */
+@media (max-width: 1024px) {
+  :root { --nav-w: 190px; }
+  nav a { padding: 9px 14px; font-size: 13.5px; }
+  .navlbl { padding: 0 14px 5px; }
+  main { padding: 20px 18px; }
 }
