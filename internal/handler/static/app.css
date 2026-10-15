@@ -31,14 +31,13 @@ header h1 { margin: 0; font-size: 20px; }
 .logout { margin-left: 14px; padding: 6px 14px; background: #ef4444; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 12px; }
 
 /* ---- 版面：header 橫跨全寬，下方 main（左）+ nav（右）側邊欄 ---- */
-/* 側邊欄固定在視窗右緣、自己垂直捲動，整頁只有一個卷軸（nav 的）。
-   為什麼這樣寫：
-   - nav 用 position:fixed 而不是 sticky：sticky 需要 .shell 有足夠高度才黏得住，
-     而 .shell 的高度取決於 main 內容，main 短時 nav 會跟著縮、長時又會多出第二個
-     卷軸（nav 自己的 overflow-y:auto + body 的），看起來就是「右邊太長導致兩個卷軸」。
-   - nav 用 height:100vh 自己負責所有垂直空間，main 獨立捲動。
-   - nav 脫離排版流後，不能靠 main 的 padding 讓位（flex 項目 flex:1 會吃掉全寬），
-     所以 .shell 改用 margin-right 把整個排版區左推，nav 蓋在右緣留出的空白上。 */
+/* --header-h 是 header 的實際高度，nav 的 top/height 都引用它。
+   為什麼用變數：header 高度由 padding + 內容決定（14px*2 + 20px 字級 ≈ 57px），
+   硬寫 57px 在改字級、換行、窄屏調 padding 時會靜默錯位（nav 蓋住 header 或
+   留一條縫）。用變數後只有一處要改。
+   注意：CSS 變數不能從 JS 動態覆寫 header 高度，所以窄屏的 header 變矮時
+   由媒體查詢重新指定 --header-h。 */
+:root { --header-h: 57px; }
 .shell { margin-right: 220px; }
 main { flex: 1; min-width: 0; padding: 24px 28px; }
 
@@ -51,9 +50,9 @@ nav {
   flex-direction: column;
   padding: 10px 0;
   position: fixed;
-  top: 57px;
+  top: var(--header-h);
   right: 0;
-  height: calc(100vh - 57px);
+  height: calc(100vh - var(--header-h));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -142,6 +141,9 @@ form.login button:hover { background: #0ea5e9; }
   header h1 { font-size: 16px; }
   /* 窄屏：.shell 恢復 flex column 才能讓 nav 的 order:-1 生效（寬屏時 .shell 不是
      flex 容器，order 無效）；同時把 margin-right 與 fixed 重置，nav 改橫排。 */
+  /* header 在這裡也變矮（padding 10px + 16px 字級），所以 --header-h 要一起更新；
+     nav 雖然已改 static 用不到 top，但保持一致避免日後改回去時錯位。 */
+  :root { --header-h: 39px; }
   .shell { margin-right: 0; display: flex; flex-direction: column; }
   nav { order: -1; position: static; width: auto; height: auto; top: auto; right: auto;
         border-left: 0; border-top: 1px solid #334155;
