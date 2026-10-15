@@ -36,7 +36,7 @@
 4. 用完啟動閒置看守：超過 `VISION_IDLE_MINUTES`（預設 10）分鐘沒人用 → 自動 Kill
 5. 防孤兒雙保險：正常關閉走 signal handler + `StopVisionClient()`；強制 kill 靠 **Windows Job Object（`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`，父死子亡）**
 
-**離線優先：** `VISION_MODEL_PATH` 有值時直接吃本地 GGUF，不用 `-hf` 規格（`-hf` 開機時會連 HuggingFace 驗證，防火牆/離線環境會卡住）。視覺模型**必須**帶 `VISION_MMPROJ_PATH`（投影檔），否則只當文字模型用。
+**離線優先：** `VISION_MODEL_PATH` 有值時直接吃本地 GGUF，不用 `-hf` 規格（`-hf` 開機時會連 HuggingFace 驗證，防火牆/離線環境會卡住）。路徑支援三種寫法（完整路徑 / 含 `*` 萬用字元 / 只給目錄自動挑最大的 `.gguf`）——因為 HF 快取的 `snapshots/<hash>` 每台機器都不同，硬寫完整路徑無法跨機器複製。`VISION_MMPROJ_PATH` **可留空**：會自動在主模型所在目錄找 `mmproj*.gguf`（投影檔與主模型在 HF 快取裡一定並存），只有不同目錄才需手動指定；沒投影檔視覺模型只當文字模型用，回傳空 JSON。
 
 **跨平台：** `vision_windows.go`（Job Object + HideWindow）與 `vision_unix.go`（stub）以 build tag 分流；動這個目錄務必雙平台 build（`GOOS=linux go build ./...`）。
 
@@ -262,6 +262,7 @@ cd AutoRepairOS && bash build.sh
 產出：
 - exe：`release/autorepair_vYYYYMMDD-HHMM.exe`（~22 MB，Windows 單機版）
 - **`release/web/` 自動同步最新 `web/`**（`start.ps1` 開頭會檢查 `web\index.html` 存在才啟動，少了會直接報錯；不同步 → 車廠跑舊前端）
+- **`release/.env.example` 自動同步**（單機版使用者從 release/ 複製它來建 `.env`；舊版會缺新功能的開關，如 `VISION_MODEL_PATH`，導致功能靜默停用）
 - docker image：`autorepairos-autorepairos:vYYYYMMDD-HHMM`（~48 MB）
 
 ### 部署
@@ -353,10 +354,9 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
 
 ## 9. CSS 設計系統
 
-全站樣式集中在 **`web/static/app.css`**（單一深色主題）。改樣式請改這裡，**勿在個別 templ 內重寫 `<style>`**（login 頁的少量額外樣式除外，僅覆寫表單版面）。
+全站樣式集中在 **`internal/handler/static/app.css`**（單一深色主題，`//go:embed` 編進 binary）。改樣式請改這裡，**勿在個別 templ 內重寫 `<style>`**（login 頁的少量額外樣式除外，僅覆寫表單版面）。
 
-> 靜態檔實際由 `internal/handler/static/app.css` embed 進 binary（`//go:embed`）。
-> 兩處內容相同，修改時**兩邊都要同步**（或改完 `cp web/static/app.css internal/handler/static/app.css`）。
+> 靜態資源**只有一個來源**：`internal/handler/static/`（`//go:embed all:static` 編進 binary）。`web/static/` 曾是純冗餘副本（沒有任何程式碼或 templ 讀它，templ 全部 link `/static/...` 走 embed），已於 v20261015 整目錄刪除——曾經因為搞錯來源、改了 `web/static/app.css` 但線上沒變。改靜態資源一律只改 `internal/handler/static/`，改完重新 build 即可，**不需要也不該**把檔案複製進 `release/web/`（`release/web/` 只需要 `index.html`）。
 
 ### 9.1 色彩（深色主題）
 
@@ -432,7 +432,7 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
 
 ### 9.4 HTMX 函式庫
 
-`web/static/htmx.min.js`（本地，非 CDN）— 離線區網部署也能用。
+`internal/handler/static/htmx.min.js`（本地，非 CDN）— 離線區網部署也能用。
 在 `components.Layout` 與 `login.templ` 的 `<head>` 以 `<script src="/static/htmx.min.js">` 載入。
 
 **為什麼本地不用 CDN：** 車行是離線區網部署，CDN 斷線互動就全掛。已下載固定版本（2.0.4）內建。

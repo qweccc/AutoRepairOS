@@ -14,7 +14,10 @@ import (
 //go:embed all:static
 var staticFS embed.FS
 
-// RegisterStatic 掛載 web/static 底下的檔案（sw.js、offline.js 等）。
+// RegisterStatic 掛載靜態資源。唯一來源是 internal/handler/static/ 這份
+// （//go:embed 編進 binary）；web/static/ 已於 v20261015 刪除（純冗餘副本，
+// 從未被讀取）。templ 全部 link /static/... 由 embed 提供，改 CSS/JS 一律改
+// 本目錄後重新 build，不需要也不應該把檔案複製到 release/web/。
 // 需登入才能取得，避免離線快取洩漏資料。
 func RegisterStatic(mux *http.ServeMux) {
 	sub, err := fs.Sub(staticFS, "static")
@@ -36,7 +39,7 @@ func RegisterStatic(mux *http.ServeMux) {
 			serveStatic(w, r, sub, name)
 		}))
 	}
-	// 其餘靜態資源（web/static 下的其他檔案）由 sub 直接掛載完整路徑。
+	// 其餘靜態資源由 sub 直接掛載完整路徑（皆來自 embed 的 static 目錄）。
 	// 需包成 http.HandlerFunc：sub 是 fs.FS，不是 http.FileSystem，所以要手動 Open 轉成 http.File。
 	mux.HandleFunc("/static/", RequireLogin(func(w http.ResponseWriter, r *http.Request) {
 		serveSub(w, r, sub)
