@@ -76,6 +76,10 @@ func BeginImmediate() (*ImmediateTx, error) {
 	if err != nil {
 		return nil, err
 	}
+	if _, err := conn.ExecContext(context.Background(), "PRAGMA busy_timeout=5000"); err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
 	if _, err := conn.ExecContext(context.Background(), "BEGIN IMMEDIATE"); err != nil {
 		_ = conn.Close()
 		return nil, err

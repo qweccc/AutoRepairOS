@@ -83,7 +83,7 @@ AutoRepairOS/
 
 ### 3.1 Migration（若需要新表/新欄位）
 
-在 `internal/db/migration/` 新增 `NNN_功能名.up.sql`（NNN 遞增，目前到 027）：
+在 `internal/db/migration/` 新增 `NNN_功能名.up.sql`（NNN 遞增，目前到 028）：
 
 ```sql
 -- NNN: 簡短說明

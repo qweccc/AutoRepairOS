@@ -167,20 +167,21 @@ func TestConcurrentPurchaseReceiveOnlyStocksOnce(t *testing.T) {
 	}
 
 	var stock, movements, before, after int
+	var purchaseItemID int64
 	if err := db.DB.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=1`).Scan(&stock); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.DB.QueryRow(`SELECT COUNT(*), COALESCE(MAX(before_quantity),0), COALESCE(MAX(after_quantity),0)
-		FROM inventory_movements`).Scan(&movements, &before, &after); err != nil {
+	if err := db.DB.QueryRow(`SELECT COUNT(*), COALESCE(MAX(before_quantity),0), COALESCE(MAX(after_quantity),0),
+		COALESCE(MAX(purchase_order_item_id),0) FROM inventory_movements`).Scan(&movements, &before, &after, &purchaseItemID); err != nil {
 		t.Fatal(err)
 	}
 	var status string
 	if err := db.DB.QueryRow(`SELECT status FROM purchase_orders WHERE id=1`).Scan(&status); err != nil {
 		t.Fatal(err)
 	}
-	if stock != 7 || movements != 1 || before != 4 || after != 7 || status != "received" {
-		t.Fatalf("receipt state = stock:%d movements:%d before:%d after:%d status:%q; want 7, 1, 4, 7, received",
-			stock, movements, before, after, status)
+	if stock != 7 || movements != 1 || before != 4 || after != 7 || status != "received" || purchaseItemID != 1 {
+		t.Fatalf("receipt state = stock:%d movements:%d before:%d after:%d status:%q purchase_item:%d; want 7, 1, 4, 7, received, 1",
+			stock, movements, before, after, status, purchaseItemID)
 	}
 }
 

@@ -42,12 +42,17 @@ func createPurchaseTestSchema(t *testing.T, d *sql.DB) {
 			inventory_item_id INTEGER NOT NULL, delta INTEGER NOT NULL,
 			before_quantity INTEGER DEFAULT 0, after_quantity INTEGER DEFAULT 0,
 			reason TEXT DEFAULT '', source TEXT NOT NULL DEFAULT 'manual',
-			work_order_id INTEGER, created_by INTEGER)`,
+			work_order_id INTEGER, created_by INTEGER, purchase_order_item_id INTEGER)`,
 	}
 	for _, s := range stmts {
 		if _, err := d.Exec(s); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if _, err := d.Exec(`CREATE UNIQUE INDEX idx_inventory_movements_purchase_item
+		ON inventory_movements (purchase_order_item_id)
+		WHERE purchase_order_item_id IS NOT NULL`); err != nil {
+		t.Fatal(err)
 	}
 }
 

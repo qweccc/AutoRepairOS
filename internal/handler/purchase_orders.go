@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -379,6 +380,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := db.BeginImmediate()
 	if err != nil {
+		log.Printf("開始進貨交易失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
@@ -389,11 +391,13 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	res, err := tx.Exec(`UPDATE purchase_orders SET status='received', received_at=?
 		WHERE id=? AND status='draft'`, nowText(), id)
 	if err != nil {
+		log.Printf("搶占進貨單失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
 	claimed, err := res.RowsAffected()
 	if err != nil {
+		log.Printf("讀取進貨單搶占結果失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
@@ -412,6 +416,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 		COALESCE(part_number,''), COALESCE(category,''), quantity, unit_cost, subtotal
 		FROM purchase_order_items WHERE order_id = ? ORDER BY id`, id)
 	if err != nil {
+		log.Printf("讀取進貨品項失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
@@ -420,6 +425,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 		if err := rows.Scan(&it.ID, &it.OrderID, &it.InventoryItemID, &it.Description,
 			&it.PartNumber, &it.Category, &it.Quantity, &it.UnitCost, &it.Subtotal); err != nil {
 			rows.Close()
+			log.Printf("讀取進貨品項失敗: %v", err)
 			fail(w, "進貨失敗")
 			return
 		}
@@ -427,6 +433,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := rows.Err(); err != nil {
 		rows.Close()
+		log.Printf("讀取進貨品項失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
@@ -439,6 +446,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	// 供應商帶到自動建檔的零件上（與單據同來源）。
 	var supplierID int64
 	if err := tx.QueryRow(`SELECT supplier_id FROM purchase_orders WHERE id = ?`, id).Scan(&supplierID); err != nil {
+		log.Printf("讀取進貨單供應商失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
@@ -457,6 +465,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 			autoCreated++
 			// 品項回填連結，之後「調庫」與異動紀錄都指得到這顆零件。
 			if _, err := tx.Exec(`UPDATE purchase_order_items SET inventory_item_id = ? WHERE id = ?`, invID, it.ID); err != nil {
+				log.Printf("回填進貨零件失敗: %v", err)
 				fail(w, "進貨失敗")
 				return
 			}
@@ -466,20 +475,22 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 		var after int64
 		if err := tx.QueryRow(`UPDATE inventory_items SET stock_quantity = stock_quantity + ?
 			WHERE id = ? RETURNING stock_quantity`, int64(it.Quantity), invID).Scan(&after); err != nil {
+			log.Printf("進貨入庫失敗: %v", err)
 			fail(w, "入庫失敗（找不到零件）")
 			return
 		}
 		before := after - int64(it.Quantity)
 		if _, err := tx.Exec(`INSERT INTO inventory_movements
-			(inventory_item_id, delta, before_quantity, after_quantity, reason, source)
-			VALUES (?,?,?,?,?,?)`,
+			(inventory_item_id, delta, before_quantity, after_quantity, reason, source, purchase_order_item_id)
+			VALUES (?,?,?,?,?,?,?)`,
 			invID, int64(it.Quantity), before, after,
-			"進貨單 #"+strconv.FormatInt(id, 10)+" 確認進貨", "purchase_receive"); err != nil {
+			"進貨單 #"+strconv.FormatInt(id, 10)+" 確認進貨", "purchase_receive", it.ID); err != nil {
 			fail(w, "寫入異動紀錄失敗")
 			return
 		}
 	}
 	if err := tx.Commit(); err != nil {
+		log.Printf("提交進貨交易失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
 	}
