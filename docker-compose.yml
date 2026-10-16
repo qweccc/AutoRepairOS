@@ -83,13 +83,18 @@ services:
   # SQLite 網頁管理介面（sqlite-web）：http://localhost:8091
   # 給管理者直接用瀏覽器看 DB、跑 SQL。與 autorepairos 共用同一個 named volume 的 DB。
   # 注意：sqlite-web 是開發/除錯工具，正式環境若不需要可移除本服務。
+  # 安全修正（T0.1）：
+  #   1. profiles: ["debug"] → 預設不啟動，需明確 --profile debug 或指定服務名
+  #   2. 只綁 127.0.0.1 → 即使啟動也不對區網公開
+  # 啟動方式：docker compose --profile debug up -d
+  #         或 docker compose up -d sqlite-web
   sqlite-web:
     image: coleifer/sqlite-web:latest
+    profiles: ["debug"]
     ports:
-      - "8091:8080"
+      - "127.0.0.1:8091:8080"
     volumes:
-      - autorepairos-data:/data
-    # 只讀掛載 DB，避免誤改正式資料；需要寫入時把 :ro 移除。
+      - autorepairos-data:/data:ro
     command: ["sqlite_web", "/data/autorepair.db", "--host", "0.0.0.0", "--port", "8080", "--read-only"]
     restart: unless-stopped
 

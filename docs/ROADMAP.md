@@ -42,9 +42,11 @@
 
 ### 階段 0：安全與資料正確性
 
-#### [ ] T0.1 停用預設公開的 sqlite-web
+#### [x] T0.1 停用預設公開的 sqlite-web
 - 預設 Compose 啟動不得把無驗證的資料庫管理介面暴露到區網／公網；若保留除錯入口，須選擇 opt-in 啟用並限制為 loopback。
-- 驗收：預設 `docker compose up` 不提供外部可連線的 sqlite-web；明確啟用後確認只有預期的本機入口可用。
+- 做法：sqlite-web 服務加上 `profiles: ["debug"]`（預設不啟動）；port 改绑 `127.0.0.1:8091:8080`（僅本機）；volume 掛載改 `:ro`（只讀）。
+- 啟動方式：`docker compose --profile debug up -d` 或 `docker compose up -d sqlite-web`。
+- 驗收：`docker compose config` 語法正確（exit 0）；預設 `docker compose up` 不啟動 sqlite-web；明確啟動後僅 127.0.0.1 可連線。
 
 #### [x] T0.2 讓停用員工立即失去存取權
 - 登入與每次請求驗證都檢查 `users.active`；停用時撤銷該使用者的所有 session。
