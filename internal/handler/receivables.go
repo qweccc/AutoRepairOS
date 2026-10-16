@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/internal/service"
 	"autorepairos/web/pages"
 )
 
@@ -408,49 +409,52 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 		voucher = nextVoucherNo(payDate)
 	}
 
-	// 關聯工單（可空）。有帶就把該工單的車輛一起記下來，列表才能顯示車牌。
+	// 關聯工單（可空）。關聯時由 service 在交易內驗證客戶並寫入車輛資料。
 	woID := mustInt(r.FormValue("work_order_id"))
-	var woArg, vehicleArg interface{}
-	if woID > 0 {
-		var vid int64
-		if db.DB.QueryRow("SELECT vehicle_id FROM work_orders WHERE id = ?", woID).Scan(&vid) == nil {
-			vehicleArg = vid
-		}
-		woArg = woID
-	}
 
 	// created_by：用自己的身分寫入（與 inventory 調庫同樣做法）
-	var actor interface{}
+	actorID := int64(0)
 	if u, uerr := currentUser(r); uerr == nil {
-		actor = u.ID
+		actorID = u.ID
 	}
 
-	_, err := db.DB.Exec(`INSERT INTO receivables
-		(voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
-		 detail_total, real_total, discount, tax, pay_total,
-		 cash, card, check_amount, card_no, check_no, check_date, bank,
-		 notes, source, created_by)
-		VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?,?, ?, 'manual', ?)`,
-		voucher, customerID, vehicleArg, woArg, payDate,
-		atofDefault(r.FormValue("detail_total"), 0),
-		atofDefault(r.FormValue("real_total"), 0),
-		atofDefault(r.FormValue("discount"), 0),
-		atofDefault(r.FormValue("tax"), 0),
-		payTotal,
-		cash, card, checkAmt,
-		nullStr(r.FormValue("card_no")), nullStr(r.FormValue("check_no")),
-		normDate(r.FormValue("check_date")), nullStr(r.FormValue("bank")),
-		nullStr(r.FormValue("notes")), actor)
+	detailTotal := atofDefault(r.FormValue("detail_total"), 0)
+	realTotal := atofDefault(r.FormValue("real_total"), 0)
+	discount := atofDefault(r.FormValue("discount"), 0)
+	tax := atofDefault(r.FormValue("tax"), 0)
+	cardNo := strings.TrimSpace(r.FormValue("card_no"))
+	checkNo := strings.TrimSpace(r.FormValue("check_no"))
+	checkDate := normDate(r.FormValue("check_date"))
+	bank := strings.TrimSpace(r.FormValue("bank"))
+	notes := strings.TrimSpace(r.FormValue("notes"))
+
+	var err error
+	if woID > 0 {
+		err = service.New(db.DB).AssociateReceipt(r.Context(), service.ReceiptInput{
+			VoucherNo: voucher, CustomerID: customerID, WorkOrderID: woID, PayDate: payDate,
+			DetailTotal: detailTotal, RealTotal: realTotal, Discount: discount, Tax: tax,
+			PayTotal: payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+			CardNo: cardNo, CheckNo: checkNo, CheckDate: checkDate, Bank: bank,
+			Notes: notes, CreatedBy: actorID,
+		})
+	} else {
+		var actor interface{}
+		if actorID > 0 {
+			actor = actorID
+		}
+		_, err = db.DB.Exec(`INSERT INTO receivables
+			(voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
+			 detail_total, real_total, discount, tax, pay_total,
+			 cash, card, check_amount, card_no, check_no, check_date, bank,
+			 notes, source, created_by)
+			VALUES (?,?,NULL,NULL,?, ?,?,?,?,?, ?,?,?,?,?,?,?, ?, 'manual', ?)`,
+			voucher, customerID, payDate, detailTotal, realTotal, discount, tax, payTotal,
+			cash, card, checkAmt, nullStr(cardNo), nullStr(checkNo),
+			nullStr(checkDate), nullStr(bank), nullStr(notes), actor)
+	}
 	if err != nil {
 		redirectMsg(w, r, "/receivables/new", "新增收款失敗："+err.Error())
 		return
-	}
-
-	// 收款完成 → 對應工單標記為已結帳。
-	// 這是舊系統「沖銷」的核心語意：收到錢就把帳結掉。
-	if woID > 0 {
-		db.DB.Exec(`UPDATE work_orders SET status = 'paid',
-			updated_at = datetime('now','localtime') WHERE id = ? AND status <> 'paid'`, woID)
 	}
 
 	redirectMsg(w, r, "/receivables", "收款已記錄："+voucher+"（"+money(payTotal)+"）")

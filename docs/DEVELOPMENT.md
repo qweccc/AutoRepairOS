@@ -59,6 +59,7 @@ AutoRepairOS/
 ├── internal/
 │   ├── handler/             # HTTP handler（業務邏輯 + 呼叫 Templ render）
 │   │   └── static/          # 靜態資源唯一來源（CSS/JS，//go:embed 編進 binary）
+│   ├── service/             # 可測試的業務流程（依賴注入 *sql.DB）
 │   ├── model/               # struct 定義（DB 欄位對應）
 │   ├── db/                  # DB 連線、migration SQL
 │   ├── session/             # session token 管理
@@ -73,6 +74,7 @@ AutoRepairOS/
 **分工原則：**
 - `web/pages/*.templ` 只負責「長什麼樣」，不放業務邏輯
 - `internal/handler/*.go` 負責查 DB、組資料、呼叫 Templ `.Render()`
+- `internal/service/*.go` 承載共用或新業務流程，以 `*sql.DB` 注入並負責交易邊界；舊 handler 依功能需求漸進抽取，不要求一次搬移
 - handler 不可直接產 HTML 字串
 
 ---

@@ -11,6 +11,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/internal/service"
 	"autorepairos/web/pages"
 )
 
@@ -571,9 +572,20 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 結帳扣料與累計營收必須在同一個 transaction 內完成，並用「目前狀態 = paid」
-	// 作為條件（compare-and-set）。如此重複送出或並行請求最多只有一次會生效，
-	// 不會重複扣庫存或重複累計消費。
+	if status == "paid" {
+		if err := service.New(db.DB).Checkout(r.Context(), id, actorID); err != nil {
+			if errors.Is(err, service.ErrNotFound) {
+				http.NotFound(w, r)
+				return
+			}
+			fail(w, "結帳失敗："+err.Error())
+			return
+		}
+		redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
+		return
+	}
+
+	// 一般狀態轉換仍以條件更新避免覆寫已結帳工單。
 	tx, err := db.DB.Begin()
 	if err != nil {
 		fail(w, "資料庫忙碌")
@@ -597,74 +609,6 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if status == "paid" {
-
-		// 扣料：讀出該工單所有「零件類」項目，按實際數量扣庫（Go 側計算，避免複雜 UPDATE 子查詢）
-		var deltas []struct {
-			invID int64
-			qty   int
-		}
-		rows, err := tx.Query(`SELECT inventory_item_id, quantity
-											FROM work_order_items
-											WHERE work_order_id = ? AND item_type = 'part' AND inventory_item_id > 0 AND quantity > 0
-											ORDER BY id`, id)
-		if err != nil {
-			fail(w, "讀取工單項目失敗")
-			return
-		}
-		for rows.Next() {
-			var invID int64
-			var qty int
-			if err := rows.Scan(&invID, &qty); err != nil {
-				rows.Close()
-				fail(w, "讀取工單項目失敗")
-				return
-			}
-			deltas = append(deltas, struct {
-				invID int64
-				qty   int
-			}{invID, qty})
-		}
-		rows.Close()
-
-		partsDeducted := 0
-		for _, d := range deltas {
-			// 先檢查足額，避免結帳時超賣
-			var avail int
-			if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", d.invID).Scan(&avail); err != nil {
-				fail(w, "查詢庫存失敗")
-				return
-			}
-			if avail < d.qty {
-				fail(w, "結帳時庫存不足："+strconv.FormatInt(d.invID, 10)+" 僅剩 "+strconv.Itoa(avail)+"，需要 "+strconv.Itoa(d.qty))
-				return
-			}
-			if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity - ?, reserved_quantity = MAX(COALESCE(reserved_quantity,0) - ?, 0) WHERE id = ?", d.qty, d.qty, d.invID); err != nil {
-				fail(w, "扣減庫存失敗")
-				return
-			}
-			// 留痕：結帳扣料同樣寫入異動紀錄，否則庫存對帳會出現缺口
-			if err := recordMovement(tx, d.invID, -d.qty, avail, avail-d.qty,
-				"工單 #"+strconv.FormatInt(id, 10)+" 結帳扣料", "checkout", id, actorID); err != nil {
-				fail(w, "寫入異動紀錄失敗")
-				return
-			}
-			partsDeducted++
-		}
-
-		// 累計客戶消費（扣料不改變工單金額）。
-		// 不以 partsDeducted 為條件：純工資的工單同樣要累計消費。
-		// 必須用 tx 而非 db.DB：此時 transaction 仍持有寫入鎖，
-		// 用獨立連線會因 SQLite 單寫者限制而失敗。
-		if _, err := tx.Exec(`UPDATE customers SET total_spent = COALESCE(total_spent,0) +
-			(SELECT total_amount FROM work_orders WHERE id = ?), unpaid_amount = 0 WHERE id =
-			(SELECT customer_id FROM work_orders WHERE id = ?)`, id, id); err != nil {
-			fail(w, "累計消費失敗")
-			return
-		}
-	}
-
-	// 非結帳的狀態轉換也要提交，否則上面的 CAS 會被 rollback。
 	if err := tx.Commit(); err != nil {
 		fail(w, "提交失敗")
 		return

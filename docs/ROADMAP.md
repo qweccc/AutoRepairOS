@@ -67,8 +67,15 @@
 #### [x] T0.4 修正採購收貨與庫存調整的併發安全
 - 採購單在交易內以條件式狀態轉換搶占 draft → received；只有成功轉換的一次請求能入庫。
 - 庫存檢查與調整在同一交易以條件式更新完成；異動記錄的 before／after 必須來自實際更新結果。
-- SQLite 不支援 `SELECT ... FOR UPDATE`，請使用適用於 SQLite 的交易與條件更新，不照搬其他資料庫語法。
-- 驗收：併發收貨不重複入庫；併發扣庫不會造成負庫存或錯誤異動記錄。
+- SQLite 不支援 SELECT ... FOR UPDATE，請使用適用於 SQLite 的交易與條件更新，不照搬其他資料庫語法。
+- 實作：
+  - 採購收貨：BEGIN IMMEDIATE + UPDATE ... WHERE status='draft' 的 affected rows 判斷搶占
+  - 庫存調整：交易內條件式更新（UPDATE ... SET qty = qty - ? WHERE id = ? AND qty >= ?）
+  - 異動記錄 before/after 來自 RETURNING 的實際更新結果
+  - db.go：BeginImmediate 對每條連線設定 5 秒 busy timeout
+  - 新增 migration 028：採購異動連結到採購單品項並以唯一索引防止同品項重複留痕
+  - 新增 goroutine 併發測試（併發收貨只入庫一次、併發扣庫不負庫存）
+- 驗證：go build ./... exit 0、go test -count=1 ./... exit 0（併發測試 -count=10 重複通過）
 
 #### [x] T0.5 修正庫存搜尋的成本價權限
 - 依目前登入角色決定是否回傳／顯示成本價，不能只隱藏頁面欄位；檢查庫存列表及搜尋 API 的所有輸出路徑。
@@ -93,12 +100,20 @@
 - 以 migration 與 model 為準，列出主要資料表用途、主鍵／外鍵、重要欄位及關係圖。
 - 驗收：文件中的表格均存在；所有主要 migration 建立的業務表均有說明。
 
-#### [ ] T1.2 建立可測試的 Service Layer 基礎
+#### [x] T1.2 建立可測試的 Service Layer 基礎
 - 新增 `internal/service/`，使用 `*sql.DB` 依賴注入，避免 service 直接依賴全域 `db.DB`。
 - 以 T0.6 共用結帳流程作為第一個有實際用途的 service；新業務邏輯優先放 service。
 - 不要求一次搬移所有既有 handler；只在功能修改或有重複消費者時漸進抽取。
 - 更新 SRS §8.3 的架構描述，使其反映實際分層邊界。
-- 驗收：service 可用獨立測試資料庫測試；`go test ./internal/service/...` 通過。
+- 實作：
+  - internal/service/checkout.go：Checkout service（*sql.DB 注入）
+  - internal/service/checkout_test.go：5 個測試（成功+冪等、失敗回滾、收款結帳原子性、收款+結帳回滾、工單不存在）
+  - internal/handler/workorders.go：改用 Checkout service
+  - internal/handler/receivables.go：改用 Checkout service（AssociateReceipt）
+  - docs/SRS.md §8.3：更新架構描述
+  - docs/DEVELOPMENT.md：更新開發規範
+- 驗證：go build ./... exit 0、go test ./internal/service/... 5/5 PASS、go test ./... 全綠
+- 實作：`Checkout` 與 `AssociateReceipt` 共用原子交易流程；工單結帳 handler 及關聯工單收款新增已呼叫 service。其他收款維護流程仍待 T0.6／後續功能依需求整合。
 
 ### 階段 2：SRS 功能缺口
 

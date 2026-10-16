@@ -1,0 +1,206 @@
+package service
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"testing"
+
+	_ "modernc.org/sqlite"
+)
+
+func newCheckoutTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+	db, err := sql.Open("sqlite", "file:"+t.Name()+"?mode=memory&cache=shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	db.SetMaxOpenConns(1)
+	t.Cleanup(func() { _ = db.Close() })
+
+	statements := []string{
+		`CREATE TABLE customers (
+			id INTEGER PRIMARY KEY, total_spent REAL DEFAULT 0, unpaid_amount REAL DEFAULT 0
+		)`,
+		`CREATE TABLE work_orders (
+			id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, vehicle_id INTEGER,
+			status TEXT NOT NULL, total_amount REAL DEFAULT 0, updated_at TEXT
+		)`,
+		`CREATE TABLE work_order_items (
+			id INTEGER PRIMARY KEY, work_order_id INTEGER NOT NULL, item_type TEXT NOT NULL,
+			inventory_item_id INTEGER, quantity INTEGER NOT NULL
+		)`,
+		`CREATE TABLE inventory_items (
+			id INTEGER PRIMARY KEY, stock_quantity INTEGER DEFAULT 0,
+			reserved_quantity INTEGER DEFAULT 0
+		)`,
+		`CREATE TABLE inventory_movements (
+			id INTEGER PRIMARY KEY, inventory_item_id INTEGER NOT NULL, delta INTEGER NOT NULL,
+			before_quantity INTEGER DEFAULT 0, after_quantity INTEGER DEFAULT 0,
+			reason TEXT DEFAULT '', source TEXT NOT NULL, work_order_id INTEGER, created_by INTEGER
+		)`,
+		`CREATE TABLE receivables (
+			id INTEGER PRIMARY KEY, voucher_no TEXT NOT NULL, customer_id INTEGER NOT NULL,
+			vehicle_id INTEGER, work_order_id INTEGER, pay_date TEXT, detail_total REAL,
+			real_total REAL, discount REAL, tax REAL, pay_total REAL, cash REAL, card REAL,
+			check_amount REAL, card_no TEXT, check_no TEXT, check_date TEXT, bank TEXT,
+			notes TEXT, source TEXT, created_by INTEGER
+		)`,
+		`INSERT INTO customers (id, total_spent, unpaid_amount) VALUES (1, 12, 80)`,
+		`INSERT INTO work_orders (id, customer_id, vehicle_id, status, total_amount)
+			VALUES (10, 1, 7, 'completed', 125)`,
+		`INSERT INTO inventory_items (id, stock_quantity, reserved_quantity) VALUES (3, 8, 4)`,
+		`INSERT INTO work_order_items (id, work_order_id, item_type, inventory_item_id, quantity)
+			VALUES (1, 10, 'part', 3, 2)`,
+		`INSERT INTO work_order_items (id, work_order_id, item_type, inventory_item_id, quantity)
+			VALUES (2, 10, 'labor', NULL, 1)`,
+	}
+	for _, statement := range statements {
+		if _, err := db.Exec(statement); err != nil {
+			t.Fatalf("setup database: %v\nSQL: %s", err, statement)
+		}
+	}
+	return db
+}
+
+func TestCheckoutSuccessAndIdempotency(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	svc := New(db)
+
+	for i := 0; i < 2; i++ {
+		if err := svc.Checkout(context.Background(), 10, 21); err != nil {
+			t.Fatalf("Checkout attempt %d: %v", i+1, err)
+		}
+	}
+
+	var status string
+	var stock, reserved, movementCount int
+	var totalSpent, unpaid float64
+	var delta, before, after int
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity, reserved_quantity FROM inventory_items WHERE id=3`).
+		Scan(&stock, &reserved); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent, unpaid_amount FROM customers WHERE id=1`).
+		Scan(&totalSpent, &unpaid); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*), COALESCE(MAX(delta),0),
+		COALESCE(MAX(before_quantity),0), COALESCE(MAX(after_quantity),0)
+		FROM inventory_movements`).Scan(&movementCount, &delta, &before, &after); err != nil {
+		t.Fatal(err)
+	}
+	if status != "paid" || stock != 6 || reserved != 2 || totalSpent != 137 ||
+		unpaid != 0 || movementCount != 1 || delta != -2 || before != 8 || after != 6 {
+		t.Fatalf("checkout state: status=%q stock=%d reserved=%d spent=%v unpaid=%v movements=%d (%d,%d,%d)",
+			status, stock, reserved, totalSpent, unpaid, movementCount, delta, before, after)
+	}
+}
+
+func TestCheckoutRollsBackWhenMovementFails(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	if _, err := db.Exec(`CREATE TRIGGER reject_checkout_movement
+		BEFORE INSERT ON inventory_movements
+		BEGIN SELECT RAISE(ABORT, 'movement rejected'); END`); err != nil {
+		t.Fatal(err)
+	}
+
+	err := New(db).Checkout(context.Background(), 10, 21)
+	if err == nil {
+		t.Fatal("Checkout succeeded despite movement insert failure")
+	}
+	assertUnchangedCheckoutState(t, db)
+}
+
+func TestAssociateReceiptChecksOutAtomically(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	input := ReceiptInput{
+		VoucherNo: "RCV-001", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, Cash: 125, CreatedBy: 21,
+	}
+	if err := New(db).AssociateReceipt(context.Background(), input); err != nil {
+		t.Fatalf("AssociateReceipt: %v", err)
+	}
+	var receipts int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM receivables WHERE voucher_no='RCV-001'`).Scan(&receipts); err != nil {
+		t.Fatal(err)
+	}
+	var status string
+	var stock, reserved int
+	var spent float64
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity, reserved_quantity FROM inventory_items WHERE id=3`).
+		Scan(&stock, &reserved); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
+		t.Fatal(err)
+	}
+	if receipts != 1 || status != "paid" || stock != 6 || reserved != 2 || spent != 137 {
+		t.Fatalf("associated receipt state: receipts=%d status=%q stock=%d reserved=%d spent=%v",
+			receipts, status, stock, reserved, spent)
+	}
+}
+
+func TestAssociateReceiptRollsBackReceiptAndCheckout(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	if _, err := db.Exec(`CREATE TRIGGER reject_checkout_movement
+		BEFORE INSERT ON inventory_movements
+		BEGIN SELECT RAISE(ABORT, 'movement rejected'); END`); err != nil {
+		t.Fatal(err)
+	}
+
+	err := New(db).AssociateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-002", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, Cash: 125,
+	})
+	if err == nil {
+		t.Fatal("AssociateReceipt succeeded despite checkout failure")
+	}
+	assertUnchangedCheckoutState(t, db)
+	var receipts int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM receivables`).Scan(&receipts); err != nil {
+		t.Fatal(err)
+	}
+	if receipts != 0 {
+		t.Fatalf("receipt count after rollback = %d, want 0", receipts)
+	}
+}
+
+func TestCheckoutMissingWorkOrder(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	err := New(db).Checkout(context.Background(), 999, 21)
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("Checkout error = %v, want ErrNotFound", err)
+	}
+}
+
+func assertUnchangedCheckoutState(t *testing.T, db *sql.DB) {
+	t.Helper()
+	var status string
+	var stock, reserved, movements int
+	var spent, unpaid float64
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity, reserved_quantity FROM inventory_items WHERE id=3`).
+		Scan(&stock, &reserved); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent, unpaid_amount FROM customers WHERE id=1`).
+		Scan(&spent, &unpaid); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if status != "completed" || stock != 8 || reserved != 4 || spent != 12 || unpaid != 80 || movements != 0 {
+		t.Fatalf("state not rolled back: status=%q stock=%d reserved=%d spent=%v unpaid=%v movements=%d",
+			status, stock, reserved, spent, unpaid, movements)
+	}
+}
