@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"strings"
 	"testing"
 
@@ -17,11 +18,16 @@ func setupPurchaseTestDB(t *testing.T) {
 		t.Fatal(err)
 	}
 	db.DB = d
+	createPurchaseTestSchema(t, d)
+}
+
+func createPurchaseTestSchema(t *testing.T, d *sql.DB) {
+	t.Helper()
 	stmts := []string{
 		`CREATE TABLE suppliers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)`,
 		`CREATE TABLE purchase_orders (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			supplier_id INTEGER, order_date TEXT, status TEXT, total_amount REAL DEFAULT 0,
-			notes TEXT, created_by INTEGER, created_at TEXT)`,
+			notes TEXT, created_by INTEGER, created_at TEXT, received_at TEXT)`,
 		`CREATE TABLE purchase_order_items (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			order_id INTEGER NOT NULL, inventory_item_id INTEGER DEFAULT 0,
 			description TEXT DEFAULT '', part_number TEXT DEFAULT '', category TEXT DEFAULT '',
@@ -35,10 +41,11 @@ func setupPurchaseTestDB(t *testing.T) {
 		`CREATE TABLE inventory_movements (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			inventory_item_id INTEGER NOT NULL, delta INTEGER NOT NULL,
 			before_quantity INTEGER DEFAULT 0, after_quantity INTEGER DEFAULT 0,
-			reason TEXT DEFAULT '', source TEXT NOT NULL DEFAULT 'manual', created_by INTEGER)`,
+			reason TEXT DEFAULT '', source TEXT NOT NULL DEFAULT 'manual',
+			work_order_id INTEGER, created_by INTEGER)`,
 	}
 	for _, s := range stmts {
-		if _, err := db.DB.Exec(s); err != nil {
+		if _, err := d.Exec(s); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -15,6 +16,72 @@ import (
 )
 
 var DB *sql.DB
+
+// TxExecutor is the subset of transaction operations used by inventory writes.
+type TxExecutor interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+}
+
+// ImmediateTx holds a connection for a SQLite BEGIN IMMEDIATE transaction.
+type ImmediateTx struct {
+	conn   *sql.Conn
+	closed bool
+}
+
+func (tx *ImmediateTx) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return tx.conn.ExecContext(context.Background(), query, args...)
+}
+
+func (tx *ImmediateTx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return tx.conn.QueryContext(context.Background(), query, args...)
+}
+
+func (tx *ImmediateTx) QueryRow(query string, args ...interface{}) *sql.Row {
+	return tx.conn.QueryRowContext(context.Background(), query, args...)
+}
+
+func (tx *ImmediateTx) Commit() error {
+	if tx.closed {
+		return sql.ErrTxDone
+	}
+	_, err := tx.conn.ExecContext(context.Background(), "COMMIT")
+	if err != nil {
+		_, _ = tx.conn.ExecContext(context.Background(), "ROLLBACK")
+	}
+	tx.closed = true
+	if closeErr := tx.conn.Close(); err == nil {
+		err = closeErr
+	}
+	return err
+}
+
+func (tx *ImmediateTx) Rollback() error {
+	if tx.closed {
+		return sql.ErrTxDone
+	}
+	_, err := tx.conn.ExecContext(context.Background(), "ROLLBACK")
+	tx.closed = true
+	if closeErr := tx.conn.Close(); err == nil {
+		err = closeErr
+	}
+	return err
+}
+
+// BeginImmediate starts a SQLite write transaction, acquiring the write
+// reservation before reading state that must be changed exactly once.
+func BeginImmediate() (*ImmediateTx, error) {
+	conn, err := DB.Conn(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	if _, err := conn.ExecContext(context.Background(), "BEGIN IMMEDIATE"); err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
+	return &ImmediateTx{conn: conn}, nil
+}
 
 func Init(cfg *config.Config) error {
 	var err error

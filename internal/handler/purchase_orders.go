@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -373,21 +372,65 @@ func DeletePurchaseOrderItem(w http.ResponseWriter, r *http.Request) {
 //   - bin_location = 「待歸位」（NOT NULL，櫃檯之後到零件頁補實際庫位）
 //   - category = 拍照時猜到的類別（辨識結果已存於 purchase_order_items.category）
 //   - cost_price = 進貨單價；stock_quantity = 本次進貨數量；supplier = 單據的供應商
+//
 // 建檔後同一交易內入庫，並寫 inventory_movements（source=purchase_receive）留痕。
 func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	var status string
-	if err := db.DB.QueryRow(`SELECT status FROM purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
-		http.NotFound(w, r)
+	tx, err := db.BeginImmediate()
+	if err != nil {
+		fail(w, "進貨失敗")
 		return
 	}
-	if status == "received" {
+	defer tx.Rollback()
+
+	// Claim the draft while holding SQLite's write reservation. Only the
+	// request that changes one row may proceed to update inventory.
+	res, err := tx.Exec(`UPDATE purchase_orders SET status='received', received_at=?
+		WHERE id=? AND status='draft'`, nowText(), id)
+	if err != nil {
+		fail(w, "進貨失敗")
+		return
+	}
+	claimed, err := res.RowsAffected()
+	if err != nil {
+		fail(w, "進貨失敗")
+		return
+	}
+	if claimed == 0 {
+		var status string
+		if err := tx.QueryRow(`SELECT status FROM purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
+			http.NotFound(w, r)
+			return
+		}
 		fail(w, "此單已進貨")
 		return
 	}
 
-	items, _ := loadPurchaseOrderItems(id)
+	items := make([]model.PurchaseOrderItem, 0)
+	rows, err := tx.Query(`SELECT id, order_id, COALESCE(inventory_item_id,0), description,
+		COALESCE(part_number,''), COALESCE(category,''), quantity, unit_cost, subtotal
+		FROM purchase_order_items WHERE order_id = ? ORDER BY id`, id)
+	if err != nil {
+		fail(w, "進貨失敗")
+		return
+	}
+	for rows.Next() {
+		var it model.PurchaseOrderItem
+		if err := rows.Scan(&it.ID, &it.OrderID, &it.InventoryItemID, &it.Description,
+			&it.PartNumber, &it.Category, &it.Quantity, &it.UnitCost, &it.Subtotal); err != nil {
+			rows.Close()
+			fail(w, "進貨失敗")
+			return
+		}
+		items = append(items, it)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		fail(w, "進貨失敗")
+		return
+	}
+	rows.Close()
 	if len(items) == 0 {
 		fail(w, "尚無品項，無法進貨")
 		return
@@ -395,14 +438,10 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 
 	// 供應商帶到自動建檔的零件上（與單據同來源）。
 	var supplierID int64
-	_ = db.DB.QueryRow(`SELECT supplier_id FROM purchase_orders WHERE id = ?`, id).Scan(&supplierID)
-
-	tx, err := db.DB.Begin()
-	if err != nil {
+	if err := tx.QueryRow(`SELECT supplier_id FROM purchase_orders WHERE id = ?`, id).Scan(&supplierID); err != nil {
 		fail(w, "進貨失敗")
 		return
 	}
-	defer tx.Rollback()
 
 	autoCreated := 0
 	for _, it := range items {
@@ -423,18 +462,14 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// 入庫：數量加回（同一交易讀目前庫存，供異動紀錄留痕）。
-		var before int64
-		if err := tx.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id = ?`, invID).Scan(&before); err != nil {
+		// 入庫後以 RETURNING 的結果記錄實際庫存數量。
+		var after int64
+		if err := tx.QueryRow(`UPDATE inventory_items SET stock_quantity = stock_quantity + ?
+			WHERE id = ? RETURNING stock_quantity`, int64(it.Quantity), invID).Scan(&after); err != nil {
 			fail(w, "入庫失敗（找不到零件）")
 			return
 		}
-		after := before + int64(it.Quantity)
-		if _, err := tx.Exec(`UPDATE inventory_items SET stock_quantity = stock_quantity + ? WHERE id = ?`,
-			it.Quantity, invID); err != nil {
-			fail(w, "入庫失敗")
-			return
-		}
+		before := after - int64(it.Quantity)
 		if _, err := tx.Exec(`INSERT INTO inventory_movements
 			(inventory_item_id, delta, before_quantity, after_quantity, reason, source)
 			VALUES (?,?,?,?,?,?)`,
@@ -443,11 +478,6 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 			fail(w, "寫入異動紀錄失敗")
 			return
 		}
-	}
-	if _, err := tx.Exec(`UPDATE purchase_orders SET status='received', received_at=? WHERE id=?`,
-		nowText(), id); err != nil {
-		fail(w, "進貨失敗")
-		return
 	}
 	if err := tx.Commit(); err != nil {
 		fail(w, "進貨失敗")
@@ -467,7 +497,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 // 因為建立品項時不會填 inventory_item_id；這裡再防一次 UNIQUE 碰撞換後綴），
 // 沒有就用「PO-{單號}-{序號}」。bin_location 一律「待歸位」——NOT NULL 不可留空，
 // 實際庫位由櫃檯之後到零件編輯頁補。
-func autoCreatePartFromItem(tx *sql.Tx, orderID, supplierID int64, it model.PurchaseOrderItem) (int64, error) {
+func autoCreatePartFromItem(tx db.TxExecutor, orderID, supplierID int64, it model.PurchaseOrderItem) (int64, error) {
 	name := strings.TrimSpace(it.Description)
 	if name == "" {
 		name = "進貨品項 #" + strconv.FormatInt(it.ID, 10)
@@ -535,4 +565,3 @@ func recalcPurchaseOrderTotal(orderID int64) {
 func nowText() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
-

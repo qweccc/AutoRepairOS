@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -26,12 +25,12 @@ import (
 
 // negativeStockStats 負庫存概況。
 type negativeStockStats struct {
-	Total        int     // 負庫存料號數
-	TotalAll     int     // 全部料號數
-	WorstQty     int     // 最負的數量
-	SumDeficit   int     // 缺口總和（取絕對值）
-	SellableOnly int     // 其中有售價（代表有在賣）的數量
-	WithSupplier int     // 其中有指定供應商的數量
+	Total        int // 負庫存料號數
+	TotalAll     int // 全部料號數
+	WorstQty     int // 最負的數量
+	SumDeficit   int // 缺口總和（取絕對值）
+	SellableOnly int // 其中有售價（代表有在賣）的數量
+	WithSupplier int // 其中有指定供應商的數量
 }
 
 func loadNegativeStockStats() negativeStockStats {
@@ -473,9 +472,9 @@ func recentMovements(itemID int64, limit int) string {
 
 // recordMovement 寫入一筆庫存異動（供其他 handler 呼叫）。
 //
-// 用 *sql.Tx 讓呼叫端能把「改庫存」與「寫紀錄」放在同一個 transaction，
+// 用同一個 transaction 執行器讓呼叫端把「改庫存」與「寫紀錄」放在一起，
 // 避免只改了庫存卻沒留下紀錄。
-func recordMovement(tx *sql.Tx, itemID int64, delta, before, after int, reason, source string, workOrderID, userID int64) error {
+func recordMovement(tx db.TxExecutor, itemID int64, delta, before, after int, reason, source string, workOrderID, userID int64) error {
 	var woArg, userArg interface{}
 	if workOrderID > 0 {
 		woArg = workOrderID

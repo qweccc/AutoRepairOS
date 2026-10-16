@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -336,16 +338,8 @@ func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {
 		fail(w, "異動數量不可為 0")
 		return
 	}
-
-	var current int
-	if err := db.DB.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", id).Scan(&current); err != nil {
-		http.NotFound(w, r)
-		return
-	}
-
-	if current+delta < 0 {
-		fail(w, "庫存不足：目前 "+strconv.Itoa(current)+"，無法扣 "+strconv.Itoa(-delta)+
-			"（若是舊系統留下的負庫存，請用「負庫存補正」）")
+	if delta == -int(^uint(0)>>1)-1 {
+		fail(w, "異動數量超出範圍")
 		return
 	}
 
@@ -353,25 +347,50 @@ func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {
 	if reason == "" {
 		reason = "手動調庫"
 	}
+	actorID := int64(0)
+	if u, uerr := currentUser(r); uerr == nil {
+		actorID = u.ID
+	}
 
 	// 改庫存與寫異動紀錄必須同進同出，否則會出現「庫存變了但查不到原因」
-	tx, err := db.DB.Begin()
+	tx, err := db.BeginImmediate()
 	if err != nil {
 		fail(w, "調庫失敗")
 		return
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec("UPDATE inventory_items SET stock_quantity = stock_quantity + ? WHERE id = ?",
-		delta, id); err != nil {
+	var after int
+	var updateErr error
+	if delta < 0 {
+		needed := -delta
+		updateErr = tx.QueryRow(`UPDATE inventory_items SET stock_quantity = stock_quantity - ?
+			WHERE id = ? AND stock_quantity >= ? RETURNING stock_quantity`, needed, id, needed).Scan(&after)
+	} else {
+		updateErr = tx.QueryRow(`UPDATE inventory_items SET stock_quantity = stock_quantity + ?
+			WHERE id = ? RETURNING stock_quantity`, delta, id).Scan(&after)
+	}
+	if updateErr == sql.ErrNoRows {
+		var current int
+		if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", id).Scan(&current); err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		if delta < 0 {
+			fail(w, "庫存不足：目前 "+strconv.Itoa(current)+"，無法扣 "+strconv.Itoa(-delta)+
+				"（若是舊系統留下的負庫存，請用「負庫存補正」）")
+			return
+		}
 		fail(w, "調庫失敗")
 		return
 	}
-	actorID := int64(0)
-	if u, uerr := currentUser(r); uerr == nil {
-		actorID = u.ID
+	if updateErr != nil {
+		fail(w, "調庫失敗")
+		return
 	}
-	if err := recordMovement(tx, id, delta, current, current+delta, reason, "manual", 0, actorID); err != nil {
+	before := after - delta
+	if err := recordMovement(tx, id, delta, before, after, reason, "manual", 0, actorID); err != nil {
+		log.Printf("寫入庫存異動失敗: %v", err)
 		fail(w, "寫入異動紀錄失敗")
 		return
 	}
@@ -380,7 +399,7 @@ func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectMsg(w, r, "/inventory", "庫存已調整 "+strconv.Itoa(delta)+"，目前 "+strconv.Itoa(current+delta))
+	redirectMsg(w, r, "/inventory", "庫存已調整 "+strconv.Itoa(delta)+"，目前 "+strconv.Itoa(after))
 }
 
 func DeleteInventoryItem(w http.ResponseWriter, r *http.Request) {

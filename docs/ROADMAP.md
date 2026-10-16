@@ -64,7 +64,7 @@
   - 所有 .templ 頁面：表單加上 CSRF token + HTMX header
 - 驗證：go build ./... exit 0、go test ./... exit 0（40 files, +1317/-852）
 
-#### [ ] T0.4 修正採購收貨與庫存調整的併發安全
+#### [x] T0.4 修正採購收貨與庫存調整的併發安全
 - 採購單在交易內以條件式狀態轉換搶占 draft → received；只有成功轉換的一次請求能入庫。
 - 庫存檢查與調整在同一交易以條件式更新完成；異動記錄的 before／after 必須來自實際更新結果。
 - SQLite 不支援 `SELECT ... FOR UPDATE`，請使用適用於 SQLite 的交易與條件更新，不照搬其他資料庫語法。
