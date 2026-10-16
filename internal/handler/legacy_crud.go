@@ -2,12 +2,14 @@
 package handler
 
 import (
+	"bytes"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ============================================================
@@ -32,7 +34,7 @@ const vehInsuranceCols = `vi.id, vi.vehicle_id, COALESCE(vi.insurance_company_id
 	COALESCE(ic.name, vi.company_no, ''), COALESCE(vi.company_no,''),
 	COALESCE(vi.insurance_class,''), COALESCE(vi.insurance_class_name,''),
 	COALESCE(vi.license_date,''), COALESCE(vi.card_no,''), COALESCE(vi.amount_raw,''),
-	COALESCE(vi.notes,'')`
+	COALESCE(vi.notes,''), COALESCE(vi.policy_number,''), COALESCE(vi.expiry_date,'')`
 
 const vehInsuranceFrom = ` FROM active_vehicle_insurances vi
 	JOIN active_vehicles v ON v.id = vi.vehicle_id
@@ -40,23 +42,26 @@ const vehInsuranceFrom = ` FROM active_vehicle_insurances vi
 	LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id `
 
 type insuranceRow struct {
-	ID          int64
-	VehicleID   int64
-	CompanyID   int64
-	CompanyName string
-	CompanyNo   string
-	Class       string
-	ClassName   string
-	LicenseDate string
-	CardNo      string
-	AmountRaw   string
-	Notes       string
+	ID           int64
+	VehicleID    int64
+	CompanyID    int64
+	CompanyName  string
+	CompanyNo    string
+	Class        string
+	ClassName    string
+	LicenseDate  string
+	CardNo       string
+	AmountRaw    string
+	Notes        string
+	PolicyNumber string
+	ExpiryDate   string
 }
 
 func scanInsuranceRow(rows interface{ Scan(...interface{}) error }) (insuranceRow, error) {
 	var r insuranceRow
 	err := rows.Scan(&r.ID, &r.VehicleID, &r.CompanyID, &r.CompanyName, &r.CompanyNo,
-		&r.Class, &r.ClassName, &r.LicenseDate, &r.CardNo, &r.AmountRaw, &r.Notes)
+		&r.Class, &r.ClassName, &r.LicenseDate, &r.CardNo, &r.AmountRaw, &r.Notes,
+		&r.PolicyNumber, &r.ExpiryDate)
 	return r, err
 }
 
@@ -64,30 +69,11 @@ func scanInsuranceRow(rows interface{ Scan(...interface{}) error }) (insuranceRo
 func NewVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 可從車輛頁帶入 ?vehicle=<id>，省去重選車輛。
 	vehID := mustInt(r.URL.Query().Get("vehicle"))
-	sel := `<select name="vehicle_id" required>` + vehicleOptionsFor(vehID) + `</select>`
-
-	body := `
-    <div class="card">
-      <h2>新增車輛投保紀錄</h2>
-      <form class="frm" method="POST" action="/insurances">
-        <label>車輛` + sel + `</label>
-        <label>保險公司<select name="insurance_company_id"><option value="0">未指定</option>` +
-		insuranceCompanyOptions(0) + `</select></label>
-        <label>舊系統公司編號<input name="company_no" placeholder="無法對應到現有公司時填"></label>
-        <label>險種代碼<input name="insurance_class" placeholder="例：A（強制險）/ B（任意險）"></label>
-        <label>險種名稱<input name="insurance_class_name" placeholder="例：強制汽車責任保險"></label>
-        <label>發照日<input type="date" name="license_date"></label>
-        <label>保險卡號<input name="card_no"></label>
-        <label>保額說明<input name="amount_raw" placeholder="例：200/400/30萬"></label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">建立</button>
-          <a class="btn btn-s" href="/insurances">取消</a>
-        </div>
-      </form>
-    </div>`
-
-	renderPage(w, "新增投保紀錄", "/insurances", user.Username, user.Role, body)
+	data := pages.VehicleInsuranceFormData{
+		Title: "新增車輛投保紀錄", Action: "/insurances", VehicleID: vehID,
+		VehicleOptions: vehicleOptionsFor(vehID), CompanyOptions: insuranceCompanyOptions(0),
+	}
+	renderVehicleInsuranceForm(w, r, user, data)
 }
 
 // CreateVehicleInsurance 建立投保紀錄。
@@ -104,12 +90,13 @@ func CreateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 
 	_, err := db.DB.Exec(`INSERT INTO vehicle_insurances
 		(vehicle_id, insurance_company_id, company_no, insurance_class, insurance_class_name,
-		 license_date, card_no, amount_raw, notes)
-		VALUES (?,?,?,?,?,?,?,?,?)`,
+		 license_date, card_no, amount_raw, notes, policy_number, expiry_date)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
 		vehID, zeroToNil(compID), nullStr(r.FormValue("company_no")),
 		nullStr(r.FormValue("insurance_class")), nullStr(r.FormValue("insurance_class_name")),
 		normDateOrEmpty(r.FormValue("license_date")), nullStr(r.FormValue("card_no")),
-		nullStr(r.FormValue("amount_raw")), nullStr(r.FormValue("notes")))
+		nullStr(r.FormValue("amount_raw")), nullStr(r.FormValue("notes")),
+		strings.TrimSpace(r.FormValue("policy_number")), normDateOrEmpty(r.FormValue("expiry_date")))
 	if err != nil {
 		fail(w, "建立投保紀錄失敗")
 		return
@@ -127,27 +114,24 @@ func EditVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>編輯投保紀錄 #` + strconv.FormatInt(ir.ID, 10) + `</h2>
-      <form class="frm" method="POST" action="/insurances/` + strconv.FormatInt(ir.ID, 10) + `">
-        <label>保險公司<select name="insurance_company_id"><option value="0">未指定</option>` +
-		insuranceCompanyOptions(ir.CompanyID) + `</select></label>
-        <label>舊系統公司編號<input name="company_no" value="` + htmlEsc(ir.CompanyNo) + `"></label>
-        <label>險種代碼<input name="insurance_class" value="` + htmlEsc(ir.Class) + `"></label>
-        <label>險種名稱<input name="insurance_class_name" value="` + htmlEsc(ir.ClassName) + `"></label>
-        <label>發照日<input type="date" name="license_date" value="` + htmlEsc(normDate(ir.LicenseDate)) + `"></label>
-        <label>保險卡號<input name="card_no" value="` + htmlEsc(ir.CardNo) + `"></label>
-        <label>保額說明<input name="amount_raw" value="` + htmlEsc(ir.AmountRaw) + `"></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(ir.Notes) + `</textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/insurances">取消</a>
-        </div>
-      </form>
-    </div>`
+	data := pages.VehicleInsuranceFormData{
+		ID: ir.ID, Title: "編輯投保紀錄 #" + strconv.FormatInt(ir.ID, 10),
+		Action:    "/insurances/" + strconv.FormatInt(ir.ID, 10),
+		CompanyID: ir.CompanyID, CompanyOptions: insuranceCompanyOptions(ir.CompanyID),
+		CompanyNo: ir.CompanyNo, Class: ir.Class, ClassName: ir.ClassName,
+		LicenseDate: normDate(ir.LicenseDate), PolicyNumber: ir.PolicyNumber,
+		ExpiryDate: normDate(ir.ExpiryDate), CardNo: ir.CardNo, AmountRaw: ir.AmountRaw, Notes: ir.Notes,
+	}
+	renderVehicleInsuranceForm(w, r, user, data)
+}
 
-	renderPage(w, "編輯投保紀錄", "/insurances", user.Username, user.Role, body)
+func renderVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model.User, data pages.VehicleInsuranceFormData) {
+	var body bytes.Buffer
+	if err := pages.VehicleInsuranceForm(data).Render(r.Context(), &body); err != nil {
+		http.Error(w, "投保表單產生失敗", http.StatusInternalServerError)
+		return
+	}
+	renderPage(w, data.Title, "/insurances", user.Username, user.Role, body.String())
 }
 
 // UpdateVehicleInsurance 更新投保紀錄。
@@ -160,12 +144,14 @@ func UpdateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := db.DB.Exec(`UPDATE vehicle_insurances SET insurance_company_id=?, company_no=?,
-		insurance_class=?, insurance_class_name=?, license_date=?, card_no=?, amount_raw=?, notes=?
+		insurance_class=?, insurance_class_name=?, license_date=?, card_no=?, amount_raw=?, notes=?,
+		policy_number=?, expiry_date=?
 		WHERE id=?`,
 		zeroToNil(compID), nullStr(r.FormValue("company_no")),
 		nullStr(r.FormValue("insurance_class")), nullStr(r.FormValue("insurance_class_name")),
 		normDateOrEmpty(r.FormValue("license_date")), nullStr(r.FormValue("card_no")),
-		nullStr(r.FormValue("amount_raw")), nullStr(r.FormValue("notes")), id)
+		nullStr(r.FormValue("amount_raw")), nullStr(r.FormValue("notes")),
+		strings.TrimSpace(r.FormValue("policy_number")), normDateOrEmpty(r.FormValue("expiry_date")), id)
 	if err != nil {
 		fail(w, "更新失敗")
 		return

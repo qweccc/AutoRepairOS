@@ -26,11 +26,12 @@ const workOrderCols = `wo.id, wo.vehicle_id, wo.customer_id, COALESCE(wo.technic
 	COALESCE(wo.insurance_company_id,0), COALESCE(ic.name,''),
 	COALESCE(wo.claim_no,''), COALESCE(wo.is_insurance,0),
 	COALESCE(wo.accident_date,''), COALESCE(wo.deductible_amount,0),
+	COALESCE(wo.claim_amount,0), COALESCE(wo.claim_date,''), COALESCE(wo.claim_note,''),
 	wo.created_at, wo.updated_at`
 
 func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrder, error) {
 	var wo model.WorkOrder
-	// Scan 目標數（24）必須與 workOrderCols 的欄位數（24）完全一致。
+	// Scan 目標數必須與 workOrderCols 的欄位數完全一致。
 	//
 	// 時間欄位刻意掃成字串再自行解析：舊系統遷移進來的 created_at 是
 	// '2016/02/22'，直接掃進 time.Time 會解析失敗，而錯誤被呼叫端的
@@ -43,6 +44,7 @@ func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrde
 		&wo.TotalAmount, &wo.SOPCompleted, &wo.Notes,
 		&wo.InsuranceCompanyID, &wo.InsuranceName, &wo.ClaimNo, &isIns,
 		&wo.AccidentDate, &wo.DeductibleAmount,
+		&wo.ClaimAmount, &wo.ClaimDate, &wo.ClaimNote,
 		&createdAt, &updatedAt)
 	if err != nil {
 		return wo, err
@@ -484,17 +486,31 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 		insArg = insID
 	}
 	claimNo := strings.TrimSpace(r.FormValue("claim_no"))
-	accidentDate := strings.TrimSpace(r.FormValue("accident_date"))
+	accidentDate := normDateOrEmpty(r.FormValue("accident_date"))
 	deductible := atofDefault(r.FormValue("deductible_amount"), 0)
+	claimDate := normDateOrEmpty(r.FormValue("claim_date"))
+	if claimDate != "" {
+		if _, err := time.Parse("2006-01-02", claimDate); err != nil {
+			fail(w, "理賠日期格式錯誤")
+			return
+		}
+	}
+	claimAmount, amountErr := parseClaimAmount(r.FormValue("claim_amount"))
+	if amountErr != nil || claimAmount < 0 {
+		fail(w, "理賠金額必須為不小於 0 的數字")
+		return
+	}
 
 	res, err := db.DB.Exec(`INSERT INTO work_orders
 		(vehicle_id, customer_id, technician_id, status, current_mileage,
 		 customer_complaint, approval_status, total_amount, sop_completed,
-		 insurance_company_id, claim_no, is_insurance, accident_date, deductible_amount)
-		VALUES (?,?,?,'pending',?,?,?,0,0,?,?,?,?,?)`,
+		 insurance_company_id, claim_no, is_insurance, accident_date, deductible_amount,
+		 claim_amount, claim_date, claim_note)
+		VALUES (?,?,?,'pending',?,?,?,0,0,?,?,?,?,?,?,?,?)`,
 		vehicleID, customerID, techArg, mileage,
 		nullStr(r.FormValue("customer_complaint")), approval,
-		insArg, nullStr(claimNo), isIns, nullStr(accidentDate), deductible)
+		insArg, nullStr(claimNo), isIns, nullStr(accidentDate), deductible,
+		claimAmount, nullStr(claimDate), nullStr(r.FormValue("claim_note")))
 	if err != nil {
 		fail(w, "建立工單失敗")
 		return
@@ -508,6 +524,47 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 	RecordMileage(vehicleID, mileage, "work_order", id, "", 0)
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "工單已建立")
+}
+
+func parseClaimAmount(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, nil
+	}
+	return strconv.ParseFloat(s, 64)
+}
+
+// UpdateWorkOrderClaim updates claim details on an existing, mutable work order.
+func UpdateWorkOrderClaim(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	if err := requireOrderMutable(id); err != nil {
+		fail(w, err.Error())
+		return
+	}
+	claimDate := normDateOrEmpty(r.FormValue("claim_date"))
+	if claimDate != "" {
+		if _, err := time.Parse("2006-01-02", claimDate); err != nil {
+			fail(w, "理賠日期格式錯誤")
+			return
+		}
+	}
+	amount, err := parseClaimAmount(r.FormValue("claim_amount"))
+	if err != nil || amount < 0 {
+		fail(w, "理賠金額必須為不小於 0 的數字")
+		return
+	}
+	res, err := db.DB.Exec(`UPDATE work_orders SET claim_date=?, claim_amount=?, claim_note=?,
+		updated_at=CURRENT_TIMESTAMP WHERE id=?`,
+		nullStr(claimDate), amount, nullStr(r.FormValue("claim_note")), id)
+	if err != nil {
+		fail(w, "更新理賠資料失敗")
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
+	}
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "理賠資料已更新")
 }
 
 func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {

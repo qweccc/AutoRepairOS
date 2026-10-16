@@ -78,46 +78,46 @@ type Customer struct {
 }
 
 type Vehicle struct {
-	ID                    int64     `json:"id"`
-	CustomerID            int64     `json:"customer_id"`
-	CustomerName          string    `json:"customer_name,omitempty"`
-	PlateNumber           string    `json:"plate_number"`
-	BrandModel            string    `json:"brand_model"`
-	VehicleType           string    `json:"vehicle_type,omitempty"`
-	VehicleTypeLabel      string    `json:"vehicle_type_label,omitempty"`
-	DriverName            string    `json:"driver_name,omitempty"`
-	DriverPhone           string    `json:"driver_phone,omitempty"`
-	ContactName           string    `json:"contact_name,omitempty"`
-	ContactPhone          string    `json:"contact_phone,omitempty"`
-	OwnerName             string    `json:"owner_name,omitempty"`
-	OwnerAddress          string    `json:"owner_address,omitempty"`
-	OwnerIDNumber         string    `json:"owner_id_number,omitempty"`
-	LicenseExpiryDate     string    `json:"license_expiry_date,omitempty"`
-	Color                 string    `json:"color,omitempty"`
-	DoorCount             int       `json:"door_count,omitempty"`
-	ManufactureYear       int       `json:"manufacture_year,omitempty"`
-	ManufactureDate       string    `json:"manufacture_date,omitempty"`
-	LicenseIssueDate      string    `json:"license_issue_date,omitempty"`
-	FuelType              string    `json:"fuel_type,omitempty"`
-	FuelTypeLabel         string    `json:"fuel_type_label,omitempty"`
-	Displacement          int       `json:"displacement,omitempty"`
-	BodyStyle             string    `json:"body_style,omitempty"`
-	BodyStyleLabel        string    `json:"body_style_label,omitempty"`
-	SeatingCapacity       int       `json:"seating_capacity,omitempty"`
-	CurbWeight            int       `json:"curb_weight,omitempty"`
-	GrossWeight           int       `json:"gross_weight,omitempty"`
-	TireSize              string    `json:"tire_size,omitempty"`
-	Wheelbase             int       `json:"wheelbase,omitempty"`
-	VIN                   string    `json:"vin,omitempty"`
-	EngineNumber          string    `json:"engine_number,omitempty"`
-	InspectionDueDate     string    `json:"inspection_due_date,omitempty"`
-	NextMaintenanceDate   string    `json:"next_maintenance_date,omitempty"`
-	NextMaintenanceMileage int      `json:"next_maintenance_mileage,omitempty"`
-	LastMaintenanceDate   string    `json:"last_maintenance_date,omitempty"`
-	LastMaintenanceMileage int      `json:"last_maintenance_mileage,omitempty"`
-	MaintIntervalMonths   int       `json:"next_maintenance_interval_months"`
-	MaintIntervalKm       int       `json:"next_maintenance_interval_km"`
-	CreatedAt             time.Time `json:"created_at"`
+	ID                     int64     `json:"id"`
+	CustomerID             int64     `json:"customer_id"`
+	CustomerName           string    `json:"customer_name,omitempty"`
+	PlateNumber            string    `json:"plate_number"`
+	BrandModel             string    `json:"brand_model"`
+	VehicleType            string    `json:"vehicle_type,omitempty"`
+	VehicleTypeLabel       string    `json:"vehicle_type_label,omitempty"`
+	DriverName             string    `json:"driver_name,omitempty"`
+	DriverPhone            string    `json:"driver_phone,omitempty"`
+	ContactName            string    `json:"contact_name,omitempty"`
+	ContactPhone           string    `json:"contact_phone,omitempty"`
+	OwnerName              string    `json:"owner_name,omitempty"`
+	OwnerAddress           string    `json:"owner_address,omitempty"`
+	OwnerIDNumber          string    `json:"owner_id_number,omitempty"`
+	LicenseExpiryDate      string    `json:"license_expiry_date,omitempty"`
+	Color                  string    `json:"color,omitempty"`
+	DoorCount              int       `json:"door_count,omitempty"`
+	ManufactureYear        int       `json:"manufacture_year,omitempty"`
+	ManufactureDate        string    `json:"manufacture_date,omitempty"`
+	LicenseIssueDate       string    `json:"license_issue_date,omitempty"`
+	FuelType               string    `json:"fuel_type,omitempty"`
+	FuelTypeLabel          string    `json:"fuel_type_label,omitempty"`
+	Displacement           int       `json:"displacement,omitempty"`
+	BodyStyle              string    `json:"body_style,omitempty"`
+	BodyStyleLabel         string    `json:"body_style_label,omitempty"`
+	SeatingCapacity        int       `json:"seating_capacity,omitempty"`
+	CurbWeight             int       `json:"curb_weight,omitempty"`
+	GrossWeight            int       `json:"gross_weight,omitempty"`
+	TireSize               string    `json:"tire_size,omitempty"`
+	Wheelbase              int       `json:"wheelbase,omitempty"`
+	VIN                    string    `json:"vin,omitempty"`
+	EngineNumber           string    `json:"engine_number,omitempty"`
+	InspectionDueDate      string    `json:"inspection_due_date,omitempty"`
+	NextMaintenanceDate    string    `json:"next_maintenance_date,omitempty"`
+	NextMaintenanceMileage int       `json:"next_maintenance_mileage,omitempty"`
+	LastMaintenanceDate    string    `json:"last_maintenance_date,omitempty"`
+	LastMaintenanceMileage int       `json:"last_maintenance_mileage,omitempty"`
+	MaintIntervalMonths    int       `json:"next_maintenance_interval_months"`
+	MaintIntervalKm        int       `json:"next_maintenance_interval_km"`
+	CreatedAt              time.Time `json:"created_at"`
 }
 
 type InventoryItem struct {
@@ -133,27 +133,27 @@ type InventoryItem struct {
 	StockQuantity  int     `json:"stock_quantity"`
 	MinSafetyStock int     `json:"min_safety_stock"`
 	LowStock       bool    `json:"low_stock"`
-	Category       string  `json:"category,omitempty"`  // 零件類別（引擎/電機音響/…）
-	ItemKind       string  `json:"item_kind"`           // part 零件 / labor 工資服務
+	Category       string  `json:"category,omitempty"` // 零件類別（引擎/電機音響/…）
+	ItemKind       string  `json:"item_kind"`          // part 零件 / labor 工資服務
 }
 
 type WorkOrder struct {
-	ID                int64     `json:"id"`
-	VehicleID         int64     `json:"vehicle_id"`
-	CustomerID        int64     `json:"customer_id"`
-	TechnicianID      int64     `json:"technician_id,omitempty"`
-	PlateNumber       string    `json:"plate_number,omitempty"`
-	BrandModel        string    `json:"brand_model,omitempty"`
-	CustomerName      string    `json:"customer_name,omitempty"`
-	CustomerPhone     string    `json:"customer_phone,omitempty"`
-	TechnicianName    string    `json:"technician_name,omitempty"`
-	Status            string    `json:"status"`
-	CurrentMileage    int       `json:"current_mileage"`
-	CustomerComplaint string    `json:"customer_complaint,omitempty"`
-	ApprovalStatus    string    `json:"approval_status"`
-	TotalAmount       float64   `json:"total_amount"`
-	SOPCompleted      bool      `json:"sop_completed"`
-	Notes             string    `json:"notes,omitempty"`
+	ID                int64   `json:"id"`
+	VehicleID         int64   `json:"vehicle_id"`
+	CustomerID        int64   `json:"customer_id"`
+	TechnicianID      int64   `json:"technician_id,omitempty"`
+	PlateNumber       string  `json:"plate_number,omitempty"`
+	BrandModel        string  `json:"brand_model,omitempty"`
+	CustomerName      string  `json:"customer_name,omitempty"`
+	CustomerPhone     string  `json:"customer_phone,omitempty"`
+	TechnicianName    string  `json:"technician_name,omitempty"`
+	Status            string  `json:"status"`
+	CurrentMileage    int     `json:"current_mileage"`
+	CustomerComplaint string  `json:"customer_complaint,omitempty"`
+	ApprovalStatus    string  `json:"approval_status"`
+	TotalAmount       float64 `json:"total_amount"`
+	SOPCompleted      bool    `json:"sop_completed"`
+	Notes             string  `json:"notes,omitempty"`
 
 	// 保險理賠（CAR35 P0-1，對應 Header.Insurance）
 	// InsuranceCompanyID 與 IsInsurance 分開：車主有保險但本次自費維修很常見，
@@ -161,9 +161,12 @@ type WorkOrder struct {
 	InsuranceCompanyID int64   `json:"insurance_company_id,omitempty"`
 	InsuranceName      string  `json:"insurance_name,omitempty"`
 	ClaimNo            string  `json:"claim_no,omitempty"`
-	IsInsurance       bool    `json:"is_insurance"`
+	IsInsurance        bool    `json:"is_insurance"`
 	AccidentDate       string  `json:"accident_date,omitempty"`
 	DeductibleAmount   float64 `json:"deductible_amount"`
+	ClaimAmount        float64 `json:"claim_amount"`
+	ClaimDate          string  `json:"claim_date,omitempty"`
+	ClaimNote          string  `json:"claim_note,omitempty"`
 
 	// 列表顯示用的零件彙總（非資料庫欄位）。
 	// PartSummary 例："BE071×2、G015×1"；PartCount 是不同料號數。
@@ -284,16 +287,16 @@ type Equipment struct {
 
 // EquipmentMaintenance 設備保養紀錄（SRS 5.11）。
 type EquipmentMaintenance struct {
-	ID                 int64     `json:"id"`
-	EquipmentID        int64     `json:"equipment_id"`
-	EquipmentName      string    `json:"equipment_name,omitempty"`
-	MaintenanceDate    string    `json:"maintenance_date"`
-	MaintenanceType    string    `json:"maintenance_type,omitempty"`
-	Description        string    `json:"description,omitempty"`
-	Cost               float64   `json:"cost"`
-	NextMaintenanceDate string   `json:"next_maintenance_date,omitempty"`
-	TechnicianID       int64     `json:"technician_id,omitempty"`
-	TechnicianName     string    `json:"technician_name,omitempty"`
-	Notes              string    `json:"notes,omitempty"`
-	CreatedAt          time.Time `json:"created_at"`
+	ID                  int64     `json:"id"`
+	EquipmentID         int64     `json:"equipment_id"`
+	EquipmentName       string    `json:"equipment_name,omitempty"`
+	MaintenanceDate     string    `json:"maintenance_date"`
+	MaintenanceType     string    `json:"maintenance_type,omitempty"`
+	Description         string    `json:"description,omitempty"`
+	Cost                float64   `json:"cost"`
+	NextMaintenanceDate string    `json:"next_maintenance_date,omitempty"`
+	TechnicianID        int64     `json:"technician_id,omitempty"`
+	TechnicianName      string    `json:"technician_name,omitempty"`
+	Notes               string    `json:"notes,omitempty"`
+	CreatedAt           time.Time `json:"created_at"`
 }

@@ -334,6 +334,10 @@ const (
 	notificationLease      = 2 * time.Minute
 )
 
+func notificationProcessingTime(t time.Time) string {
+	return t.UTC().Format("2006-01-02T15:04:05.000000000Z07:00")
+}
+
 var notificationRetryBackoff = [...]time.Duration{
 	time.Minute,
 	5 * time.Minute,
@@ -355,7 +359,7 @@ func processPendingNotifications() (int, error) {
 
 func processPendingNotificationsWithSender(send func(notificationItem) error) (int, error) {
 	scanTime := time.Now().UTC()
-	leaseExpired := dbTime(scanTime.Add(-notificationLease))
+	leaseExpired := notificationProcessingTime(scanTime.Add(-notificationLease))
 	rows, err := db.DB.Query(`SELECT n.id, COALESCE(n.customer_id,0), n.channel, n.kind,
 			COALESCE(n.subject,''), n.body, COALESCE(n.work_order_id,0),
 			COALESCE(c.line_user_id,'')
@@ -389,7 +393,7 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 	var sent, failed, claimed int
 	for _, it := range items {
 		now := time.Now().UTC()
-		leaseExpired = dbTime(now.Add(-notificationLease))
+		leaseExpired = notificationProcessingTime(now.Add(-notificationLease))
 		ok, claimToken, err := claimNotification(it.id, now, leaseExpired)
 		if err != nil {
 			return claimed, err
@@ -452,7 +456,7 @@ func deliver(cfg *line.Config, client *line.Client, it notificationItem) error {
 }
 
 func claimNotification(id int64, now time.Time, leaseExpired string) (bool, string, error) {
-	claimToken := now.Format(time.RFC3339Nano)
+	claimToken := notificationProcessingTime(now)
 	res, err := db.DB.Exec(`UPDATE notifications
 		SET status='processing', processing_at=?
 		WHERE id=? AND ((status='pending' AND scheduled_at<=?)

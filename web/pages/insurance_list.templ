@@ -17,10 +17,71 @@ type VehicleInsuranceRow struct {
 	Date      string
 	CardNo    string
 	Amount    string
+	PolicyNumber string
+	ExpiryDate string
+}
+
+type VehicleInsuranceFormData struct {
+	ID              int64
+	Title           string
+	Action          string
+	VehicleID       int64
+	VehicleOptions  string
+	CompanyID       int64
+	CompanyOptions  string
+	CompanyNo       string
+	Class           string
+	ClassName       string
+	LicenseDate     string
+	PolicyNumber    string
+	ExpiryDate      string
+	CardNo          string
+	AmountRaw       string
+	Notes           string
+}
+
+templ VehicleInsuranceForm(data VehicleInsuranceFormData) {
+	<div class="card">
+		<h2>{ data.Title }</h2>
+		<form class="frm" method="POST" action={ data.Action }>
+			if data.ID == 0 {
+				<label>車輛<select name="vehicle_id" required>
+					@templ.Raw(data.VehicleOptions)
+				</select></label>
+			}
+			<label>保險公司<select name="insurance_company_id">
+				<option value="0">未指定</option>
+				@templ.Raw(data.CompanyOptions)
+			</select></label>
+			<label>舊系統公司編號<input name="company_no" value={ data.CompanyNo }></label>
+			<label>險種代碼<input name="insurance_class" value={ data.Class }></label>
+			<label>險種名稱<input name="insurance_class_name" value={ data.ClassName }></label>
+			<label>發照日<input type="date" name="license_date" value={ data.LicenseDate }></label>
+			<label>保單號碼<input name="policy_number" value={ data.PolicyNumber }></label>
+			<label>有效期限<input type="date" name="expiry_date" value={ data.ExpiryDate }></label>
+			<label>保險卡號<input name="card_no" value={ data.CardNo }></label>
+			<label>保額說明<input name="amount_raw" value={ data.AmountRaw }></label>
+			<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+			<div class="full">
+				if data.ID == 0 {
+					<button class="btn btn-p" type="submit">建立</button>
+				} else {
+					<button class="btn btn-p" type="submit">儲存</button>
+				}
+				<a class="btn btn-s" href="/insurances">取消</a>
+			</div>
+		</form>
+	</div>
 }
 
 // ListVehicleInsurancesPage 車輛投保紀錄頁（HTMX 即時搜尋）。
-templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int, q, company string, compTabsHTML string) {
+templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int, q, company string, expiring bool, compTabsHTML string) {
+	{{ searchURL := "/api/insurances/search" }}
+	{{ pagerURL := "/insurances" }}
+	if expiring {
+		{{ searchURL = "/api/insurances/search?expiring=30" }}
+		{{ pagerURL = "/insurances?expiring=30" }}
+	}
 	@components.Layout("車輛投保紀錄", "/insurances", "owner", "owner", "AutoRepair OS") {
 		<div class="card">
 			<h2>車輛投保紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
@@ -31,18 +92,19 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 				@templ.Raw(compTabsHTML)
 			</div>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋車牌 / 車主 / 保險卡號"
-				hx-get="/api/insurances/search"
+				placeholder="搜尋車牌 / 車主 / 保單號碼 / 保險卡號"
+				hx-get={ searchURL }
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#insurance-list-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			<a class="btn btn-p" href="/insurances/new">＋ 新增投保</a>
+			<a class="btn btn-s" href="/insurances?expiring=30">30 日內到期</a>
 			<a class="btn btn-s" href="/inspections">定檢排程</a>
 			<table>
 				<tr>
 					<th>車牌</th><th>車主</th><th>保險公司</th><th>險種</th>
-					<th>發照日</th><th>保險卡號</th><th>保額／備註</th><th>操作</th>
+					<th>發照日</th><th>保單號碼</th><th>到期日</th><th>保險卡號</th><th>保額／備註</th><th>操作</th>
 				</tr>
 				<tbody id="insurance-list-rows">
 					for _, r := range rows {
@@ -53,7 +115,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 			if len(rows) == 0 {
 				<div class="empty">沒有符合條件的投保紀錄</div>
 			}
-			@components.Pager("/insurances", page, calcPages(total, size), total)
+			@components.Pager(pagerURL, page, calcPages(total, size), total)
 		</div>
 	}
 }
@@ -72,6 +134,8 @@ templ VehicleInsuranceRowContent(r VehicleInsuranceRow) {
 			}
 		</td>
 		<td style="font-size:12.5px">{ r.Date }</td>
+		<td><code style="font-size:12px">{ r.PolicyNumber }</code></td>
+		<td style="font-size:12.5px">{ r.ExpiryDate }</td>
 		<td><code style="font-size:12px">{ r.CardNo }</code></td>
 		<td style="font-size:12px;color:#94a3b8">{ r.Amount }</td>
 		<td>
@@ -146,7 +210,7 @@ templ VehicleInspectionRowContent(r InspectionRow) {
 // VehicleInsuranceSearchRows 投保即時搜尋回傳的純列。
 templ VehicleInsuranceSearchRows(rows []VehicleInsuranceRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="8" style="color:#64748b;text-align:center;padding:20px">查無投保紀錄</td></tr>
+		<tr><td colspan="10" style="color:#64748b;text-align:center;padding:20px">查無投保紀錄</td></tr>
 	}
 	for _, r := range rows {
 		@VehicleInsuranceRowContent(r)

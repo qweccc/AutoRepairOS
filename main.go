@@ -104,6 +104,7 @@ func main() {
 	mux.HandleFunc("GET /api/staff/search", handler.RequireLogin(handler.SearchStaffAPI))
 	mux.HandleFunc("GET /api/receivables/search", handler.RequireLogin(handler.SearchReceivablesAPI))
 	mux.HandleFunc("GET /api/insurances/search", handler.RequireLogin(handler.SearchInsurancesAPI))
+	mux.HandleFunc("GET /api/insurances/expiring", handler.RequireLogin(handler.ExpiringInsurancesAPI))
 	mux.HandleFunc("GET /api/inspections/search", handler.RequireLogin(handler.SearchInspectionsAPI))
 	mux.HandleFunc("GET /api/expenses/search", handler.RequireLogin(handler.SearchExpensesAPI))
 
@@ -149,6 +150,7 @@ func main() {
 	mux.HandleFunc("GET /work-orders/{id}", handler.AllStaff(handler.ShowWorkOrder))
 	mux.HandleFunc("POST /work-orders/{id}/status", handler.CounterUp(handler.UpdateWorkOrderStatus))
 	mux.HandleFunc("POST /work-orders/{id}/approval", handler.CounterUp(handler.UpdateWorkOrderApproval))
+	mux.HandleFunc("POST /work-orders/{id}/claim", handler.CounterUp(handler.UpdateWorkOrderClaim))
 	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
 	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))
 	mux.HandleFunc("POST /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))

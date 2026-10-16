@@ -26,19 +26,25 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 	qv := r.URL.Query()
 	q := strings.TrimSpace(qv.Get("q"))
 	company := strings.TrimSpace(qv.Get("company"))
+	expiring := qv.Get("expiring") == "30"
 	page := pageNo(r)
 	size := pageSize(r)
 
 	where := ` WHERE 1=1`
 	var args []interface{}
 	if q != "" {
-		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR COALESCE(vi.card_no,'') LIKE ?)`
+		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR COALESCE(vi.card_no,'') LIKE ?
+			OR COALESCE(vi.policy_number,'') LIKE ?)`
 		like := "%" + q + "%"
-		args = append(args, like, like, like)
+		args = append(args, like, like, like, like)
 	}
 	if company != "" {
-		where += ` AND vi.company_no = ?`
+		where += ` AND COALESCE(ic.name, vi.company_no, '(未知)') = ?`
 		args = append(args, company)
+	}
+	if expiring {
+		where += ` AND vi.expiry_date >= date('now','localtime')
+			AND vi.expiry_date <= date('now','localtime','+30 days')`
 	}
 
 	from := ` FROM active_vehicle_insurances vi
@@ -52,8 +58,9 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 		COALESCE(ic.name, vi.company_no, ''), COALESCE(vi.company_no,''),
 		COALESCE(vi.insurance_class,''), COALESCE(vi.insurance_class_name,''),
 		COALESCE(vi.license_date,''), COALESCE(vi.card_no,''), COALESCE(vi.amount_raw,''),
-		COALESCE(vi.notes,''), COALESCE(c.name,'')
-		` + from + where + ` ORDER BY vi.license_date DESC, vi.id DESC LIMIT ? OFFSET ?`
+		COALESCE(vi.notes,''), COALESCE(c.name,''), COALESCE(vi.policy_number,''), COALESCE(vi.expiry_date,'')
+		` + from + where + ` ORDER BY CASE WHEN vi.expiry_date = '' THEN 1 ELSE 0 END,
+		vi.expiry_date ASC, vi.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
 	rows, err := db.DB.Query(query, pageArgs...)
@@ -66,22 +73,24 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 	var insRows []pages.VehicleInsuranceRow
 	for rows.Next() {
 		var id, vid, compID int64
-		var plate, compName, compNo, cls, clsName, date, card, amount, notes, custName string
+		var plate, compName, compNo, cls, clsName, date, card, amount, notes, custName, policyNumber, expiryDate string
 		if err := rows.Scan(&id, &vid, &plate, &compID, &compName, &compNo,
-			&cls, &clsName, &date, &card, &amount, &notes, &custName); err != nil {
+			&cls, &clsName, &date, &card, &amount, &notes, &custName, &policyNumber, &expiryDate); err != nil {
 			continue
 		}
 		insRows = append(insRows, pages.VehicleInsuranceRow{
-			ID:        id,
-			VehicleID: vid,
-			Plate:     plate,
-			Customer:  custName,
-			Company:   compName,
-			ClassName: clsName,
-			Class:     cls,
-			Date:      normDate(date),
-			CardNo:    card,
-			Amount:    amount,
+			ID:           id,
+			VehicleID:    vid,
+			Plate:        plate,
+			Customer:     custName,
+			Company:      compName,
+			ClassName:    clsName,
+			Class:        cls,
+			Date:         normDate(date),
+			CardNo:       card,
+			Amount:       amount,
+			PolicyNumber: policyNumber,
+			ExpiryDate:   normDate(expiryDate),
 		})
 	}
 
@@ -107,13 +116,14 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 		}
 	}
 
-	pages.ListVehicleInsurancesPage(insRows, total, page, size, q, company,
+	pages.ListVehicleInsurancesPage(insRows, total, page, size, q, company, expiring,
 		compTabs.String()).Render(r.Context(), w)
 }
 
 // SearchInsurancesAPI 車輛投保即時搜尋 API（HTMX 用）。
 func SearchInsurancesAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	expiring := r.URL.Query().Get("expiring") == "30"
 	from := ` FROM active_vehicle_insurances vi
 		JOIN active_vehicles v ON v.id = vi.vehicle_id
 		JOIN active_customers c ON c.id = v.customer_id
@@ -121,16 +131,21 @@ func SearchInsurancesAPI(w http.ResponseWriter, r *http.Request) {
 	where := ` WHERE 1=1`
 	var args []interface{}
 	if q != "" {
-		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR COALESCE(vi.card_no,'') LIKE ?)`
+		where += ` AND (v.plate_number LIKE ? OR c.name LIKE ? OR COALESCE(vi.card_no,'') LIKE ?
+			OR COALESCE(vi.policy_number,'') LIKE ?)`
 		like := "%" + q + "%"
-		args = append(args, like, like, like)
+		args = append(args, like, like, like, like)
+	}
+	if expiring {
+		where += ` AND vi.expiry_date >= date('now','localtime')
+			AND vi.expiry_date <= date('now','localtime','+30 days')`
 	}
 	rows, err := db.DB.Query(`SELECT vi.id, vi.vehicle_id, v.plate_number, COALESCE(vi.insurance_company_id,0),
 		COALESCE(ic.name, vi.company_no, ''), COALESCE(vi.company_no,''),
 		COALESCE(vi.insurance_class,''), COALESCE(vi.insurance_class_name,''),
 		COALESCE(vi.license_date,''), COALESCE(vi.card_no,''), COALESCE(vi.amount_raw,''),
-		COALESCE(vi.notes,''), COALESCE(c.name,'')`+from+where+
-		` ORDER BY vi.license_date DESC, vi.id DESC LIMIT 50`, args...)
+		COALESCE(vi.notes,''), COALESCE(c.name,''), COALESCE(vi.policy_number,''), COALESCE(vi.expiry_date,'')`+from+where+
+		` ORDER BY CASE WHEN vi.expiry_date = '' THEN 1 ELSE 0 END, vi.expiry_date ASC, vi.id DESC LIMIT 50`, args...)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
@@ -140,25 +155,71 @@ func SearchInsurancesAPI(w http.ResponseWriter, r *http.Request) {
 	var result []pages.VehicleInsuranceRow
 	for rows.Next() {
 		var id, vid, compID int64
-		var plate, compName, compNo, cls, clsName, date, card, amount, notes, custName string
+		var plate, compName, compNo, cls, clsName, date, card, amount, notes, custName, policyNumber, expiryDate string
 		if err := rows.Scan(&id, &vid, &plate, &compID, &compName, &compNo,
-			&cls, &clsName, &date, &card, &amount, &notes, &custName); err != nil {
+			&cls, &clsName, &date, &card, &amount, &notes, &custName, &policyNumber, &expiryDate); err != nil {
 			continue
 		}
 		result = append(result, pages.VehicleInsuranceRow{
-			ID:        id,
-			VehicleID: vid,
-			Plate:     plate,
-			Customer:  custName,
-			Company:   compName,
-			ClassName: clsName,
-			Class:     cls,
-			Date:      normDate(date),
-			CardNo:    card,
-			Amount:    amount,
+			ID:           id,
+			VehicleID:    vid,
+			Plate:        plate,
+			Customer:     custName,
+			Company:      compName,
+			ClassName:    clsName,
+			Class:        cls,
+			Date:         normDate(date),
+			CardNo:       card,
+			Amount:       amount,
+			PolicyNumber: policyNumber,
+			ExpiryDate:   normDate(expiryDate),
 		})
 	}
 	pages.VehicleInsuranceSearchRows(result).Render(r.Context(), w)
+}
+
+// ExpiringInsurancesAPI returns policies expiring within the next 30 days for notification jobs.
+func ExpiringInsurancesAPI(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.DB.Query(`SELECT vi.id, vi.vehicle_id, v.plate_number, c.name,
+		COALESCE(ic.name, vi.company_no, ''), COALESCE(vi.policy_number,''), vi.expiry_date
+		FROM active_vehicle_insurances vi
+		JOIN active_vehicles v ON v.id = vi.vehicle_id
+		JOIN active_customers c ON c.id = v.customer_id
+		LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id
+		WHERE vi.expiry_date >= date('now','localtime')
+			AND vi.expiry_date <= date('now','localtime','+30 days')
+		ORDER BY vi.expiry_date ASC, vi.id ASC`)
+	if err != nil {
+		http.Error(w, "查詢即將到期保單失敗", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type expiringPolicy struct {
+		ID           int64  `json:"id"`
+		VehicleID    int64  `json:"vehicle_id"`
+		Plate        string `json:"plate_number"`
+		Customer     string `json:"customer_name"`
+		Company      string `json:"insurance_company"`
+		PolicyNumber string `json:"policy_number"`
+		ExpiryDate   string `json:"expiry_date"`
+	}
+	result := make([]expiringPolicy, 0)
+	for rows.Next() {
+		var item expiringPolicy
+		if err := rows.Scan(&item.ID, &item.VehicleID, &item.Plate, &item.Customer,
+			&item.Company, &item.PolicyNumber, &item.ExpiryDate); err != nil {
+			http.Error(w, "讀取即將到期保單失敗", http.StatusInternalServerError)
+			return
+		}
+		item.ExpiryDate = normDate(item.ExpiryDate)
+		result = append(result, item)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "讀取即將到期保單失敗", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 // ListVehicleInspections 定檢排程列表。

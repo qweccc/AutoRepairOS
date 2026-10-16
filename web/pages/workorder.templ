@@ -41,7 +41,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 					<th>SOP</th><td>{ yesNo(wo.SOPCompleted) }</td>
 					<th>建立時間</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
 				</tr>
-				@InsuranceRow(wo)
+				@InsuranceRow(wo, canEdit)
 			</table>
 			<div style="margin-top:16px">
 				@StatusControls(wo, canEdit)
@@ -204,7 +204,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 }
 
 // InsuranceRow 保險理賠資訊列。
-templ InsuranceRow(wo model.WorkOrder) {
+templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 	if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
 		<tr><th>件別</th><td><span class="pill p-progress">保險理賠</span></td>
 			<th>保險公司</th><td>{ wo.InsuranceName }</td></tr>
@@ -215,6 +215,25 @@ templ InsuranceRow(wo model.WorkOrder) {
 		<tr><th>件別</th><td><span class="pill">自費</span></td>
 			<th></th><td></td></tr>
 	}
+	<tr>
+		<td colspan="4">
+			if canEdit {
+				<form class="frm" method="POST" action={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/claim" }>
+					@components.CSRFInput()
+					<label>理賠日期<input type="date" name="claim_date" value={ wo.ClaimDate }></label>
+					<label>理賠金額<input type="number" name="claim_amount" min="0" step="0.01" value={ strconv.FormatFloat(wo.ClaimAmount, 'f', 2, 64) }></label>
+					<label class="full">理賠備註<textarea name="claim_note">{ wo.ClaimNote }</textarea></label>
+					<div class="full"><button class="btn btn-s" type="submit">儲存理賠資料</button></div>
+				</form>
+			}
+			if !canEdit {
+				<b>理賠日期</b> { wo.ClaimDate }　<b>理賠金額</b> { money(wo.ClaimAmount) }
+				if wo.ClaimNote != "" {
+					<p>{ wo.ClaimNote }</p>
+				}
+			}
+		</td>
+	</tr>
 }
 
 // PartSearchScript 零件即時搜尋 JS。

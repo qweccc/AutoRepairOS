@@ -155,9 +155,9 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
       <form class="frm" method="POST" action="/work-orders" id="woForm">
         <label class="full">車輛
           <div class="vsearch" data-vsearch data-options="` + optsJSON + `"` +
-			selAttr(preVehicle > 0) + `>
+		selAttr(preVehicle > 0) + `>
             <input type="hidden" name="vehicle_id" id="vehicle_id" value="` +
-			strconv.FormatInt(preVehicle, 10) + `" required>
+		strconv.FormatInt(preVehicle, 10) + `" required>
             <input class="vs-input" id="vsInput" autocomplete="off"
                    placeholder="輸入車牌 / 車型 / 車主 / 電話"
                    value="` + presetLabel + `">
@@ -191,6 +191,9 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
         <label>理賠案件編號<input name="claim_no" placeholder="保險公司給的報案號"></label>
         <label>事故日期<input name="accident_date" type="date"></label>
         <label>自負額<input name="deductible_amount" type="number" min="0" step="1" placeholder="0"></label>
+        <label>理賠日期<input name="claim_date" type="date"></label>
+        <label>理賠金額<input name="claim_amount" type="number" min="0" step="0.01" value="0"></label>
+        <label class="full">理賠備註<textarea name="claim_note"></textarea></label>
         <div class="full">
           <button class="btn btn-p" type="submit">建立工單</button>
           <a class="btn btn-s" href="/work-orders">取消</a>
@@ -206,7 +209,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
         var sel = document.getElementById('isInsurance');
         var mirror = document.getElementById('insuranceCompanyMirror');
         var company = document.querySelector('[name="insurance_company_id"]');
-        var others = ['claim_no', 'accident_date', 'deductible_amount'];
+        var others = ['claim_no', 'accident_date', 'deductible_amount', 'claim_date', 'claim_amount', 'claim_note'];
         function sync() {
           var on = sel && sel.value === '1';
           others.forEach(function (n) {
