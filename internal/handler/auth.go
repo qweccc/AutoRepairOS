@@ -41,12 +41,17 @@ func currentUser(r *http.Request) (model.User, error) {
 	}
 
 	err = db.DB.QueryRow(
-		"SELECT id, username, role, name FROM users WHERE id = ?", userID,
-	).Scan(&user.ID, &user.Username, &user.Role, &user.Name)
+		"SELECT id, username, role, name, active FROM users WHERE id = ?", userID,
+	).Scan(&user.ID, &user.Username, &user.Role, &user.Name, &user.Active)
 	if err != nil {
 		// 帳號已被刪除：順手清掉孤兒 session
 		session.Delete(token)
 		return user, err
+	}
+	if user.Active == 0 {
+		// 帳號已停用：清掉 session，讓前端導回登入頁
+		session.Delete(token)
+		return user, http.ErrNoCookie
 	}
 
 	return user, nil
@@ -90,8 +95,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user model.User
 	err := db.DB.QueryRow(
-		"SELECT id, username, password, role, name FROM users WHERE username = ?", username,
-	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name)
+		"SELECT id, username, password, role, name, active FROM users WHERE username = ?", username,
+	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name, &user.Active)
 	if err != nil {
 		loginFail(w, r, "帳號或密碼錯誤")
 		return
@@ -99,6 +104,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
 		loginFail(w, r, "帳號或密碼錯誤")
+		return
+	}
+
+	if user.Active == 0 {
+		loginFail(w, r, "帳號已停用，請聯絡管理員")
 		return
 	}
 

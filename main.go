@@ -92,7 +92,7 @@ func main() {
 	mux.HandleFunc("POST /api/suppliers/quick-create", handler.CounterUp(handler.QuickCreateSupplier))
 	mux.HandleFunc("GET /api/parts", handler.RequireLogin(handler.SearchPartsAPI))
 	mux.HandleFunc("GET /api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
-	mux.HandleFunc("GET /api/inventory/search", handler.RequireLogin(handler.SearchInventoryAPI))
+	mux.HandleFunc("GET /api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	mux.HandleFunc("GET /api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
 	mux.HandleFunc("GET /api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
 	mux.HandleFunc("GET /api/lookup/search", handler.RequireLogin(handler.SearchLookupAPI))

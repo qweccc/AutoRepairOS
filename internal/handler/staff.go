@@ -10,6 +10,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/internal/session"
 	"autorepairos/web/pages"
 )
 
@@ -411,6 +412,9 @@ func DeactivateStaff(w http.ResponseWriter, r *http.Request) {
 		fail(w, "停用失敗")
 		return
 	}
+
+	// 停用後立刻讓所有已開啟的 session 失效，否則被停用者手上的瀏覽器分頁仍可操作。
+	session.DeleteForUser(id)
 
 	redirectMsg(w, r, "/staff", "員工已標記為離職")
 }

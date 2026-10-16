@@ -1,6 +1,6 @@
 # AutoRepair OS – 汽車修護廠區域網路管理系統 需求規格書 (SRS)
 
-> 版本：1.0 | 日期：2026-10-08
+> 版本：1.1 | 日期：2026-10-16
 
 ## 1. 專案簡介 (Introduction)
 
@@ -35,7 +35,7 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 - 維修工單與現場施工： 多技師派工、SOP 檢查表、語音/片語輸入、施工照片/舊品標記上傳。
 - 帳務收付款與財務分析： AR/AP Aging 管理、毛利與營運報表、會計系統資料匯出。
 - 預約與工位排程： 工位調度、預約提醒與進場前導通知。
-- 自動化關懷與線上互動： LINE / 簡訊 自動推播（驗車/保養/完工通知）、LINE 電子估價單一鍵授權。
+- 自動化關懷與線上互動： LINE／Telegram 自動推播（驗車／保養／完工通知）、LINE 電子估價單一鍵授權。
 - 列印與匯出表單： 估價單、工單、發票/收據、AR 催款單、AP 對帳單、日結報表與營運分析報表。
 
 **Out of scope：**
@@ -66,16 +66,16 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 - 店內人員透過 Chrome / Edge 等桌面或平板/手機瀏覽器連線至區網伺服器。
 - 保險公司與零件供應商資料由人工維護，不進行自動 API 對接。
 - 資料庫採 SQLite，寫入併發透過 WAL + 單連線控制，適合單店工作負載。
-- 外部通訊依賴 LINE Messaging API 及簡訊 Gateway，無其他雲端服務負擔。
+- 客戶通知支援 LINE Messaging API 與 Telegram Bot API；不支援 SMS Gateway。
 
 ## 5. 功能需求 (Functional Requirements)
 
 ### 5.1 客戶管理 (CRM)
 
-- **FR-CRM-01：** 客戶建立/編輯：姓名、電話、地址、LINE UserID、備註與標籤（VIP、奧客警示…）。
+- **FR-CRM-01：** 客戶建立/編輯：姓名、電話、地址、LINE UserID、Telegram UserID、備註與標籤（VIP、奧客警示…）。
 - **FR-CRM-02：** 客戶搜尋：電話、姓名、標籤等條件查詢列表。
 - **FR-CRM-03：** 客戶檔案顯示歷史消費總額與未結清欠款（整合 AR）。
-- **FR-CRM-04：** 客戶通知偏好（LINE / 簡訊 / 不通知），供自動化模組使用。
+- **FR-CRM-04：** 客戶通知偏好（LINE／Telegram／不通知），供自動化模組使用；選擇 LINE 或 Telegram 時須綁定對應的使用者 ID。
 - **FR-CRM-05：** 顧客活動代碼：支援在客戶/工單上標記行銷方案代碼，供方案成效分析。
 
 ### 5.2 車輛履歷與數位 Passbook (Vehicle History)
@@ -310,7 +310,7 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 │  handler/     → HTTP Handler、Request/Response 解析          │
 │  service/     → 業務邏輯、權限驗證、資料處理                  │
 │  cron/        → 背景排程 (通知掃描、備份)                    │
-│  integration/ → 外部整合 (LINE Messaging API、簡訊 Gateway)   │
+│  integration/ → 外部整合 (LINE、Telegram)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -357,7 +357,7 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 │  2. 照片先暫存 IndexedDB，背景上傳                           │
 │  3. 通知寫入佇列，恢復後重試                                 │
 │  4. 本地 SQLite DB，無雲端依賴                               │
-│  5. 外部 API (LINE/簡訊) 失敗不阻塞核心流程                  │
+│  5. 外部 API (LINE／Telegram) 失敗不阻塞核心流程             │
 └─────────────────────────────────────────────────────────────┘
 ```
 

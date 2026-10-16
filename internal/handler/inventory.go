@@ -134,16 +134,21 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 }
 
 // SearchInventoryAPI 庫存即時搜尋 API（HTMX 用）。
-func SearchInventoryAPI(w http.ResponseWriter, r *http.Request) {
+func SearchInventoryAPI(w http.ResponseWriter, r *http.Request, user model.User) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
-		pages.InventorySearchRows(nil, true).Render(r.Context(), w)
+		pages.InventorySearchRows(nil, canSeeMoney(user)).Render(r.Context(), w)
 		return
 	}
 	like := "%" + q + "%"
+	costPrice := "0"
+	showMoney := canSeeMoney(user)
+	if showMoney {
+		costPrice = "COALESCE(i.cost_price,0)"
+	}
 	rows, err := db.DB.Query(`SELECT i.id, i.name, i.part_number, COALESCE(i.category,''),
 		COALESCE(i.bin_location,''), COALESCE(s.name,''),
-		COALESCE(i.cost_price,0), COALESCE(i.selling_price,0),
+		`+costPrice+`, COALESCE(i.selling_price,0),
 		COALESCE(i.stock_quantity,0), COALESCE(i.min_safety_stock,0),
 		COALESCE(i.stock_quantity,0) < COALESCE(i.min_safety_stock,0),
 		COALESCE(i.item_kind,'')
@@ -167,7 +172,7 @@ func SearchInventoryAPI(w http.ResponseWriter, r *http.Request) {
 		}
 		result = append(result, it)
 	}
-	pages.InventorySearchRows(result, true).Render(r.Context(), w)
+	pages.InventorySearchRows(result, showMoney).Render(r.Context(), w)
 }
 
 // invTabURL 產生庫存類別篩選連結，保留搜尋與低庫存條件。
