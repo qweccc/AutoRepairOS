@@ -123,7 +123,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "建立登入階段失敗", http.StatusInternalServerError)
 		return
 	}
-	session.SetCookie(w, token)
+	session.SetCookie(w, r, token)
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -132,7 +132,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// 撤銷 sessions 表的記錄，再清除 cookie，最後回跳到登入前的頁面。
 	// return_to 從登入表單的隱藏欄位帶回（預設首頁 /，避免回跳 loop）。
 	session.Delete(session.TokenFromRequest(r))
-	session.ClearCookie(w)
+	session.ClearCookie(w, r)
 	returnTo := r.URL.Query().Get("return_to")
 	if returnTo == "" || returnTo == "/login" {
 		returnTo = "/"

@@ -13,6 +13,7 @@ templ EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelTyp
 		<div class="card">
 			<h2>編輯車輛 { v.PlateNumber }</h2>
 			<form class="frm" method="POST" action={ "/vehicles/" + strconv.FormatInt(v.ID, 10) }>
+				@components.CSRFInput()
 				@components.PlateScanUI(`{"plate_number":"plate_number","vin":"vin","engine_number":"engine_number","owner_name":"owner_name","owner_address":"owner_address","owner_id_number":"owner_id_number","displacement":"displacement","manufacture_date":"manufacture_date","license_issue_date":"license_issue_date","seating_capacity":"seating_capacity"}`)
 				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" value={ v.CustomerName } required></label>
 				<label>車牌號碼<input name="plate_number" value={ v.PlateNumber } required></label>
@@ -83,6 +84,7 @@ templ NewVehiclePage(customerName string, modelOptions, vehicleTypeOptions, fuel
 		<div class="card">
 			<h2>新增車輛</h2>
 			<form class="frm" method="POST" action="/vehicles">
+				@components.CSRFInput()
 				@components.PlateScanUI(`{"plate_number":"plate_number","vin":"vin","engine_number":"engine_number","owner_name":"owner_name","owner_address":"owner_address","owner_id_number":"owner_id_number","displacement":"displacement","manufacture_date":"manufacture_date","license_issue_date":"license_issue_date","seating_capacity":"seating_capacity"}`)
 				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required></label>
 				<label>車牌號碼<input name="plate_number" required></label>

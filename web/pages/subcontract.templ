@@ -26,6 +26,7 @@ templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, stat
 		<div class="card">
 			<h2>新增外包工項</h2>
 			<form class="frm" method="POST" action="/subcontracts">
+				@components.CSRFInput()
 				<label>工單 ID<input type="number" name="work_order_id" required></label>
 				<label>協力廠商
 					<select name="supplier_id">
@@ -90,6 +91,7 @@ templ SubcontractRowContent(s SubcontractRow) {
 		<td>
 			<a class="btn btn-s" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>
 			<a class="btn btn-d" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/delete" }
+				hx-post={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/delete" }
 				data-confirm="確定刪除這筆外包？">刪除</a>
 		</td>
 	</tr>

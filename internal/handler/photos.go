@@ -63,8 +63,8 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
             <div class="pname">` + htmlEsc(orDash(origName)) + `</div>
             <div class="pmeta">` + htmlEsc(uploader) + ` · ` + htmlEsc(createdAt) + ` · ` + sizeKB(size) + `</div>
             ` + noteLine(note) + `
-            <a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(woID, 10) +
-			`/photos/` + strconv.FormatInt(id, 10) + `/delete" onclick="return confirm('刪除這張照片？')">刪除</a>
+            <form method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) +
+			`/photos/` + strconv.FormatInt(id, 10) + `/delete" style="display:inline" onsubmit="return confirm('刪除這張照片？')"><button class="btn btn-d" type="submit">刪除</button></form>
           </figcaption>
         </figure>`)
 		n++

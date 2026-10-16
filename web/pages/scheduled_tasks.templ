@@ -24,9 +24,9 @@ templ ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
 				<div class="empty">尚未註冊任何排程任務</div>
 			}
 			<div style="margin-top:14px">
-				<a class="btn btn-p" href="/scheduled-tasks/backups/run">立即執行備份</a>
-				<a class="btn btn-s" href="/scheduled-tasks/notifications/run">立即處理通知佇列</a>
-				<a class="btn btn-s" href="/scheduled-tasks/maintenance-due/run">立即掃描保養到期</a>
+				<a class="btn btn-p" href="/scheduled-tasks/backups/run" hx-post="/scheduled-tasks/backups/run">立即執行備份</a>
+				<a class="btn btn-s" href="/scheduled-tasks/notifications/run" hx-post="/scheduled-tasks/notifications/run">立即處理通知佇列</a>
+				<a class="btn btn-s" href="/scheduled-tasks/maintenance-due/run" hx-post="/scheduled-tasks/maintenance-due/run">立即掃描保養到期</a>
 			</div>
 		</div>
 		<div class="card">

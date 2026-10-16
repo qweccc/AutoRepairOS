@@ -120,8 +120,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 					if canEdit {
 						<td>
 							<a class="btn btn-d"
-								href={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) + "/delete" }
-								hx-delete={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) }
+								hx-post={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) + "/delete" }
 								hx-target="#wo-items"
 								hx-swap="innerHTML"
 								hx-confirm="刪除此項目？">刪除</a>
@@ -142,6 +141,7 @@ templ AddItemForm(woID int64) {
 		hx-target="#wo-items"
 		hx-swap="innerHTML"
 		hx-on::after-request="if(event.detail.successful) this.reset(); document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0';">
+		@components.CSRFInput()
 		<label>類型
 			<select name="item_type" id="itemType" hx-on:change="togglePartSearch(this)">
 				<option value="labor">工資</option>
@@ -171,6 +171,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			hx-target="#wo-status"
 			hx-swap="innerHTML"
 			style="display:inline;margin:0 8px">
+			@components.CSRFInput()
 			<select name="status" onchange="htmx.trigger(this.closest('form'), 'submit')"
 				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 				<option value="pending" selected?={ wo.Status == "pending" }>待處理</option>
@@ -184,6 +185,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			hx-target="#wo-approval"
 			hx-swap="innerHTML"
 			style="display:inline;margin:0 8px">
+			@components.CSRFInput()
 			<select name="approval_status" onchange="htmx.trigger(this.closest('form'), 'submit')"
 				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 				<option value="pending" selected?={ wo.ApprovalStatus == "pending" }>待核准</option>
@@ -195,6 +197,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			hx-target="#wo-sop"
 			hx-swap="innerHTML"
 			style="display:inline;margin:0 8px">
+			@components.CSRFInput()
 			<button class="btn btn-s" type="submit">{ sopLabel(wo.SOPCompleted) }</button>
 		</form>
 	}

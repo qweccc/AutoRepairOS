@@ -56,9 +56,9 @@ func ListMaintenanceTemplates(w http.ResponseWriter, r *http.Request, user model
 			strconv.FormatInt(t.ID, 10) + `">查看項目</a> ` +
 			`<a class="btn btn-p" href="/maintenance-templates/` +
 			strconv.FormatInt(t.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-d" href="/maintenance-templates/` +
-			strconv.FormatInt(t.ID, 10) + `/delete" onclick="return confirm('確定刪除套餐「` +
-			htmlEsc(t.Code) + `」？已開出的工單不受影響。')">刪除</a></td></tr>`)
+			`<form method="POST" action="/maintenance-templates/` +
+			strconv.FormatInt(t.ID, 10) + `/delete" style="display:inline" onsubmit="return confirm('確定刪除套餐「` +
+			htmlEsc(t.Code) + `」？已開出的工單不受影響。')"><button class="btn btn-d" type="submit">刪除</button></form></td></tr>`)
 	}
 	tb.WriteString(`</table>`)
 

@@ -65,7 +65,8 @@ templ LookupRowContent(li LookupRow) {
 		</td>
 		<td>
 			if li.Active == 0 {
-				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }>復用</a>
+				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }
+					hx-post={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }>復用</a>
 			}
 			if li.Active != 0 {
 				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/edit" }>編輯</a>

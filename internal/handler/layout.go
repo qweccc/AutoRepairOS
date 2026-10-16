@@ -137,6 +137,9 @@ func appName() string {
 
 func renderPage(w http.ResponseWriter, title, active, username, role, body string) {
 	app := appName()
+	csrfToken := csrfTokenForResponse(w)
+	body = withCSRFFormFields(body, csrfToken)
+	body = withCSRFHTMXActions(body)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(`<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -145,13 +148,14 @@ func renderPage(w http.ResponseWriter, title, active, username, role, body strin
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>` + html.EscapeString(title) + ` - ` + html.EscapeString(app) + `</title>
 <link rel="stylesheet" href="/static/app.css"/>
+<script src="/static/htmx.min.js"></script>
 <style>` + pageStyle + `</style>
 </head>
-<body>
+<body hx-headers='{"X-CSRF-Token":"` + csrfToken + `"}'>
   <header>
     <h1>🔧 ` + html.EscapeString(app) + `</h1>
     <div class="user">登入中：<code>` + html.EscapeString(username) + `</code> <span class="badge">` + html.EscapeString(role) + `</span>
-    <a href="/logout" class="logout">登出</a>
+    <form method="POST" action="/logout" style="display:inline"><button class="logout" type="submit">登出</button></form>
     </div>
   </header>
   <div class="shell">

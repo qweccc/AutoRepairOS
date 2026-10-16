@@ -35,6 +35,7 @@ func setupStaffActiveTestDB(t *testing.T) {
 		`CREATE TABLE sessions (
 			id TEXT PRIMARY KEY,
 			user_id INTEGER NOT NULL,
+			csrf_token TEXT NOT NULL DEFAULT '',
 			created_at TEXT
 		)`,
 	}
@@ -172,5 +173,4 @@ func TestStaffActive_CurrentUserRejectsInactive(t *testing.T) {
 		t.Fatalf("active=0 的 currentUser 應讓 AllStaff 302，got %d", rec.Code)
 	}
 }
-
 

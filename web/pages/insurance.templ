@@ -22,6 +22,7 @@ templ ListInsurancePage(rows []InsuranceCompanyRow, total, page, size int, q str
 		<div class="card">
 			<h2>新增保險公司</h2>
 			<form class="frm" method="POST" action="/insurance-companies">
+				@components.CSRFInput()
 				<label>簡稱<input name="code" placeholder="如：國泰" required></label>
 				<label>公司名稱<input name="name" required></label>
 				<label>統一編號<input name="tax_id"></label>
@@ -83,6 +84,7 @@ templ InsuranceCompanyRowContent(ic InsuranceCompanyRow) {
 			<a class="btn btn-s" href={ "/insurance-companies/" + strconv.FormatInt(ic.ID, 10) + "/edit" }>編輯</a>
 			if ic.Active != 0 {
 				<a class="btn btn-d" href={ "/insurance-companies/" + strconv.FormatInt(ic.ID, 10) + "/delete" }
+					hx-post={ "/insurance-companies/" + strconv.FormatInt(ic.ID, 10) + "/delete" }
 					data-confirm="確定停用這家保險公司？">停用</a>
 			}
 		</td>

@@ -101,8 +101,8 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 			`%</td><td class="num">` + money(lg.CommissionAmount) + `</td><td>` + htmlEsc(orDash(lg.Notes)) +
 			`</td><td><a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) +
 			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/edit">編輯</a> ` +
-			`<a class="btn btn-d" href="/work-orders/` + strconv.FormatInt(woID, 10) +
-			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/delete" onclick="return confirm('刪除這筆工時紀錄？')">刪除</a></td></tr>`)
+			`<form method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) +
+			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/delete" style="display:inline" onsubmit="return confirm('刪除這筆工時紀錄？')"><button class="btn btn-d" type="submit">刪除</button></form></td></tr>`)
 	}
 	b.WriteString(`</table>`)
 

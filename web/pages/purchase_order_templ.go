@@ -391,7 +391,15 @@ func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) templ.Componen
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<form class=\"frm\" id=\"newPurchaseOrderForm\" method=\"POST\" action=\"/purchase-orders\"><label>供應商（廠商） <select name=\"supplier_id\" required><option value=\"\">請選擇供應商</option>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<form class=\"frm\" id=\"newPurchaseOrderForm\" method=\"POST\" action=\"/purchase-orders\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<label>供應商（廠商） <select name=\"supplier_id\" required><option value=\"\">請選擇供應商</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -399,20 +407,20 @@ func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</select></label> <label>進貨日期<input type=\"date\" name=\"order_date\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</select></label> <label>進貨日期<input type=\"date\" name=\"order_date\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(orderDate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 110, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 111, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\"></label> <label>關聯工單（選填）<input name=\"work_order_id\" type=\"number\" min=\"0\" placeholder=\"工單號碼，例：1153001；留空=一般進貨\"></label> <label class=\"full\">備註<textarea name=\"notes\" placeholder=\"例：本月第二批機油進貨\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立並加入品項</button> <a class=\"btn btn-s\" href=\"/purchase-orders\">取消</a></div></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\"></label> <label>關聯工單（選填）<input name=\"work_order_id\" type=\"number\" min=\"0\" placeholder=\"工單號碼，例：1153001；留空=一般進貨\"></label> <label class=\"full\">備註<textarea name=\"notes\" placeholder=\"例：本月第二批機油進貨\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立並加入品項</button> <a class=\"btn btn-s\" href=\"/purchase-orders\">取消</a></div></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -420,7 +428,7 @@ func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<p style=\"color:#64748b;font-size:12.5px;margin-top:10px\">若這批貨是為特定工單特別叫的（客戶指定零件、急件補料），填工單號碼； 一般進貨留空即可（僅入庫）。</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<p style=\"color:#64748b;font-size:12.5px;margin-top:10px\">若這批貨是為特定工單特別叫的（客戶指定零件、急件補料），填工單號碼； 一般進貨留空即可（僅入庫）。</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -472,243 +480,277 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 			}
 			ctx = templ.InitializeContext(ctx)
 			if flashMsg != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"msg msg-ok\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"msg msg-ok\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(flashMsg)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 134, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 135, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, " <div class=\"card\"><h2>進貨單 #")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, " <div class=\"card\"><h2>進貨單 #")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(po.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 137, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 138, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, " — ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, " — ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(po.SupplierName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 137, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 138, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</h2><table><tr><th style=\"width:120px\">供應商</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</h2><table><tr><th style=\"width:120px\">供應商</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(po.SupplierName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 140, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 141, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</td><th style=\"width:120px\">進貨日</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</td><th style=\"width:120px\">進貨日</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(po.OrderDate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 141, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 142, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</td></tr><tr><th>關聯工單</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</td></tr><tr><th>關聯工單</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if po.WorkOrderID > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 templ.SafeURL
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/" + strconv.FormatInt(po.WorkOrderID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 147, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 148, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\">#")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\">#")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(po.WorkOrderID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 147, Col: 115}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 148, Col: 115}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</a> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</a> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if po.WorkOrderID == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<span style=\"color:#64748b\">一般進貨（無特定工單）</span>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<span style=\"color:#64748b\">一般進貨（無特定工單）</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</td><th>狀態</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</td><th>狀態</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if po.Status == "received" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<span class=\"pill p-completed\">已進貨</span> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<span class=\"pill p-completed\">已進貨</span> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if po.Status != "received" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<span class=\"pill p-pending\">草稿</span>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<span class=\"pill p-pending\">草稿</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</td></tr><tr><th>建立時間</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</td></tr><tr><th>建立時間</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(po.CreatedAt)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 164, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 165, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</td><th></th><td></td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</td><th></th><td></td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if po.Notes != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<tr><th>備註</th><td colspan=\"3\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<tr><th>備註</th><td colspan=\"3\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(po.Notes)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 167, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 168, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</table><div style=\"margin-top:16px;padding:14px;background:#0f172a;border:1px solid #334155;border-radius:9px\"><div style=\"color:#94a3b8;font-size:12.5px;margin-bottom:6px\">應付總額（總共要給廠商多少錢）</div><div style=\"font-size:28px;font-weight:700;color:#38bdf8\" id=\"po-total\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</table><div style=\"margin-top:16px;padding:14px;background:#0f172a;border:1px solid #334155;border-radius:9px\"><div style=\"color:#94a3b8;font-size:12.5px;margin-bottom:6px\">應付總額（總共要給廠商多少錢）</div><div style=\"font-size:28px;font-weight:700;color:#38bdf8\" id=\"po-total\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 172, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 173, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</div></div><div style=\"margin-top:16px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</div></div><div style=\"margin-top:16px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if !locked {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<form hx-post=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<form hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/items")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 176, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 177, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" style=\"display:inline\"><button class=\"btn btn-p\" type=\"submit\">＋ 加入品項（於下方表單）</button></form><a class=\"btn btn-o\" href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" style=\"display:inline\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<button class=\"btn btn-p\" type=\"submit\">＋ 加入品項（於下方表單）</button></form><a class=\"btn btn-o\" href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var33 templ.SafeURL
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinURLErrs("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 183, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 185, Col: 96}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" data-confirm=\"確認進貨？將把品項數量加回庫存，之後不可修改。\">✓ 確認進貨</a> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\" hx-post=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var34 string
+				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 186, Col: 79}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\" data-confirm=\"確認進貨？將把品項數量加回庫存，之後不可修改。\">✓ 確認進貨</a> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<a class=\"btn btn-s\" href=\"/purchase-orders\">回列表</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<a class=\"btn btn-s\" href=\"/purchase-orders\">回列表</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if !locked {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<a class=\"btn btn-d\" href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<a class=\"btn btn-d\" href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var34 templ.SafeURL
-				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinURLErrs("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete")
+				var templ_7745c5c3_Var35 templ.SafeURL
+				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinURLErrs("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 188, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 191, Col: 95}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\" data-confirm=\"確定刪除此進貨單？\">刪除</a>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" hx-post=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var36 string
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 192, Col: 78}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" data-confirm=\"確定刪除此進貨單？\">刪除</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</div></div><div class=\"card\"><h2>進貨品項</h2><div id=\"po-items\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</div></div><div class=\"card\"><h2>進貨品項</h2><div id=\"po-items\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -716,7 +758,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -726,7 +768,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -757,149 +799,149 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var35 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var35 == nil {
-			templ_7745c5c3_Var35 = templ.NopComponent
+		templ_7745c5c3_Var37 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var37 == nil {
+			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(items) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "<div class=\"empty\">尚未加入品項</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"empty\">尚未加入品項</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if len(items) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<table><tr><th>品項</th><th>類別</th><th>料號</th><th class=\"num\">數量</th><th class=\"num\">進貨單價</th><th class=\"num\">小計</th><th>操作</th></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<table><tr><th>品項</th><th>類別</th><th>料號</th><th class=\"num\">數量</th><th class=\"num\">進貨單價</th><th class=\"num\">小計</th><th>操作</th></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, it := range items {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<tr><td>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(it.Description)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 219, Col: 25}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</td><td style=\"font-size:12px;color:#94a3b8\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(it.Category))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 220, Col: 68}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</td><td><code style=\"font-size:12px\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<tr><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var38 string
-				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(it.PartNumber))
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(it.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 221, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 223, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</code></td><td class=\"num\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</td><td style=\"font-size:12px;color:#94a3b8\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var39 string
-				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(trimQtyF(it.Quantity))
+				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(it.Category))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 222, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 224, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</td><td class=\"num\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</td><td><code style=\"font-size:12px\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var40 string
-				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(it.UnitCost))
+				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(it.PartNumber))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 223, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 225, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</td><td class=\"num\"><b>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</code></td><td class=\"num\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var41 string
-				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(it.Subtotal))
+				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(trimQtyF(it.Quantity))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 224, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 226, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</b></td><td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</td><td class=\"num\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var42 string
+				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(it.UnitCost))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 227, Col: 44}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</td><td class=\"num\"><b>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var43 string
+				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(it.Subtotal))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 228, Col: 47}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</b></td><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if !locked {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<a class=\"btn btn-d\" hx-delete=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<a class=\"btn btn-d\" hx-delete=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var42 string
-					templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items/" + strconv.FormatInt(it.ID, 10))
+					var templ_7745c5c3_Var44 string
+					templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items/" + strconv.FormatInt(it.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 228, Col: 115}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 232, Col: 115}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-confirm=\"刪除此品項？\">刪除</a> ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-confirm=\"刪除此品項？\">刪除</a> ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				if locked {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<span style=\"color:#64748b\">—</span>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<span style=\"color:#64748b\">—</span>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "</td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<tr><td colspan=\"5\" style=\"text-align:right\"><b>應付總額</b></td><td class=\"num\"><b style=\"color:#38bdf8;font-size:16px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<tr><td colspan=\"5\" style=\"text-align:right\"><b>應付總額</b></td><td class=\"num\"><b style=\"color:#38bdf8;font-size:16px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var43 string
-			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(total))
+			var templ_7745c5c3_Var45 string
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 241, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 245, Col: 77}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "</b></td><td></td></tr></table>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "</b></td><td></td></tr></table>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -928,25 +970,33 @@ func AddPurchaseItemForm(orderID int64, partCategoryOptions string) templ.Compon
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var44 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var44 == nil {
-			templ_7745c5c3_Var44 = templ.NopComponent
+		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var46 == nil {
+			templ_7745c5c3_Var46 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<form class=\"frm\" id=\"addItemForm\" hx-post=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<form class=\"frm\" id=\"addItemForm\" hx-post=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var45 string
-		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items")
+		var templ_7745c5c3_Var47 string
+		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue("/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 254, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/purchase_order.templ`, Line: 258, Col: 75}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" style=\"margin-top:18px\"><label class=\"full\">品項名稱 <input name=\"description\" required placeholder=\"例：機油 5W-30 或 掃描/選擇下方零件帶入\"></label> <label>數量<input name=\"quantity\" type=\"number\" step=\"0.01\" min=\"0.01\" value=\"1\" required></label> <label>類別 <select name=\"category\"><option value=\"\">未分類</option>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" style=\"margin-top:18px\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "<label class=\"full\">品項名稱 <input name=\"description\" required placeholder=\"例：機油 5W-30 或 掃描/選擇下方零件帶入\"></label> <label>數量<input name=\"quantity\" type=\"number\" step=\"0.01\" min=\"0.01\" value=\"1\" required></label> <label>類別 <select name=\"category\"><option value=\"\">未分類</option>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -954,7 +1004,7 @@ func AddPurchaseItemForm(orderID int64, partCategoryOptions string) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "</select></label> <label>進貨單價（給廠商的價）<input name=\"unit_price_f\" id=\"unitPrice\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" required></label> <input type=\"hidden\" name=\"unit_cost\" id=\"unitCost\" value=\"0\"> <input type=\"hidden\" name=\"quantity_hidden\" id=\"quantityHidden\" value=\"1\"> <input type=\"hidden\" name=\"inventory_item_id\" id=\"inventoryItemId\" value=\"0\"> <input type=\"hidden\" name=\"part_number\" id=\"partNumber\" value=\"\"><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入品項</button></div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "</select></label> <label>進貨單價（給廠商的價）<input name=\"unit_price_f\" id=\"unitPrice\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" required></label> <input type=\"hidden\" name=\"unit_cost\" id=\"unitCost\" value=\"0\"> <input type=\"hidden\" name=\"quantity_hidden\" id=\"quantityHidden\" value=\"1\"> <input type=\"hidden\" name=\"inventory_item_id\" id=\"inventoryItemId\" value=\"0\"> <input type=\"hidden\" name=\"part_number\" id=\"partNumber\" value=\"\"><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入品項</button></div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -962,7 +1012,7 @@ func AddPurchaseItemForm(orderID int64, partCategoryOptions string) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<script>\n\t\t// 數量與單價：使用者輸入的是 quantity 與 unit_price_f，\n\t\t// 送出前同步到 hidden 欄位（handler 讀 quantity / unit_cost）。\n\t\tdocument.addEventListener('submit', function(e){\n\t\t\tvar form = document.getElementById('addItemForm');\n\t\t\tif (!form || !form.contains(e.target)) return;\n\t\t\tvar q = form.querySelector('[name=\"quantity\"]');\n\t\t\tvar p = form.querySelector('[name=\"unit_price_f\"]');\n\t\t\tif (q) document.getElementById('quantityHidden').value = q.value;\n\t\t\tif (p) document.getElementById('unitCost').value = p.value;\n\t\t}, true);\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<script>\n\t\t// 數量與單價：使用者輸入的是 quantity 與 unit_price_f，\n\t\t// 送出前同步到 hidden 欄位（handler 讀 quantity / unit_cost）。\n\t\tdocument.addEventListener('submit', function(e){\n\t\t\tvar form = document.getElementById('addItemForm');\n\t\t\tif (!form || !form.contains(e.target)) return;\n\t\t\tvar q = form.querySelector('[name=\"quantity\"]');\n\t\t\tvar p = form.querySelector('[name=\"unit_price_f\"]');\n\t\t\tif (q) document.getElementById('quantityHidden').value = q.value;\n\t\t\tif (p) document.getElementById('unitCost').value = p.value;\n\t\t}, true);\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -987,12 +1037,12 @@ func PurchaseItemLookup(orderID int64) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var46 == nil {
-			templ_7745c5c3_Var46 = templ.NopComponent
+		templ_7745c5c3_Var48 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var48 == nil {
+			templ_7745c5c3_Var48 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<input type=\"search\" id=\"poPartSearch\" placeholder=\"搜尋庫存零件帶入（例：機油）\" hx-get=\"/api/parts\" hx-trigger=\"keyup changed delay:300ms\" hx-target=\"#po-part-results\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:8px\"><div id=\"po-part-results\" style=\"font-size:13px\"></div><script>\n\t\t// 點零件項目帶入表單（parts API 回 JSON，這裡監聽點擊）。\n\t\t(function(){\n\t\t\tvar box = document.getElementById('po-part-results');\n\t\t\tvar search = document.getElementById('poPartSearch');\n\t\t\tif (!box || !search) return;\n\t\t\tvar timer;\n\t\t\tsearch.addEventListener('input', function(){\n\t\t\t\tclearTimeout(timer);\n\t\t\t\ttimer = setTimeout(function(){\n\t\t\t\t\tvar q = search.value.trim();\n\t\t\t\t\tif (q.length < 1) { box.innerHTML = ''; return; }\n\t\t\t\t\tfetch('/api/parts?q=' + encodeURIComponent(q))\n\t\t\t\t\t\t.then(function(r){ return r.json(); })\n\t\t\t\t\t\t.then(function(list){\n\t\t\t\t\t\t\tbox.innerHTML = '';\n\t\t\t\t\t\t\tif (!list || list.length === 0) {\n\t\t\t\t\t\t\t\tbox.innerHTML = '<div style=\"color:#64748b;padding:6px\">查無零件</div>';\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tlist.forEach(function(p){\n\t\t\t\t\t\t\t\tvar div = document.createElement('div');\n\t\t\t\t\t\t\t\tdiv.style.cssText = 'padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b';\n\t\t\t\t\t\t\t\tdiv.innerHTML = '<b>' + p.name + '</b> <span style=\"color:#64748b\">' + p.part_number + '</span>';\n\t\t\t\t\t\t\t\tdiv.addEventListener('click', function(){\n\t\t\t\t\t\t\t\t\tvar form = document.getElementById('addItemForm');\n\t\t\t\t\t\t\t\t\tform.querySelector('[name=\"description\"]').value = p.name;\n\t\t\t\t\t\t\t\t\tform.querySelector('[name=\"unit_price_f\"]').value = p.price;\n\t\t\t\t\t\t\t\t\tdocument.getElementById('inventoryItemId').value = p.id;\n\t\t\t\t\t\t\t\t\tdocument.getElementById('partNumber').value = p.part_number;\n\t\t\t\t\t\t\t\t\tbox.innerHTML = '';\n\t\t\t\t\t\t\t\t\tsearch.value = '';\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\tbox.appendChild(div);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t}, 300);\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<input type=\"search\" id=\"poPartSearch\" placeholder=\"搜尋庫存零件帶入（例：機油）\" hx-get=\"/api/parts\" hx-trigger=\"keyup changed delay:300ms\" hx-target=\"#po-part-results\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:8px\"><div id=\"po-part-results\" style=\"font-size:13px\"></div><script>\n\t\t// 點零件項目帶入表單（parts API 回 JSON，這裡監聽點擊）。\n\t\t(function(){\n\t\t\tvar box = document.getElementById('po-part-results');\n\t\t\tvar search = document.getElementById('poPartSearch');\n\t\t\tif (!box || !search) return;\n\t\t\tvar timer;\n\t\t\tsearch.addEventListener('input', function(){\n\t\t\t\tclearTimeout(timer);\n\t\t\t\ttimer = setTimeout(function(){\n\t\t\t\t\tvar q = search.value.trim();\n\t\t\t\t\tif (q.length < 1) { box.innerHTML = ''; return; }\n\t\t\t\t\tfetch('/api/parts?q=' + encodeURIComponent(q))\n\t\t\t\t\t\t.then(function(r){ return r.json(); })\n\t\t\t\t\t\t.then(function(list){\n\t\t\t\t\t\t\tbox.innerHTML = '';\n\t\t\t\t\t\t\tif (!list || list.length === 0) {\n\t\t\t\t\t\t\t\tbox.innerHTML = '<div style=\"color:#64748b;padding:6px\">查無零件</div>';\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tlist.forEach(function(p){\n\t\t\t\t\t\t\t\tvar div = document.createElement('div');\n\t\t\t\t\t\t\t\tdiv.style.cssText = 'padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b';\n\t\t\t\t\t\t\t\tdiv.innerHTML = '<b>' + p.name + '</b> <span style=\"color:#64748b\">' + p.part_number + '</span>';\n\t\t\t\t\t\t\t\tdiv.addEventListener('click', function(){\n\t\t\t\t\t\t\t\t\tvar form = document.getElementById('addItemForm');\n\t\t\t\t\t\t\t\t\tform.querySelector('[name=\"description\"]').value = p.name;\n\t\t\t\t\t\t\t\t\tform.querySelector('[name=\"unit_price_f\"]').value = p.price;\n\t\t\t\t\t\t\t\t\tdocument.getElementById('inventoryItemId').value = p.id;\n\t\t\t\t\t\t\t\t\tdocument.getElementById('partNumber').value = p.part_number;\n\t\t\t\t\t\t\t\t\tbox.innerHTML = '';\n\t\t\t\t\t\t\t\t\tsearch.value = '';\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\tbox.appendChild(div);\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t});\n\t\t\t\t}, 300);\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

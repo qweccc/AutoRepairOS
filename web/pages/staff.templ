@@ -35,6 +35,7 @@ templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
 			<div class="card">
 				<h2>新增員工 / 健保眷屬</h2>
 				<form class="frm" method="POST" action="/staff">
+					@components.CSRFInput()
 					<label>姓名<input name="name" required></label>
 					<label>帳號<input name="username" required></label>
 					<label>密碼<input name="password" type="password" required placeholder="首次登入後請改密碼"></label>

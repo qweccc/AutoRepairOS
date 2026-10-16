@@ -26,6 +26,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string) {
 		<div class="card">
 			<h2>新增客戶</h2>
 			<form class="frm" method="POST" action="/customers">
+				@components.CSRFInput()
 				<label>姓名<input name="name" required></label>
 				<label>電話<input name="phone" required></label>
 				<label>通知偏好
@@ -80,6 +81,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string) {
 								<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
 								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>催款單</a>
 								<a class="btn btn-d" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
+									hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
 									data-confirm="確定刪除這位客戶？">刪除</a>
 							</td>
 						</tr>
@@ -117,6 +119,7 @@ templ CustomerSearchRows(rows []CustomerRow) {
 				<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
 				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>催款單</a>
 				<a class="btn btn-d" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
+					hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
 					data-confirm="確定刪除這位客戶？">刪除</a>
 			</td>
 		</tr>

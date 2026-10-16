@@ -83,7 +83,7 @@ func main() {
 	// 未登入
 	mux.HandleFunc("GET /login", handler.LoginHandler)
 	mux.HandleFunc("POST /login", handler.LoginHandler)
-	mux.HandleFunc("GET /logout", handler.LogoutHandler)
+	mux.HandleFunc("POST /logout", handler.LogoutHandler)
 	mux.HandleFunc("GET /api/me", handler.MeHandler)
 	mux.HandleFunc("GET /api/vision/status", handler.RequireLogin(handler.VisionStatus))
 	mux.HandleFunc("POST /api/vision/recognize", handler.CounterUp(handler.RecognizePlate))
@@ -129,14 +129,14 @@ func main() {
 	mux.HandleFunc("POST /customers", handler.CounterUp(handler.CreateCustomer))
 	mux.HandleFunc("GET /customers/{id}/edit", handler.AllStaff(handler.EditCustomerForm))
 	mux.HandleFunc("POST /customers/{id}", handler.CounterUp(handler.UpdateCustomer))
-	mux.HandleFunc("GET /customers/{id}/delete", handler.OwnerOnly(handler.DeleteCustomer))
+	mux.HandleFunc("POST /customers/{id}/delete", handler.OwnerOnly(handler.DeleteCustomer))
 
 	// 車輛
 	mux.HandleFunc("GET /vehicles", handler.AllStaff(handler.ListVehicles))
 	mux.HandleFunc("POST /vehicles", handler.CounterUp(handler.CreateVehicle))
 	mux.HandleFunc("GET /vehicles/{id}/edit", handler.AllStaff(handler.EditVehicleForm))
 	mux.HandleFunc("POST /vehicles/{id}", handler.CounterUp(handler.UpdateVehicle))
-	mux.HandleFunc("GET /vehicles/{id}/delete", handler.OwnerOnly(handler.DeleteVehicle))
+	mux.HandleFunc("POST /vehicles/{id}/delete", handler.OwnerOnly(handler.DeleteVehicle))
 
 	// 車輛履歷
 	mux.HandleFunc("GET /vehicles/{id}", handler.AllStaff(handler.ShowVehicle))
@@ -151,7 +151,7 @@ func main() {
 	mux.HandleFunc("POST /work-orders/{id}/approval", handler.CounterUp(handler.UpdateWorkOrderApproval))
 	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
 	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))
-	mux.HandleFunc("GET /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))
+	mux.HandleFunc("POST /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))
 
 	// 庫存
 	mux.HandleFunc("GET /inventory", handler.AllStaff(handler.ListInventory))
@@ -160,7 +160,7 @@ func main() {
 	mux.HandleFunc("POST /inventory/{id}", handler.CounterUp(handler.UpdateInventoryItem))
 	mux.HandleFunc("GET /inventory/{id}/stock", handler.AllStaff(handler.StockAdjustForm))
 	mux.HandleFunc("POST /inventory/{id}/stock", handler.CounterUp(handler.ApplyStockAdjust))
-	mux.HandleFunc("GET /inventory/{id}/delete", handler.OwnerOnly(handler.DeleteInventoryItem))
+	mux.HandleFunc("POST /inventory/{id}/delete", handler.OwnerOnly(handler.DeleteInventoryItem))
 
 	// 庫存異動紀錄與舊系統負庫存補正。
 	//
@@ -176,16 +176,16 @@ func main() {
 	mux.HandleFunc("POST /suppliers", handler.CounterUp(handler.CreateSupplier))
 	mux.HandleFunc("GET /suppliers/{id}/edit", handler.CounterUpPage(handler.EditSupplierForm))
 	mux.HandleFunc("POST /suppliers/{id}", handler.CounterUp(handler.UpdateSupplier))
-	mux.HandleFunc("GET /suppliers/{id}/deactivate", handler.OwnerOnly(handler.DeactivateSupplier))
-	mux.HandleFunc("GET /suppliers/{id}/reactivate", handler.OwnerOnly(handler.ReactivateSupplier))
+	mux.HandleFunc("POST /suppliers/{id}/deactivate", handler.OwnerOnly(handler.DeactivateSupplier))
+	mux.HandleFunc("POST /suppliers/{id}/reactivate", handler.OwnerOnly(handler.ReactivateSupplier))
 
 	// 員工與健保資料（含健保眷屬）
 	mux.HandleFunc("GET /staff", handler.AllStaff(handler.ListStaff))
 	mux.HandleFunc("POST /staff", handler.CounterUpPage(handler.CreateStaff))
 	mux.HandleFunc("GET /staff/{id}/edit", handler.CounterUpPage(handler.EditStaffForm))
 	mux.HandleFunc("POST /staff/{id}", handler.CounterUp(handler.UpdateStaff))
-	mux.HandleFunc("GET /staff/{id}/deactivate", handler.OwnerOnly(handler.DeactivateStaff))
-	mux.HandleFunc("GET /staff/{id}/reactivate", handler.OwnerOnly(handler.ReactivateStaff))
+	mux.HandleFunc("POST /staff/{id}/deactivate", handler.OwnerOnly(handler.DeactivateStaff))
+	mux.HandleFunc("POST /staff/{id}/reactivate", handler.OwnerOnly(handler.ReactivateStaff))
 
 	// 舊系統補遷移：車輛投保紀錄 / 定檢排程 / 保養套餐 / 零用金
 	mux.HandleFunc("GET /insurances", handler.AllStaff(handler.ListVehicleInsurances))
@@ -193,13 +193,13 @@ func main() {
 	mux.HandleFunc("POST /insurances", handler.CounterUp(handler.CreateVehicleInsurance))
 	mux.HandleFunc("GET /insurances/{id}/edit", handler.CounterUpPage(handler.EditVehicleInsuranceForm))
 	mux.HandleFunc("POST /insurances/{id}", handler.CounterUp(handler.UpdateVehicleInsurance))
-	mux.HandleFunc("GET /insurances/{id}/delete", handler.CounterUp(handler.DeleteVehicleInsurance))
+	mux.HandleFunc("POST /insurances/{id}/delete", handler.CounterUp(handler.DeleteVehicleInsurance))
 	mux.HandleFunc("GET /inspections", handler.AllStaff(handler.ListVehicleInspections))
 	mux.HandleFunc("GET /inspections/new", handler.CounterUpPage(handler.NewVehicleInspectionForm))
 	mux.HandleFunc("POST /inspections", handler.CounterUp(handler.CreateVehicleInspection))
 	mux.HandleFunc("GET /inspections/{id}/edit", handler.CounterUpPage(handler.EditVehicleInspectionForm))
 	mux.HandleFunc("POST /inspections/{id}", handler.CounterUp(handler.UpdateVehicleInspection))
-	mux.HandleFunc("GET /inspections/{id}/delete", handler.CounterUp(handler.DeleteVehicleInspection))
+	mux.HandleFunc("POST /inspections/{id}/delete", handler.CounterUp(handler.DeleteVehicleInspection))
 	mux.HandleFunc("GET /maintenance-templates", handler.AllStaff(handler.ListMaintenanceTemplates))
 	// 保養套餐範本 CRUD（項目整批重寫）
 	mux.HandleFunc("GET /maintenance-templates/new", handler.CounterUpPage(handler.NewMaintenanceTemplateForm))
@@ -207,7 +207,7 @@ func main() {
 	mux.HandleFunc("GET /maintenance-templates/{id}/edit", handler.CounterUpPage(handler.EditMaintenanceTemplateForm))
 	mux.HandleFunc("POST /maintenance-templates/{id}", handler.CounterUp(handler.UpdateMaintenanceTemplate))
 	mux.HandleFunc("POST /maintenance-templates/{id}/items", handler.CounterUp(handler.ReplaceMaintenanceTemplateItems))
-	mux.HandleFunc("GET /maintenance-templates/{id}/delete", handler.CounterUp(handler.DeleteMaintenanceTemplate))
+	mux.HandleFunc("POST /maintenance-templates/{id}/delete", handler.CounterUp(handler.DeleteMaintenanceTemplate))
 	mux.HandleFunc("GET /expenses", handler.CounterUpPage(handler.ListExpenses))
 
 	// 收款沖銷（CAR35 Customer Pay，90,762 筆）——
@@ -217,21 +217,21 @@ func main() {
 	mux.HandleFunc("POST /receivables", handler.CounterUp(handler.CreateReceivable))
 	mux.HandleFunc("GET /receivables/{id}/edit", handler.CounterUpPage(handler.EditReceivableForm))
 	mux.HandleFunc("POST /receivables/{id}", handler.CounterUp(handler.UpdateReceivable))
-	mux.HandleFunc("GET /receivables/{id}/void", handler.OwnerOnly(handler.VoidReceivable))
+	mux.HandleFunc("POST /receivables/{id}/void", handler.OwnerOnly(handler.VoidReceivable))
 
 	// 保險公司（CAR35 P0-1：Company 表，理賠案件歸屬對象）
 	mux.HandleFunc("GET /insurance-companies", handler.AllStaff(handler.ListInsuranceCompanies))
 	mux.HandleFunc("POST /insurance-companies", handler.CounterUp(handler.CreateInsuranceCompany))
 	mux.HandleFunc("GET /insurance-companies/{id}/edit", handler.CounterUpPage(handler.EditInsuranceCompanyForm))
 	mux.HandleFunc("POST /insurance-companies/{id}", handler.CounterUp(handler.UpdateInsuranceCompany))
-	mux.HandleFunc("GET /insurance-companies/{id}/delete", handler.OwnerOnly(handler.DeactivateInsuranceCompany))
+	mux.HandleFunc("POST /insurance-companies/{id}/delete", handler.OwnerOnly(handler.DeactivateInsuranceCompany))
 
 	// Phase 2: 技師工時/佣金
 	mux.HandleFunc("GET /work-orders/{id}/worklogs", handler.AllStaff(handler.ListTechnicianWorklogs))
 	mux.HandleFunc("POST /work-orders/{id}/worklogs", handler.WithActor(handler.AddTechnicianWorklog))
 	mux.HandleFunc("GET /work-orders/{id}/worklogs/{log_id}/edit", handler.CounterUpPage(handler.EditTechnicianWorklogForm))
 	mux.HandleFunc("POST /work-orders/{id}/worklogs/{log_id}", handler.CounterUp(handler.UpdateTechnicianWorklog))
-	mux.HandleFunc("GET /work-orders/{id}/worklogs/{log_id}/delete", handler.CounterUp(handler.DeleteTechnicianWorklog))
+	mux.HandleFunc("POST /work-orders/{id}/worklogs/{log_id}/delete", handler.CounterUp(handler.DeleteTechnicianWorklog))
 	mux.HandleFunc("GET /technicians/commissions", handler.AllStaff(handler.ListTechnicianCommissions))
 
 	// Phase 2: 收據列印
@@ -254,7 +254,7 @@ func main() {
 	// Phase 2: 照片上傳
 	mux.HandleFunc("GET /work-orders/{id}/photos", handler.AllStaff(handler.ListWorkOrderPhotos))
 	mux.HandleFunc("POST /work-orders/{id}/photos", handler.CounterUp(handler.UploadWorkOrderPhoto))
-	mux.HandleFunc("GET /work-orders/{id}/photos/{photo_id}/delete", handler.CounterUp(handler.DeleteWorkOrderPhoto))
+	mux.HandleFunc("POST /work-orders/{id}/photos/{photo_id}/delete", handler.CounterUp(handler.DeleteWorkOrderPhoto))
 	mux.HandleFunc("GET /photos/{filename}", handler.RequireLogin(handler.ServePhoto))
 
 	// Phase 3: 排程 + 報表
@@ -263,15 +263,15 @@ func main() {
 	mux.HandleFunc("POST /lookup", handler.CounterUp(handler.CreateLookupItem))
 	mux.HandleFunc("GET /lookup/{id}/edit", handler.CounterUpPage(handler.EditLookupItemForm))
 	mux.HandleFunc("POST /lookup/{id}", handler.CounterUp(handler.UpdateLookupItem))
-	mux.HandleFunc("GET /lookup/{id}/deactivate", handler.OwnerOnly(handler.DeactivateLookupItem))
-	mux.HandleFunc("GET /lookup/{id}/reactivate", handler.OwnerOnly(handler.ReactivateLookupItem))
+	mux.HandleFunc("POST /lookup/{id}/deactivate", handler.OwnerOnly(handler.DeactivateLookupItem))
+	mux.HandleFunc("POST /lookup/{id}/reactivate", handler.OwnerOnly(handler.ReactivateLookupItem))
 	mux.HandleFunc("GET /scheduled-tasks", handler.AllStaff(handler.ListScheduledTasks))
-	mux.HandleFunc("GET /scheduled-tasks/{key}/toggle", handler.OwnerOnly(handler.ToggleScheduledTask))
-	mux.HandleFunc("GET /scheduled-tasks/backups/run", handler.OwnerOnly(handler.RunBackupNow))
-	mux.HandleFunc("GET /scheduled-tasks/notifications/run", handler.OwnerOnly(handler.RunNotificationsNow))
-	mux.HandleFunc("GET /scheduled-tasks/maintenance-due/run", handler.OwnerOnly(handler.RunMaintenanceScanNow))
-	mux.HandleFunc("GET /scheduled-tasks/work-order-ready/run", handler.OwnerOnly(handler.RunWorkOrderReadyNow))
-	mux.HandleFunc("GET /notifications/{id}/cancel", handler.OwnerOnly(handler.CancelNotification))
+	mux.HandleFunc("POST /scheduled-tasks/{key}/toggle", handler.OwnerOnly(handler.ToggleScheduledTask))
+	mux.HandleFunc("POST /scheduled-tasks/backups/run", handler.OwnerOnly(handler.RunBackupNow))
+	mux.HandleFunc("POST /scheduled-tasks/notifications/run", handler.OwnerOnly(handler.RunNotificationsNow))
+	mux.HandleFunc("POST /scheduled-tasks/maintenance-due/run", handler.OwnerOnly(handler.RunMaintenanceScanNow))
+	mux.HandleFunc("POST /scheduled-tasks/work-order-ready/run", handler.OwnerOnly(handler.RunWorkOrderReadyNow))
+	mux.HandleFunc("POST /notifications/{id}/cancel", handler.OwnerOnly(handler.CancelNotification))
 	mux.HandleFunc("GET /reports", handler.AllStaff(handler.ReportsHome))
 
 	// 經營分析（SRS 5.12）：KPI、損益分拆、留存、方案成效、死頭料、CSV 匯出
@@ -283,7 +283,7 @@ func main() {
 	mux.HandleFunc("POST /appointments", handler.CounterUp(handler.CreateAppointment))
 	mux.HandleFunc("GET /appointments/{id}/edit", handler.AllStaff(handler.EditAppointmentForm))
 	mux.HandleFunc("POST /appointments/{id}", handler.CounterUp(handler.UpdateAppointment))
-	mux.HandleFunc("GET /appointments/{id}/delete", handler.OwnerOnly(handler.DeleteAppointment))
+	mux.HandleFunc("POST /appointments/{id}/delete", handler.OwnerOnly(handler.DeleteAppointment))
 
 	// 車輛里程履歷（FR-VH-03）：進廠工單自動帶入，也可手動登錄
 	mux.HandleFunc("GET /vehicles/{id}/mileage/new", handler.CounterUpPage(handler.AddVehicleMileageForm))
@@ -294,17 +294,17 @@ func main() {
 	mux.HandleFunc("POST /subcontracts", handler.CounterUp(handler.CreateSubcontract))
 	mux.HandleFunc("GET /subcontracts/{id}/edit", handler.AllStaff(handler.EditSubcontractForm))
 	mux.HandleFunc("POST /subcontracts/{id}", handler.CounterUp(handler.UpdateSubcontract))
-	mux.HandleFunc("GET /subcontracts/{id}/delete", handler.OwnerOnly(handler.DeleteSubcontract))
+	mux.HandleFunc("POST /subcontracts/{id}/delete", handler.OwnerOnly(handler.DeleteSubcontract))
 
 	// 設備管理（SRS 5.11）
 	mux.HandleFunc("GET /equipment", handler.AllStaff(handler.ListEquipment))
 	mux.HandleFunc("POST /equipment", handler.CounterUp(handler.CreateEquipment))
 	mux.HandleFunc("GET /equipment/{id}/edit", handler.AllStaff(handler.EditEquipmentForm))
 	mux.HandleFunc("POST /equipment/{id}", handler.CounterUp(handler.UpdateEquipment))
-	mux.HandleFunc("GET /equipment/{id}/delete", handler.OwnerOnly(handler.DeleteEquipment))
+	mux.HandleFunc("POST /equipment/{id}/delete", handler.OwnerOnly(handler.DeleteEquipment))
 	mux.HandleFunc("GET /equipment/{id}/maintenance", handler.AllStaff(handler.ListEquipmentMaintenance))
 	mux.HandleFunc("POST /equipment/{id}/maintenance", handler.CounterUp(handler.CreateEquipmentMaintenance))
-	mux.HandleFunc("GET /equipment/{id}/maintenance/{maint_id}/delete", handler.OwnerOnly(handler.DeleteEquipmentMaintenance))
+	mux.HandleFunc("POST /equipment/{id}/maintenance/{maint_id}/delete", handler.OwnerOnly(handler.DeleteEquipmentMaintenance))
 
 	// 進貨單（採購進貨：品項 + 應付總額）
 	mux.HandleFunc("GET /purchase-orders", handler.AllStaff(handler.ListPurchaseOrders))
@@ -313,8 +313,8 @@ func main() {
 	mux.HandleFunc("GET /purchase-orders/{id}", handler.AllStaff(handler.ShowPurchaseOrder))
 	mux.HandleFunc("POST /purchase-orders/{id}/items", handler.CounterUp(handler.AddPurchaseOrderItem))
 	mux.HandleFunc("DELETE /purchase-orders/{id}/items/{itemId}", handler.CounterUp(handler.DeletePurchaseOrderItem))
-	mux.HandleFunc("GET /purchase-orders/{id}/receive", handler.CounterUp(handler.ReceivePurchaseOrder))
-	mux.HandleFunc("GET /purchase-orders/{id}/delete", handler.CounterUp(handler.DeletePurchaseOrder))
+	mux.HandleFunc("POST /purchase-orders/{id}/receive", handler.CounterUp(handler.ReceivePurchaseOrder))
+	mux.HandleFunc("POST /purchase-orders/{id}/delete", handler.CounterUp(handler.DeletePurchaseOrder))
 
 	port := cfg.Port
 	if port == "" {
@@ -358,7 +358,7 @@ func main() {
 	}()
 
 	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(":"+port, handler.CSRFProtection(mux)); err != nil {
 		// 用 log.Printf + shutdown + os.Exit 取代 log.Fatal：
 		// log.Fatal 內部是 os.Exit(1)，同樣會跳過 defer，DB 不會被關閉。
 		log.Printf("HTTP 服務結束: %v", err)

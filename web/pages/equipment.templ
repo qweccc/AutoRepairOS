@@ -24,6 +24,7 @@ templ ListEquipmentPage(rows []EquipmentRow, total, page, size int, q, status st
 		<div class="card">
 			<h2>新增設備</h2>
 			<form class="frm" method="POST" action="/equipment">
+				@components.CSRFInput()
 				<label>設備名稱<input name="name" required></label>
 				<label>型號<input name="model"></label>
 				<label>序號<input name="serial_number"></label>
@@ -80,6 +81,7 @@ templ EquipmentRowContent(e EquipmentRow) {
 			<a class="btn btn-s" href={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/edit" }>編輯</a>
 			<a class="btn btn-o" href={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/maintenance" }>保養</a>
 			<a class="btn btn-d" href={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/delete" }
+				hx-post={ "/equipment/" + strconv.FormatInt(e.ID, 10) + "/delete" }
 				data-confirm="確定刪除這台設備？">刪除</a>
 		</td>
 	</tr>

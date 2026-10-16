@@ -21,10 +21,10 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 	tb.WriteString(`<table><tr><th>任務</th><th>識別碼</th><th>頻率</th><th>狀態</th><th>上次執行</th><th>下次執行</th><th>次數</th><th>操作</th></tr>`)
 	for _, s := range statuses {
 		pill := `<span class="pill p-completed">啟用</span>`
-		toggleBtn := `<a class="btn btn-o" href="/scheduled-tasks/` + htmlEsc(s.Key) + `/toggle">停用</a>`
+		toggleBtn := `<form method="POST" action="/scheduled-tasks/` + htmlEsc(s.Key) + `/toggle" style="display:inline"><button class="btn btn-o" type="submit">停用</button></form>`
 		if !s.Enabled {
 			pill = `<span class="pill p-pending">停用</span>`
-			toggleBtn = `<a class="btn btn-p" href="/scheduled-tasks/` + htmlEsc(s.Key) + `/toggle">啟用</a>`
+			toggleBtn = `<form method="POST" action="/scheduled-tasks/` + htmlEsc(s.Key) + `/toggle" style="display:inline"><button class="btn btn-p" type="submit">啟用</button></form>`
 		}
 		lastErr := ""
 		if s.LastError != "" {
@@ -89,8 +89,8 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 
 		action := `<span style="color:#64748b">—</span>`
 		if n.Status == "pending" {
-			action = `<a class="btn btn-d" href="/notifications/` + strconv.FormatInt(n.ID, 10) +
-				`/cancel" onclick="return confirm('取消這筆通知？')">取消</a>`
+			action = `<form method="POST" action="/notifications/` + strconv.FormatInt(n.ID, 10) +
+				`/cancel" style="display:inline" onsubmit="return confirm('取消這筆通知？')"><button class="btn btn-d" type="submit">取消</button></form>`
 		}
 
 		nb.WriteString(`<tr><td>` + strconv.FormatInt(n.ID, 10) + `</td><td>` + htmlEsc(kindLabel) +

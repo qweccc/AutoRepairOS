@@ -67,7 +67,7 @@ func ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div style=\"margin-top:14px\"><a class=\"btn btn-p\" href=\"/scheduled-tasks/backups/run\">立即執行備份</a> <a class=\"btn btn-s\" href=\"/scheduled-tasks/notifications/run\">立即處理通知佇列</a> <a class=\"btn btn-s\" href=\"/scheduled-tasks/maintenance-due/run\">立即掃描保養到期</a></div></div><div class=\"card\"><h2>通知紀錄</h2><p style=\"color:#64748b;font-size:12.5px;margin:0 0 6px\">待處理 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div style=\"margin-top:14px\"><a class=\"btn btn-p\" href=\"/scheduled-tasks/backups/run\" hx-post=\"/scheduled-tasks/backups/run\">立即執行備份</a> <a class=\"btn btn-s\" href=\"/scheduled-tasks/notifications/run\" hx-post=\"/scheduled-tasks/notifications/run\">立即處理通知佇列</a> <a class=\"btn btn-s\" href=\"/scheduled-tasks/maintenance-due/run\" hx-post=\"/scheduled-tasks/maintenance-due/run\">立即掃描保養到期</a></div></div><div class=\"card\"><h2>通知紀錄</h2><p style=\"color:#64748b;font-size:12.5px;margin:0 0 6px\">待處理 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

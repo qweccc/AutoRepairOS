@@ -28,6 +28,7 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 		<div class="card">
 			<h2>新增預約</h2>
 			<form class="frm" method="POST" action="/appointments">
+				@components.CSRFInput()
 				<label>客戶
 					<select name="customer_id" required>
 						<option value="">請選擇客戶</option>
@@ -111,6 +112,7 @@ templ AppointmentRowContent(a AppointmentRow) {
 		<td>
 			<a class="btn btn-s" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/edit" }>編輯</a>
 			<a class="btn btn-d" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }
+				hx-post={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }
 				data-confirm="確定刪除這筆預約？">刪除</a>
 		</td>
 	</tr>

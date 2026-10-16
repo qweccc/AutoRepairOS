@@ -28,6 +28,7 @@ templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype stri
 			<div class="card">
 				<h2>新增廠商</h2>
 				<form class="frm" method="POST" action="/suppliers">
+					@components.CSRFInput()
 					<label>名稱<input name="name" required placeholder="如：○○輪胎行"></label>
 					<label>類型<select name="vendor_type">
 						<option value="material">材料商</option>
@@ -116,7 +117,8 @@ templ SupplierRowContent(s SupplierRow) {
 		<td style="font-size:12px;color:#94a3b8">{ s.Notes }</td>
 		<td>
 			if s.Active == 0 {
-				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }>復用</a>
+				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }
+					hx-post={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }>復用</a>
 			}
 			if s.Active != 0 {
 				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>

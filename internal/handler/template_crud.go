@@ -145,8 +145,8 @@ func EditMaintenanceTemplateForm(w http.ResponseWriter, r *http.Request, user mo
 
       <div style="margin-top:18px;padding-top:14px;border-top:1px solid #334155">
         <a class="btn btn-p" href="/maintenance-templates">返回列表</a>
-        <a class="btn btn-d" href="/maintenance-templates/` + strconv.FormatInt(id, 10) +
-		`/delete" onclick="return confirm('確定刪除套餐「` + htmlEsc(code) + `」？已開出的工單不受影響。')">刪除套餐</a>
+        <form method="POST" action="/maintenance-templates/` + strconv.FormatInt(id, 10) +
+		`/delete" style="display:inline" onsubmit="return confirm('確定刪除套餐「` + htmlEsc(code) + `」？已開出的工單不受影響。')"><button class="btn btn-d" type="submit">刪除套餐</button></form>
       </div>
     </div>
 

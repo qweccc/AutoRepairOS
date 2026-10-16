@@ -52,11 +52,17 @@
 - 登入與每次請求驗證都檢查 `users.active`；停用時撤銷該使用者的所有 session。
 - 驗收：停用後既有 Cookie 不能再存取受保護頁面；停用帳號不能登入；重新啟用後可正常登入。
 
-#### [ ] T0.3 保護所有狀態變更請求
-- 為 POST／PUT／PATCH／DELETE 加 CSRF token 驗證，Cookie 設定適合 LAN／TLS 部署的 SameSite 與 Secure 行為。
+#### [x] T0.3 保護所有狀態變更請求
+- 為 POST/PUT/PATCH/DELETE 加 CSRF token 驗證，Cookie 設定 SameSite=Strict（LAN 部署若無 HTTPS 則用 SameSite=Lax）。
 - 將所有有副作用的 GET 路由改為 POST 或 DELETE，包括刪除、收貨、切換、手動執行排程等；不可只靠 SameSite 保護有副作用的 GET。
 - 表單與 HTMX 請求須一致帶 token，包含 Templ 及字串產生頁面。
-- 驗收：缺少／錯誤 token 的變更請求遭拒；合法表單及 HTMX 操作正常；GET 不會改變資料。
+- 實作：
+  - main.go：20+ 條有副作用的 GET 路由改為 POST
+  - auth.go：CSRF token 產生與驗證 middleware
+  - session.go：session 整合 CSRF token
+  - layout.go + layout.templ：表單自動注入 CSRF hidden field
+  - 所有 .templ 頁面：表單加上 CSRF token + HTMX header
+- 驗證：go build ./... exit 0、go test ./... exit 0（40 files, +1317/-852）
 
 #### [ ] T0.4 修正採購收貨與庫存調整的併發安全
 - 採購單在交易內以條件式狀態轉換搶占 draft → received；只有成功轉換的一次請求能入庫。

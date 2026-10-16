@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"database/sql"
@@ -20,6 +21,19 @@ const (
 	tokenEntropy = 32 // bytes
 )
 
+type csrfContextKey struct{}
+
+// WithCSRFToken adds a session's CSRF token to the request context for rendering.
+func WithCSRFToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, csrfContextKey{}, token)
+}
+
+// CSRFTokenFromContext returns the CSRF token attached by CSRFProtection.
+func CSRFTokenFromContext(ctx context.Context) string {
+	token, _ := ctx.Value(csrfContextKey{}).(string)
+	return token
+}
+
 // Start 為指定使用者建立新 session，回傳 token。
 func Start(userID int64) (string, error) {
 	raw := make([]byte, tokenEntropy)
@@ -29,13 +43,53 @@ func Start(userID int64) (string, error) {
 	// base64.RawURLEncoding：只含 URL-safe 字元，可直接放 cookie
 	token := base64.RawURLEncoding.EncodeToString(raw)
 
+	csrfRaw := make([]byte, tokenEntropy)
+	if _, err := rand.Read(csrfRaw); err != nil {
+		return "", fmt.Errorf("產生 CSRF token 失敗: %v", err)
+	}
+	csrfToken := base64.RawURLEncoding.EncodeToString(csrfRaw)
+
 	if _, err := db.DB.Exec(
-		"INSERT INTO sessions (id, user_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
-		token, userID,
+		"INSERT INTO sessions (id, user_id, csrf_token, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+		token, userID, csrfToken,
 	); err != nil {
 		return "", fmt.Errorf("寫入 session 失敗: %v", err)
 	}
 
+	return token, nil
+}
+
+// CSRFToken returns the token stored with a session, initializing older sessions
+// created before CSRF protection was installed.
+func CSRFToken(sessionToken string) (string, error) {
+	if strings.TrimSpace(sessionToken) == "" {
+		return "", sql.ErrNoRows
+	}
+
+	var token string
+	err := db.DB.QueryRow("SELECT csrf_token FROM sessions WHERE id = ?", sessionToken).Scan(&token)
+	if err != nil {
+		return "", err
+	}
+	if token != "" {
+		return token, nil
+	}
+
+	raw := make([]byte, tokenEntropy)
+	if _, err := rand.Read(raw); err != nil {
+		return "", fmt.Errorf("產生 CSRF token 失敗: %v", err)
+	}
+	token = base64.RawURLEncoding.EncodeToString(raw)
+	if _, err := db.DB.Exec(
+		"UPDATE sessions SET csrf_token = ? WHERE id = ? AND csrf_token = ''",
+		token, sessionToken,
+	); err != nil {
+		return "", fmt.Errorf("儲存 CSRF token 失敗: %v", err)
+	}
+
+	if err := db.DB.QueryRow("SELECT csrf_token FROM sessions WHERE id = ?", sessionToken).Scan(&token); err != nil {
+		return "", err
+	}
 	return token, nil
 }
 
@@ -95,26 +149,35 @@ func parseTime(s string) (time.Time, error) {
 }
 
 // SetCookie 把 token 寫進 HttpOnly cookie。
-func SetCookie(w http.ResponseWriter, token string) {
+func SetCookie(w http.ResponseWriter, r *http.Request, token string) {
+	secure := requestIsSecure(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieName,
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // 本機 HTTP 部署；上線走 TLS 時應改為 true
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   int(sessionTTL.Seconds()),
 	})
 }
 
 // ClearCookie 清除瀏覽器端的 cookie。
-func ClearCookie(w http.ResponseWriter) {
+func ClearCookie(w http.ResponseWriter, r *http.Request) {
+	secure := requestIsSecure(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
 	})
+}
+
+func requestIsSecure(r *http.Request) bool {
+	return r.TLS != nil || strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")), "https")
 }
 
 // TokenFromRequest 取出請求中的 session token。

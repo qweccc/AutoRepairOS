@@ -32,6 +32,7 @@ templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 		<div class="card">
 			<h2>新增車輛</h2>
 			<form class="frm" method="POST" action="/vehicles">
+				@components.CSRFInput()
 				@components.PlateScanUI(vehiclePlateFieldMap)
 				<label>所屬客戶（編號 / 姓名 / 電話）<input name="customer_query" required placeholder="例：王小明 或 0912345678 或 1234"></label>
 				<label>車牌號碼<input name="plate_number" required></label>
@@ -139,6 +140,7 @@ templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 									<a class="btn btn-o" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) }>履歷</a>
 									<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit" }>編輯</a>
 									<a class="btn btn-d" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete" }
+										hx-post={ "/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete" }
 										data-confirm="確定刪除這台車？">刪除</a>
 								</td>
 							</tr>

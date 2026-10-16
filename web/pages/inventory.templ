@@ -33,6 +33,7 @@ templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, si
 		<div class="card">
 			<h2>新增零件</h2>
 			<form class="frm" method="POST" action="/inventory">
+				@components.CSRFInput()
 				<label>料號<input name="part_number" required></label>
 				<label>名稱<input name="name" required></label>
 				<label>類別
@@ -124,6 +125,7 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 			<a class="btn btn-s" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/edit" }>編輯</a>
 			<a class="btn btn-o" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/stock" }>調庫</a>
 			<a class="btn btn-d" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/delete" }
+				hx-post={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/delete" }
 				data-confirm="確定刪除此零件？">刪除</a>
 		</td>
 	</tr>

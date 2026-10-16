@@ -101,6 +101,7 @@ templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) {
 				<div class="msg msg-err">{ errMsg }</div>
 			}
 			<form class="frm" id="newPurchaseOrderForm" method="POST" action="/purchase-orders">
+				@components.CSRFInput()
 				<label>供應商（廠商）
 					<select name="supplier_id" required>
 						<option value="">請選擇供應商</option>
@@ -178,14 +179,17 @@ templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderI
 						hx-swap="innerHTML"
 						hx-on::after-request="if(event.detail.successful) this.reset();"
 						style="display:inline">
+						@components.CSRFInput()
 						<button class="btn btn-p" type="submit">＋ 加入品項（於下方表單）</button>
 					</form>
 					<a class="btn btn-o" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive" }
+						hx-post={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive" }
 						data-confirm="確認進貨？將把品項數量加回庫存，之後不可修改。">✓ 確認進貨</a>
 				}
 				<a class="btn btn-s" href="/purchase-orders">回列表</a>
 				if !locked {
 					<a class="btn btn-d" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete" }
+						hx-post={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete" }
 						data-confirm="確定刪除此進貨單？">刪除</a>
 				}
 			</div>
@@ -256,6 +260,7 @@ templ AddPurchaseItemForm(orderID int64, partCategoryOptions string) {
 		hx-swap="innerHTML"
 		hx-on::after-request="if(event.detail.successful) this.reset();"
 		style="margin-top:18px">
+		@components.CSRFInput()
 		<label class="full">品項名稱
 			<input name="description" required placeholder="例：機油 5W-30 或 掃描/選擇下方零件帶入">
 		</label>

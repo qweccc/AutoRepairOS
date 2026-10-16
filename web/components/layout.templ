@@ -2,6 +2,7 @@ package components
 
 import (
 	"autorepairos/internal/nav"
+	"autorepairos/internal/session"
 )
 
 // Layout 全站共用版面：header + nav + main。
@@ -15,13 +16,16 @@ templ Layout(title, active, username, role, appName string) {
 			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/htmx.min.js"></script>
 		</head>
-		<body>
+		<body hx-headers={ `{"X-CSRF-Token":"` + session.CSRFTokenFromContext(ctx) + `"}` }>
 			<header>
 				<h1>🔧 { appName }</h1>
 				<div class="user">
 					登入中：<code>{ username }</code>
 					<span class="badge">{ role }</span>
-					<a href="/logout" class="logout">登出</a>
+					<form method="POST" action="/logout" style="display:inline">
+						@CSRFInput()
+						<button class="logout" type="submit">登出</button>
+					</form>
 				</div>
 			</header>
 			<div class="shell">
@@ -34,6 +38,10 @@ templ Layout(title, active, username, role, appName string) {
 			</div>
 		</body>
 	</html>
+}
+
+templ CSRFInput() {
+	<input type="hidden" name="_csrf" value={ session.CSRFTokenFromContext(ctx) }/>
 }
 
 // NavItems 側邊導覽列。
