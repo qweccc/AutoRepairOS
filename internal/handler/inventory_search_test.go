@@ -36,8 +36,14 @@ func TestSearchInventoryAPICostVisibility(t *testing.T) {
 				selling_price REAL,
 				stock_quantity INTEGER,
 				min_safety_stock INTEGER,
-				item_kind TEXT
+				item_kind TEXT,
+				deleted_at TEXT
 			)`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = d.Exec(`CREATE VIEW active_inventory_items AS
+				SELECT * FROM inventory_items WHERE deleted_at IS NULL`)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -47,7 +53,12 @@ func TestSearchInventoryAPICostVisibility(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, err = d.Exec(`CREATE TABLE suppliers (id INTEGER PRIMARY KEY, name TEXT)`)
+			_, err = d.Exec(`CREATE TABLE suppliers (id INTEGER PRIMARY KEY, name TEXT, deleted_at TEXT)`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = d.Exec(`CREATE VIEW active_suppliers AS
+				SELECT * FROM suppliers WHERE deleted_at IS NULL`)
 			if err != nil {
 				t.Fatal(err)
 			}

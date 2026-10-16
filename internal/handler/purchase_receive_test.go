@@ -24,25 +24,30 @@ func setupPurchaseTestDB(t *testing.T) {
 func createPurchaseTestSchema(t *testing.T, d *sql.DB) {
 	t.Helper()
 	stmts := []string{
-		`CREATE TABLE suppliers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)`,
+		`CREATE TABLE suppliers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, deleted_at TEXT)`,
 		`CREATE TABLE purchase_orders (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			supplier_id INTEGER, order_date TEXT, status TEXT, total_amount REAL DEFAULT 0,
-			notes TEXT, created_by INTEGER, created_at TEXT, received_at TEXT)`,
+			notes TEXT, created_by INTEGER, created_at TEXT, received_at TEXT, deleted_at TEXT)`,
 		`CREATE TABLE purchase_order_items (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			order_id INTEGER NOT NULL, inventory_item_id INTEGER DEFAULT 0,
 			description TEXT DEFAULT '', part_number TEXT DEFAULT '', category TEXT DEFAULT '',
-			quantity REAL DEFAULT 0, unit_cost REAL DEFAULT 0, subtotal REAL DEFAULT 0)`,
+			quantity REAL DEFAULT 0, unit_cost REAL DEFAULT 0, subtotal REAL DEFAULT 0,
+			deleted_at TEXT)`,
 		`CREATE TABLE inventory_items (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			supplier_id INTEGER, part_number TEXT NOT NULL UNIQUE, barcode TEXT,
 			name TEXT NOT NULL, bin_location TEXT NOT NULL, category TEXT DEFAULT '',
 			item_kind TEXT NOT NULL DEFAULT 'part', cost_price REAL DEFAULT 0,
 			selling_price REAL DEFAULT 0, stock_quantity INTEGER DEFAULT 0,
-			min_safety_stock INTEGER DEFAULT 5)`,
+			min_safety_stock INTEGER DEFAULT 5, deleted_at TEXT)`,
 		`CREATE TABLE inventory_movements (id INTEGER PRIMARY KEY AUTOINCREMENT,
 			inventory_item_id INTEGER NOT NULL, delta INTEGER NOT NULL,
 			before_quantity INTEGER DEFAULT 0, after_quantity INTEGER DEFAULT 0,
 			reason TEXT DEFAULT '', source TEXT NOT NULL DEFAULT 'manual',
 			work_order_id INTEGER, created_by INTEGER, purchase_order_item_id INTEGER)`,
+		`CREATE VIEW active_suppliers AS SELECT * FROM suppliers WHERE deleted_at IS NULL`,
+		`CREATE VIEW active_purchase_orders AS SELECT * FROM purchase_orders WHERE deleted_at IS NULL`,
+		`CREATE VIEW active_purchase_order_items AS SELECT * FROM purchase_order_items WHERE deleted_at IS NULL`,
+		`CREATE VIEW active_inventory_items AS SELECT * FROM inventory_items WHERE deleted_at IS NULL`,
 	}
 	for _, s := range stmts {
 		if _, err := d.Exec(s); err != nil {

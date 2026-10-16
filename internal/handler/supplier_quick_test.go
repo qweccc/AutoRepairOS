@@ -27,8 +27,13 @@ func setupSupplierTestDB(t *testing.T) {
 		notes TEXT,
 		vendor_type TEXT,
 		payment_terms TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		deleted_at TEXT
 	)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.DB.Exec(`CREATE VIEW active_suppliers AS
+		SELECT * FROM suppliers WHERE deleted_at IS NULL`); err != nil {
 		t.Fatal(err)
 	}
 }
