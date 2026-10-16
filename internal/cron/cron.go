@@ -2,6 +2,7 @@ package cron
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -282,7 +283,7 @@ func RecentNotifications(limit int) []Notification {
 func queryNotifications(clause string, limit int) []Notification {
 	rows, err := db.DB.Query(`SELECT id, COALESCE(work_order_id,0), COALESCE(customer_id,0),
 		channel, kind, COALESCE(subject,''), body, scheduled_at, COALESCE(sent_at,''),
-		status, COALESCE(retry_count,0)
+		status, COALESCE(retry_count,0), COALESCE(error_message,'')
 		FROM notifications`+clause+` LIMIT ?`, limit)
 	if err != nil {
 		return nil
@@ -293,7 +294,7 @@ func queryNotifications(clause string, limit int) []Notification {
 	for rows.Next() {
 		var n Notification
 		if err := rows.Scan(&n.ID, &n.WorkOrderID, &n.CustomerID, &n.Channel, &n.Kind,
-			&n.Subject, &n.Body, &n.ScheduledAt, &n.SentAt, &n.Status, &n.RetryCount); err != nil {
+			&n.Subject, &n.Body, &n.ScheduledAt, &n.SentAt, &n.Status, &n.RetryCount, &n.ErrorMessage); err != nil {
 			continue
 		}
 		out = append(out, n)
@@ -302,17 +303,18 @@ func queryNotifications(clause string, limit int) []Notification {
 }
 
 type Notification struct {
-	ID          int64
-	WorkOrderID int64
-	CustomerID  int64
-	Channel     string
-	Kind        string
-	Subject     string
-	Body        string
-	ScheduledAt string
-	SentAt      string
-	Status      string
-	RetryCount  int
+	ID           int64
+	WorkOrderID  int64
+	CustomerID   int64
+	Channel      string
+	Kind         string
+	Subject      string
+	Body         string
+	ScheduledAt  string
+	SentAt       string
+	Status       string
+	RetryCount   int
+	ErrorMessage string
 }
 
 // processNotifications 由排程器定期呼叫；channel=internal 僅記錄不外送。
@@ -327,26 +329,48 @@ func ProcessNotificationsNow() int {
 	return n
 }
 
+const (
+	maxNotificationRetries = 3
+	notificationLease      = 2 * time.Minute
+)
+
+var notificationRetryBackoff = [...]time.Duration{
+	time.Minute,
+	5 * time.Minute,
+	15 * time.Minute,
+}
+
+type notificationItem struct {
+	id, custID, workOrderID int64
+	channel, kind, subject  string
+	body, lineUserID        string
+}
+
 func processPendingNotifications() (int, error) {
+	cfg, client := line.Shared()
+	return processPendingNotificationsWithSender(func(it notificationItem) error {
+		return deliver(cfg, client, it)
+	})
+}
+
+func processPendingNotificationsWithSender(send func(notificationItem) error) (int, error) {
+	scanTime := time.Now().UTC()
+	leaseExpired := dbTime(scanTime.Add(-notificationLease))
 	rows, err := db.DB.Query(`SELECT n.id, COALESCE(n.customer_id,0), n.channel, n.kind,
 			COALESCE(n.subject,''), n.body, COALESCE(n.work_order_id,0),
 			COALESCE(c.line_user_id,'')
 		FROM notifications n
 		LEFT JOIN active_customers c ON c.id = n.customer_id
-		WHERE n.status='pending' AND n.scheduled_at <= ?
-		ORDER BY n.scheduled_at LIMIT 50`, nowDBTime())
+		WHERE (n.status='pending' AND n.scheduled_at <= ?)
+		   OR (n.status='processing' AND n.processing_at <= ?)
+		ORDER BY n.scheduled_at LIMIT 50`, dbTime(scanTime), leaseExpired)
 	if err != nil {
 		return 0, err
 	}
 
-	type item struct {
-		id, custID, workOrderID int64
-		channel, kind, subject  string
-		body, lineUserID        string
-	}
-	var items []item
+	var items []notificationItem
 	for rows.Next() {
-		var it item
+		var it notificationItem
 		// Scan 的目標數必須與 SELECT 欄位数完全一致；不一致時 Scan 會回錯，
 		// 而原本的 `continue` 會把整列靜默丟棄，結果是「查得到但一筆都沒處理」。
 		if err := rows.Scan(&it.id, &it.custID, &it.channel, &it.kind,
@@ -356,69 +380,163 @@ func processPendingNotifications() (int, error) {
 		}
 		items = append(items, it)
 	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, err
+	}
 	rows.Close()
 
-	cfg, client := line.Shared()
-
-	var sent, failed int
+	var sent, failed, claimed int
 	for _, it := range items {
+		now := time.Now().UTC()
+		leaseExpired = dbTime(now.Add(-notificationLease))
+		ok, claimToken, err := claimNotification(it.id, now, leaseExpired)
+		if err != nil {
+			return claimed, err
+		}
+		if !ok {
+			continue
+		}
+		claimed++
+
 		switch it.channel {
 		case "internal", "none":
 			// 不外送，直接標記完成，讓佇列不阻塞。
-			markSent(it.id)
+			if err := markSent(it.id, claimToken); err != nil {
+				return claimed, err
+			}
 			sent++
 
 		case "line", "sms":
-			// 沒有綁定 LINE user ID 就無法推播，標記失敗並記錄原因，
-			// 不要靜默標成已送——否則 UI 會顯示「已送達」但客戶根本沒收到。
 			if it.lineUserID == "" {
-				markFailed(it.id, "客戶未綁定 LINE user ID")
+				if err := markFailed(it.id, "客戶未綁定 LINE user ID", true, now, claimToken); err != nil {
+					return claimed, err
+				}
 				failed++
 				continue
 			}
-			if err := deliver(cfg, client, it); err != nil {
-				markFailed(it.id, err.Error())
+			if err := send(it); err != nil {
+				if markErr := markFailed(it.id, err.Error(), isPermanentNotificationError(err), now, claimToken); markErr != nil {
+					return claimed, markErr
+				}
 				failed++
 				continue
 			}
-			markSent(it.id)
+			if err := markSent(it.id, claimToken); err != nil {
+				return claimed, err
+			}
 			sent++
 
 		default:
-			markFailed(it.id, "不支援的通知通道: "+it.channel)
+			if err := markFailed(it.id, "不支援的通知通道: "+it.channel, true, now, claimToken); err != nil {
+				return claimed, err
+			}
 			failed++
 		}
 	}
 
-	if len(items) > 0 {
-		log.Printf("處理 %d 筆通知：送達 %d、失敗 %d", len(items), sent, failed)
+	if claimed > 0 {
+		log.Printf("處理 %d 筆通知：送達 %d、失敗 %d", claimed, sent, failed)
 	}
-	return len(items), nil
+	return claimed, nil
 }
 
 // deliver 實際外送一則通知。LINE 未設定憑證時由 client 進入 MOCK，只記錄不外送。
-func deliver(cfg *line.Config, client *line.Client, it struct {
-	id, custID, workOrderID int64
-	channel, kind, subject  string
-	body, lineUserID        string
-}) error {
+func deliver(cfg *line.Config, client *line.Client, it notificationItem) error {
 	// SMS 通道尚未接電信商商；LINE 已接。SMS 改走 LINE 推播並在訊息標註，
 	// 避免整筆失敗造成佇列堆積。真正接 SMS 時應拆成獨立分支。
 	if it.channel == "sms" && !cfg.Ready() {
-		return fmt.Errorf("SMS 通道尚未整合，且 LINE 未設定憑證")
+		return permanentNotificationError(fmt.Errorf("SMS 通道尚未整合，且 LINE 未設定憑證"))
 	}
 	return client.PushMessage(it.lineUserID, it.body)
 }
 
-func markSent(id int64) {
-	db.MustExec(`UPDATE notifications SET status='sent', sent_at=CURRENT_TIMESTAMP,
-		error_message=NULL WHERE id=?`, id)
+func claimNotification(id int64, now time.Time, leaseExpired string) (bool, string, error) {
+	claimToken := now.Format(time.RFC3339Nano)
+	res, err := db.DB.Exec(`UPDATE notifications
+		SET status='processing', processing_at=?
+		WHERE id=? AND ((status='pending' AND scheduled_at<=?)
+			OR (status='processing' AND processing_at<=?))`,
+		claimToken, id, dbTime(now), leaseExpired)
+	if err != nil {
+		return false, "", err
+	}
+	n, err := res.RowsAffected()
+	return n == 1, claimToken, err
 }
 
-func markFailed(id int64, reason string) {
-	// retry_count 上限 5 次，避免無限重試。
-	db.MustExec(`UPDATE notifications SET status='failed', retry_count=retry_count+1,
-		error_message=? WHERE id=?`, reason, id)
+func markSent(id int64, claimToken string) error {
+	res, err := db.DB.Exec(`UPDATE notifications SET status='sent', sent_at=CURRENT_TIMESTAMP,
+		processing_at=NULL, error_message=NULL WHERE id=? AND status='processing' AND processing_at=?`,
+		id, claimToken)
+	return requireClaimedUpdate(res, err, id)
+}
+
+func markFailed(id int64, reason string, permanent bool, now time.Time, claimToken string) error {
+	var status string
+	var scheduledAt string
+	if permanent {
+		status = "permanent_failure"
+	} else {
+		retryCount, err := currentRetryCount(id, claimToken)
+		if err != nil {
+			return err
+		}
+		if retryCount >= maxNotificationRetries {
+			status = "permanent_failure"
+		} else {
+			status = "pending"
+			scheduledAt = dbTime(now.Add(notificationRetryBackoff[retryCount]))
+		}
+	}
+	res, err := db.DB.Exec(`UPDATE notifications SET status=?, retry_count=retry_count+1,
+		scheduled_at=CASE WHEN ?='' THEN scheduled_at ELSE ? END,
+		processing_at=NULL, error_message=? WHERE id=? AND status='processing' AND processing_at=?`,
+		status, scheduledAt, scheduledAt, reason, id, claimToken)
+	return requireClaimedUpdate(res, err, id)
+}
+
+func requireClaimedUpdate(res sql.Result, err error, id int64) error {
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows != 1 {
+		return fmt.Errorf("通知 #%d 已不由此 worker 持有", id)
+	}
+	return nil
+}
+
+func currentRetryCount(id int64, claimToken string) (int, error) {
+	var count int
+	err := db.DB.QueryRow(`SELECT retry_count FROM notifications
+		WHERE id=? AND status='processing' AND processing_at=?`, id, claimToken).Scan(&count)
+	return count, err
+}
+
+type permanentDeliveryError struct{ err error }
+
+func (e permanentDeliveryError) Error() string { return e.err.Error() }
+func (e permanentDeliveryError) Unwrap() error { return e.err }
+
+func permanentNotificationError(err error) error {
+	return permanentDeliveryError{err: err}
+}
+
+func isPermanentNotificationError(err error) bool {
+	var permanent permanentDeliveryError
+	if errors.As(err, &permanent) {
+		return true
+	}
+	var apiErr *line.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode >= 400 && apiErr.StatusCode < 500 &&
+			apiErr.StatusCode != 408 && apiErr.StatusCode != 429
+	}
+	return false
 }
 
 // --- 每日備份 ---

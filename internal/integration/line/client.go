@@ -23,6 +23,16 @@ type Client struct {
 	baseURL    string
 }
 
+// APIError reports an HTTP rejection from the LINE API.
+type APIError struct {
+	StatusCode int
+	Response   string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("推播狀態 %d: %s", e.StatusCode, e.Response)
+}
+
 // NewClient 建立 Client。token 缺失時 cfg.Mock=true，仍回傳可用於 Mock 呼叫的 Client。
 func NewClient(cfg *Config) *Client {
 	if cfg == nil {
@@ -126,7 +136,7 @@ func (c *Client) PushMessage(userID, text string) error {
 		return fmt.Errorf("推播失敗: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("推播狀態 %d: %s", resp.StatusCode, string(data))
+		return &APIError{StatusCode: resp.StatusCode, Response: string(data)}
 	}
 	return nil
 }

@@ -42,7 +42,7 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		tasksTable = `<div class="empty">尚未註冊任何排程任務</div>`
 	}
 
-	// 通知紀錄：同時顯示待處理（可取消）與近期歷史（含已送達/已取消）
+	// 通知紀錄：同時顯示待處理（可取消）與近期歷史（含失敗狀態）
 	pending := cron.PendingNotifications(50)
 	recent := cron.RecentNotifications(50)
 
@@ -64,10 +64,12 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 
 	type statusStyle struct{ Label, Pill string }
 	statusPills := map[string]statusStyle{
-		"pending":   {"待處理", "p-waitparts"},
-		"sent":      {"已送達", "p-completed"},
-		"cancelled": {"已取消", "p-pending"},
-		"failed":    {"失敗", "p-apprno"},
+		"pending":           {"待處理", "p-waitparts"},
+		"processing":        {"處理中", "p-waitparts"},
+		"sent":              {"已送達", "p-completed"},
+		"cancelled":         {"已取消", "p-pending"},
+		"failed":            {"失敗", "p-apprno"},
+		"permanent_failure": {"永久失敗", "p-apprno"},
 	}
 
 	var nb strings.Builder
@@ -97,6 +99,7 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 			`</td><td>` + htmlEsc(chLabel) + `</td><td>` + htmlEsc(orDash(n.Subject)) +
 			`</td><td style="max-width:340px">` + htmlEsc(truncateStr(n.Body, 70)) +
 			`</td><td>` + htmlEsc(n.ScheduledAt) + `</td><td><span class="pill ` + pill + `">` + label + `</span>` +
+			retryStatusDetail(n) +
 			`</td><td>` + action + `</td></tr>`)
 	}
 	nb.WriteString(`</table>`)
@@ -146,6 +149,20 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		linePill, lineCfg.StatusLine(),
 		len(statuses) > 0, len(recent) > 0, backupRows > 0,
 	).Render(r.Context(), w)
+}
+
+func retryStatusDetail(n cron.Notification) string {
+	var details []string
+	if n.RetryCount > 0 {
+		details = append(details, "失敗次數 "+strconv.Itoa(n.RetryCount))
+	}
+	if n.ErrorMessage != "" {
+		details = append(details, htmlEsc(n.ErrorMessage))
+	}
+	if len(details) == 0 {
+		return ""
+	}
+	return `<br><small style="color:#fca5a5">` + strings.Join(details, "；") + `</small>`
 }
 
 // ToggleScheduledTask 啟用或停用排程任務。
