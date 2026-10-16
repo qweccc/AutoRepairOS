@@ -334,3 +334,13 @@ type EquipmentMaintenance struct {
 	Notes               string    `json:"notes,omitempty"`
 	CreatedAt           time.Time `json:"created_at"`
 }
+
+// TechnicianPhrase 技師常用片語（FR-WO-07）。
+type TechnicianPhrase struct {
+	ID         int64  `json:"id"`
+	Phrase     string `json:"phrase"`
+	Category   string `json:"category,omitempty"`
+	SortOrder  int    `json:"sort_order"`
+	Active     int    `json:"active"`
+	CreatedAt  string `json:"created_at,omitempty"`
+}

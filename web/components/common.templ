@@ -149,3 +149,26 @@ templ PlateScanUI(fieldMapJSON string) {
 		});
 	</script>
 }
+
+// BarcodeScanUI 條碼掃描 UI。
+// 載入 scan.js + html5-qrcode，插入「📷 掃條碼」按鈕與掃描容器，
+// 掃描成功後將條碼填入目標 input（通常是零件搜尋框或料號欄）。
+// targetId 是目標 input 的 id，containerId 是掃描視頻容器的 id。
+templ BarcodeScanUI(buttonId, targetId, containerId string) {
+	<script src="/static/scan.js"></script>
+	<div class="scan-btn-wrapper">
+		<button type="button" class="btn btn-s" id={ buttonId }>📷 掃條碼</button>
+		<div id={ containerId } class="scan-box"></div>
+	</div>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			if (window.initBarcodeScan && window.Html5Qrcode) {
+				window.initBarcodeScan({
+					buttonId: "{ buttonId }",
+					targetId: "{ targetId }",
+					containerId: "{ containerId }"
+				});
+			}
+		});
+	</script>
+}

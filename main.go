@@ -190,6 +190,14 @@ func main() {
 	mux.HandleFunc("POST /staff/{id}/deactivate", handler.OwnerOnly(handler.DeactivateStaff))
 	mux.HandleFunc("POST /staff/{id}/reactivate", handler.OwnerOnly(handler.ReactivateStaff))
 
+	// 技師片語庫（T2.7）
+	mux.HandleFunc("GET /phrases", handler.AllStaff(handler.ListPhrases))
+	mux.HandleFunc("POST /phrases/new", handler.AllStaff(handler.CreatePhrase))
+	mux.HandleFunc("GET /phrases/{id}/edit", handler.AllStaff(handler.EditPhraseForm))
+	mux.HandleFunc("POST /phrases/{id}/update", handler.AllStaff(handler.UpdatePhrase))
+	mux.HandleFunc("POST /phrases/{id}/delete", handler.AllStaff(handler.DeletePhrase))
+	mux.HandleFunc("GET /api/phrases/search", handler.RequireLogin(handler.SearchPhrasesAPI))
+
 	// 舊系統補遷移：車輛投保紀錄 / 定檢排程 / 保養套餐 / 零用金
 	mux.HandleFunc("GET /insurances", handler.AllStaff(handler.ListVehicleInsurances))
 	mux.HandleFunc("GET /insurances/expiring", handler.AllStaff(handler.ListVehicleInsurances))

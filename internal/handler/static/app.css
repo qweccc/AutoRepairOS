@@ -174,3 +174,17 @@ form.login button:hover { background: #0ea5e9; }
   .navlbl { padding: 0 14px 5px; }
   main { padding: 20px 18px; }
 }
+
+/* ---- T2.23: 條碼掃描與庫位顯示 ---- */
+.search-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.search-input { padding: 8px 10px; border-radius: 7px; border: 1px solid #334155;
+              background: #0f172a; color: #e2e8f0; flex: 1; }
+.search-input.wide { width: 300px; flex: none; }
+.scan-btn-wrapper { display: inline-block; margin-left: 8px; }
+.scan-box { display: none; margin-top: 8px; border: 1px solid #334155;
+           border-radius: 8px; overflow: hidden; }
+.part-results { display: none; border: 1px solid #334155; border-radius: 7px;
+              margin-top: 4px; max-height: 200px; overflow-y: auto; background: #0f172a; }
+.part-result-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #1e293b; font-size: 13px; }
+.part-result-hover { background: #1e293b; }
+.bin-loc { color: #10b981; }

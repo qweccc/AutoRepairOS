@@ -60,14 +60,16 @@ templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, si
 				@templ.Raw(catTabsHTML)
 			</div>
 			// HTMX 即時搜尋
-			<input type="search" name="q" value={ q }
-				placeholder="搜尋名稱 / 料號 / 條碼 / 庫位"
-				hx-get="/api/inventory/search"
-				hx-trigger="keyup changed delay:300ms, search"
-				hx-target="#inventory-rows"
-				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px;margin-bottom:12px">
-			<a class="btn btn-s" href="/inventory">清除</a>
+			<div class="search-bar">
+				<input type="search" id="inventorySearch" class="search-input wide" name="q" value={ q }
+					placeholder="搜尋名稱 / 料號 / 條碼 / 庫位"
+					hx-get="/api/inventory/search"
+					hx-trigger="keyup changed delay:300ms, search"
+					hx-target="#inventory-rows"
+					hx-swap="innerHTML">
+				@components.BarcodeScanUI("inventoryScanBtn", "inventorySearch", "inventoryScanBox")
+				<a class="btn btn-s" href="/inventory">清除</a>
+			</div>
 			<a class="btn btn-s" href="/inventory/movements">異動紀錄</a>
 			<table>
 				<tr>

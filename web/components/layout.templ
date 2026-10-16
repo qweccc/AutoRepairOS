@@ -15,6 +15,7 @@ templ Layout(title, active, username, role, appName string) {
 			<title>{ title } - { appName }</title>
 			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/htmx.min.js"></script>
+			<script src="/static/html5-qrcode.min.js"></script>
 		</head>
 		<body hx-headers={ `{"X-CSRF-Token":"` + session.CSRFTokenFromContext(ctx) + `"}` }>
 			<header>

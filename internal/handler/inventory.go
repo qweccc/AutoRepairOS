@@ -494,7 +494,9 @@ func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	like := "%" + q + "%"
-	rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(selling_price,0), COALESCE(stock_quantity,0)
+	// T2.23: 加入庫位 bin_location，讓掃描條碼後可顯示庫位位置
+	rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(bin_location,''),
+		COALESCE(selling_price,0), COALESCE(stock_quantity,0)
 		FROM active_inventory_items
 		WHERE name LIKE ? OR part_number LIKE ? OR COALESCE(barcode,'') LIKE ?
 		ORDER BY name LIMIT 20`, like, like, like)
@@ -505,16 +507,17 @@ func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type partResult struct {
-		ID         int64   `json:"id"`
-		Name       string  `json:"name"`
-		PartNumber string  `json:"part_number"`
-		Price      float64 `json:"price"`
-		Stock      int     `json:"stock"`
+		ID          int64   `json:"id"`
+		Name        string  `json:"name"`
+		PartNumber  string  `json:"part_number"`
+		BinLocation string  `json:"bin_location"`
+		Price       float64 `json:"price"`
+		Stock       int     `json:"stock"`
 	}
 	var results []partResult
 	for rows.Next() {
 		var p partResult
-		if err := rows.Scan(&p.ID, &p.Name, &p.PartNumber, &p.Price, &p.Stock); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.PartNumber, &p.BinLocation, &p.Price, &p.Stock); err != nil {
 			continue
 		}
 		results = append(results, p)

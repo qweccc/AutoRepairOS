@@ -52,6 +52,7 @@ var Routes = []Route{
 	{"/scheduled-tasks", "排程", "後台設定"},
 	{"/subcontracts", "外包", "後台設定"},
 	{"/equipment", "設備", "後台設定"},
+	{"/phrases", "技師片語", "後台設定"},
 }
 
 // Render 產生選單的 HTML（只含 navgrp 群組本身，不含 <nav> 標籤）。
