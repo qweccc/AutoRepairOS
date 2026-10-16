@@ -562,14 +562,10 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 
 	// 已結帳的工單是財務憑證，不允許再改狀態：否則扣料與營收會與實物對不上。
 	if currentStatus := countStatus(id); currentStatus == "paid" {
-		if status == "paid" {
-			// 冪等：重複結帳視為成功，但不得重複扣料或重複計營收。
-			redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10),
-				"此工單已是「已結帳」，未重複計算")
+		if status != "paid" {
+			fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel[status]+"」。如需更正請另行開立沖銷單。")
 			return
 		}
-		fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel[status]+"」。如需更正請另行開立沖銷單。")
-		return
 	}
 
 	if status == "paid" {

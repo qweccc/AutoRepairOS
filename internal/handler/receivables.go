@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -311,7 +313,23 @@ func NewReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) 
 		http.Error(w, "權限不足", http.StatusForbidden)
 		return
 	}
-	renderPage(w, "新增收款", "/receivables", user.Username, user.Role, receivableFormBody(receivable{}, "", ""))
+	payDate := today()
+	rec := receivable{VoucherNo: nextVoucherNo(payDate), PayDate: payDate}
+	if workOrderID := mustInt(r.URL.Query().Get("work_order")); workOrderID > 0 {
+		rec.WorkOrderID = workOrderID
+		err := db.DB.QueryRow(`SELECT wo.customer_id, COALESCE(c.name,'')
+			FROM work_orders wo JOIN customers c ON c.id = wo.customer_id
+			WHERE wo.id = ?`, workOrderID).Scan(&rec.CustomerID, &rec.CustomerName)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			http.Error(w, "載入工單收款資料失敗", http.StatusInternalServerError)
+			return
+		}
+	}
+	renderPage(w, "新增收款", "/receivables", user.Username, user.Role, receivableFormBody(rec, "", ""))
 }
 
 // receivableFormBody 收款表單（新增與編輯共用）。
@@ -326,7 +344,7 @@ func receivableFormBody(rec receivable, action, errMsg string) string {
     <div class="card">
       <h2>收款紀錄</h2>
       <form class="frm" method="POST" action="` + action + `">
-        <label>收款單號<input name="voucher_no" value="` + htmlEsc(rec.VoucherNo) + `" placeholder="留空自動產生"></label>
+        <label>收款單號<input name="voucher_no" value="` + htmlEsc(rec.VoucherNo) + `" placeholder="系統預先產生，可修改" required></label>
         <label>收款日期<input name="pay_date" type="date" value="` + htmlEsc(normDate(rec.PayDate)) + `" required></label>
         <label>客戶
           <input name="customer_q" value="` + htmlEsc(rec.CustomerName) + `" placeholder="姓名 / 電話 / 車牌" required>
@@ -406,10 +424,11 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 
 	voucher := strings.TrimSpace(r.FormValue("voucher_no"))
 	if voucher == "" {
-		voucher = nextVoucherNo(payDate)
+		redirectMsg(w, r, "/receivables/new", "收款單號不可空白，請重新載入表單")
+		return
 	}
 
-	// 關聯工單（可空）。關聯時由 service 在交易內驗證客戶並寫入車輛資料。
+	// 關聯工單（可空）。收款與必要的結帳由 service 在同一交易內處理。
 	woID := mustInt(r.FormValue("work_order_id"))
 
 	// created_by：用自己的身分寫入（與 inventory 調庫同樣做法）
@@ -428,30 +447,13 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 	bank := strings.TrimSpace(r.FormValue("bank"))
 	notes := strings.TrimSpace(r.FormValue("notes"))
 
-	var err error
-	if woID > 0 {
-		err = service.New(db.DB).AssociateReceipt(r.Context(), service.ReceiptInput{
-			VoucherNo: voucher, CustomerID: customerID, WorkOrderID: woID, PayDate: payDate,
-			DetailTotal: detailTotal, RealTotal: realTotal, Discount: discount, Tax: tax,
-			PayTotal: payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
-			CardNo: cardNo, CheckNo: checkNo, CheckDate: checkDate, Bank: bank,
-			Notes: notes, CreatedBy: actorID,
-		})
-	} else {
-		var actor interface{}
-		if actorID > 0 {
-			actor = actorID
-		}
-		_, err = db.DB.Exec(`INSERT INTO receivables
-			(voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
-			 detail_total, real_total, discount, tax, pay_total,
-			 cash, card, check_amount, card_no, check_no, check_date, bank,
-			 notes, source, created_by)
-			VALUES (?,?,NULL,NULL,?, ?,?,?,?,?, ?,?,?,?,?,?,?, ?, 'manual', ?)`,
-			voucher, customerID, payDate, detailTotal, realTotal, discount, tax, payTotal,
-			cash, card, checkAmt, nullStr(cardNo), nullStr(checkNo),
-			nullStr(checkDate), nullStr(bank), nullStr(notes), actor)
-	}
+	err := service.New(db.DB).CreateReceipt(r.Context(), service.ReceiptInput{
+		VoucherNo: voucher, CustomerID: customerID, WorkOrderID: woID, PayDate: payDate,
+		DetailTotal: detailTotal, RealTotal: realTotal, Discount: discount, Tax: tax,
+		PayTotal: payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+		CardNo: cardNo, CheckNo: checkNo, CheckDate: checkDate, Bank: bank,
+		Notes: notes, CreatedBy: actorID,
+	})
 	if err != nil {
 		redirectMsg(w, r, "/receivables/new", "新增收款失敗："+err.Error())
 		return
@@ -493,18 +495,6 @@ func EditReceivableForm(w http.ResponseWriter, r *http.Request, user model.User)
 func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	var oldRec receivable
-	err := db.DB.QueryRow(`SELECT work_order_id, pay_total, voided FROM receivables WHERE id = ?`, id).
-		Scan(&oldRec.WorkOrderID, &oldRec.PayTotal, &oldRec.Voided)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	if oldRec.Voided != 0 {
-		fail(w, "已作廢的收款不能編輯")
-		return
-	}
-
 	payDate := strings.TrimSpace(r.FormValue("pay_date"))
 	if payDate == "" {
 		payDate = today()
@@ -528,36 +518,31 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec(`UPDATE receivables SET
-		voucher_no = ?, pay_date = ?, detail_total = ?, real_total = ?,
-		discount = ?, tax = ?, pay_total = ?,
-		cash = ?, card = ?, check_amount = ?,
-		card_no = ?, check_no = ?, check_date = ?, bank = ?,
-		notes = ?
-		WHERE id = ?`,
-		voucher, payDate,
-		atofDefault(r.FormValue("detail_total"), 0),
-		atofDefault(r.FormValue("real_total"), 0),
-		atofDefault(r.FormValue("discount"), 0),
-		atofDefault(r.FormValue("tax"), 0),
-		payTotal,
-		cash, card, checkAmt,
-		nullStr(r.FormValue("card_no")), nullStr(r.FormValue("check_no")),
-		normDate(r.FormValue("check_date")), nullStr(r.FormValue("bank")),
-		nullStr(r.FormValue("notes")), id)
+	actorID := int64(0)
+	if user, userErr := currentUser(r); userErr == nil {
+		actorID = user.ID
+	}
+	err := service.New(db.DB).UpdateReceipt(r.Context(), id, service.ReceiptInput{
+		VoucherNo: voucher, PayDate: payDate,
+		DetailTotal: atofDefault(r.FormValue("detail_total"), 0),
+		RealTotal:   atofDefault(r.FormValue("real_total"), 0),
+		Discount:    atofDefault(r.FormValue("discount"), 0),
+		Tax:         atofDefault(r.FormValue("tax"), 0),
+		PayTotal:    payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+		CardNo: nullStr(r.FormValue("card_no")), CheckNo: nullStr(r.FormValue("check_no")),
+		CheckDate: normDate(r.FormValue("check_date")), Bank: nullStr(r.FormValue("bank")),
+		Notes: nullStr(r.FormValue("notes")), CreatedBy: actorID,
+	})
 	if err != nil {
-		fail(w, "更新收款失敗")
+		switch {
+		case errors.Is(err, service.ErrReceiptNotFound):
+			http.NotFound(w, r)
+		case errors.Is(err, service.ErrReceiptVoided):
+			fail(w, "已作廢的收款不能編輯")
+		default:
+			fail(w, "更新收款失敗："+err.Error())
+		}
 		return
-	}
-	if n, _ := res.RowsAffected(); n == 0 {
-		http.NotFound(w, r)
-		return
-	}
-
-	// 如果工單已結帳但收款金額變少，需要把工單狀態改回 completed
-	if oldRec.WorkOrderID > 0 && payTotal < oldRec.PayTotal {
-		db.DB.Exec(`UPDATE work_orders SET status = 'completed',
-			updated_at = datetime('now','localtime') WHERE id = ? AND status = 'paid'`, oldRec.WorkOrderID)
 	}
 
 	redirectMsg(w, r, "/receivables", "收款已更新："+voucher)
@@ -573,13 +558,14 @@ func VoidReceivable(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	res, err := db.DB.Exec(`UPDATE receivables SET voided = 1 WHERE id = ? AND voided = 0`, id)
+	err := service.New(db.DB).VoidReceipt(r.Context(), id)
 	if err != nil {
-		fail(w, "作廢失敗")
-		return
-	}
-	if n, _ := res.RowsAffected(); n == 0 {
-		redirectMsg(w, r, "/receivables", "該筆不存在或已作廢")
+		switch {
+		case errors.Is(err, service.ErrReceiptNotFound), errors.Is(err, service.ErrReceiptVoided):
+			redirectMsg(w, r, "/receivables", "該筆不存在或已作廢")
+		default:
+			fail(w, "作廢失敗："+err.Error())
+		}
 		return
 	}
 	redirectMsg(w, r, "/receivables", "已作廢該筆收款（紀錄保留，可用「含作廢」查回）")

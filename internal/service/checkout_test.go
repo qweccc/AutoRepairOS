@@ -44,7 +44,7 @@ func newCheckoutTestDB(t *testing.T) *sql.DB {
 			vehicle_id INTEGER, work_order_id INTEGER, pay_date TEXT, detail_total REAL,
 			real_total REAL, discount REAL, tax REAL, pay_total REAL, cash REAL, card REAL,
 			check_amount REAL, card_no TEXT, check_no TEXT, check_date TEXT, bank TEXT,
-			notes TEXT, source TEXT, created_by INTEGER
+			notes TEXT, source TEXT, created_by INTEGER, voided INTEGER NOT NULL DEFAULT 0
 		)`,
 		`INSERT INTO customers (id, total_spent, unpaid_amount) VALUES (1, 12, 80)`,
 		`INSERT INTO work_orders (id, customer_id, vehicle_id, status, total_amount)
@@ -147,6 +147,65 @@ func TestAssociateReceiptChecksOutAtomically(t *testing.T) {
 	}
 }
 
+func TestCreateReceiptIsIdempotentForRepeatedVoucher(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	input := ReceiptInput{
+		VoucherNo: "RCV-RETRY", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, Cash: 125, CreatedBy: 21,
+	}
+	svc := New(db)
+	start := make(chan struct{})
+	errs := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		go func() {
+			<-start
+			errs <- svc.CreateReceipt(context.Background(), input)
+		}()
+	}
+	close(start)
+	for i := 0; i < 2; i++ {
+		if err := <-errs; err != nil {
+			t.Fatalf("concurrent CreateReceipt attempt: %v", err)
+		}
+	}
+	var receipts, movements int
+	var stock int
+	var spent float64
+	if err := db.QueryRow(`SELECT COUNT(*) FROM receivables WHERE voucher_no='RCV-RETRY'`).Scan(&receipts); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=3`).Scan(&stock); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
+		t.Fatal(err)
+	}
+	if receipts != 1 || movements != 1 || stock != 6 || spent != 137 {
+		t.Fatalf("duplicate receipt state: receipts=%d movements=%d stock=%d spent=%v",
+			receipts, movements, stock, spent)
+	}
+}
+
+func TestCreateReceiptFailureDoesNotCheckout(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	if _, err := db.Exec(`CREATE TRIGGER reject_receipt_insert
+		BEFORE INSERT ON receivables
+		BEGIN SELECT RAISE(ABORT, 'receipt rejected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	err := New(db).CreateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-FAIL", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, Cash: 125,
+	})
+	if err == nil {
+		t.Fatal("CreateReceipt succeeded despite insert failure")
+	}
+	assertUnchangedCheckoutState(t, db)
+}
+
 func TestAssociateReceiptRollsBackReceiptAndCheckout(t *testing.T) {
 	db := newCheckoutTestDB(t)
 	if _, err := db.Exec(`CREATE TRIGGER reject_checkout_movement
@@ -169,6 +228,36 @@ func TestAssociateReceiptRollsBackReceiptAndCheckout(t *testing.T) {
 	}
 	if receipts != 0 {
 		t.Fatalf("receipt count after rollback = %d, want 0", receipts)
+	}
+}
+
+func TestUpdateReceiptAndCheckoutRollBackTogether(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	if _, err := db.Exec(`INSERT INTO receivables
+		(id, voucher_no, customer_id, work_order_id, pay_date, pay_total, cash, source)
+		VALUES (20, 'RCV-OLD', 1, 10, '2026-10-16', 100, 100, 'manual')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`CREATE TRIGGER reject_checkout_movement
+		BEFORE INSERT ON inventory_movements
+		BEGIN SELECT RAISE(ABORT, 'movement rejected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	err := New(db).UpdateReceipt(context.Background(), 20, ReceiptInput{
+		VoucherNo: "RCV-UPDATED", PayDate: "2026-10-17", PayTotal: 125, Cash: 125,
+	})
+	if err == nil {
+		t.Fatal("UpdateReceipt succeeded despite checkout failure")
+	}
+	assertUnchangedCheckoutState(t, db)
+	var voucher string
+	var amount float64
+	if err := db.QueryRow(`SELECT voucher_no, pay_total FROM receivables WHERE id=20`).
+		Scan(&voucher, &amount); err != nil {
+		t.Fatal(err)
+	}
+	if voucher != "RCV-OLD" || amount != 100 {
+		t.Fatalf("receipt update was not rolled back: voucher=%q amount=%v", voucher, amount)
 	}
 }
 
