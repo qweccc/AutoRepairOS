@@ -199,6 +199,139 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 
 ## 6. 資料模型概要 (Data Model Overview)
 
+本節依 `internal/db/migration/*.up.sql` 的最終 schema 彙整；主鍵／外鍵以資料庫實際宣告為準。欄位列出主要業務欄位，未列出的時間戳記、備註及索引仍依 migration 定義。`internal/model/models.go` 是應用程式使用的資料模型投影；列表中的彙總名稱或顯示用名稱不一定是資料庫欄位。
+
+### 6.1 身分、客戶與車輛
+
+| 資料表 | 用途 | 主鍵／外鍵 | 重要欄位 |
+|---|---|---|---|
+| `users` | 系統帳號、員工及健保人事資料；以狀態欄位保留離職、眷屬及協力廠商歷史資料。 | PK：`id`；FK：`dependent_of` → `users.id`（自我關聯） | `username`（唯一）、`password`、`role`、`name`、`active`、`staff_branch`、`staff_kind`、`national_id`、`birthday`、`insurance_start`、`insurance_end`、`bank_account` |
+| `sessions` | 登入 session 與 CSRF token。 | PK：`id`；FK：`user_id` → `users.id` | `user_id`、`csrf_token`、`created_at` |
+| `suppliers` | 材料供應商、外包廠商及其他往來對象。 | PK：`id` | `name`、`phone`、`contact_person`、`vendor_type`、`payment_terms`、`active` |
+| `customers` | 車主及客戶聯絡、通知與營收摘要資料。 | PK：`id` | `name`、唯一 `phone`、`line_user_id`、`telegram_user_id`、`notification_preference`、`tags`、`campaign_code`、`total_spent`、`unpaid_amount` |
+| `vehicles` | 客戶車輛、行照資料與保養基準。 | PK：`id`；FK：`customer_id` → `customers.id` | `plate_number`（唯一）、`brand_model`、`vehicle_type`、`vin`、`engine_number`、車主／駕駛／聯絡人欄位、燃料／車身／重量／輪胎等行照欄位、檢驗到期日及最後／下次保養日期與里程、保養間隔 |
+
+### 6.2 工單與服務履歷
+
+| 資料表 | 用途 | 主鍵／外鍵 | 重要欄位 |
+|---|---|---|---|
+| `work_orders` | 維修工單主檔，記錄服務進度、金額、保險理賠及保固／行銷資訊。 | PK：`id`；FK：`vehicle_id` → `vehicles.id`、`customer_id` → `customers.id`、`technician_id` → `users.id`、`insurance_company_id` → `insurance_companies.id` | `status`、`current_mileage`、`customer_complaint`、`approval_status`、`total_amount`、`sop_completed`、`discount_amount`、`is_warranty`、`is_insurance`、`claim_no`、`accident_date`、`deductible_amount`、`campaign_code` |
+| `work_order_items` | 工單服務、零件及外包項目明細。 | PK：`id`；FK：`work_order_id` → `work_orders.id`、`inventory_item_id` → `inventory_items.id`、`primary_technician_id`／`assistant_technician_id` → `users.id` | `item_type`、`description`、`quantity`、`unit_price`、`subtotal`、`photo_url` |
+| `technician_worklogs` | 工單技師工時及佣金計算明細。 | PK：`id`；FK：`work_order_id` → `work_orders.id`、`technician_id` → `users.id` | `work_date`、`hours`、`hourly_rate`、`labor_amount`、`commission_rate`、`commission_amount` |
+| `work_order_photos` | 工單及工單項目的照片附件。 | PK：`id`；FK：`work_order_id` → `work_orders.id`、`item_id` → `work_order_items.id`、`uploaded_by` → `users.id` | `filename`、`original_name`、`mime_type`、`file_size`、`photo_type`、`note` |
+| `appointments` | 車輛進廠預約及工位安排。 | PK：`id`；FK：`customer_id` → `customers.id`、`vehicle_id` → `vehicles.id` | `appointment_date`、`appointment_time`、`service_type`、`bay`、`status` |
+| `subcontracts` | 工單外包加工及成本／收費追蹤。 | PK：`id`；FK：`work_order_id` → `work_orders.id`、`supplier_id` → `suppliers.id` | `description`、`cost_amount`、`charge_amount`、`status`、預計及完成日期 |
+| `vehicle_mileages` | 車輛里程歷史，保留來源與登錄人供追溯。 | PK：`id`；FK：`vehicle_id` → `vehicles.id`、`work_order_id` → `work_orders.id`、`recorded_by` → `users.id` | `mileage`、`source`（工單／手動／匯入）、`notes`、`created_at` |
+| `vehicle_inspections` | 車輛定期檢驗排程與完成資料。 | PK：`id`；FK：`vehicle_id` → `vehicles.id` | `order_date`、`check_date`、`firm_no`、`notes` |
+| `vehicle_insurances` | 車輛保險及投保歷史。 | PK：`id`；FK：`vehicle_id` → `vehicles.id`、`insurance_company_id` → `insurance_companies.id` | `company_no`、`insurance_class`、`insurance_class_name`、`license_date`、`card_no`、`amount_raw` |
+| `maintenance_templates` | 可套用於工單的保養套餐範本主檔。 | PK：`id` | `code`（唯一）、`name`、`notes` |
+| `maintenance_template_items` | 保養套餐的逐項作業／零件明細。 | PK：`id`；FK：`template_id` → `maintenance_templates.id` | `sequence_no`、`part_number`、`description`、`quantity`、`unit_price` |
+
+### 6.3 庫存、採購與帳務
+
+| 資料表 | 用途 | 主鍵／外鍵 | 重要欄位 |
+|---|---|---|---|
+| `inventory_items` | 零件與工資／服務品項主檔及現有庫存。 | PK：`id`；FK：`supplier_id` → `suppliers.id` | `part_number`（唯一）、`barcode`、`name`、`bin_location`、`cost_price`、`selling_price`、`stock_quantity`、`reserved_quantity`、`min_safety_stock`、`category`、`item_kind`、庫存補正欄位 |
+| `inventory_movements` | 庫存進出、工單領料及人工補正的異動稽核紀錄。 | PK：`id`；FK：`inventory_item_id` → `inventory_items.id`、`work_order_id` → `work_orders.id`、`created_by` → `users.id`、`purchase_order_item_id` → `purchase_order_items.id`（可空） | `delta`、`before_quantity`、`after_quantity`、`reason`、`source`、`created_at` |
+| `purchase_orders` | 向供應商進貨的單據主檔。 | PK：`id`；無資料庫 FK（`supplier_id`、`work_order_id` 為應用層關聯） | `supplier_id`、`work_order_id`（0 表示一般進貨）、`order_date`、`status`、`total_amount`、`created_by`、`received_at` |
+| `purchase_order_items` | 進貨單品項、數量與成本明細。 | PK：`id`；無資料庫 FK（`order_id`、`inventory_item_id` 為應用層關聯；`inventory_item_id=0` 可表示尚未建檔品項） | `order_id`、`inventory_item_id`、`description`、`part_number`、`category`、`quantity`、`unit_cost`、`subtotal` |
+| `receivables` | 收款事件主檔，記錄收款金額拆分、付款方式及作廢狀態。 | PK：`id`；FK：`customer_id` → `customers.id`、`vehicle_id` → `vehicles.id`、`work_order_id` → `work_orders.id`、`created_by` → `users.id` | `voucher_no`、`pay_date`、`detail_total`、`real_total`、`discount`、`tax`、`pay_total`、`cash`、`card`、`check_amount`、`voided`、`source` |
+| `receivable_payments` | 收款事件與工單的沖銷明細，可分次收款或一次沖銷多張工單。 | PK：`id`；FK：`receivable_id` → `receivables.id`（刪除收款時 cascade）、`work_order_id` → `work_orders.id` | `amount`、`created_at` |
+| `expenses` | 零用金及雜支收支歷史；金額欄沿用舊系統原單位。 | PK：`id` | `sequence_no`、`spend_date`、`amount_in`、`amount_out`、`part_number`、`notes` |
+
+### 6.4 保險、共用代碼與系統作業
+
+| 資料表 | 用途 | 主鍵／外鍵 | 重要欄位 |
+|---|---|---|---|
+| `insurance_companies` | 保險公司主檔，供工單理賠及車輛投保紀錄引用。 | PK：`id` | `code`（唯一簡稱）、`name`、`tax_id`、`claim_phone`、`legacy_no`、`active` |
+| `lookup_items` | 共用代碼／名稱對照，涵蓋車種、車款、燃料、車身、部門、零件類別、險種及銀行等。 | PK：`id`；唯一鍵：(`category`, `code`) | `category`、`code`、`label`、`sort_order`、`active` |
+| `equipment` | 維修設備基本資料與狀態。 | PK：`id` | `name`、`model`、`serial_number`、`location`、`purchase_date`、`warranty_expiry`、`status` |
+| `equipment_maintenance` | 設備保養／檢修履歷及下次保養排程。 | PK：`id`；FK：`equipment_id` → `equipment.id`、`technician_id` → `users.id` | `maintenance_date`、`maintenance_type`、`description`、`cost`、`next_maintenance_date` |
+| `notifications` | 客戶或工單通知佇列、發送結果及重試資訊。 | PK：`id`；FK：`work_order_id` → `work_orders.id`、`customer_id` → `customers.id` | `channel`、`kind`、`subject`、`body`、`scheduled_at`、`sent_at`、`status`、`retry_count`、`error_message` |
+| `scheduled_tasks` | 排程工作定義與執行狀態。 | PK：`id` | `task_key`（唯一）、`name`、`cron_expr`、`interval_minutes`、`enabled`、`last_run_at`、`next_run_at`、`run_count`、`last_error` |
+| `backup_records` | 資料庫及照片備份結果紀錄。 | PK：`id` | `backup_date`、`db_backup_path`、`db_size`、`photo_count`、`photo_size`、`status`、`error_message` |
+
+### 6.5 關係圖
+
+實線表示 migration 宣告的資料庫外鍵；虛線表示應用程式使用的關聯，但 schema 未設外鍵約束。
+
+```mermaid
+flowchart LR
+    users[users]
+    sessions[sessions]
+    customers[customers]
+    vehicles[vehicles]
+    work_orders[work_orders]
+    work_order_items[work_order_items]
+    technician_worklogs[technician_worklogs]
+    work_order_photos[work_order_photos]
+    suppliers[suppliers]
+    inventory_items[inventory_items]
+    inventory_movements[inventory_movements]
+    insurance_companies[insurance_companies]
+    vehicle_insurances[vehicle_insurances]
+    vehicle_inspections[vehicle_inspections]
+    vehicle_mileages[vehicle_mileages]
+    appointments[appointments]
+    subcontracts[subcontracts]
+    notifications[notifications]
+    purchase_orders[purchase_orders]
+    purchase_order_items[purchase_order_items]
+    receivables[receivables]
+    receivable_payments[receivable_payments]
+    equipment[equipment]
+    equipment_maintenance[equipment_maintenance]
+    templates[maintenance_templates]
+    template_items[maintenance_template_items]
+
+    users -->|user_id| sessions
+    users -->|dependent_of| users
+    customers -->|customer_id| vehicles
+    customers -->|customer_id| work_orders
+    vehicles -->|vehicle_id| work_orders
+    users -->|technician_id| work_orders
+    insurance_companies -->|insurance_company_id| work_orders
+    work_orders -->|work_order_id| work_order_items
+    inventory_items -->|inventory_item_id| work_order_items
+    users -->|technician IDs| work_order_items
+    work_orders -->|work_order_id| technician_worklogs
+    users -->|technician_id| technician_worklogs
+    work_orders -->|work_order_id| work_order_photos
+    work_order_items -->|item_id| work_order_photos
+    users -->|uploaded_by| work_order_photos
+    work_orders -->|work_order_id| subcontracts
+    suppliers -->|supplier_id| subcontracts
+    suppliers -->|supplier_id| inventory_items
+    inventory_items -->|inventory_item_id| inventory_movements
+    work_orders -->|work_order_id| inventory_movements
+    purchase_order_items -->|purchase_order_item_id| inventory_movements
+    vehicles -->|vehicle_id| vehicle_insurances
+    insurance_companies -->|insurance_company_id| vehicle_insurances
+    vehicles -->|vehicle_id| vehicle_inspections
+    vehicles -->|vehicle_id| vehicle_mileages
+    work_orders -->|work_order_id| vehicle_mileages
+    users -->|recorded_by| vehicle_mileages
+    customers -->|customer_id| appointments
+    vehicles -->|vehicle_id| appointments
+    customers -->|customer_id| notifications
+    work_orders -->|work_order_id| notifications
+    customers -->|customer_id| receivables
+    work_orders -->|work_order_id| receivables
+    vehicles -->|vehicle_id| receivables
+    users -->|created_by| receivables
+    receivables -->|receivable_id| receivable_payments
+    work_orders -->|work_order_id| receivable_payments
+    equipment -->|equipment_id| equipment_maintenance
+    users -->|technician_id| equipment_maintenance
+    templates -->|template_id| template_items
+    suppliers -.->|應用層關聯，非 FK| purchase_orders
+    work_orders -.->|應用層關聯，非 FK| purchase_orders
+    purchase_orders -.->|order_id，非 FK| purchase_order_items
+    inventory_items -.->|inventory_item_id，非 FK| purchase_order_items
+```
+
+圖中未連線的查詢／作業表包括 `lookup_items`、`scheduled_tasks`、`backup_records`、`expenses`；逐表外鍵以 6.1–6.4 欄位為準。
+
 ## 7. 非功能性需求 (Non-functional Requirements)
 
 ### 7.1 效能 (Performance)
