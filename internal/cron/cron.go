@@ -751,6 +751,13 @@ func init() {
 		Interval: 24 * time.Hour,
 		Run:      scanMaintenanceDue,
 	})
+
+	Register(Task{
+		Key:      "appointment_reminder_scan",
+		Name:     "預約前日提醒掃描",
+		Interval: 24 * time.Hour,
+		Run:      scanAppointmentReminders,
+	})
 }
 
 // scanMaintenanceDue 每日掃描保養、定檢及保單到期項目，寫入通知佇列。
@@ -781,6 +788,79 @@ func scanMaintenanceDueInternal() (int, error) {
 	queued += insuranceCount
 	if queued > 0 {
 		log.Printf("車輛到期提醒掃描：新增 %d 筆提醒", queued)
+	}
+	return queued, nil
+}
+
+// scanAppointmentReminders 每日將明日預約提醒排入既有通知佇列。
+func scanAppointmentReminders() error {
+	_, err := ScanAppointmentRemindersNow()
+	return err
+}
+
+// ScanAppointmentRemindersNow 供測試及手動觸發使用，回傳新增筆數。
+func ScanAppointmentRemindersNow() (int, error) {
+	tomorrow := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).AddDate(0, 0, 1).Format("2006-01-02")
+	rows, err := db.DB.Query(`SELECT a.id, c.id, COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+		COALESCE(v.plate_number,''), COALESCE(a.appointment_time,''), COALESCE(a.service_type,'')
+		FROM active_appointments a
+		JOIN active_customers c ON c.id=a.customer_id
+		JOIN active_vehicles v ON v.id=a.vehicle_id
+		WHERE a.appointment_date=? AND a.status IN ('booked','confirmed')
+		ORDER BY a.id`, tomorrow)
+	if err != nil {
+		return 0, err
+	}
+	type item struct {
+		appointmentID        int64
+		customer             reminderCandidate
+		plate, time, service string
+	}
+	var items []item
+	for rows.Next() {
+		var candidate item
+		if err := rows.Scan(&candidate.appointmentID, &candidate.customer.customerID,
+			&candidate.customer.name, &candidate.customer.pref, &candidate.customer.lineID,
+			&candidate.customer.telegramID, &candidate.plate, &candidate.time, &candidate.service); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		items = append(items, candidate)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, err
+	}
+	rows.Close()
+
+	queued := 0
+	for _, item := range items {
+		channel, enabled := item.customer.channel()
+		if !enabled {
+			continue
+		}
+		body := fmt.Sprintf("您好，提醒您明日預約：車輛 %s，時間 %s，服務內容：%s。",
+			item.plate, item.time, item.service)
+		subject := fmt.Sprintf("預約 #%d 前日提醒", item.appointmentID)
+		res, err := db.DB.Exec(`INSERT INTO notifications
+			(customer_id, channel, kind, subject, body, scheduled_at)
+			SELECT ?, ?, 'appointment_reminder', ?, ?, ?
+			WHERE NOT EXISTS (
+				SELECT 1 FROM notifications
+				WHERE customer_id=? AND kind='appointment_reminder' AND subject=?
+				  AND datetime(created_at) >= datetime(?)
+			)`,
+			item.customer.customerID, channel, subject, body, dbTime(time.Now().UTC()),
+			item.customer.customerID, subject, time.Now().UTC().Add(-7*24*time.Hour).Format(sqlTimeLayout))
+		if err != nil {
+			return queued, err
+		}
+		added, err := res.RowsAffected()
+		if err != nil {
+			return queued, err
+		}
+		queued += int(added)
 	}
 	return queued, nil
 }

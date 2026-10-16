@@ -29,9 +29,16 @@ type AppointmentRow struct {
 	StatusPill      string
 }
 
+type CalendarDay struct {
+	Date         string
+	Label        string
+	Appointments []AppointmentRow
+}
+
 // ListAppointmentsPage 預約排程頁（HTMX 即時搜尋）。
 func ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
-	date, status string, customerOpts, vehicleOpts, bayOpts, bayCardHTML string) templ.Component {
+	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
+	customerOpts, vehicleOpts, bayOpts, bayCardHTML string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -88,7 +95,7 @@ func ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</select></label> <label>預約日期<input type=\"date\" name=\"appointment_date\" required></label> <label>時段<input name=\"appointment_time\" placeholder=\"例：09:00\"></label> <label>工位<select name=\"bay\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</select></label> <label>預約日期<input type=\"date\" name=\"appointment_date\" required></label> <label>時段<input type=\"time\" step=\"1800\" name=\"appointment_time\" placeholder=\"例：09:00\"></label> <label>工位<select name=\"bay\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -96,7 +103,15 @@ func ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</select></label> <label>服務內容<input name=\"service_type\" placeholder=\"例：定期保養\"></label> <label class=\"full\">備註<textarea name=\"notes\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立預約</button></div></form></div><div class=\"card\"><h2>預約列表（共 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</select></label> <label>服務內容<input name=\"service_type\" placeholder=\"例：定期保養\"></label> <label class=\"full\">備註<textarea name=\"notes\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立預約</button></div></form></div><div class=\"card\"><h2>預約行事曆</h2>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = AppointmentCalendar(calendarDate, calendarView, status, calendarDays).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div class=\"card\"><h2>預約列表（共 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

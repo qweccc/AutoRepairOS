@@ -79,7 +79,7 @@ func normBay(v string) string {
 	return strings.ToUpper(strings.TrimSpace(v))
 }
 
-// bayConflict 檢查同一工位在同一日期時段是否已被占用（FR-APP-04）。
+// bayConflict 檢查同一工位的 60 分鐘預約區間是否重疊（FR-APP-04）。
 //
 // 回傳衝突的預約資訊（車牌 / 客戶 / 時段），讓錯誤訊息可以直接告訴櫃檯
 // 「跟誰撞了」而不是只說「有衝突」——後者會讓人反覆試錯。
@@ -90,22 +90,31 @@ func bayConflict(bay, date, timeSlot string, excludeID int64) (int64, string, st
 	if bay == "" || date == "" {
 		return 0, "", "", "", false
 	}
-	// 時段為空視為「未指定時段」，此時不比對（否則同日所有無時段預約會互相衝突）。
+	// 未指定時段不佔工位；指定工位時則由建立／更新 handler 強制要求時間。
 	if timeSlot == "" {
+		return 0, "", "", "", false
+	}
+	if len(timeSlot) != 5 || !validAppointmentTime(timeSlot) {
 		return 0, "", "", "", false
 	}
 	var id int64
 	var plate, cust, t string
-	err := db.DB.QueryRow(`SELECT a.id, COALESCE(v.plate_number,''), COALESCE(c.name,''),
+	var err error
+	err = db.DB.QueryRow(`SELECT a.id, COALESCE(v.plate_number,''), COALESCE(c.name,''),
 			COALESCE(a.appointment_time,'')
 		FROM active_appointments a
 		JOIN active_vehicles v ON v.id = a.vehicle_id
 		JOIN active_customers c ON c.id = a.customer_id
-		WHERE UPPER(COALESCE(a.bay,'')) = ?
-			AND a.appointment_date = ?
-			AND COALESCE(a.appointment_time,'') = ?
-			AND a.status <> 'cancelled'
-			AND a.id <> ?`, bay, date, timeSlot, excludeID).
+		WHERE UPPER(TRIM(COALESCE(a.bay,''))) = ?
+			AND a.appointment_date BETWEEN date(?, '-1 day') AND date(?, '+1 day')
+			AND length(COALESCE(a.appointment_time,'')) = 5
+			AND COALESCE(a.appointment_time,'') GLOB '[0-2][0-9]:[0-5][0-9]'
+			AND CAST(substr(a.appointment_time,1,2) AS INTEGER) <= 23
+			AND ABS(strftime('%s', a.appointment_date || ' ' || a.appointment_time) -
+				strftime('%s', ? || ' ' || ?)) < 3600
+			AND COALESCE(a.status,'booked') <> 'cancelled'
+			AND a.id <> ?
+		LIMIT 1`, bay, date, date, date, timeSlot, excludeID).
 		Scan(&id, &plate, &cust, &t)
 	if err != nil {
 		return 0, "", "", "", false

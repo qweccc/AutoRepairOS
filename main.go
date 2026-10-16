@@ -99,6 +99,7 @@ func main() {
 	mux.HandleFunc("GET /api/insurance/search", handler.RequireLogin(handler.SearchInsuranceAPI))
 	mux.HandleFunc("GET /api/suppliers/search", handler.RequireLogin(handler.SearchSuppliersAPI))
 	mux.HandleFunc("GET /api/appointments/search", handler.RequireLogin(handler.SearchAppointmentsAPI))
+	mux.HandleFunc("GET /api/appointments/calendar", handler.AllStaff(handler.AppointmentCalendarAPI))
 	mux.HandleFunc("GET /api/subcontracts/search", handler.RequireLogin(handler.SearchSubcontractsAPI))
 	mux.HandleFunc("GET /api/equipment/search", handler.RequireLogin(handler.SearchEquipmentAPI))
 	mux.HandleFunc("GET /api/staff/search", handler.RequireLogin(handler.SearchStaffAPI))

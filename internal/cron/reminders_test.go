@@ -35,6 +35,12 @@ func reminderTestDB(t *testing.T) *sql.DB {
 			inspection_due_date TEXT, deleted_at TEXT
 		)`,
 		`CREATE VIEW active_vehicles AS SELECT * FROM vehicles WHERE deleted_at IS NULL`,
+		`CREATE TABLE appointments (
+			id INTEGER PRIMARY KEY, customer_id INTEGER, vehicle_id INTEGER,
+			appointment_date TEXT, appointment_time TEXT, service_type TEXT,
+			status TEXT DEFAULT 'booked', deleted_at TEXT
+		)`,
+		`CREATE VIEW active_appointments AS SELECT * FROM appointments WHERE deleted_at IS NULL`,
 		`CREATE TABLE work_orders (id INTEGER PRIMARY KEY, vehicle_id INTEGER, current_mileage INTEGER, deleted_at TEXT)`,
 		`CREATE VIEW active_work_orders AS SELECT * FROM work_orders WHERE deleted_at IS NULL`,
 		`CREATE TABLE vehicle_mileages (id INTEGER PRIMARY KEY, vehicle_id INTEGER, mileage INTEGER)`,
@@ -231,6 +237,64 @@ func TestReminderDeduplicatesForSevenDays(t *testing.T) {
 	}
 	if third != 1 || countQueuedReminders(t, d) != 2 {
 		t.Fatalf("third=%d total=%d; want 1, 2", third, countQueuedReminders(t, d))
+	}
+}
+
+func TestAppointmentReminderIncludesDetailsAndDeduplicates(t *testing.T) {
+	d := reminderTestDB(t)
+	tomorrow := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).
+		AddDate(0, 0, 1).Format("2006-01-02")
+	if _, err := d.Exec(`INSERT INTO customers
+		(id,name,notification_preference,line_user_id,telegram_user_id)
+		VALUES (1,'客戶甲','line','LINE-1',''), (2,'客戶乙','telegram','','TG-2'),
+		       (3,'客戶丙','none','','')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.Exec(`INSERT INTO vehicles (id,customer_id,plate_number)
+		VALUES (1,1,'ABC-1234'), (2,2,'XYZ-9876'), (3,3,'NO-ALERT')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.Exec(`INSERT INTO appointments
+		(id,customer_id,vehicle_id,appointment_date,appointment_time,service_type,status)
+		VALUES (11,1,1,?,'09:30','定期保養','booked'),
+		       (12,2,2,?,'14:00','煞車檢查','confirmed'),
+		       (13,3,3,?,'15:00','輪胎更換','booked'),
+		       (14,1,1,?,'16:00','取消項目','cancelled')`,
+		tomorrow, tomorrow, tomorrow, tomorrow); err != nil {
+		t.Fatal(err)
+	}
+
+	first, err := ScanAppointmentRemindersNow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := ScanAppointmentRemindersNow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first != 2 || second != 0 || countQueuedReminders(t, d) != 2 {
+		t.Fatalf("first=%d second=%d queued=%d; want 2, 0, 2",
+			first, second, countQueuedReminders(t, d))
+	}
+	rows, err := d.Query(`SELECT channel, body FROM notifications ORDER BY customer_id`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	got := map[string]string{}
+	for rows.Next() {
+		var channel, body string
+		if err := rows.Scan(&channel, &body); err != nil {
+			t.Fatal(err)
+		}
+		got[channel] = body
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	if !containsAll(got["line"], "ABC-1234", "09:30", "定期保養") ||
+		!containsAll(got["telegram"], "XYZ-9876", "14:00", "煞車檢查") {
+		t.Fatalf("reminder bodies missing channel/appointment details: %#v", got)
 	}
 }
 

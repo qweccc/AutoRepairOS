@@ -297,6 +297,9 @@ go build -o "$LOCALAPPDATA/Temp/ar_smoke.exe" .
 DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Temp/ar_smoke.exe"
 ```
 - **測試一律用 8099**（8080=本機 ornith llama（手動跑的，勿動）、8090=正式服務、8091=sqlite-web、8092=本系統 local LLM 視覺埠）
+  - **sqlite-web（8091）預設不啟動**：`docker compose up -d` 不會拉起它。
+  - **啟動**：`docker compose --profile debug up -d` 或 `docker compose up -d sqlite-web`。
+  - **只綁 127.0.0.1，不對區網公開**（本機可連線，外部無法訪問）
 - **exe 與 docker 分開測**：測 exe 用 8099，測完 `taskkill /F /IM ar_smoke.exe` 結束；**docker container 測完留著**（正式服務持續運行，不要每次測都重啟）
 - 若測視覺辨識（VISION_AUTOSTART=true），app 會自動在 8092 起 llama-server；
   測完殺 app 時 Job Object 會連帶清掉它（強制 kill 也不會留孤兒）

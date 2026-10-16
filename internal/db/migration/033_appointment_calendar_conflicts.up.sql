@@ -1,0 +1,12 @@
+-- Appointment slots use HH:MM and occupy one hour. Intervals are half-open:
+-- [start, start + 60m), so back-to-back appointments are allowed.
+-- Triggers enforce the rule atomically for both inserts and updates.
+CREATE TRIGGER appointments_bay_slot_insert
+BEFORE INSERT ON appointments
+WHEN TRIM(COALESCE(NEW.bay,'')) <> ''
+BEGIN SELECT CASE WHEN COALESCE(NEW.status,'booked') <> 'cancelled' AND (COALESCE(NEW.appointment_time,'') NOT GLOB '[0-2][0-9]:[0-5][0-9]' OR CAST(substr(NEW.appointment_time,1,2) AS INTEGER) > 23) THEN RAISE(ABORT, 'appointment_bay_overlap: invalid appointment time') END; SELECT CASE WHEN COALESCE(NEW.status,'booked') <> 'cancelled' AND EXISTS (SELECT 1 FROM appointments a WHERE UPPER(TRIM(COALESCE(a.bay,''))) = UPPER(TRIM(NEW.bay)) AND COALESCE(a.status,'booked') <> 'cancelled' AND a.deleted_at IS NULL AND length(COALESCE(a.appointment_time,'')) = 5 AND a.appointment_time GLOB '[0-2][0-9]:[0-5][0-9]' AND CAST(substr(a.appointment_time,1,2) AS INTEGER) <= 23 AND ABS(CAST(strftime('%s', a.appointment_date || ' ' || a.appointment_time) AS INTEGER) - CAST(strftime('%s', NEW.appointment_date || ' ' || NEW.appointment_time) AS INTEGER)) < 3600) THEN RAISE(ABORT, 'appointment_bay_overlap') END; END;
+
+CREATE TRIGGER appointments_bay_slot_update
+BEFORE UPDATE OF bay, appointment_date, appointment_time, status, deleted_at ON appointments
+WHEN TRIM(COALESCE(NEW.bay,'')) <> ''
+BEGIN SELECT CASE WHEN COALESCE(NEW.status,'booked') <> 'cancelled' AND NEW.deleted_at IS NULL AND (COALESCE(NEW.appointment_time,'') NOT GLOB '[0-2][0-9]:[0-5][0-9]' OR CAST(substr(NEW.appointment_time,1,2) AS INTEGER) > 23) THEN RAISE(ABORT, 'appointment_bay_overlap: invalid appointment time') END; SELECT CASE WHEN COALESCE(NEW.status,'booked') <> 'cancelled' AND NEW.deleted_at IS NULL AND EXISTS (SELECT 1 FROM appointments a WHERE a.id <> NEW.id AND UPPER(TRIM(COALESCE(a.bay,''))) = UPPER(TRIM(NEW.bay)) AND COALESCE(a.status,'booked') <> 'cancelled' AND a.deleted_at IS NULL AND length(COALESCE(a.appointment_time,'')) = 5 AND a.appointment_time GLOB '[0-2][0-9]:[0-5][0-9]' AND CAST(substr(a.appointment_time,1,2) AS INTEGER) <= 23 AND ABS(CAST(strftime('%s', a.appointment_date || ' ' || a.appointment_time) AS INTEGER) - CAST(strftime('%s', NEW.appointment_date || ' ' || NEW.appointment_time) AS INTEGER)) < 3600) THEN RAISE(ABORT, 'appointment_bay_overlap') END; END;
