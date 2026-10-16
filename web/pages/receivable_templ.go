@@ -15,29 +15,30 @@ import (
 )
 
 type ReceivableRow struct {
-	ID           int64
-	VoucherNo    string
-	PayDate      string
-	CustomerName string
-	PlateNumber  string
-	MethodLabel  string
-	MethodPill   string
-	Cash         float64
-	Card         float64
-	CheckAmount  float64
-	PayTotal     float64
-	WorkOrderID  int64
-	WoCell       string
-	ReceivedCell string
-	UnpaidCell   string
-	UnpaidRed    bool
-	IsLegacy     bool
+	ID             int64
+	VoucherNo      string
+	PayDate        string
+	CustomerName   string
+	PlateNumber    string
+	MethodLabel    string
+	MethodPill     string
+	Cash           float64
+	Card           float64
+	CheckAmount    float64
+	TransferAmount float64
+	PayTotal       float64
+	WorkOrderID    int64
+	WoCell         string
+	ReceivedCell   string
+	UnpaidCell     string
+	UnpaidRed      bool
+	IsLegacy       bool
 }
 
 // ListReceivablesPage 收款紀錄頁（HTMX 即時搜尋）。
 func ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 	q, method, from, to string, showVoided, unpaidOnly bool,
-	sumPay, sumCash, sumCard, sumCheck float64) templ.Component {
+	sumPay, sumCash, sumCard, sumCheck, sumTransfer float64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -135,7 +136,20 @@ func ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</b><span>票據</span></div></div><p style=\"color:#94a3b8;font-size:13.5px;margin:0 0 14px\">上方合計為目前篩選條件的全部筆數（不受分頁影響）。</p><div style=\"margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</b><span>票據</span></div><div class=\"stat\"><b>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var100 string
+			templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(sumTransfer))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/receivable.templ`, Line: 41, Col: 44}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</b><span>轉帳</span></div></div><p style=\"color:#94a3b8;font-size:13.5px;margin:0 0 14px\">上方合計為目前篩選條件的全部筆數（不受分頁影響）。</p><div style=\"margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -223,7 +237,7 @@ func ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" href=\"/receivables?method=check\">票據</a></div><div style=\"margin-bottom:12px\"><a class=\"btn btn-p\" href=\"/receivables/new\">＋ 新增收款</a> <a class=\"btn btn-s\" href=\"/receivables?unpaid=1\">待收款</a></div><input type=\"search\" name=\"q\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" href=\"/receivables?method=check\">票據</a> <a class=\"btn\" href=\"/receivables?method=transfer\">轉帳</a></div><div style=\"margin-bottom:12px\"><a class=\"btn btn-p\" href=\"/receivables/new\">＋ 新增收款</a> <a class=\"btn btn-s\" href=\"/receivables?unpaid=1\">待收款</a></div><input type=\"search\" name=\"q\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -236,7 +250,7 @@ func ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" placeholder=\"搜尋單號 / 客戶 / 電話 / 車牌 / 票號\" hx-get=\"/api/receivables/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#receivable-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px\"><table><tr><th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th><th>方式</th><th class=\"num\">現金</th><th class=\"num\">刷卡</th><th class=\"num\">票額</th><th class=\"num\">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th></tr><tbody id=\"receivable-rows\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" placeholder=\"搜尋單號 / 客戶 / 電話 / 車牌 / 票號 / 轉帳序號\" hx-get=\"/api/receivables/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#receivable-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px\"><table><tr><th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th><th>方式</th><th class=\"num\">現金</th><th class=\"num\">刷卡</th><th class=\"num\">票額</th><th class=\"num\">轉帳</th><th class=\"num\">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th></tr><tbody id=\"receivable-rows\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -431,6 +445,19 @@ func ReceivableRowContent(rec ReceivableRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</td><td class=\"num\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var101 string
+		templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(moneyOrDash(rec.TransferAmount))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/receivable.templ`, Line: 100, Col: 41}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</td><td class=\"num\"><b>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -590,7 +617,7 @@ func ReceivableSearchRows(rows []ReceivableRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(rows) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<tr><td colspan=\"13\" style=\"color:#64748b;text-align:center;padding:20px\">查無收款紀錄</td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<tr><td colspan=\"14\" style=\"color:#64748b;text-align:center;padding:20px\">查無收款紀錄</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

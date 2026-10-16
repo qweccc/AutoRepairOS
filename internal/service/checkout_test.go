@@ -45,7 +45,8 @@ func newCheckoutTestDB(t *testing.T) *sql.DB {
 			id INTEGER PRIMARY KEY, voucher_no TEXT NOT NULL, customer_id INTEGER NOT NULL,
 			vehicle_id INTEGER, work_order_id INTEGER, pay_date TEXT, detail_total REAL,
 			real_total REAL, discount REAL, tax REAL, pay_total REAL, cash REAL, card REAL,
-			check_amount REAL, card_no TEXT, check_no TEXT, check_date TEXT, bank TEXT,
+			check_amount REAL, transfer_amount REAL DEFAULT 0, transfer_reference TEXT DEFAULT '',
+			card_no TEXT, check_no TEXT, check_date TEXT, bank TEXT,
 			notes TEXT, source TEXT, created_by INTEGER, voided INTEGER NOT NULL DEFAULT 0
 		)`,
 		`INSERT INTO customers (id, total_spent, unpaid_amount) VALUES (1, 12, 80)`,
@@ -121,7 +122,7 @@ func TestAssociateReceiptChecksOutAtomically(t *testing.T) {
 	db := newCheckoutTestDB(t)
 	input := ReceiptInput{
 		VoucherNo: "RCV-001", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
-		PayTotal: 125, Cash: 125, CreatedBy: 21,
+		PayTotal: 125, TransferAmount: 125, TransferReference: "TX-001", CreatedBy: 21,
 	}
 	if err := New(db).AssociateReceipt(context.Background(), input); err != nil {
 		t.Fatalf("AssociateReceipt: %v", err)
@@ -260,6 +261,165 @@ func TestUpdateReceiptAndCheckoutRollBackTogether(t *testing.T) {
 	}
 	if voucher != "RCV-OLD" || amount != 100 {
 		t.Fatalf("receipt update was not rolled back: voucher=%q amount=%v", voucher, amount)
+	}
+}
+
+func TestPartialReceiptThenFullTransferChecksOutOnce(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	svc := New(db)
+	if err := svc.CreateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-PART", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 60, Cash: 60, CreatedBy: 21,
+	}); err != nil {
+		t.Fatalf("create partial receipt: %v", err)
+	}
+	var status string
+	var stock, movements int
+	var spent float64
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=3`).Scan(&stock); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
+		t.Fatal(err)
+	}
+	if status != "completed" || stock != 8 || movements != 0 || spent != 12 {
+		t.Fatalf("partial receipt state: status=%q stock=%d movements=%d spent=%v",
+			status, stock, movements, spent)
+	}
+
+	if err := svc.CreateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-TRANSFER", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 65, TransferAmount: 65, TransferReference: "BANK-12345", CreatedBy: 21,
+	}); err != nil {
+		t.Fatalf("create final transfer receipt: %v", err)
+	}
+	var transferAmount float64
+	var transferReference string
+	if err := db.QueryRow(`SELECT transfer_amount, transfer_reference FROM receivables
+		WHERE voucher_no='RCV-TRANSFER'`).Scan(&transferAmount, &transferReference); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=3`).Scan(&stock); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
+		t.Fatal(err)
+	}
+	if status != "paid" || stock != 6 || movements != 1 || spent != 137 ||
+		transferAmount != 65 || transferReference != "BANK-12345" {
+		t.Fatalf("full transfer state: status=%q stock=%d movements=%d spent=%v transfer=%v reference=%q",
+			status, stock, movements, spent, transferAmount, transferReference)
+	}
+}
+
+func TestVoidedPartialReceiptDoesNotCheckoutAndAllowsFullReplacement(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	svc := New(db)
+	if err := svc.CreateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-VOID", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 60, TransferAmount: 60, TransferReference: "VOID-TX", CreatedBy: 21,
+	}); err != nil {
+		t.Fatalf("create receipt to void: %v", err)
+	}
+	var receiptID int64
+	if err := db.QueryRow(`SELECT id FROM receivables WHERE voucher_no='RCV-VOID'`).Scan(&receiptID); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.VoidReceipt(context.Background(), receiptID); err != nil {
+		t.Fatalf("void partial receipt: %v", err)
+	}
+	if err := svc.CreateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-REPLACEMENT", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, TransferAmount: 125, TransferReference: "VALID-TX", CreatedBy: 21,
+	}); err != nil {
+		t.Fatalf("create replacement full receipt: %v", err)
+	}
+	if err := db.QueryRow(`SELECT id FROM receivables WHERE voucher_no='RCV-REPLACEMENT'`).Scan(&receiptID); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.VoidReceipt(context.Background(), receiptID); err != nil {
+		t.Fatalf("void completed receipt: %v", err)
+	}
+	if err := svc.CreateReceipt(context.Background(), ReceiptInput{
+		VoucherNo: "RCV-REPLACEMENT-2", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, TransferAmount: 125, TransferReference: "VALID-TX-2", CreatedBy: 21,
+	}); err != nil {
+		t.Fatalf("create replacement after voided checkout: %v", err)
+	}
+	var status string
+	var stock, movements int
+	var spent float64
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=3`).Scan(&stock); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
+		t.Fatal(err)
+	}
+	if status != "paid" || stock != 6 || movements != 1 || spent != 137 {
+		t.Fatalf("void and replacement state: status=%q stock=%d movements=%d spent=%v",
+			status, stock, movements, spent)
+	}
+}
+
+func TestUpdatingPartialReceiptToFullChecksOutOnlyOnce(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	svc := New(db)
+	input := ReceiptInput{
+		VoucherNo: "RCV-CORRECT", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 60, Cash: 60, CreatedBy: 21,
+	}
+	if err := svc.CreateReceipt(context.Background(), input); err != nil {
+		t.Fatalf("create partial receipt: %v", err)
+	}
+	input.PayTotal = 125
+	input.Cash = 0
+	input.TransferAmount = 125
+	input.TransferReference = "CORRECTED-TX"
+	if err := svc.UpdateReceipt(context.Background(), 1, input); err != nil {
+		t.Fatalf("correct receipt: %v", err)
+	}
+	if err := svc.UpdateReceipt(context.Background(), 1, input); err != nil {
+		t.Fatalf("repeat corrected receipt update: %v", err)
+	}
+	var status string
+	var stock, movements int
+	var spent, transferAmount float64
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=3`).Scan(&stock); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`SELECT transfer_amount FROM receivables WHERE id=1`).Scan(&transferAmount); err != nil {
+		t.Fatal(err)
+	}
+	if status != "paid" || stock != 6 || movements != 1 || spent != 137 || transferAmount != 125 {
+		t.Fatalf("corrected receipt state: status=%q stock=%d movements=%d spent=%v transfer=%v",
+			status, stock, movements, spent, transferAmount)
 	}
 }
 

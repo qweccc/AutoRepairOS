@@ -29,24 +29,26 @@ func New(db *sql.DB) *Service {
 
 // ReceiptInput contains the fields needed to create or update a receipt.
 type ReceiptInput struct {
-	VoucherNo   string
-	CustomerID  int64
-	WorkOrderID int64
-	PayDate     string
-	DetailTotal float64
-	RealTotal   float64
-	Discount    float64
-	Tax         float64
-	PayTotal    float64
-	Cash        float64
-	Card        float64
-	CheckAmount float64
-	CardNo      string
-	CheckNo     string
-	CheckDate   string
-	Bank        string
-	Notes       string
-	CreatedBy   int64
+	VoucherNo         string
+	CustomerID        int64
+	WorkOrderID       int64
+	PayDate           string
+	DetailTotal       float64
+	RealTotal         float64
+	Discount          float64
+	Tax               float64
+	PayTotal          float64
+	Cash              float64
+	Card              float64
+	CheckAmount       float64
+	TransferAmount    float64
+	TransferReference string
+	CardNo            string
+	CheckNo           string
+	CheckDate         string
+	Bank              string
+	Notes             string
+	CreatedBy         int64
 }
 
 // Checkout marks a work order paid and applies its inventory and customer-account
@@ -62,9 +64,10 @@ func (s *Service) AssociateReceipt(ctx context.Context, receipt ReceiptInput) er
 	return s.CreateReceipt(ctx, receipt)
 }
 
-// CreateReceipt inserts a receipt and, when it is associated with a work order,
-// checks out that work order in the same transaction. Replaying an identical
-// voucher is a no-op; reusing its number for different receipt data is rejected.
+// CreateReceipt inserts a receipt and checks out its associated work order in
+// the same transaction when active receipts cover the full work-order total.
+// Replaying an identical voucher is a no-op; reusing its number for different
+// receipt data is rejected.
 func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error {
 	if s == nil || s.db == nil {
 		return errors.New("service database is nil")
@@ -74,6 +77,10 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 	}
 	if receipt.VoucherNo == "" {
 		return errors.New("receipt voucher number is required")
+	}
+	if receipt.Cash < 0 || receipt.Card < 0 || receipt.CheckAmount < 0 ||
+		receipt.TransferAmount < 0 || receipt.PayTotal < 0 {
+		return errors.New("receipt amounts cannot be negative")
 	}
 	if receipt.WorkOrderID < 0 {
 		return errors.New("work order ID cannot be negative")
@@ -114,12 +121,14 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 		_, err = tx.ExecContext(ctx, `INSERT INTO receivables
 			(voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
 			 detail_total, real_total, discount, tax, pay_total,
-			 cash, card, check_amount, card_no, check_no, check_date, bank,
+			 cash, card, check_amount, transfer_amount, transfer_reference,
+			 card_no, check_no, check_date, bank,
 			 notes, source, created_by)
-			VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?,?, ?, 'manual', ?)`,
+			VALUES (?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,'manual',?)`,
 			receipt.VoucherNo, receipt.CustomerID, nullableID(vehicleID), nullableID(receipt.WorkOrderID), receipt.PayDate,
 			receipt.DetailTotal, receipt.RealTotal, receipt.Discount, receipt.Tax, receipt.PayTotal,
-			receipt.Cash, receipt.Card, receipt.CheckAmount, nullableString(receipt.CardNo),
+			receipt.Cash, receipt.Card, receipt.CheckAmount, receipt.TransferAmount,
+			nullableString(receipt.TransferReference), nullableString(receipt.CardNo),
 			nullableString(receipt.CheckNo), nullableString(receipt.CheckDate),
 			nullableString(receipt.Bank), nullableString(receipt.Notes), nullableID(receipt.CreatedBy))
 		if err != nil {
@@ -127,6 +136,13 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 		}
 
 		if receipt.WorkOrderID > 0 {
+			ready, err := receiptCompletesWorkOrder(ctx, tx, receipt.WorkOrderID)
+			if err != nil {
+				return err
+			}
+			if !ready {
+				return nil
+			}
 			if err := checkoutTx(ctx, tx, receipt.WorkOrderID, receipt.CreatedBy); err != nil {
 				return err
 			}
@@ -147,6 +163,10 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 	}
 	if receipt.VoucherNo == "" {
 		return errors.New("receipt voucher number is required")
+	}
+	if receipt.Cash < 0 || receipt.Card < 0 || receipt.CheckAmount < 0 ||
+		receipt.TransferAmount < 0 || receipt.PayTotal < 0 {
+		return errors.New("receipt amounts cannot be negative")
 	}
 	return s.withTx(ctx, "update receipt", func(tx sqlExecutor) error {
 		var workOrderID int64
@@ -174,19 +194,27 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 		_, err = tx.ExecContext(ctx, `UPDATE receivables SET
 			voucher_no = ?, pay_date = ?, detail_total = ?, real_total = ?,
 			discount = ?, tax = ?, pay_total = ?,
-			cash = ?, card = ?, check_amount = ?,
+			cash = ?, card = ?, check_amount = ?, transfer_amount = ?, transfer_reference = ?,
 			card_no = ?, check_no = ?, check_date = ?, bank = ?,
 			notes = ?
 			WHERE id = ? AND voided = 0`,
 			receipt.VoucherNo, receipt.PayDate, receipt.DetailTotal, receipt.RealTotal,
 			receipt.Discount, receipt.Tax, receipt.PayTotal, receipt.Cash, receipt.Card,
-			receipt.CheckAmount, nullableString(receipt.CardNo), nullableString(receipt.CheckNo),
+			receipt.CheckAmount, receipt.TransferAmount, nullableString(receipt.TransferReference),
+			nullableString(receipt.CardNo), nullableString(receipt.CheckNo),
 			nullableString(receipt.CheckDate), nullableString(receipt.Bank),
 			nullableString(receipt.Notes), id)
 		if err != nil {
 			return fmt.Errorf("update receipt: %w", err)
 		}
 		if workOrderID > 0 {
+			ready, err := receiptCompletesWorkOrder(ctx, tx, workOrderID)
+			if err != nil {
+				return err
+			}
+			if !ready {
+				return nil
+			}
 			if err := checkoutTx(ctx, tx, workOrderID, receipt.CreatedBy); err != nil {
 				return err
 			}
@@ -258,13 +286,15 @@ func existingReceiptMatches(ctx context.Context, tx sqlExecutor, receipt Receipt
 	var existing ReceiptInput
 	var source string
 	err := tx.QueryRowContext(ctx, `SELECT voucher_no, customer_id, COALESCE(work_order_id,0),
-		pay_date, detail_total, real_total, discount, tax, pay_total, cash, card, check_amount,
+		pay_date, detail_total, real_total, discount, tax, pay_total, cash, card,
+		check_amount, transfer_amount, COALESCE(transfer_reference,''),
 		COALESCE(card_no,''), COALESCE(check_no,''), COALESCE(check_date,''),
 		COALESCE(bank,''), COALESCE(notes,''), source
 		FROM receivables WHERE voucher_no = ? LIMIT 1`, receipt.VoucherNo).Scan(
 		&existing.VoucherNo, &existing.CustomerID, &existing.WorkOrderID,
 		&existing.PayDate, &existing.DetailTotal, &existing.RealTotal, &existing.Discount,
 		&existing.Tax, &existing.PayTotal, &existing.Cash, &existing.Card, &existing.CheckAmount,
+		&existing.TransferAmount, &existing.TransferReference,
 		&existing.CardNo, &existing.CheckNo, &existing.CheckDate, &existing.Bank, &existing.Notes, &source)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
@@ -284,8 +314,24 @@ func sameReceipt(a, b ReceiptInput) bool {
 		a.DetailTotal == b.DetailTotal && a.RealTotal == b.RealTotal &&
 		a.Discount == b.Discount && a.Tax == b.Tax && a.PayTotal == b.PayTotal &&
 		a.Cash == b.Cash && a.Card == b.Card && a.CheckAmount == b.CheckAmount &&
+		a.TransferAmount == b.TransferAmount && a.TransferReference == b.TransferReference &&
 		a.CardNo == b.CardNo && a.CheckNo == b.CheckNo && a.CheckDate == b.CheckDate &&
 		a.Bank == b.Bank && a.Notes == b.Notes
+}
+
+func receiptCompletesWorkOrder(ctx context.Context, tx sqlExecutor, workOrderID int64) (bool, error) {
+	var total, received float64
+	err := tx.QueryRowContext(ctx, `SELECT wo.total_amount,
+		COALESCE((SELECT SUM(r.pay_total) FROM receivables r
+			WHERE r.work_order_id = wo.id AND r.voided = 0),0)
+		FROM active_work_orders wo WHERE wo.id = ?`, workOrderID).Scan(&total, &received)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, ErrNotFound
+	}
+	if err != nil {
+		return false, fmt.Errorf("calculate work order receipts: %w", err)
+	}
+	return received >= total, nil
 }
 
 func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64) error {

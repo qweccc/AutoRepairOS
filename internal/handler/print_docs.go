@@ -63,9 +63,8 @@ func computeTaxBreakdown(total float64) taxBreakdown {
 
 // payMethodRows 收款方式的拆分列。
 //
-// 一筆收款可能同時含現金與刷卡（舊系統實測 83,094 筆現金中有部分是混合），
-// 因此這裡是逐項列出而非互斥分類。
-func payMethodRows(cash, card, check float64) []struct {
+// 一筆收款可能同時使用多種方式，因此逐項列出而非互斥分類。
+func payMethodRows(cash, card, check, transfer float64) []struct {
 	Label string
 	Value float64
 	Note  string
@@ -95,6 +94,13 @@ func payMethodRows(cash, card, check float64) []struct {
 			Value float64
 			Note  string
 		}{"票據", check, ""})
+	}
+	if transfer > 0 {
+		out = append(out, struct {
+			Label string
+			Value float64
+			Note  string
+		}{"轉帳", transfer, ""})
 	}
 	return out
 }
@@ -272,13 +278,14 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 	var payDate string
 	err := db.DB.QueryRow(`SELECT r.id, r.voucher_no, r.customer_id, COALESCE(c.name,''),
 		COALESCE(r.pay_date,''), r.detail_total, r.real_total, r.discount, r.tax, r.pay_total,
-		r.cash, r.card, r.check_amount,
+		r.cash, r.card, r.check_amount, r.transfer_amount,
+		COALESCE(r.transfer_reference,''),
 		COALESCE(r.card_no,''), COALESCE(r.check_no,''), COALESCE(r.check_date,''),
 		COALESCE(r.bank,''), COALESCE(r.notes,''), COALESCE(r.voided,0)
 		FROM receivables r JOIN active_customers c ON c.id = r.customer_id WHERE r.id = ?`, id).
 		Scan(&v.ID, &v.VoucherNo, &v.CustomerID, &v.CustomerName,
 			&payDate, &v.DetailTotal, &v.RealTotal, &v.Discount, &v.Tax, &v.PayTotal,
-			&v.Cash, &v.Card, &v.CheckAmount,
+			&v.Cash, &v.Card, &v.CheckAmount, &v.TransferAmount, &v.TransferReference,
 			&v.CardNo, &v.CheckNo, &v.CheckDate, &v.Bank, &v.Notes, &v.Voided)
 	if err != nil {
 		http.NotFound(w, r)
@@ -317,7 +324,7 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 
 	var payB strings.Builder
 	payB.WriteString(`<table class="amt"><tr><th>支付方式</th><th class="num">金額</th><th>票據資訊</th></tr>`)
-	rows := payMethodRows(v.Cash, v.Card, v.CheckAmount)
+	rows := payMethodRows(v.Cash, v.Card, v.CheckAmount, v.TransferAmount)
 	if len(rows) == 0 {
 		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">未記錄支付方式</td></tr>`)
 	}
@@ -334,6 +341,9 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 			if v.Bank != "" {
 				note += " / " + v.Bank
 			}
+		}
+		if r.Label == "轉帳" && v.TransferReference != "" {
+			note = "交易序號 " + v.TransferReference
 		}
 		payB.WriteString(`<tr><td>` + r.Label + `</td><td class="num">` + money(r.Value) +
 			`</td><td style="font-size:12.5px">` + htmlEsc(note) + `</td></tr>`)
@@ -645,12 +655,13 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	// 支付方式分布（以收款紀錄為準）
-	var cash, card, checkAmt, payTotal float64
+	var cash, card, checkAmt, transferAmt, payTotal float64
 	var receiptCount int
 	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(cash),0), COALESCE(SUM(card),0),
-		COALESCE(SUM(check_amount),0), COALESCE(SUM(pay_total),0)
+		COALESCE(SUM(check_amount),0), COALESCE(SUM(transfer_amount),0),
+		COALESCE(SUM(pay_total),0)
 		FROM receivables WHERE COALESCE(pay_date,'') = ? AND COALESCE(voided,0) = 0`, date).
-		Scan(&receiptCount, &cash, &card, &checkAmt, &payTotal)
+		Scan(&receiptCount, &cash, &card, &checkAmt, &transferAmt, &payTotal)
 
 	// 工單統計（當日結帳的工單）
 	var paidCount, insCount int
@@ -680,7 +691,7 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var payB strings.Builder
 	payB.WriteString(`<table class="amt"><tr><th>支付方式</th><th class="num">金額</th><th class="num">佔比</th></tr>`)
-	for _, x := range payMethodRows(cash, card, checkAmt) {
+	for _, x := range payMethodRows(cash, card, checkAmt, transferAmt) {
 		pct := 0.0
 		if payTotal > 0 {
 			pct = x.Value / payTotal * 100
@@ -688,7 +699,7 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 		payB.WriteString(`<tr><td>` + x.Label + `</td><td class="num">` + money(x.Value) +
 			`</td><td class="num">` + strconv.FormatFloat(pct, 'f', 1, 64) + `%</td></tr>`)
 	}
-	if len(payMethodRows(cash, card, checkAmt)) == 0 {
+	if len(payMethodRows(cash, card, checkAmt, transferAmt)) == 0 {
 		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">今日無收款紀錄</td></tr>`)
 	}
 	payB.WriteString(`<tr class="grand"><td><b>收款合計</b></td><td class="num"><b>` + money(payTotal) +

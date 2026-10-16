@@ -32,7 +32,8 @@ const receivableCols = `r.id, r.voucher_no, r.customer_id, COALESCE(c.name,''),
 	COALESCE(r.work_order_id,0),
 	COALESCE(r.pay_date,''), r.detail_total, r.real_total,
 	r.discount, r.tax, r.pay_total,
-	r.cash, r.card, r.check_amount,
+	r.cash, r.card, r.check_amount, r.transfer_amount,
+	COALESCE(r.transfer_reference,''),
 	COALESCE(r.card_no,''), COALESCE(r.check_no,''), COALESCE(r.check_date,''),
 	COALESCE(r.bank,''), COALESCE(r.notes,''), r.voided, r.source`
 
@@ -41,29 +42,31 @@ const receivableFrom = ` FROM receivables r
 	LEFT JOIN active_vehicles v ON v.id = r.vehicle_id`
 
 type receivable struct {
-	ID           int64
-	VoucherNo    string
-	CustomerID   int64
-	CustomerName string
-	VehicleID    int64
-	PlateNumber  string
-	WorkOrderID  int64
-	PayDate      string
-	DetailTotal  float64
-	RealTotal    float64
-	Discount     float64
-	Tax          float64
-	PayTotal     float64
-	Cash         float64
-	Card         float64
-	CheckAmount  float64
-	CardNo       string
-	CheckNo      string
-	CheckDate    string
-	Bank         string
-	Notes        string
-	Voided       int
-	Source       string
+	ID                int64
+	VoucherNo         string
+	CustomerID        int64
+	CustomerName      string
+	VehicleID         int64
+	PlateNumber       string
+	WorkOrderID       int64
+	PayDate           string
+	DetailTotal       float64
+	RealTotal         float64
+	Discount          float64
+	Tax               float64
+	PayTotal          float64
+	Cash              float64
+	Card              float64
+	CheckAmount       float64
+	TransferAmount    float64
+	TransferReference string
+	CardNo            string
+	CheckNo           string
+	CheckDate         string
+	Bank              string
+	Notes             string
+	Voided            int
+	Source            string
 }
 
 func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, error) {
@@ -72,7 +75,7 @@ func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, e
 		&r.VehicleID, &r.PlateNumber, &r.WorkOrderID,
 		&r.PayDate, &r.DetailTotal, &r.RealTotal,
 		&r.Discount, &r.Tax, &r.PayTotal,
-		&r.Cash, &r.Card, &r.CheckAmount,
+		&r.Cash, &r.Card, &r.CheckAmount, &r.TransferAmount, &r.TransferReference,
 		&r.CardNo, &r.CheckNo, &r.CheckDate,
 		&r.Bank, &r.Notes, &r.Voided, &r.Source)
 	return r, err
@@ -80,20 +83,23 @@ func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, e
 
 // payMethod 判斷這筆收款的主要付款方式，用於列表標籤。
 //
-// 舊系統同一筆可同時記現金與刷卡（實測 83,094 筆現金中有部分是混合），
+// 同一筆可同時使用多種收款方式，因此這裡是顯示用的主要分類。
 // 因此這裡是「顯示用」的分類，不是互斥的真實欄位。
 func payMethod(r receivable) (string, string) {
 	hasCash := r.Cash > 0
 	hasCard := r.Card > 0
 	hasCheck := r.CheckAmount > 0
+	hasTransfer := r.TransferAmount > 0
 	switch {
-	case hasCash && !hasCard && !hasCheck:
+	case hasCash && !hasCard && !hasCheck && !hasTransfer:
 		return "現金", "p-completed"
-	case hasCard && !hasCash && !hasCheck:
+	case hasCard && !hasCash && !hasCheck && !hasTransfer:
 		return "信用卡", "p-apprpend"
-	case hasCheck && !hasCash && !hasCard:
+	case hasCheck && !hasCash && !hasCard && !hasTransfer:
 		return "票據", "p-waitparts"
-	case !hasCash && !hasCard && !hasCheck:
+	case hasTransfer && !hasCash && !hasCard && !hasCheck:
+		return "轉帳", "p-waitparts"
+	case !hasCash && !hasCard && !hasCheck && !hasTransfer:
 		return "未收款", "p-apprno"
 	default:
 		return "混合", "p-apprpend"
@@ -134,9 +140,10 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	if q != "" {
 		where += ` AND (r.voucher_no LIKE ? OR c.name LIKE ? OR c.phone LIKE ?
-			OR COALESCE(v.plate_number,'') LIKE ? OR COALESCE(r.check_no,'') LIKE ?)`
+			OR COALESCE(v.plate_number,'') LIKE ? OR COALESCE(r.check_no,'') LIKE ?
+			OR COALESCE(r.transfer_reference,'') LIKE ?)`
 		like := "%" + q + "%"
-		args = append(args, like, like, like, like, like)
+		args = append(args, like, like, like, like, like, like)
 	}
 	// 付款方式篩選。舊資料同一筆可並存多種金額，所以用「> 0」判斷而非等於。
 	switch method {
@@ -146,6 +153,8 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 		where += ` AND r.card > 0`
 	case "check":
 		where += ` AND r.check_amount > 0`
+	case "transfer":
+		where += ` AND r.transfer_amount > 0`
 	}
 	// 日期區間。舊資料是 '100/03/11'（民國），新資料是 ISO，
 	// 先用 normDateSQL 正規化再比對，兩種格式都能篩。
@@ -161,10 +170,11 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	total := countRows(`SELECT COUNT(1)`+receivableFrom+where, args...)
 
 	// 合計（不受分頁影響）：這是這一頁最主要的用途 —— 知道收了多少錢。
-	var sumCash, sumCard, sumCheck, sumPay float64
+	var sumCash, sumCard, sumCheck, sumTransfer, sumPay float64
 	db.DB.QueryRow(`SELECT COALESCE(SUM(r.cash),0), COALESCE(SUM(r.card),0),
-		COALESCE(SUM(r.check_amount),0), COALESCE(SUM(r.pay_total),0)`+
-		receivableFrom+where, args...).Scan(&sumCash, &sumCard, &sumCheck, &sumPay)
+		COALESCE(SUM(r.check_amount),0), COALESCE(SUM(r.transfer_amount),0),
+		COALESCE(SUM(r.pay_total),0)`+
+		receivableFrom+where, args...).Scan(&sumCash, &sumCard, &sumCheck, &sumTransfer, &sumPay)
 
 	// 計算每張工單的已收金額（用於部分收款追蹤）
 	woReceived := make(map[int64]float64)
@@ -225,28 +235,29 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 			}
 		}
 		recRows = append(recRows, pages.ReceivableRow{
-			ID:           r2.ID,
-			VoucherNo:    r2.VoucherNo,
-			PayDate:      normDate(r2.PayDate),
-			CustomerName: r2.CustomerName,
-			PlateNumber:  r2.PlateNumber,
-			MethodLabel:  label,
-			MethodPill:   cls,
-			Cash:         r2.Cash,
-			Card:         r2.Card,
-			CheckAmount:  r2.CheckAmount,
-			PayTotal:     r2.PayTotal,
-			WorkOrderID:  r2.WorkOrderID,
-			WoCell:       woCell,
-			ReceivedCell: receivedCell,
-			UnpaidCell:   unpaidCell,
-			UnpaidRed:    unpaidRed,
-			IsLegacy:     r2.Source == "legacy",
+			ID:             r2.ID,
+			VoucherNo:      r2.VoucherNo,
+			PayDate:        normDate(r2.PayDate),
+			CustomerName:   r2.CustomerName,
+			PlateNumber:    r2.PlateNumber,
+			MethodLabel:    label,
+			MethodPill:     cls,
+			Cash:           r2.Cash,
+			Card:           r2.Card,
+			CheckAmount:    r2.CheckAmount,
+			TransferAmount: r2.TransferAmount,
+			PayTotal:       r2.PayTotal,
+			WorkOrderID:    r2.WorkOrderID,
+			WoCell:         woCell,
+			ReceivedCell:   receivedCell,
+			UnpaidCell:     unpaidCell,
+			UnpaidRed:      unpaidRed,
+			IsLegacy:       r2.Source == "legacy",
 		})
 	}
 
 	pages.ListReceivablesPage(recRows, total, page, size, q, method, from, to,
-		showVoided, unpaidOnly, sumPay, sumCash, sumCard, sumCheck).Render(r.Context(), w)
+		showVoided, unpaidOnly, sumPay, sumCash, sumCard, sumCheck, sumTransfer).Render(r.Context(), w)
 }
 
 // SearchReceivablesAPI 收款即時搜尋 API（HTMX 用）。
@@ -256,9 +267,10 @@ func SearchReceivablesAPI(w http.ResponseWriter, r *http.Request) {
 	var args []interface{}
 	if q != "" {
 		where += ` AND (r.voucher_no LIKE ? OR c.name LIKE ? OR c.phone LIKE ?
-			OR COALESCE(v.plate_number,'') LIKE ? OR COALESCE(r.check_no,'') LIKE ?)`
+			OR COALESCE(v.plate_number,'') LIKE ? OR COALESCE(r.check_no,'') LIKE ?
+			OR COALESCE(r.transfer_reference,'') LIKE ?)`
 		like := "%" + q + "%"
-		args = append(args, like, like, like, like, like)
+		args = append(args, like, like, like, like, like, like)
 	}
 	rows, err := db.DB.Query(`SELECT `+receivableCols+receivableFrom+where+
 		` ORDER BY `+normDateSQL("r.pay_date")+` DESC, r.id DESC LIMIT 50`, args...)
@@ -279,22 +291,23 @@ func SearchReceivablesAPI(w http.ResponseWriter, r *http.Request) {
 			label, cls = "已作廢", "p-apprno"
 		}
 		result = append(result, pages.ReceivableRow{
-			ID:           r2.ID,
-			VoucherNo:    r2.VoucherNo,
-			PayDate:      normDate(r2.PayDate),
-			CustomerName: r2.CustomerName,
-			PlateNumber:  r2.PlateNumber,
-			MethodLabel:  label,
-			MethodPill:   cls,
-			Cash:         r2.Cash,
-			Card:         r2.Card,
-			CheckAmount:  r2.CheckAmount,
-			PayTotal:     r2.PayTotal,
-			WorkOrderID:  r2.WorkOrderID,
-			WoCell:       woCellText(r2.WorkOrderID),
-			ReceivedCell: "-",
-			UnpaidCell:   "-",
-			IsLegacy:     r2.Source == "legacy",
+			ID:             r2.ID,
+			VoucherNo:      r2.VoucherNo,
+			PayDate:        normDate(r2.PayDate),
+			CustomerName:   r2.CustomerName,
+			PlateNumber:    r2.PlateNumber,
+			MethodLabel:    label,
+			MethodPill:     cls,
+			Cash:           r2.Cash,
+			Card:           r2.Card,
+			CheckAmount:    r2.CheckAmount,
+			TransferAmount: r2.TransferAmount,
+			PayTotal:       r2.PayTotal,
+			WorkOrderID:    r2.WorkOrderID,
+			WoCell:         woCellText(r2.WorkOrderID),
+			ReceivedCell:   "-",
+			UnpaidCell:     "-",
+			IsLegacy:       r2.Source == "legacy",
 		})
 	}
 	pages.ReceivableSearchRows(result).Render(r.Context(), w)
@@ -366,10 +379,12 @@ func receivableFormBody(rec receivable, action, errMsg string) string {
         <label>票號<input name="check_no" value="` + htmlEsc(rec.CheckNo) + `"></label>
         <label>票據到期日<input name="check_date" type="date" value="` + htmlEsc(normDate(rec.CheckDate)) + `"></label>
         <label>行庫<input name="bank" value="` + htmlEsc(rec.Bank) + `"></label>
+        <label>轉帳金額<input name="transfer_amount" type="number" min="0" step="1" value="` + sel(rec.TransferAmount) + `"></label>
+        <label>轉帳末五碼／交易序號<input name="transfer_reference" value="` + htmlEsc(rec.TransferReference) + `"></label>
 
         <div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px">
           <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">
-            金額拆分（選填）。收款合計 = 現金 + 信用卡 + 票據；若留空會自動加總。
+            金額拆分（選填）。收款合計 = 現金 + 信用卡 + 票據 + 轉帳；若留空會自動加總。
           </p>
         </div>
         <label>明細合計<input name="detail_total" type="number" min="0" step="1" value="` + sel(rec.DetailTotal) + `"></label>
@@ -412,12 +427,13 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 	cash := atofDefault(r.FormValue("cash"), 0)
 	card := atofDefault(r.FormValue("card"), 0)
 	checkAmt := atofDefault(r.FormValue("check_amount"), 0)
+	transferAmt := atofDefault(r.FormValue("transfer_amount"), 0)
 	payTotal := atofDefault(r.FormValue("pay_total"), 0)
 	// 合計留空時自動加總，避免櫃檯填了方式卻忘了填合計。
 	if payTotal == 0 {
-		payTotal = cash + card + checkAmt
+		payTotal = cash + card + checkAmt + transferAmt
 	}
-	if cash+card+checkAmt == 0 && payTotal == 0 {
+	if cash+card+checkAmt+transferAmt == 0 && payTotal == 0 {
 		redirectMsg(w, r, "/receivables/new", "請至少填一種付款方式或收款合計")
 		return
 	}
@@ -451,6 +467,7 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 		VoucherNo: voucher, CustomerID: customerID, WorkOrderID: woID, PayDate: payDate,
 		DetailTotal: detailTotal, RealTotal: realTotal, Discount: discount, Tax: tax,
 		PayTotal: payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+		TransferAmount: transferAmt, TransferReference: strings.TrimSpace(r.FormValue("transfer_reference")),
 		CardNo: cardNo, CheckNo: checkNo, CheckDate: checkDate, Bank: bank,
 		Notes: notes, CreatedBy: actorID,
 	})
@@ -479,7 +496,7 @@ func EditReceivableForm(w http.ResponseWriter, r *http.Request, user model.User)
 		&rec.VehicleID, &rec.PlateNumber, &rec.WorkOrderID,
 		&rec.PayDate, &rec.DetailTotal, &rec.RealTotal,
 		&rec.Discount, &rec.Tax, &rec.PayTotal,
-		&rec.Cash, &rec.Card, &rec.CheckAmount,
+		&rec.Cash, &rec.Card, &rec.CheckAmount, &rec.TransferAmount, &rec.TransferReference,
 		&rec.CardNo, &rec.CheckNo, &rec.CheckDate,
 		&rec.Bank, &rec.Notes, &rec.Voided, &rec.Source)
 	if err != nil {
@@ -503,11 +520,12 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 	cash := atofDefault(r.FormValue("cash"), 0)
 	card := atofDefault(r.FormValue("card"), 0)
 	checkAmt := atofDefault(r.FormValue("check_amount"), 0)
+	transferAmt := atofDefault(r.FormValue("transfer_amount"), 0)
 	payTotal := atofDefault(r.FormValue("pay_total"), 0)
 	if payTotal == 0 {
-		payTotal = cash + card + checkAmt
+		payTotal = cash + card + checkAmt + transferAmt
 	}
-	if cash+card+checkAmt == 0 && payTotal == 0 {
+	if cash+card+checkAmt+transferAmt == 0 && payTotal == 0 {
 		fail(w, "請至少填一種付款方式或收款合計")
 		return
 	}
@@ -529,6 +547,7 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 		Discount:    atofDefault(r.FormValue("discount"), 0),
 		Tax:         atofDefault(r.FormValue("tax"), 0),
 		PayTotal:    payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+		TransferAmount: transferAmt, TransferReference: nullStr(r.FormValue("transfer_reference")),
 		CardNo: nullStr(r.FormValue("card_no")), CheckNo: nullStr(r.FormValue("check_no")),
 		CheckDate: normDate(r.FormValue("check_date")), Bank: nullStr(r.FormValue("bank")),
 		Notes: nullStr(r.FormValue("notes")), CreatedBy: actorID,

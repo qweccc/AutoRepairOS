@@ -17,6 +17,7 @@ type ReceivableRow struct {
 	Cash         float64
 	Card         float64
 	CheckAmount  float64
+	TransferAmount float64
 	PayTotal     float64
 	WorkOrderID  int64
 	WoCell       string
@@ -29,7 +30,7 @@ type ReceivableRow struct {
 // ListReceivablesPage 收款紀錄頁（HTMX 即時搜尋）。
 templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 	q, method, from, to string, showVoided, unpaidOnly bool,
-	sumPay, sumCash, sumCard, sumCheck float64) {
+	sumPay, sumCash, sumCard, sumCheck, sumTransfer float64) {
 	@components.Layout("收款紀錄", "/receivables", "owner", "owner", "AutoRepair OS") {
 		<div class="card">
 			<h2>收款紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
@@ -38,6 +39,7 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				<div class="stat"><b>{ moneyFmt(sumCash) }</b><span>現金</span></div>
 				<div class="stat"><b>{ moneyFmt(sumCard) }</b><span>信用卡</span></div>
 				<div class="stat"><b>{ moneyFmt(sumCheck) }</b><span>票據</span></div>
+				<div class="stat"><b>{ moneyFmt(sumTransfer) }</b><span>轉帳</span></div>
 			</div>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
 				上方合計為目前篩選條件的全部筆數（不受分頁影響）。
@@ -47,13 +49,14 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				<a class={ "btn " + btnCls(method == "cash") } href="/receivables?method=cash">現金</a>
 				<a class={ "btn " + btnCls(method == "card") } href="/receivables?method=card">信用卡</a>
 				<a class={ "btn " + btnCls(method == "check") } href="/receivables?method=check">票據</a>
+				<a class={ "btn " + btnCls(method == "transfer") } href="/receivables?method=transfer">轉帳</a>
 			</div>
 			<div style="margin-bottom:12px">
 				<a class="btn btn-p" href="/receivables/new">＋ 新增收款</a>
 				<a class="btn btn-s" href="/receivables?unpaid=1">待收款</a>
 			</div>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋單號 / 客戶 / 電話 / 車牌 / 票號"
+				placeholder="搜尋單號 / 客戶 / 電話 / 車牌 / 票號 / 轉帳序號"
 				hx-get="/api/receivables/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#receivable-rows"
@@ -63,7 +66,7 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				<tr>
 					<th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th>
 					<th>方式</th><th class="num">現金</th><th class="num">刷卡</th>
-					<th class="num">票額</th><th class="num">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th>
+					<th class="num">票額</th><th class="num">轉帳</th><th class="num">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th>
 				</tr>
 				<tbody id="receivable-rows">
 					for _, rec := range rows {
@@ -94,6 +97,7 @@ templ ReceivableRowContent(rec ReceivableRow) {
 		<td class="num">{ moneyOrDash(rec.Cash) }</td>
 		<td class="num">{ moneyOrDash(rec.Card) }</td>
 		<td class="num">{ moneyOrDash(rec.CheckAmount) }</td>
+		<td class="num">{ moneyOrDash(rec.TransferAmount) }</td>
 		<td class="num"><b>{ moneyFmt(rec.PayTotal) }</b></td>
 		<td style="font-size:12.5px">
 			if rec.WorkOrderID > 0 {
@@ -122,7 +126,7 @@ templ ReceivableRowContent(rec ReceivableRow) {
 // ReceivableSearchRows HTMX 即時搜尋回傳的純列。
 templ ReceivableSearchRows(rows []ReceivableRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="13" style="color:#64748b;text-align:center;padding:20px">查無收款紀錄</td></tr>
+		<tr><td colspan="14" style="color:#64748b;text-align:center;padding:20px">查無收款紀錄</td></tr>
 	}
 	for _, rec := range rows {
 		@ReceivableRowContent(rec)
