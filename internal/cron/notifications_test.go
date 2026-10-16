@@ -26,12 +26,16 @@ func notificationTestDB(t *testing.T) *sql.DB {
 	})
 
 	for _, stmt := range []string{
-		`CREATE TABLE customers (id INTEGER PRIMARY KEY, line_user_id TEXT, deleted_at TEXT)`,
+		`CREATE TABLE customers (
+			id INTEGER PRIMARY KEY, line_user_id TEXT, telegram_user_id TEXT,
+			notification_preference TEXT DEFAULT 'line', deleted_at TEXT
+		)`,
 		`CREATE VIEW active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`,
 		`CREATE TABLE notifications (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, work_order_id INTEGER, customer_id INTEGER,
 			channel TEXT, kind TEXT, subject TEXT, body TEXT, scheduled_at TEXT, sent_at TEXT,
-			status TEXT, retry_count INTEGER DEFAULT 0, error_message TEXT, processing_at TEXT
+			status TEXT, retry_count INTEGER DEFAULT 0, error_message TEXT, processing_at TEXT,
+			created_at TEXT DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`INSERT INTO customers (id, line_user_id) VALUES (1, 'LINE-USER')`,
 	} {
@@ -90,6 +94,27 @@ func TestProcessPendingNotificationSuccess(t *testing.T) {
 	status, retries := notificationState(t, d, id)
 	if count != 1 || sent != 1 || status != "sent" || retries != 0 {
 		t.Fatalf("count=%d sent=%d status=%q retries=%d", count, sent, status, retries)
+	}
+}
+
+func TestProcessPendingTelegramNotificationUsesCustomerBinding(t *testing.T) {
+	d := notificationTestDB(t)
+	id := insertNotification(t, d, "telegram")
+	if _, err := d.Exec(`UPDATE customers SET telegram_user_id='TG-CUSTOMER' WHERE id=1`); err != nil {
+		t.Fatal(err)
+	}
+	var received string
+	count, err := processPendingNotificationsWithSender(func(item notificationItem) error {
+		received = item.telegramUserID
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, retries := notificationState(t, d, id)
+	if count != 1 || received != "TG-CUSTOMER" || status != "sent" || retries != 0 {
+		t.Fatalf("count=%d recipient=%q status=%q retries=%d; want 1/TG-CUSTOMER/sent/0",
+			count, received, status, retries)
 	}
 }
 

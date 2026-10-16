@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -87,8 +88,13 @@ func CreateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	if compID > 0 && countRows("SELECT COUNT(1) FROM insurance_companies WHERE id = ?", compID) == 0 {
 		compID = 0
 	}
+	expiryDate, err := insuranceExpiryDate(r.FormValue("expiry_date"))
+	if err != nil {
+		fail(w, "保單有效期限格式錯誤")
+		return
+	}
 
-	_, err := db.DB.Exec(`INSERT INTO vehicle_insurances
+	_, err = db.DB.Exec(`INSERT INTO vehicle_insurances
 		(vehicle_id, insurance_company_id, company_no, insurance_class, insurance_class_name,
 		 license_date, card_no, amount_raw, notes, policy_number, expiry_date)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
@@ -96,7 +102,7 @@ func CreateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 		nullStr(r.FormValue("insurance_class")), nullStr(r.FormValue("insurance_class_name")),
 		normDateOrEmpty(r.FormValue("license_date")), nullStr(r.FormValue("card_no")),
 		nullStr(r.FormValue("amount_raw")), nullStr(r.FormValue("notes")),
-		strings.TrimSpace(r.FormValue("policy_number")), normDateOrEmpty(r.FormValue("expiry_date")))
+		strings.TrimSpace(r.FormValue("policy_number")), expiryDate)
 	if err != nil {
 		fail(w, "建立投保紀錄失敗")
 		return
@@ -142,6 +148,11 @@ func UpdateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	if compID > 0 && countRows("SELECT COUNT(1) FROM insurance_companies WHERE id = ?", compID) == 0 {
 		compID = 0
 	}
+	expiryDate, err := insuranceExpiryDate(r.FormValue("expiry_date"))
+	if err != nil {
+		fail(w, "保單有效期限格式錯誤")
+		return
+	}
 
 	res, err := db.DB.Exec(`UPDATE vehicle_insurances SET insurance_company_id=?, company_no=?,
 		insurance_class=?, insurance_class_name=?, license_date=?, card_no=?, amount_raw=?, notes=?,
@@ -151,16 +162,26 @@ func UpdateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 		nullStr(r.FormValue("insurance_class")), nullStr(r.FormValue("insurance_class_name")),
 		normDateOrEmpty(r.FormValue("license_date")), nullStr(r.FormValue("card_no")),
 		nullStr(r.FormValue("amount_raw")), nullStr(r.FormValue("notes")),
-		strings.TrimSpace(r.FormValue("policy_number")), normDateOrEmpty(r.FormValue("expiry_date")), id)
+		strings.TrimSpace(r.FormValue("policy_number")), expiryDate, id)
 	if err != nil {
 		fail(w, "更新失敗")
 		return
 	}
+
 	if n, _ := res.RowsAffected(); n == 0 {
 		http.NotFound(w, r)
 		return
 	}
 	redirectMsg(w, r, "/insurances", "投保紀錄已更新")
+}
+
+func insuranceExpiryDate(value string) (string, error) {
+	date := normDateOrEmpty(value)
+	if date == "" {
+		return "", nil
+	}
+	_, err := time.Parse("2006-01-02", date)
+	return date, err
 }
 
 // DeleteVehicleInsurance 刪除投保紀錄。

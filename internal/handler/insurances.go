@@ -26,7 +26,7 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 	qv := r.URL.Query()
 	q := strings.TrimSpace(qv.Get("q"))
 	company := strings.TrimSpace(qv.Get("company"))
-	expiring := qv.Get("expiring") == "30"
+	expiring := qv.Get("expiring") == "30" || r.URL.Path == "/insurances/expiring"
 	page := pageNo(r)
 	size := pageSize(r)
 

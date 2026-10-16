@@ -510,7 +510,7 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 		vehicleID, customerID, techArg, mileage,
 		nullStr(r.FormValue("customer_complaint")), approval,
 		insArg, nullStr(claimNo), isIns, nullStr(accidentDate), deductible,
-		claimAmount, nullStr(claimDate), nullStr(r.FormValue("claim_note")))
+		claimAmount, claimDate, strings.TrimSpace(r.FormValue("claim_note")))
 	if err != nil {
 		fail(w, "建立工單失敗")
 		return
@@ -555,7 +555,7 @@ func UpdateWorkOrderClaim(w http.ResponseWriter, r *http.Request) {
 	}
 	res, err := db.DB.Exec(`UPDATE work_orders SET claim_date=?, claim_amount=?, claim_note=?,
 		updated_at=CURRENT_TIMESTAMP WHERE id=?`,
-		nullStr(claimDate), amount, nullStr(r.FormValue("claim_note")), id)
+		claimDate, amount, strings.TrimSpace(r.FormValue("claim_note")), id)
 	if err != nil {
 		fail(w, "更新理賠資料失敗")
 		return

@@ -132,9 +132,10 @@
 - 實作：migration 030（retry_count、next_retry_at、last_error）；cron.go 退避重試與永久失敗判斷；scheduled.go 排程頁狀態顯示；notifications_test.go 四种情境測試。
 - 驗證：go build ./... exit 0、go test ./... 全綠（cron 1.050s、handler 1.309s）。
 
-#### [ ] T2.2 保養、驗車及保險到期提醒（FR-NOTI-02、FR-INS-03）
-- 依日期及里程條件產生提醒，支援保養日期／里程、車輛定檢及保單到期。
-- 產生提醒前檢查客戶通知偏好、LINE／Telegram 綁定及去重週期。
+#### [x] T2.2 保養、驗車及保險到期提醒（FR-NOTI-02、FR-INS-03）
+- 每日掃描保養日期／里程、車輛定檢及 30 日內保單到期，提醒寫入通知佇列並沿用 T2.1 重試。
+- 依客戶 LINE／Telegram 偏好及綁定狀態決定是否排入；同一客戶、事項與內容七日內去重。
+- Migration 032 開放 Telegram 通知通道；cron 測試涵蓋到期、偏好、綁定及去重。
 - 依賴：T2.5（保險到期欄位）；通知重試依賴 T2.1。
 
 #### [ ] T2.3 預約日曆與前日提醒（FR-APP-01、FR-APP-05）

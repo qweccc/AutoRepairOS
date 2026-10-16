@@ -287,7 +287,7 @@ func ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int
 		pagerURL := "/insurances"
 		if expiring {
 			searchURL = "/api/insurances/search?expiring=30"
-			pagerURL = "/insurances?expiring=30"
+			pagerURL = "/insurances/expiring"
 		}
 		templ_7745c5c3_Var14 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -348,7 +348,7 @@ func ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#insurance-list-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px\"> <a class=\"btn btn-p\" href=\"/insurances/new\">＋ 新增投保</a> <a class=\"btn btn-s\" href=\"/insurances?expiring=30\">30 日內到期</a> <a class=\"btn btn-s\" href=\"/inspections\">定檢排程</a><table><tr><th>車牌</th><th>車主</th><th>保險公司</th><th>險種</th><th>發照日</th><th>保單號碼</th><th>到期日</th><th>保險卡號</th><th>保額／備註</th><th>操作</th></tr><tbody id=\"insurance-list-rows\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#insurance-list-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px\"> <a class=\"btn btn-p\" href=\"/insurances/new\">＋ 新增投保</a> <a class=\"btn btn-s\" href=\"/insurances/expiring\">30 日內到期</a> <a class=\"btn btn-s\" href=\"/inspections\">定檢排程</a><table><tr><th>車牌</th><th>車主</th><th>保險公司</th><th>險種</th><th>發照日</th><th>保單號碼</th><th>到期日</th><th>保險卡號</th><th>保額／備註</th><th>操作</th></tr><tbody id=\"insurance-list-rows\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

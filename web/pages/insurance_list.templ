@@ -80,7 +80,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 	{{ pagerURL := "/insurances" }}
 	if expiring {
 		{{ searchURL = "/api/insurances/search?expiring=30" }}
-		{{ pagerURL = "/insurances?expiring=30" }}
+		{{ pagerURL = "/insurances/expiring" }}
 	}
 	@components.Layout("車輛投保紀錄", "/insurances", "owner", "owner", "AutoRepair OS") {
 		<div class="card">
@@ -99,7 +99,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			<a class="btn btn-p" href="/insurances/new">＋ 新增投保</a>
-			<a class="btn btn-s" href="/insurances?expiring=30">30 日內到期</a>
+			<a class="btn btn-s" href="/insurances/expiring">30 日內到期</a>
 			<a class="btn btn-s" href="/inspections">定檢排程</a>
 			<table>
 				<tr>

@@ -191,6 +191,7 @@ func main() {
 
 	// 舊系統補遷移：車輛投保紀錄 / 定檢排程 / 保養套餐 / 零用金
 	mux.HandleFunc("GET /insurances", handler.AllStaff(handler.ListVehicleInsurances))
+	mux.HandleFunc("GET /insurances/expiring", handler.AllStaff(handler.ListVehicleInsurances))
 	mux.HandleFunc("GET /insurances/new", handler.CounterUpPage(handler.NewVehicleInsuranceForm))
 	mux.HandleFunc("POST /insurances", handler.CounterUp(handler.CreateVehicleInsurance))
 	mux.HandleFunc("GET /insurances/{id}/edit", handler.CounterUpPage(handler.EditVehicleInsuranceForm))

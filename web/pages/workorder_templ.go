@@ -284,7 +284,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = InsuranceRow(wo).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = InsuranceRow(wo, canEdit).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -928,7 +928,7 @@ func StatusControls(wo model.WorkOrder, canEdit bool) templ.Component {
 }
 
 // InsuranceRow 保險理賠資訊列。
-func InsuranceRow(wo model.WorkOrder) templ.Component {
+func InsuranceRow(wo model.WorkOrder, canEdit bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1011,6 +1011,10 @@ func InsuranceRow(wo model.WorkOrder) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+		}
+		templ_7745c5c3_Err = WorkOrderClaimFields(wo, canEdit).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
 		return nil
 	})

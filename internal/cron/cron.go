@@ -17,6 +17,7 @@ import (
 	"autorepairos/internal/config"
 	"autorepairos/internal/db"
 	"autorepairos/internal/integration/line"
+	"autorepairos/internal/integration/telegram"
 )
 
 // --- 內建任務註冊表 ---
@@ -64,24 +65,6 @@ func dbTime(t time.Time) string {
 
 func nowDBTime() string {
 	return dbTime(time.Now())
-}
-
-// dedupSince 回傳去重時間界線：現在往前一個排程週期（取最長的間隔）。
-// 用它取代 status='pending' 判斷，可避免已送達的通知在下一輪掃描被重複排入。
-//
-// 格式必須與 notifications.created_at 完全一致。該欄位的 DEFAULT 是
-// CURRENT_TIMESTAMP，寫出來是 SQL datetime（"2026-10-05 06:51:07"），
-// 而 dbTime() 產出 RFC3339（"2026-10-05T06:51:07Z"）。用字串比較時
-// 空格(0x20) < 'T'(0x54)，所以 SQL 格式永遠被判為「早於」RFC3339，
-// 會讓去重條件恆成立、每次掃描都跳過所有車輛。
-func dedupSince() string {
-	interval := 6 * time.Hour
-	for _, t := range registry {
-		if t.Interval > interval {
-			interval = t.Interval
-		}
-	}
-	return time.Now().Add(-interval).UTC().Format(sqlTimeLayout)
 }
 
 // sqlTimeLayout 與 SQLite CURRENT_TIMESTAMP 相同：YYYY-MM-DD HH:MM:SS (UTC)。
@@ -345,15 +328,16 @@ var notificationRetryBackoff = [...]time.Duration{
 }
 
 type notificationItem struct {
-	id, custID, workOrderID int64
-	channel, kind, subject  string
-	body, lineUserID        string
+	id, custID, workOrderID          int64
+	channel, kind, subject           string
+	body, lineUserID, telegramUserID string
 }
 
 func processPendingNotifications() (int, error) {
 	cfg, client := line.Shared()
+	_, telegramClient := telegram.Shared()
 	return processPendingNotificationsWithSender(func(it notificationItem) error {
-		return deliver(cfg, client, it)
+		return deliver(cfg, client, telegramClient, it)
 	})
 }
 
@@ -362,7 +346,7 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 	leaseExpired := notificationProcessingTime(scanTime.Add(-notificationLease))
 	rows, err := db.DB.Query(`SELECT n.id, COALESCE(n.customer_id,0), n.channel, n.kind,
 			COALESCE(n.subject,''), n.body, COALESCE(n.work_order_id,0),
-			COALESCE(c.line_user_id,'')
+			COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
 		FROM notifications n
 		LEFT JOIN active_customers c ON c.id = n.customer_id
 		WHERE (n.status='pending' AND n.scheduled_at <= ?)
@@ -378,7 +362,7 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 		// Scan 的目標數必須與 SELECT 欄位数完全一致；不一致時 Scan 會回錯，
 		// 而原本的 `continue` 會把整列靜默丟棄，結果是「查得到但一筆都沒處理」。
 		if err := rows.Scan(&it.id, &it.custID, &it.channel, &it.kind,
-			&it.subject, &it.body, &it.workOrderID, &it.lineUserID); err != nil {
+			&it.subject, &it.body, &it.workOrderID, &it.lineUserID, &it.telegramUserID); err != nil {
 			log.Printf("通知 #%d 欄位掃描失敗，放棄處理: %v", it.id, err)
 			continue
 		}
@@ -431,6 +415,26 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 			}
 			sent++
 
+		case "telegram":
+			if strings.TrimSpace(it.telegramUserID) == "" {
+				if err := markFailed(it.id, "客戶未綁定 Telegram user ID", true, now, claimToken); err != nil {
+					return claimed, err
+				}
+				failed++
+				continue
+			}
+			if err := send(it); err != nil {
+				if markErr := markFailed(it.id, err.Error(), isPermanentNotificationError(err), now, claimToken); markErr != nil {
+					return claimed, markErr
+				}
+				failed++
+				continue
+			}
+			if err := markSent(it.id, claimToken); err != nil {
+				return claimed, err
+			}
+			sent++
+
 		default:
 			if err := markFailed(it.id, "不支援的通知通道: "+it.channel, true, now, claimToken); err != nil {
 				return claimed, err
@@ -446,7 +450,10 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 }
 
 // deliver 實際外送一則通知。LINE 未設定憑證時由 client 進入 MOCK，只記錄不外送。
-func deliver(cfg *line.Config, client *line.Client, it notificationItem) error {
+func deliver(cfg *line.Config, client *line.Client, telegramClient *telegram.Client, it notificationItem) error {
+	if it.channel == "telegram" {
+		return telegramClient.SendMessage(it.telegramUserID, it.body)
+	}
 	// SMS 通道尚未接電信商商；LINE 已接。SMS 改走 LINE 推播並在訊息標註，
 	// 避免整筆失敗造成佇列堆積。真正接 SMS 時應拆成獨立分支。
 	if it.channel == "sms" && !cfg.Ready() {
@@ -740,13 +747,13 @@ func init() {
 
 	Register(Task{
 		Key:      "maintenance_due_scan",
-		Name:     "定期保養到期掃描",
-		Interval: 6 * time.Hour,
+		Name:     "車輛到期提醒掃描",
+		Interval: 24 * time.Hour,
 		Run:      scanMaintenanceDue,
 	})
 }
 
-// scanMaintenanceDue 找出 7 天內到期或已逾期的定期保養，寫入通知佇列。
+// scanMaintenanceDue 每日掃描保養、定檢及保單到期項目，寫入通知佇列。
 func scanMaintenanceDue() error {
 	_, err := scanMaintenanceDueInternal()
 	return err
@@ -758,92 +765,266 @@ func ScanMaintenanceDueNow() (int, error) {
 }
 
 func scanMaintenanceDueInternal() (int, error) {
-	// 以台北當地日期為準（車行在台灣），不能用 SQLite 的 date('now')（UTC，會差 8 小時）。
-
-	// next_maintenance_date 可能以兩種格式存在：
-	//   - 純日期 "2026-10-04"
-	//   - 驅動寫入的 RFC3339 "2026-10-04T00:00:00Z"
-	// SQLite 的 date() 對後者回傳 NULL，因此在 SQL 內比較會靜默失效。
-	// 這裡改成全部撈回來、在 Go 端用字串前 10 碼比較，行為可預期且不受驅動格式影響。
-	rows, err := db.DB.Query(`SELECT v.id, v.customer_id, v.plate_number, v.next_maintenance_date,
-		COALESCE(c.name,''), COALESCE(c.notification_preference,'line')
-		FROM active_vehicles v
-		JOIN active_customers c ON c.id = v.customer_id
-		WHERE v.next_maintenance_date IS NOT NULL
-		  AND TRIM(COALESCE(v.next_maintenance_date,'')) != ''`)
+	queued, err := scanMaintenanceReminders()
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	inspectionCount, err := scanInspectionReminders()
+	if err != nil {
+		return queued, err
+	}
+	queued += inspectionCount
+	insuranceCount, err := scanInsuranceReminders()
+	if err != nil {
+		return queued, err
+	}
+	queued += insuranceCount
+	if queued > 0 {
+		log.Printf("車輛到期提醒掃描：新增 %d 筆提醒", queued)
+	}
+	return queued, nil
+}
 
-	cutoff := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
-	today := time.Now().Format("2006-01-02")
+type reminderCandidate struct {
+	customerID int64
+	name       string
+	pref       string
+	lineID     string
+	telegramID string
+}
 
-	// 先把候選資料全部讀出來，再逐一處理。
-	// 不能在 rows 迴圈內再對 db.DB 發查詢（去重檢查會另開連線），
-	// 部分 SQLite 驅動會因此讓外層 rows 提前失效，導致只處理第一筆。
+func (c reminderCandidate) channel() (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(c.pref)) {
+	case "line":
+		return "line", strings.TrimSpace(c.lineID) != ""
+	case "telegram":
+		return "telegram", strings.TrimSpace(c.telegramID) != ""
+	default:
+		return "", false
+	}
+}
+
+// queueVehicleReminder verifies the selected channel binding and uses the same
+// customer, event and body as the stable identity of a reminder for seven days.
+func queueVehicleReminder(kind, subject, body string, c reminderCandidate) (bool, error) {
+	channel, enabled := c.channel()
+	if !enabled {
+		return false, nil
+	}
+	now := time.Now().UTC()
+	res, err := db.DB.Exec(`INSERT INTO notifications
+		(customer_id, channel, kind, subject, body, scheduled_at)
+		SELECT ?, ?, ?, ?, ?, ?
+		WHERE NOT EXISTS (
+			SELECT 1 FROM notifications
+			WHERE customer_id=? AND kind=? AND body=?
+			  AND datetime(created_at) >= datetime(?)
+		)`,
+		c.customerID, channel, kind, subject, body, dbTime(now),
+		c.customerID, kind, body, now.Add(-7*24*time.Hour).Format(sqlTimeLayout))
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	return n == 1, err
+}
+
+func reminderDate(raw string) string {
+	value := strings.TrimSpace(raw)
+	if len(value) < 10 {
+		return ""
+	}
+	date := value[:10]
+	if _, err := time.Parse("2006-01-02", date); err != nil {
+		return ""
+	}
+	return date
+}
+
+func reminderDateRange() (today, cutoff string) {
+	now := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60))
+	today = now.Format("2006-01-02")
+	cutoff = now.AddDate(0, 0, 30).Format("2006-01-02")
+	return today, cutoff
+}
+
+func scanMaintenanceReminders() (int, error) {
+	rows, err := db.DB.Query(`SELECT v.customer_id, COALESCE(v.plate_number,''),
+		COALESCE(v.next_maintenance_date,''), COALESCE(v.next_maintenance_mileage,0),
+		COALESCE((SELECT MAX(vm.mileage) FROM vehicle_mileages vm WHERE vm.vehicle_id=v.id),0),
+		COALESCE((SELECT MAX(wo.current_mileage) FROM active_work_orders wo WHERE wo.vehicle_id=v.id),0),
+		COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		FROM active_vehicles v
+		JOIN active_customers c ON c.id=v.customer_id
+		WHERE TRIM(COALESCE(v.next_maintenance_date,''))!=''
+		   OR COALESCE(v.next_maintenance_mileage,0)>0`)
+	if err != nil {
+		return 0, err
+	}
 	type candidate struct {
-		vehID, custID     int64
-		plate, dueDate    string
-		custName, notifPr string
+		customerID                               int64
+		plate, dueDate                           string
+		dueMileage, historyMileage, orderMileage int
+		customer                                 reminderCandidate
 	}
 	var candidates []candidate
+	dateCutoff := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).AddDate(0, 0, 7).Format("2006-01-02")
 	for rows.Next() {
 		var c candidate
-		if err := rows.Scan(&c.vehID, &c.custID, &c.plate, &c.dueDate, &c.custName, &c.notifPr); err != nil {
-			continue
+		if err := rows.Scan(&c.customerID, &c.plate, &c.dueDate,
+			&c.dueMileage, &c.historyMileage, &c.orderMileage,
+			&c.customer.name, &c.customer.pref, &c.customer.lineID, &c.customer.telegramID); err != nil {
+			rows.Close()
+			return 0, err
 		}
-
-		// 取前 10 碼當作 YYYY-MM-DD；格式不符就跳過
-		d := strings.TrimSpace(c.dueDate)
-		if len(d) < 10 {
-			continue
-		}
-		d = d[:10]
-		if _, perr := time.Parse("2006-01-02", d); perr != nil {
-			continue
-		}
-		// 只提醒今天（含逾期）到 7 天內到期
-		if d < today || d > cutoff {
-			continue
-		}
-		c.dueDate = d
+		c.customer.customerID = c.customerID
 		candidates = append(candidates, c)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, err
 	}
 	rows.Close()
 
 	queued := 0
 	for _, c := range candidates {
-		// 避免重複排程：同一台車在「最近一次排程週期」內只提醒一次。
-		// 只看 status='pending' 會讓已送達的通知在下一輪掃描又被重新排入，
-		// 造成客戶每 6 小時收到一次重複提醒。因此改為比對最近一次建立時間。
-		var dup int
-		if err := db.DB.QueryRow(`SELECT COUNT(1) FROM notifications
-			WHERE kind='maintenance_due' AND datetime(created_at) >= datetime(?) AND body LIKE ?`,
-			dedupSince(), "%"+c.plate+"%").Scan(&dup); err != nil {
+		var reasons []string
+		if dueDate := reminderDate(c.dueDate); dueDate != "" && dueDate <= dateCutoff {
+			reasons = append(reasons, "保養日期 "+dueDate)
+		}
+		currentMileage := c.historyMileage
+		if c.orderMileage > currentMileage {
+			currentMileage = c.orderMileage
+		}
+		if c.dueMileage > 0 && currentMileage >= c.dueMileage {
+			reasons = append(reasons, fmt.Sprintf("保養里程 %d 公里", c.dueMileage))
+		}
+		if len(reasons) == 0 {
 			continue
 		}
-		if dup > 0 {
-			continue
+		body := fmt.Sprintf("親愛的 %s 您好，車輛 %s 的%s已到期，歡迎預約保養。",
+			c.customer.name, c.plate, strings.Join(reasons, "、"))
+		added, err := queueVehicleReminder("maintenance_due", "定期保養提醒", body, c.customer)
+		if err != nil {
+			return queued, err
 		}
-
-		channel := c.notifPr
-		if channel != "line" && channel != "sms" {
-			channel = "internal"
+		if added {
+			queued++
 		}
-
-		msg := fmt.Sprintf("親愛的 %s 您好，您的車輛 %s 定期保養日期為 %s，即將到期，歡迎預約保養。",
-			c.custName, c.plate, c.dueDate)
-
-		if err := QueueNotification("maintenance_due", channel, "定期保養提醒", msg,
-			c.custID, 0, time.Now()); err != nil {
-			continue
-		}
-		queued++
 	}
+	return queued, nil
+}
 
-	if queued > 0 {
-		log.Printf("定期保養到期掃描：新增 %d 筆提醒", queued)
+func scanInspectionReminders() (int, error) {
+	rows, err := db.DB.Query(`SELECT c.id, COALESCE(v.plate_number,''), v.inspection_due_date,
+		COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		FROM active_vehicles v JOIN active_customers c ON c.id=v.customer_id
+		WHERE TRIM(COALESCE(v.inspection_due_date,''))!=''
+		UNION ALL
+		SELECT c.id, COALESCE(v.plate_number,''), vi.order_date,
+			COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
+			COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		FROM active_vehicle_inspections vi
+		JOIN active_vehicles v ON v.id=vi.vehicle_id
+		JOIN active_customers c ON c.id=v.customer_id
+		WHERE COALESCE(vi.check_date,'')='' AND TRIM(COALESCE(vi.order_date,''))!=''`)
+	if err != nil {
+		return 0, err
+	}
+	type item struct {
+		dueDate string
+		plate   string
+		reminderCandidate
+	}
+	var items []item
+	for rows.Next() {
+		var v item
+		if err := rows.Scan(&v.reminderCandidate.customerID, &v.plate,
+			&v.dueDate, &v.reminderCandidate.name,
+			&v.reminderCandidate.pref, &v.reminderCandidate.lineID, &v.reminderCandidate.telegramID); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		items = append(items, v)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, err
+	}
+	rows.Close()
+
+	today, cutoff := reminderDateRange()
+	queued := 0
+	for _, item := range items {
+		dueDate := reminderDate(item.dueDate)
+		if dueDate == "" || dueDate < today || dueDate > cutoff {
+			continue
+		}
+		body := fmt.Sprintf("親愛的 %s 您好，車輛 %s 預定於 %s 定期檢驗，請預先安排驗車。",
+			item.name, item.plate, dueDate)
+		added, err := queueVehicleReminder("inspection_due", "車輛定檢提醒", body, item.reminderCandidate)
+		if err != nil {
+			return queued, err
+		}
+		if added {
+			queued++
+		}
+	}
+	return queued, nil
+}
+
+func scanInsuranceReminders() (int, error) {
+	rows, err := db.DB.Query(`SELECT c.id, COALESCE(c.name,''), COALESCE(v.plate_number,''),
+		COALESCE(c.notification_preference,'none'), COALESCE(c.line_user_id,''),
+		COALESCE(c.telegram_user_id,''), COALESCE(vi.expiry_date,''),
+		COALESCE(vi.policy_number,''), COALESCE(ic.name, vi.company_no, '')
+		FROM active_vehicle_insurances vi
+		JOIN active_vehicles v ON v.id=vi.vehicle_id
+		JOIN active_customers c ON c.id=v.customer_id
+		LEFT JOIN insurance_companies ic ON ic.id=vi.insurance_company_id
+		WHERE TRIM(COALESCE(vi.expiry_date,''))!=''`)
+	if err != nil {
+		return 0, err
+	}
+	type item struct {
+		dueDate, policy, company string
+		plate                    string
+		reminderCandidate
+	}
+	var items []item
+	for rows.Next() {
+		var v item
+		if err := rows.Scan(&v.customerID, &v.name, &v.plate, &v.pref, &v.lineID,
+			&v.telegramID, &v.dueDate, &v.policy, &v.company); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		items = append(items, v)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, err
+	}
+	rows.Close()
+
+	today, cutoff := reminderDateRange()
+	queued := 0
+	for _, item := range items {
+		dueDate := reminderDate(item.dueDate)
+		if dueDate == "" || dueDate < today || dueDate > cutoff {
+			continue
+		}
+		body := fmt.Sprintf("親愛的 %s 您好，車輛 %s 的%s保單 %s 將於 %s 到期，請洽詢續保。",
+			item.name, item.plate, item.company, item.policy, dueDate)
+		added, err := queueVehicleReminder("insurance_due", "保單到期提醒", body, item.reminderCandidate)
+		if err != nil {
+			return queued, err
+		}
+		if added {
+			queued++
+		}
 	}
 	return queued, nil
 }
