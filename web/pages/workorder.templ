@@ -12,7 +12,8 @@ import (
 // 用 Templ 型別安全產生，HTMX 處理狀態切換與新增項目。
 templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTotal float64,
 	statusLabels map[string]string, statusPill map[string]string, approvalLabels map[string]string, approvalPill map[string]string,
-	techNames map[int64]string, canEdit bool, flashMsg string) {
+	techNames map[int64]string, canEdit bool, flashMsg string,
+	sopRecords []model.SOPRecord, sopTemplateOpts string, attachedTemplates []int64) {
 
 	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", wo.CustomerName, "counter", "AutoRepair OS") {
 		if flashMsg != "" {
@@ -38,7 +39,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 				</tr>
 				<tr><th>客戶反映</th><td colspan="3">{ wo.CustomerComplaint }</td></tr>
 				<tr>
-					<th>SOP</th><td>{ yesNo(wo.SOPCompleted) }</td>
+					<th>SOP</th><td>{ sopStatusText(wo.SOPCompleted, len(sopRecords)) }</td>
 					<th>建立時間</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
 				</tr>
 				@InsuranceRow(wo, canEdit)
@@ -53,6 +54,30 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/photos" }>📷 車損照片</a>
 				</div>
 			</div>
+		</div>
+
+		// T2.6：SOP 檢查表
+		<div class="card">
+			<h2>📋 SOP 檢查表</h2>
+			if len(sopRecords) == 0 {
+				<div class="empty">尚未掛入 SOP 模板</div>
+			}
+			if len(sopRecords) > 0 {
+				@SOPChecklistTable(wo.ID, sopRecords, canEdit)
+			}
+			if canEdit {
+				if sopTemplateOpts != "" {
+					<form method="POST" action={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/sop/attach" }
+						style="margin-top:14px;display:flex;gap:8px;align-items:center">
+						@components.CSRFInput()
+						<select name="template_id"
+							style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+							@templ.Raw(sopTemplateOpts)
+						</select>
+						<button class="btn btn-s" type="submit">掛入 SOP 模板</button>
+					</form>
+				}
+			}
 		</div>
 
 		<div class="card">
@@ -102,12 +127,13 @@ templ StatusStep(step, current, label string, showArrow bool) {
 templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) {
 	if len(items) == 0 {
 		<div class="empty">尚未加入任何工資或零件</div>
-	} else {
-		<table>
-			<tr>
-				<th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th>
-				<th class="num">小計</th><th>主技師</th><th>助手</th><th>操作</th>
-			</tr>
+	}
+	if len(items) > 0 {
+	<table>
+		<tr>
+			<th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th>
+			<th class="num">小計</th><th>主技師</th><th>助手</th><th>操作</th>
+		</tr>
 			for _, it := range items {
 				<tr>
 					<td>@components.Pill(itemTypeLabel(it.ItemType), "p-progress")</td>
@@ -124,10 +150,11 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 								hx-target="#wo-items"
 								hx-swap="innerHTML"
 								hx-confirm="刪除此項目？">刪除</a>
-						</td>
-					} else {
-						<td style="color:#64748b">—</td>
-					}
+							</td>
+							}
+							if canEdit == false {
+							<td style="color:#64748b">—</td>
+							}
 				</tr>
 			}
 		</table>
@@ -207,13 +234,14 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 	if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
 		<tr><th>件別</th><td><span class="pill p-progress">保險理賠</span></td>
-			<th>保險公司</th><td>{ wo.InsuranceName }</td></tr>
+		<th>保險公司</th><td>{ wo.InsuranceName }</td></tr>
 		<tr><th>理賠編號</th><td>{ wo.ClaimNo }</td>
-			<th>事故日期</th><td>{ wo.AccidentDate }</td></tr>
+		<th>事故日期</th><td>{ wo.AccidentDate }</td></tr>
 		<tr><th>自負額</th><td>{ money(wo.DeductibleAmount) }</td><th></th><td></td></tr>
-	} else {
+	}
+	if wo.IsInsurance == false && wo.InsuranceCompanyID == 0 {
 		<tr><th>件別</th><td><span class="pill">自費</span></td>
-			<th></th><td></td></tr>
+		<th></th><td></td></tr>
 	}
 	<tr>
 		<td colspan="4">
@@ -227,13 +255,43 @@ templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 				</form>
 			}
 			if !canEdit {
-				<b>理賠日期</b> { wo.ClaimDate }　<b>理賠金額</b> { money(wo.ClaimAmount) }
-				if wo.ClaimNote != "" {
-					<p>{ wo.ClaimNote }</p>
-				}
+				<b>理賠日期</b> { wo.ClaimDate }
+				<b>理賂金額</b> { money(wo.ClaimAmount) }
+			}
+			if !canEdit && wo.ClaimNote != "" {
+				<p>{ wo.ClaimNote }</p>
 			}
 		</td>
 	</tr>
+}
+
+templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
+	<table>
+		<tr><th>檢查項目</th><th>必填</th><th>狀態</th><th>完成者</th><th>完成時間</th></tr>
+		for _, r := range records {
+			<tr>
+				<td>{ r.Description }</td>
+				<td>{ strconv.FormatBool(r.Required) }</td>
+				<td>
+					if r.Completed {
+						<span class="pill p-completed">已完成</span>
+					}
+					if !r.Completed {
+						<span class="pill p-pending">未勾選</span>
+					}
+				</td>
+				<td>{ r.CompletedByName }</td>
+				<td>{ r.CompletedAtText }</td>
+			</tr>
+		}
+	</table>
+	if canEdit {
+		<form method="POST" action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/complete" }>
+			@components.CSRFInput()
+			<input type="hidden" name="sop_item_id" id="sop_item_id" value="0">
+			<button class="btn btn-s" type="submit" onclick="var cb=document.querySelector('input[name=sop_completed]:checked');if(!cb){alert('請先勾選項目');return false;}document.getElementById('sop_item_id').value=cb.value;">勾選完成</button>
+		</form>
+	}
 }
 
 // PartSearchScript 零件即時搜尋 JS。
@@ -308,7 +366,8 @@ func statusIndex(s string) int {
 func statusStepStyle(stepIdx, currentIdx int) string {
 	if stepIdx < currentIdx {
 		return "background:#1e3a5f;color:#93c5fd"
-	} else if stepIdx == currentIdx {
+	}
+	if stepIdx == currentIdx {
 		return "background:#1d4ed8;color:#fff"
 	}
 	return "background:#334155;color:#64748b"
@@ -338,6 +397,12 @@ func sopLabel(done bool) string {
 		return "取消 SOP"
 	}
 	return "標記 SOP 完成"
+}
+
+func sopStatusText(completed bool, total int) string {
+	if total == 0 { return "未掛入模板" }
+	if completed { return "已完成" }
+	return "進行中"
 }
 
 func money(f float64) string {

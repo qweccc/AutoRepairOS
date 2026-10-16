@@ -598,9 +598,15 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
+	// T2.6：載入工單的 SOP 檢查紀錄與已掛模板。
+	sopRecords := LoadSOPRecords(id)
+	attachedTemplates := LoadAttachedTemplates(id)
+	sopTemplateOpts := SOPTemplateOptions(attachedTemplates)
+
 	pages.ShowWorkOrderPage(wo, items, itemTotal,
 		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
-		techNames, canEdit, flash(r)).Render(r.Context(), w)
+		techNames, canEdit, flash(r),
+		sopRecords, sopTemplateOpts, attachedTemplates).Render(r.Context(), w)
 }
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -623,6 +629,13 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 			fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel[status]+"」。如需更正請另行開立沖銷單。")
 			return
 		}
+	}
+
+	// T2.6：完工限制——所有必填 SOP 項目必須已完成才能進入 completed 或 paid。
+	// 後端強制檢查，不能只靠前端禁用按鈕。
+	if sopErr := CheckSOPCompletionForStatus(id, status); sopErr != nil {
+		fail(w, sopErr.Error())
+		return
 	}
 
 	if status == "paid" {

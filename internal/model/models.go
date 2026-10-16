@@ -285,6 +285,40 @@ type Equipment struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+// SOPTemplate SOP 檢查表模板（FR-WO-08）。
+type SOPTemplate struct {
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	RepairType string `json:"repair_type,omitempty"` // maintenance/overhaul/bodywork/…
+	Active     int    `json:"active"`
+	SortOrder  int    `json:"sort_order"`
+	ItemCount  int    `json:"item_count,omitempty"` // 非 DB 欄位：查詢時計算
+}
+
+// SOPItem SOP 模板內的檢查項目。
+type SOPItem struct {
+	ID          int64  `json:"id"`
+	TemplateID  int64  `json:"template_id"`
+	Description string `json:"description"`
+	Required    bool   `json:"required"`
+	SortOrder   int    `json:"sort_order"`
+}
+
+// SOPRecord 工單逐項 SOP 勾選紀錄（含完成者與完成時間追溯）。
+type SOPRecord struct {
+ 	ID              int64  `json:"id"`
+ 	WorkOrderID     int64  `json:"work_order_id"`
+ 	SOPItemID       int64  `json:"sop_item_id"`
+ 	TemplateID      int64  `json:"template_id"`
+ 	Description     string `json:"description"`
+ 	Required        bool   `json:"required"`
+ 	Completed       bool   `json:"completed"`
+ 	CompletedBy     int64  `json:"completed_by,omitempty"`
+ 	CompletedByName string `json:"completed_by_name,omitempty"` // 非 DB 欄位：JOIN 取得
+ 	CompletedAtText string `json:"completed_at_text,omitempty"`   // 非 DB 欄位：格式化後的的操作時間
+	SortOrder     int    `json:"sort_order"`
+}
+
 // EquipmentMaintenance 設備保養紀錄（SRS 5.11）。
 type EquipmentMaintenance struct {
 	ID                  int64     `json:"id"`
