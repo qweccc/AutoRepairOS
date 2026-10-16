@@ -107,7 +107,7 @@ func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
 // 比對成 select 的 value 用。「先拍單據再開單」流程需要它：
 // 辨識回傳的是名稱字串，要轉成下拉選單的 id 才能帶入表單。
 func SupplierOptionsAPI(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name LIMIT 300")
+	rows, err := db.DB.Query("SELECT id, name FROM active_suppliers ORDER BY name LIMIT 300")
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "查詢供應商失敗"})
 		return

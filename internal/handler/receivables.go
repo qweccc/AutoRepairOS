@@ -37,8 +37,8 @@ const receivableCols = `r.id, r.voucher_no, r.customer_id, COALESCE(c.name,''),
 	COALESCE(r.bank,''), COALESCE(r.notes,''), r.voided, r.source`
 
 const receivableFrom = ` FROM receivables r
-	JOIN customers c ON c.id = r.customer_id
-	LEFT JOIN vehicles v ON v.id = r.vehicle_id`
+	JOIN active_customers c ON c.id = r.customer_id
+	LEFT JOIN active_vehicles v ON v.id = r.vehicle_id`
 
 type receivable struct {
 	ID           int64
@@ -123,7 +123,7 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	if unpaidOnly {
 		// 待收款：工单已结帐但收款合计不足
 		where += ` AND r.work_order_id IN (
-			SELECT wo.id FROM work_orders wo
+			SELECT wo.id FROM active_work_orders wo
 			WHERE wo.status = 'completed'
 			AND COALESCE((SELECT SUM(r2.pay_total) FROM receivables r2 WHERE r2.work_order_id = wo.id AND r2.voided = 0), 0) < wo.total_amount
 		)`
@@ -171,7 +171,7 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	woTotal := make(map[int64]float64)
 	woRows, _ := db.DB.Query(`SELECT r.work_order_id, COALESCE(r.pay_total,0), COALESCE(wo.total_amount,0)
 		FROM receivables r
-		JOIN work_orders wo ON wo.id = r.work_order_id
+		JOIN active_work_orders wo ON wo.id = r.work_order_id
 		WHERE r.voided = 0 AND r.work_order_id > 0`)
 	if woRows != nil {
 		for woRows.Next() {
@@ -318,7 +318,7 @@ func NewReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) 
 	if workOrderID := mustInt(r.URL.Query().Get("work_order")); workOrderID > 0 {
 		rec.WorkOrderID = workOrderID
 		err := db.DB.QueryRow(`SELECT wo.customer_id, COALESCE(c.name,'')
-			FROM work_orders wo JOIN customers c ON c.id = wo.customer_id
+			FROM active_work_orders wo JOIN active_customers c ON c.id = wo.customer_id
 			WHERE wo.id = ?`, workOrderID).Scan(&rec.CustomerID, &rec.CustomerName)
 		if errors.Is(err, sql.ErrNoRows) {
 			http.NotFound(w, r)
@@ -472,8 +472,8 @@ func EditReceivableForm(w http.ResponseWriter, r *http.Request, user model.User)
 
 	var rec receivable
 	err := db.DB.QueryRow(`SELECT `+receivableCols+` FROM receivables r
-		JOIN customers c ON c.id = r.customer_id
-		LEFT JOIN vehicles v ON v.id = r.vehicle_id
+		JOIN active_customers c ON c.id = r.customer_id
+		LEFT JOIN active_vehicles v ON v.id = r.vehicle_id
 		WHERE r.id = ?`, id).Scan(
 		&rec.ID, &rec.VoucherNo, &rec.CustomerID, &rec.CustomerName,
 		&rec.VehicleID, &rec.PlateNumber, &rec.WorkOrderID,

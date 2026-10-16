@@ -24,8 +24,10 @@ func newCheckoutTestDB(t *testing.T) *sql.DB {
 		)`,
 		`CREATE TABLE work_orders (
 			id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, vehicle_id INTEGER,
-			status TEXT NOT NULL, total_amount REAL DEFAULT 0, updated_at TEXT
+			status TEXT NOT NULL, total_amount REAL DEFAULT 0, updated_at TEXT,
+			deleted_at TEXT
 		)`,
+		`CREATE VIEW IF NOT EXISTS active_work_orders AS SELECT * FROM work_orders WHERE deleted_at IS NULL`,
 		`CREATE TABLE work_order_items (
 			id INTEGER PRIMARY KEY, work_order_id INTEGER NOT NULL, item_type TEXT NOT NULL,
 			inventory_item_id INTEGER, quantity INTEGER NOT NULL

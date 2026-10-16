@@ -275,7 +275,7 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 		r.cash, r.card, r.check_amount,
 		COALESCE(r.card_no,''), COALESCE(r.check_no,''), COALESCE(r.check_date,''),
 		COALESCE(r.bank,''), COALESCE(r.notes,''), COALESCE(r.voided,0)
-		FROM receivables r JOIN customers c ON c.id = r.customer_id WHERE r.id = ?`, id).
+		FROM receivables r JOIN active_customers c ON c.id = r.customer_id WHERE r.id = ?`, id).
 		Scan(&v.ID, &v.VoucherNo, &v.CustomerID, &v.CustomerName,
 			&payDate, &v.DetailTotal, &v.RealTotal, &v.Discount, &v.Tax, &v.PayTotal,
 			&v.Cash, &v.Card, &v.CheckAmount,
@@ -394,7 +394,7 @@ func PrintARStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var custName, phone, addr string
 	if err := db.DB.QueryRow(`SELECT name, COALESCE(phone,''), COALESCE(address,'')
-		FROM customers WHERE id = ?`, customerID).
+		FROM active_customers WHERE id = ?`, customerID).
 		Scan(&custName, &phone, &addr); err != nil {
 		http.NotFound(w, r)
 		return
@@ -415,8 +415,8 @@ func PrintARStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(wo.updated_at, wo.created_at), COALESCE(wo.total_amount,0),
 		COALESCE((SELECT SUM(r.pay_total) FROM receivables r
 			WHERE r.work_order_id = wo.id AND r.voided = 0), 0)
-		FROM work_orders wo
-		JOIN vehicles v ON v.id = wo.vehicle_id
+		FROM active_work_orders wo
+		JOIN active_vehicles v ON v.id = wo.vehicle_id
 		WHERE wo.customer_id = ? AND wo.status = 'completed'
 		ORDER BY COALESCE(wo.updated_at, wo.created_at)`, customerID)
 	if err == nil {
@@ -532,7 +532,7 @@ func PrintAPStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 	var sup model.Supplier
 	if err := db.DB.QueryRow(`SELECT id, name, COALESCE(phone,''), COALESCE(contact_person,''),
 		COALESCE(address,''), COALESCE(payment_terms,'')
-		FROM suppliers WHERE id = ?`, supplierID).
+		FROM active_suppliers WHERE id = ?`, supplierID).
 		Scan(&sup.ID, &sup.Name, &sup.Phone, &sup.ContactPerson,
 			&sup.Address, &sup.PaymentTerms); err != nil {
 		http.NotFound(w, r)
@@ -552,9 +552,9 @@ func PrintAPStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 	apRows, err := db.DB.Query(`SELECT sc.id, sc.work_order_id, COALESCE(v.plate_number,''),
 		sc.description, COALESCE(sc.cost_amount,0), COALESCE(sc.charge_amount,0),
 		COALESCE(sc.completed_date,'')
-		FROM subcontracts sc
-		JOIN work_orders wo ON wo.id = sc.work_order_id
-		JOIN vehicles v ON v.id = wo.vehicle_id
+		FROM active_subcontracts sc
+		JOIN active_work_orders wo ON wo.id = sc.work_order_id
+		JOIN active_vehicles v ON v.id = wo.vehicle_id
 		WHERE sc.supplier_id = ? AND sc.status = 'completed'
 			AND COALESCE(sc.completed_date,'') BETWEEN ? AND ?
 		ORDER BY sc.completed_date, sc.id`, supplierID, from, to)
@@ -660,15 +660,15 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(SUM(total_amount - COALESCE(discount_amount,0)),0),
 		COALESCE(SUM(COALESCE(discount_amount,0)),0),
 		COALESCE(SUM(CASE WHEN is_warranty=1 THEN total_amount ELSE 0 END),0)
-		FROM work_orders WHERE status='paid' AND date(created_at) = ?`, date).
+		FROM active_work_orders WHERE status='paid' AND date(created_at) = ?`, date).
 		Scan(&paidCount, &insCount, &woRevenue, &discountTotal, &warrantyRev)
 
 	// 零件成本（當日結帳工單的零件，從庫存主檔帶成本價）
 	var partsCost float64
 	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
+		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.item_type='part' AND wo.status='paid' AND date(wo.created_at) = ?`, date).
 		Scan(&partsCost)
 

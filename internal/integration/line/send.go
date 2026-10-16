@@ -23,7 +23,7 @@ type Notification struct {
 func DeliverNotification(n Notification) error {
 	var lineUserID string
 	err := db.DB.QueryRow(
-		"SELECT COALESCE(line_user_id,'') FROM customers WHERE id=?", n.CustomerID,
+		"SELECT COALESCE(line_user_id,'') FROM active_customers WHERE id=?", n.CustomerID,
 	).Scan(&lineUserID)
 	if err == sql.ErrNoRows {
 		log.Printf("[line] 客戶 %d 不存在，略過: %v", n.CustomerID, err)

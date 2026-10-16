@@ -98,9 +98,9 @@ func bayConflict(bay, date, timeSlot string, excludeID int64) (int64, string, st
 	var plate, cust, t string
 	err := db.DB.QueryRow(`SELECT a.id, COALESCE(v.plate_number,''), COALESCE(c.name,''),
 			COALESCE(a.appointment_time,'')
-		FROM appointments a
-		JOIN vehicles v ON v.id = a.vehicle_id
-		JOIN customers c ON c.id = a.customer_id
+		FROM active_appointments a
+		JOIN active_vehicles v ON v.id = a.vehicle_id
+		JOIN active_customers c ON c.id = a.customer_id
 		WHERE UPPER(COALESCE(a.bay,'')) = ?
 			AND a.appointment_date = ?
 			AND COALESCE(a.appointment_time,'') = ?
@@ -122,9 +122,9 @@ func baySchedule(date string) map[string][]string {
 	}
 	rows, err := db.DB.Query(`SELECT UPPER(COALESCE(a.bay,'')), COALESCE(a.appointment_time,''),
 			COALESCE(v.plate_number,''), COALESCE(c.name,''), a.status
-		FROM appointments a
-		JOIN vehicles v ON v.id = a.vehicle_id
-		JOIN customers c ON c.id = a.customer_id
+		FROM active_appointments a
+		JOIN active_vehicles v ON v.id = a.vehicle_id
+		JOIN active_customers c ON c.id = a.customer_id
 		WHERE a.appointment_date = ? AND a.status <> 'cancelled'
 		ORDER BY a.appointment_time`, date)
 	if err != nil {
@@ -274,7 +274,7 @@ func AddVehicleMileageForm(w http.ResponseWriter, r *http.Request, user model.Us
 	vehicleID := mustInt(r.PathValue("id"))
 	var plate, brand string
 	if err := db.DB.QueryRow(`SELECT COALESCE(plate_number,''), COALESCE(brand_model,'')
-		FROM vehicles WHERE id = ?`, vehicleID).Scan(&plate, &brand); err != nil {
+		FROM active_vehicles WHERE id = ?`, vehicleID).Scan(&plate, &brand); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -318,7 +318,7 @@ func CreateVehicleMileage(w http.ResponseWriter, r *http.Request) {
 		fail(w, "請填寫有效里程（不可為負數）")
 		return
 	}
-	if countRows("SELECT COUNT(1) FROM vehicles WHERE id = ?", vehicleID) == 0 {
+	if countRows("SELECT COUNT(1) FROM active_vehicles WHERE id = ?", vehicleID) == 0 {
 		http.NotFound(w, r)
 		return
 	}

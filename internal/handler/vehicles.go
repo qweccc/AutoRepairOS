@@ -69,7 +69,7 @@ func intOrBlank(n int) string {
 // lastMileageOf 該車工單紀錄中的最大里程（用來算「距下次保養還差多少」）。
 func lastMileageOf(vehicleID int64) int {
 	var km int
-	db.DB.QueryRow(`SELECT COALESCE(MAX(current_mileage),0) FROM work_orders
+	db.DB.QueryRow(`SELECT COALESCE(MAX(current_mileage),0) FROM active_work_orders
 		WHERE vehicle_id = ?`, vehicleID).Scan(&km)
 	return km
 }
@@ -139,11 +139,11 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, filterCustomer)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM vehicles v
-		JOIN customers c ON c.id = v.customer_id`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id`+where, args...)
 
-	query := `SELECT ` + vehicleCols + ` FROM vehicles v
-		JOIN customers c ON c.id = v.customer_id` + where +
+	query := `SELECT ` + vehicleCols + ` FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id` + where +
 		` ORDER BY v.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -196,8 +196,8 @@ func SearchVehiclesAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	like := "%" + q + "%"
-	rows, err := db.DB.Query(`SELECT `+vehicleCols+` FROM vehicles v
-		JOIN customers c ON c.id = v.customer_id
+	rows, err := db.DB.Query(`SELECT `+vehicleCols+` FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id
 		WHERE v.plate_number LIKE ? OR v.brand_model LIKE ? OR c.name LIKE ? OR COALESCE(v.vin,'') LIKE ?
 		ORDER BY v.id DESC LIMIT 50`, like, like, like, like)
 	if err != nil {
@@ -235,8 +235,8 @@ func SearchVehiclesAPI(w http.ResponseWriter, r *http.Request) {
 func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
 
-	row := db.DB.QueryRow(`SELECT `+vehicleCols+` FROM vehicles v
-		JOIN customers c ON c.id = v.customer_id WHERE v.id = ?`, id)
+	row := db.DB.QueryRow(`SELECT `+vehicleCols+` FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, id)
 	v, err := scanVehicle(row)
 	if err != nil {
 		http.NotFound(w, r)
@@ -248,18 +248,18 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	var totalSpent, unpaid float64
 	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(total_amount),0),
 		COALESCE(SUM(CASE WHEN status <> 'paid' THEN total_amount ELSE 0 END),0)
-		FROM work_orders WHERE vehicle_id = ?`, id).
+		FROM active_work_orders WHERE vehicle_id = ?`, id).
 		Scan(&orderCount, &totalSpent, &unpaid)
 
 	var lastMileage int
-	db.DB.QueryRow(`SELECT COALESCE(MAX(current_mileage),0) FROM work_orders WHERE vehicle_id = ?`, id).
+	db.DB.QueryRow(`SELECT COALESCE(MAX(current_mileage),0) FROM active_work_orders WHERE vehicle_id = ?`, id).
 		Scan(&lastMileage)
 
 	// 歷年工單
 	rows, err := db.DB.Query(`SELECT wo.id, wo.status, wo.current_mileage,
 		COALESCE(wo.total_amount,0), wo.created_at, COALESCE(wo.notes,''),
 		COALESCE(u.name,''), COALESCE(ic.name,''), COALESCE(wo.claim_no,'')
-		FROM work_orders wo
+		FROM active_work_orders wo
 		LEFT JOIN users u ON u.id = wo.technician_id
 		LEFT JOIN insurance_companies ic ON ic.id = wo.insurance_company_id
 		WHERE wo.vehicle_id = ?
@@ -309,7 +309,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	prows, perr := db.DB.Query(`SELECT woi.description, SUM(woi.quantity), MAX(woi.unit_price),
 		COUNT(DISTINCT woi.work_order_id)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		WHERE wo.vehicle_id = ?
 		GROUP BY woi.description
 		ORDER BY COUNT(DISTINCT woi.work_order_id) DESC, SUM(woi.quantity) DESC
@@ -440,7 +440,7 @@ func recalcNextMaintenance(vehicleID int64) {
 		COALESCE(last_maintenance_mileage,0),
 		COALESCE(next_maintenance_interval_months,6),
 		COALESCE(next_maintenance_interval_km,5000)
-		FROM vehicles WHERE id = ?`, vehicleID).Scan(&lastDate, &lastKm, &months, &km)
+		FROM active_vehicles WHERE id = ?`, vehicleID).Scan(&lastDate, &lastKm, &months, &km)
 	if err != nil {
 		return
 	}
@@ -469,8 +469,8 @@ func recalcNextMaintenance(vehicleID int64) {
 func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
 
-	row := db.DB.QueryRow(`SELECT `+vehicleCols+` FROM vehicles v
-		JOIN customers c ON c.id = v.customer_id WHERE v.id = ?`, id)
+	row := db.DB.QueryRow(`SELECT `+vehicleCols+` FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, id)
 	v, err := scanVehicle(row)
 	if err != nil {
 		http.NotFound(w, r)
@@ -548,12 +548,12 @@ func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
 func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	if countRows("SELECT COUNT(1) FROM work_orders WHERE vehicle_id = ?", id) > 0 {
+	if countRows("SELECT COUNT(1) FROM active_work_orders WHERE vehicle_id = ?", id) > 0 {
 		fail(w, "此車輛已有工單紀錄，無法刪除")
 		return
 	}
 
-	res, err := db.DB.Exec("DELETE FROM vehicles WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE vehicles SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除車輛失敗")
 		return
@@ -576,7 +576,7 @@ func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 func resolveCustomerID(r *http.Request) (int64, string) {
 	// 表單直接帶 id（例如從客戶列表點「開工單」帶過來）
 	if id := mustInt(r.FormValue("customer_id")); id > 0 {
-		if countRows("SELECT COUNT(1) FROM customers WHERE id = ?", id) > 0 {
+		if countRows("SELECT COUNT(1) FROM active_customers WHERE id = ?", id) > 0 {
 			return id, ""
 		}
 		return 0, "找不到該客戶"
@@ -590,23 +590,23 @@ func resolveCustomerID(r *http.Request) (int64, string) {
 	// 純數字 → 先當 id，再當電話
 	if n, err := strconv.ParseInt(raw, 10, 64); err == nil {
 		var id int64
-		if db.DB.QueryRow("SELECT id FROM customers WHERE id = ?", n).Scan(&id) == nil {
+		if db.DB.QueryRow("SELECT id FROM active_customers WHERE id = ?", n).Scan(&id) == nil {
 			return id, ""
 		}
-		if db.DB.QueryRow("SELECT id FROM customers WHERE phone = ?", raw).Scan(&id) == nil {
+		if db.DB.QueryRow("SELECT id FROM active_customers WHERE phone = ?", raw).Scan(&id) == nil {
 			return id, ""
 		}
 	}
 
 	// 姓名或電話精確比對
 	var id int64
-	if db.DB.QueryRow("SELECT id FROM customers WHERE name = ? OR phone = ? LIMIT 1", raw, raw).
+	if db.DB.QueryRow("SELECT id FROM active_customers WHERE name = ? OR phone = ? LIMIT 1", raw, raw).
 		Scan(&id) == nil {
 		return id, ""
 	}
 	// 模糊比對（取第一筆，並要求唯一以免誤選）
 	like := "%" + raw + "%"
-	rows, err := db.DB.Query(`SELECT id FROM customers
+	rows, err := db.DB.Query(`SELECT id FROM active_customers
 		WHERE name LIKE ? OR phone LIKE ? OR COALESCE(notes,'') LIKE ? LIMIT 5`, like, like, like)
 	if err != nil {
 		return 0, "查詢客戶失敗"
@@ -632,7 +632,7 @@ func resolveCustomerID(r *http.Request) (int64, string) {
 // customerOptions 客戶下拉選單（僅用於小資料集，如工單篩選）。
 // 大資料集請改用 resolveCustomerID 搭配文字輸入。
 func customerOptions() string {
-	rows, err := db.DB.Query("SELECT id, name, phone FROM customers ORDER BY name LIMIT 300")
+	rows, err := db.DB.Query("SELECT id, name, phone FROM active_customers ORDER BY name LIMIT 300")
 	if err != nil {
 		return ""
 	}
@@ -652,7 +652,7 @@ func customerOptions() string {
 
 func vehicleOptions() string {
 	rows, err := db.DB.Query(`SELECT v.id, v.plate_number, v.brand_model, COALESCE(c.name,'')
-		FROM vehicles v JOIN customers c ON c.id = v.customer_id ORDER BY v.plate_number LIMIT 300`)
+		FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id ORDER BY v.plate_number LIMIT 300`)
 	if err != nil {
 		return ""
 	}

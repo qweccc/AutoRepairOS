@@ -35,7 +35,7 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 		p.filename, COALESCE(p.original_name,''), COALESCE(p.mime_type,''),
 		COALESCE(p.file_size,0), COALESCE(p.photo_type,'damage'), COALESCE(p.note,''),
 		COALESCE(p.created_at,''), COALESCE(u.name,'-')
-		FROM work_order_photos p
+		FROM active_work_order_photos p
 		LEFT JOIN users u ON u.id = p.uploaded_by
 		WHERE p.work_order_id = ? ORDER BY p.id DESC`, woID)
 	if err != nil {
@@ -107,7 +107,7 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 func UploadWorkOrderPhoto(w http.ResponseWriter, r *http.Request) {
 	woID := mustInt(r.PathValue("id"))
 
-	if countRows("SELECT COUNT(1) FROM work_orders WHERE id = ?", woID) == 0 {
+	if countRows("SELECT COUNT(1) FROM active_work_orders WHERE id = ?", woID) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -179,27 +179,28 @@ func UploadWorkOrderPhoto(w http.ResponseWriter, r *http.Request) {
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10)+"/photos", "照片已上傳")
 }
 
-// DeleteWorkOrderPhoto 刪除照片紀錄與實體檔。
+// DeleteWorkOrderPhoto 隱藏照片紀錄並保留原始檔供稽核追溯。
 func DeleteWorkOrderPhoto(w http.ResponseWriter, r *http.Request) {
 	woID := mustInt(r.PathValue("id"))
 	photoID := mustInt(r.PathValue("photo_id"))
 
-	var filename string
-	err := db.DB.QueryRow("SELECT filename FROM work_order_photos WHERE id = ? AND work_order_id = ?",
-		photoID, woID).Scan(&filename)
+	var found int
+	err := db.DB.QueryRow("SELECT 1 FROM active_work_order_photos WHERE id = ? AND work_order_id = ?",
+		photoID, woID).Scan(&found)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	if _, err := db.DB.Exec("DELETE FROM work_order_photos WHERE id = ? AND work_order_id = ?",
-		photoID, woID); err != nil {
+	res, err := db.DB.Exec(`UPDATE work_order_photos SET deleted_at = datetime('now')
+		WHERE id = ? AND work_order_id = ? AND deleted_at IS NULL`, photoID, woID)
+	if err != nil {
 		fail(w, "刪除照片紀錄失敗")
 		return
 	}
-
-	if filename != "" {
-		os.Remove(filepath.Join(photoDir, filename))
+	if n, _ := res.RowsAffected(); n == 0 {
+		http.NotFound(w, r)
+		return
 	}
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10)+"/photos", "照片已刪除")

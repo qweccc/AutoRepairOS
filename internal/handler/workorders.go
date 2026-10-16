@@ -53,9 +53,9 @@ func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrde
 	return wo, nil
 }
 
-const workOrderFrom = ` FROM work_orders wo
-	JOIN vehicles v ON v.id = wo.vehicle_id
-	JOIN customers c ON c.id = wo.customer_id
+const workOrderFrom = ` FROM active_work_orders wo
+	JOIN active_vehicles v ON v.id = wo.vehicle_id
+	JOIN active_customers c ON c.id = wo.customer_id
 	LEFT JOIN users u ON u.id = wo.technician_id
 	LEFT JOIN insurance_companies ic ON ic.id = wo.insurance_company_id `
 
@@ -108,7 +108,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	// （實測 5,489 組，最多 10 列），JOIN 會讓該工單重複出現。
 	if part != "" {
 		where += ` AND EXISTS (SELECT 1 FROM work_order_items i
-			LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+			LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 			WHERE i.work_order_id = wo.id
 			  AND (ii.part_number LIKE ? OR ii.name LIKE ? OR i.description LIKE ?))`
 		like := "%" + part + "%"
@@ -131,9 +131,9 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// 總筆數（分頁用）
 	total := 0
-	db.DB.QueryRow(`SELECT COUNT(1) FROM work_orders wo
-		JOIN vehicles v ON v.id = wo.vehicle_id
-		JOIN customers c ON c.id = wo.customer_id`+where, args...).Scan(&total)
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders wo
+		JOIN active_vehicles v ON v.id = wo.vehicle_id
+		JOIN active_customers c ON c.id = wo.customer_id`+where, args...).Scan(&total)
 
 	query := `SELECT ` + workOrderCols + workOrderFrom + where +
 		` ORDER BY wo.created_at DESC, wo.id DESC LIMIT ? OFFSET ?`
@@ -168,7 +168,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		q := `SELECT i.work_order_id, COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,''),
 				COALESCE(SUM(i.quantity),0)
 			FROM work_order_items i
-			LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+			LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 			WHERE i.item_type = 'part' AND i.work_order_id IN (` + strings.Join(ids, ",") + `)
 			GROUP BY i.work_order_id, COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,'')
 			ORDER BY i.work_order_id, COALESCE(ii.part_number,'')`
@@ -260,7 +260,7 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	if part != "" {
 		where += ` AND EXISTS (SELECT 1 FROM work_order_items i
-			LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+			LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 			WHERE i.work_order_id = wo.id
 			  AND (ii.part_number LIKE ? OR ii.name LIKE ? OR i.description LIKE ?))`
 		like := "%" + part + "%"
@@ -395,7 +395,7 @@ func woPartUsage(workOrderID int64) []struct {
 	rows, err := db.DB.Query(`SELECT COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,''),
 			COALESCE(SUM(i.quantity),0)
 		FROM work_order_items i
-		LEFT JOIN inventory_items ii ON ii.id = i.inventory_item_id
+		LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 		WHERE i.work_order_id = ? AND i.item_type = 'part'
 		GROUP BY COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,'')
 		ORDER BY COALESCE(ii.part_number,'')`, workOrderID)
@@ -436,7 +436,7 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var customerID int64
-	err := db.DB.QueryRow("SELECT customer_id FROM vehicles WHERE id = ?", vehicleID).Scan(&customerID)
+	err := db.DB.QueryRow("SELECT customer_id FROM active_vehicles WHERE id = ?", vehicleID).Scan(&customerID)
 	if err != nil {
 		fail(w, "找不到該車輛")
 		return
@@ -616,7 +616,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 // countStatus 讀取工單目前狀態；查無回傳空字串。
 func countStatus(id int64) string {
 	var s string
-	if err := db.DB.QueryRow("SELECT status FROM work_orders WHERE id = ?", id).Scan(&s); err != nil {
+	if err := db.DB.QueryRow("SELECT status FROM active_work_orders WHERE id = ?", id).Scan(&s); err != nil {
 		return ""
 	}
 	return s
@@ -707,7 +707,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	if itemType == "part" && invID > 0 {
 		var name string
 		var sell float64
-		if err := db.DB.QueryRow("SELECT name, COALESCE(selling_price,0) FROM inventory_items WHERE id=?", invID).
+		if err := db.DB.QueryRow("SELECT name, COALESCE(selling_price,0) FROM active_inventory_items WHERE id=?", invID).
 			Scan(&name, &sell); err == nil {
 			if desc == "" {
 				desc = name
@@ -778,7 +778,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	// AJAX 請求：回傳 JSON 供前端局部更新，不跳頁
 	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
 		var newTotal float64
-		db.DB.QueryRow("SELECT COALESCE(total_amount,0) FROM work_orders WHERE id = ?", woID).Scan(&newTotal)
+		db.DB.QueryRow("SELECT COALESCE(total_amount,0) FROM active_work_orders WHERE id = ?", woID).Scan(&newTotal)
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"ok": true, "wo_id": woID, "total": newTotal,
 			"desc": desc, "qty": qty, "unit_price": unitPrice,
@@ -819,7 +819,7 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 
 	// 已結帳（paid）的工單不允許再改動項目，否則庫存與帳務會對不上。
 	var status string
-	if err := tx.QueryRow("SELECT status FROM work_orders WHERE id = ?", woID).Scan(&status); err == nil && status == "paid" {
+	if err := tx.QueryRow("SELECT status FROM active_work_orders WHERE id = ?", woID).Scan(&status); err == nil && status == "paid" {
 		fail(w, "工單已結帳，無法刪除項目")
 		return
 	}

@@ -35,16 +35,16 @@ type negativeStockStats struct {
 
 func loadNegativeStockStats() negativeStockStats {
 	var s negativeStockStats
-	db.DB.QueryRow(`SELECT COUNT(1) FROM inventory_items`).Scan(&s.TotalAll)
-	db.DB.QueryRow(`SELECT COUNT(1) FROM inventory_items
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_inventory_items`).Scan(&s.TotalAll)
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_inventory_items
 		WHERE COALESCE(stock_quantity,0) < 0`).Scan(&s.Total)
-	db.DB.QueryRow(`SELECT COALESCE(MIN(stock_quantity),0) FROM inventory_items
+	db.DB.QueryRow(`SELECT COALESCE(MIN(stock_quantity),0) FROM active_inventory_items
 		WHERE COALESCE(stock_quantity,0) < 0`).Scan(&s.WorstQty)
-	db.DB.QueryRow(`SELECT COALESCE(SUM(-stock_quantity),0) FROM inventory_items
+	db.DB.QueryRow(`SELECT COALESCE(SUM(-stock_quantity),0) FROM active_inventory_items
 		WHERE COALESCE(stock_quantity,0) < 0`).Scan(&s.SumDeficit)
-	db.DB.QueryRow(`SELECT COUNT(1) FROM inventory_items
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_inventory_items
 		WHERE COALESCE(stock_quantity,0) < 0 AND COALESCE(selling_price,0) > 0`).Scan(&s.SellableOnly)
-	db.DB.QueryRow(`SELECT COUNT(1) FROM inventory_items
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_inventory_items
 		WHERE COALESCE(stock_quantity,0) < 0 AND supplier_id IS NOT NULL`).Scan(&s.WithSupplier)
 	return s
 }
@@ -86,10 +86,10 @@ func NegativeStockList(w http.ResponseWriter, r *http.Request, user model.User) 
 	}
 
 	stats := loadNegativeStockStats()
-	total := countRows(`SELECT COUNT(1) FROM inventory_items i`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_inventory_items i`+where, args...)
 
-	query := `SELECT ` + inventoryCols + ` FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id` + where + order +
+	query := `SELECT ` + inventoryCols + ` FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id` + where + order +
 		` LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -190,8 +190,8 @@ func NegativeStockList(w http.ResponseWriter, r *http.Request, user model.User) 
 func NegativeStockFixForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.URL.Query().Get("id"))
 
-	row := db.DB.QueryRow(`SELECT `+inventoryCols+` FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id WHERE i.id = ?`, id)
+	row := db.DB.QueryRow(`SELECT `+inventoryCols+` FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id WHERE i.id = ?`, id)
 	it, err := scanInventoryItem(row)
 	if err != nil {
 		http.NotFound(w, r)
@@ -244,14 +244,14 @@ func ApplyNegativeStockFix(w http.ResponseWriter, r *http.Request, user model.Us
 	}
 
 	var current int
-	if err := db.DB.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", id).
+	if err := db.DB.QueryRow("SELECT COALESCE(stock_quantity,0) FROM active_inventory_items WHERE id = ?", id).
 		Scan(&current); err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
 	var minSafe int
-	db.DB.QueryRow("SELECT COALESCE(min_safety_stock,0) FROM inventory_items WHERE id = ?", id).Scan(&minSafe)
+	db.DB.QueryRow("SELECT COALESCE(min_safety_stock,0) FROM active_inventory_items WHERE id = ?", id).Scan(&minSafe)
 
 	var target int
 	switch mode {
@@ -333,7 +333,7 @@ func MovementLog(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	from := ` FROM inventory_movements m
-		JOIN inventory_items i ON i.id = m.inventory_item_id
+		JOIN active_inventory_items i ON i.id = m.inventory_item_id
 		LEFT JOIN users u ON u.id = m.created_by`
 
 	total := countRows(`SELECT COUNT(1)`+from+where, args...)

@@ -25,13 +25,13 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, like, like, like, like, like)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM customers`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_customers`+where, args...)
 
 	query := `SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
 		COALESCE(address,''), COALESCE(notification_preference,'none'), COALESCE(notes,''),
 		COALESCE(tags,''), COALESCE(campaign_code,''),
 		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), created_at
-		FROM customers` + where + ` ORDER BY id DESC LIMIT ? OFFSET ?`
+		FROM active_customers` + where + ` ORDER BY id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
 	rows, err := db.DB.Query(query, pageArgs...)
@@ -92,7 +92,7 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.DB.Query(`SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
 		COALESCE(address,''), COALESCE(notification_preference,'none'),
 		COALESCE(total_spent,0), COALESCE(unpaid_amount,0)
-		FROM customers
+		FROM active_customers
 		WHERE name LIKE ? OR phone LIKE ? OR COALESCE(address,'') LIKE ? OR COALESCE(tags,'') LIKE ?
 		ORDER BY id DESC LIMIT 50`, like, like, like, like)
 	if err != nil {
@@ -161,7 +161,7 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(address,''), COALESCE(notification_preference,'none'), COALESCE(notes,''),
 		COALESCE(tags,''), COALESCE(campaign_code,''),
 		COALESCE(total_spent,0), COALESCE(unpaid_amount,0)
-		FROM customers WHERE id = ?`, id).
+		FROM active_customers WHERE id = ?`, id).
 		Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.TelegramUserID, &c.Address,
 			&c.NotificationPref, &c.Notes, &c.Tags, &c.CampaignCode, &c.TotalSpent, &c.UnpaidAmount)
 	if err != nil {
@@ -231,19 +231,19 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	hasVehicles := countRows("SELECT COUNT(1) FROM vehicles WHERE customer_id = ?", id)
+	hasVehicles := countRows("SELECT COUNT(1) FROM active_vehicles WHERE customer_id = ?", id)
 	if hasVehicles > 0 {
 		fail(w, "此客戶仍有車輛，請先移轉或刪除車輛")
 		return
 	}
 
-	hasOrders := countRows("SELECT COUNT(1) FROM work_orders WHERE customer_id = ?", id)
+	hasOrders := countRows("SELECT COUNT(1) FROM active_work_orders WHERE customer_id = ?", id)
 	if hasOrders > 0 {
 		fail(w, "此客戶仍有工單紀錄，無法刪除")
 		return
 	}
 
-	res, err := db.DB.Exec("DELETE FROM customers WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE customers SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除客戶失敗")
 		return

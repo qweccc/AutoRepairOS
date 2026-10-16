@@ -1,0 +1,36 @@
+-- Preserve operational records while hiding deleted rows from normal queries.
+ALTER TABLE customers ADD COLUMN deleted_at TEXT;
+ALTER TABLE vehicles ADD COLUMN deleted_at TEXT;
+ALTER TABLE work_orders ADD COLUMN deleted_at TEXT;
+ALTER TABLE inventory_items ADD COLUMN deleted_at TEXT;
+ALTER TABLE suppliers ADD COLUMN deleted_at TEXT;
+ALTER TABLE appointments ADD COLUMN deleted_at TEXT;
+ALTER TABLE subcontracts ADD COLUMN deleted_at TEXT;
+ALTER TABLE equipment ADD COLUMN deleted_at TEXT;
+ALTER TABLE equipment_maintenance ADD COLUMN deleted_at TEXT;
+ALTER TABLE vehicle_insurances ADD COLUMN deleted_at TEXT;
+ALTER TABLE vehicle_inspections ADD COLUMN deleted_at TEXT;
+ALTER TABLE work_order_photos ADD COLUMN deleted_at TEXT;
+ALTER TABLE purchase_orders ADD COLUMN deleted_at TEXT;
+ALTER TABLE purchase_order_items ADD COLUMN deleted_at TEXT;
+ALTER TABLE technician_worklogs ADD COLUMN deleted_at TEXT;
+ALTER TABLE maintenance_templates ADD COLUMN deleted_at TEXT;
+ALTER TABLE maintenance_template_items ADD COLUMN deleted_at TEXT;
+
+CREATE VIEW IF NOT EXISTS active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_vehicles AS SELECT * FROM vehicles WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_work_orders AS SELECT * FROM work_orders WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_inventory_items AS SELECT * FROM inventory_items WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_suppliers AS SELECT * FROM suppliers WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_appointments AS SELECT * FROM appointments WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_subcontracts AS SELECT * FROM subcontracts WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_equipment AS SELECT * FROM equipment WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_equipment_maintenance AS SELECT * FROM equipment_maintenance WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_vehicle_insurances AS SELECT * FROM vehicle_insurances WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_vehicle_inspections AS SELECT * FROM vehicle_inspections WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_work_order_photos AS SELECT * FROM work_order_photos WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_purchase_orders AS SELECT * FROM purchase_orders WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_purchase_order_items AS SELECT * FROM purchase_order_items WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_technician_worklogs AS SELECT * FROM technician_worklogs WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_maintenance_templates AS SELECT * FROM maintenance_templates WHERE deleted_at IS NULL;
+CREATE VIEW IF NOT EXISTS active_maintenance_template_items AS SELECT * FROM maintenance_template_items WHERE deleted_at IS NULL;

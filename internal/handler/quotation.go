@@ -46,7 +46,7 @@ func PrintWorkOrderQuotation(w http.ResponseWriter, r *http.Request, user model.
 	var discount float64
 	var isWarranty int
 	db.DB.QueryRow(`SELECT COALESCE(discount_amount,0), COALESCE(is_warranty,0)
-		FROM work_orders WHERE id = ?`, id).Scan(&discount, &isWarranty)
+		FROM active_work_orders WHERE id = ?`, id).Scan(&discount, &isWarranty)
 
 	// 總額權威來源：work_orders.total_amount（增刪項目時由 recalcWorkOrderTotal 重算）。
 	// 不在此另行加總，避免與結帳時累計到 customers.total_spent 的金額不一致。

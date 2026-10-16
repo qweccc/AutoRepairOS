@@ -29,15 +29,15 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, status)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM appointments a`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_appointments a`+where, args...)
 
 	query := `SELECT a.id, a.customer_id, COALESCE(c.name,''), a.vehicle_id,
 		COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
 		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,''),
 		a.created_at, a.updated_at
-		FROM appointments a
-		JOIN customers c ON c.id = a.customer_id
-		JOIN vehicles v ON v.id = a.vehicle_id` + where +
+		FROM active_appointments a
+		JOIN active_customers c ON c.id = a.customer_id
+		JOIN active_vehicles v ON v.id = a.vehicle_id` + where +
 		` ORDER BY a.appointment_date DESC, a.appointment_time ASC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -129,9 +129,9 @@ func SearchAppointmentsAPI(w http.ResponseWriter, r *http.Request) {
 		COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
 		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,''),
 		a.created_at, a.updated_at
-		FROM appointments a
-		JOIN customers c ON c.id = a.customer_id
-		JOIN vehicles v ON v.id = a.vehicle_id`+where+
+		FROM active_appointments a
+		JOIN active_customers c ON c.id = a.customer_id
+		JOIN active_vehicles v ON v.id = a.vehicle_id`+where+
 		` ORDER BY a.appointment_date DESC, a.appointment_time ASC LIMIT 50`, args...)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -213,9 +213,9 @@ func EditAppointmentForm(w http.ResponseWriter, r *http.Request, user model.User
 	err := db.DB.QueryRow(`SELECT a.id, a.customer_id, COALESCE(c.name,''), a.vehicle_id,
 		COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
 		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,'')
-		FROM appointments a
-		JOIN customers c ON c.id = a.customer_id
-		JOIN vehicles v ON v.id = a.vehicle_id
+		FROM active_appointments a
+		JOIN active_customers c ON c.id = a.customer_id
+		JOIN active_vehicles v ON v.id = a.vehicle_id
 		WHERE a.id = ?`, id).
 		Scan(&a.ID, &a.CustomerID, &a.CustomerName, &a.VehicleID,
 			&a.PlateNumber, &a.AppointmentDate, &a.AppointmentTime,
@@ -301,7 +301,7 @@ func UpdateAppointment(w http.ResponseWriter, r *http.Request) {
 func DeleteAppointment(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	res, err := db.DB.Exec("DELETE FROM appointments WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE appointments SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除預約失敗")
 		return

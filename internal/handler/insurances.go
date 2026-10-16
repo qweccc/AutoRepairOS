@@ -41,9 +41,9 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 		args = append(args, company)
 	}
 
-	from := ` FROM vehicle_insurances vi
-		JOIN vehicles v ON v.id = vi.vehicle_id
-		JOIN customers c ON c.id = v.customer_id
+	from := ` FROM active_vehicle_insurances vi
+		JOIN active_vehicles v ON v.id = vi.vehicle_id
+		JOIN active_customers c ON c.id = v.customer_id
 		LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id`
 
 	total := countRows(`SELECT COUNT(1)`+from+where, args...)
@@ -89,7 +89,7 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 	var compTabs strings.Builder
 	compTabs.WriteString(`<a class="btn ` + btnIf(company == "", "btn-p", "btn-s") + `" href="/insurances">全部</a> `)
 	crows, cerr := db.DB.Query(`SELECT COALESCE(ic.name, vi.company_no, '(未知)') nm, COUNT(1) n
-		FROM vehicle_insurances vi
+		FROM active_vehicle_insurances vi
 		LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id
 		GROUP BY nm ORDER BY n DESC LIMIT 12`)
 	if cerr == nil {
@@ -114,9 +114,9 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 // SearchInsurancesAPI 車輛投保即時搜尋 API（HTMX 用）。
 func SearchInsurancesAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
-	from := ` FROM vehicle_insurances vi
-		JOIN vehicles v ON v.id = vi.vehicle_id
-		JOIN customers c ON c.id = v.customer_id
+	from := ` FROM active_vehicle_insurances vi
+		JOIN active_vehicles v ON v.id = vi.vehicle_id
+		JOIN active_customers c ON c.id = v.customer_id
 		LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id`
 	where := ` WHERE 1=1`
 	var args []interface{}
@@ -180,12 +180,12 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
 		where += ` AND COALESCE(vi.check_date,'') = ''`
 	}
 
-	from := ` FROM vehicle_inspections vi
-		JOIN vehicles v ON v.id = vi.vehicle_id
-		JOIN customers c ON c.id = v.customer_id`
+	from := ` FROM active_vehicle_inspections vi
+		JOIN active_vehicles v ON v.id = vi.vehicle_id
+		JOIN active_customers c ON c.id = v.customer_id`
 
 	total := countRows(`SELECT COUNT(1)`+from+where, args...)
-	pendingCount := countRows(`SELECT COUNT(1) FROM vehicle_inspections WHERE COALESCE(check_date,'')=''`)
+	pendingCount := countRows(`SELECT COUNT(1) FROM active_vehicle_inspections WHERE COALESCE(check_date,'')=''`)
 
 	query := `SELECT vi.id, vi.vehicle_id, v.plate_number, COALESCE(vi.order_date,''),
 		COALESCE(vi.check_date,''), COALESCE(vi.firm_no,''), COALESCE(vi.notes,''),
@@ -235,9 +235,9 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
 // SearchInspectionsAPI 定檢排程即時搜尋 API（HTMX 用）。
 func SearchInspectionsAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
-	from := ` FROM vehicle_inspections vi
-		JOIN vehicles v ON v.id = vi.vehicle_id
-		JOIN customers c ON c.id = v.customer_id`
+	from := ` FROM active_vehicle_inspections vi
+		JOIN active_vehicles v ON v.id = vi.vehicle_id
+		JOIN active_customers c ON c.id = v.customer_id`
 	where := ` WHERE 1=1`
 	var args []interface{}
 	if q != "" {

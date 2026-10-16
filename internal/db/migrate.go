@@ -54,7 +54,7 @@ func Migrate() error {
 			return fmt.Errorf("套用 migration %s 失敗: %v", version, err)
 		}
 
-		if _, err := tx.Exec("INSERT INTO schema_migrations (version) VALUES (?)", version); err != nil {
+		if _, err := tx.Exec("INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)", version); err != nil {
 			tx.Rollback()
 			return fmt.Errorf("記錄 migration %s 失敗: %v", version, err)
 		}

@@ -91,7 +91,7 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 		var customerID, vehicleID int64
 		if receipt.WorkOrderID > 0 {
 			err = tx.QueryRowContext(ctx, `SELECT customer_id, vehicle_id
-				FROM work_orders WHERE id = ?`, receipt.WorkOrderID).Scan(&customerID, &vehicleID)
+				FROM active_work_orders WHERE id = ?`, receipt.WorkOrderID).Scan(&customerID, &vehicleID)
 			if errors.Is(err, sql.ErrNoRows) {
 				return ErrNotFound
 			}
@@ -102,7 +102,7 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 				return errors.New("receipt customer does not match work order")
 			}
 		} else {
-			err = tx.QueryRowContext(ctx, `SELECT id FROM customers WHERE id = ?`, receipt.CustomerID).Scan(&customerID)
+			err = tx.QueryRowContext(ctx, `SELECT id FROM active_customers WHERE id = ?`, receipt.CustomerID).Scan(&customerID)
 			if errors.Is(err, sql.ErrNoRows) {
 				return errors.New("receipt customer not found")
 			}
@@ -301,7 +301,7 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 	}
 	if affected == 0 {
 		var status string
-		err := tx.QueryRowContext(ctx, `SELECT status FROM work_orders WHERE id = ?`, workOrderID).Scan(&status)
+		err := tx.QueryRowContext(ctx, `SELECT status FROM active_work_orders WHERE id = ?`, workOrderID).Scan(&status)
 		if errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
 		}
@@ -315,7 +315,7 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 	}
 
 	var customerID int64
-	err = tx.QueryRowContext(ctx, `SELECT customer_id FROM work_orders WHERE id = ?`, workOrderID).Scan(&customerID)
+	err = tx.QueryRowContext(ctx, `SELECT customer_id FROM active_work_orders WHERE id = ?`, workOrderID).Scan(&customerID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
@@ -381,7 +381,7 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 
 	result, err = tx.ExecContext(ctx, `UPDATE customers
 		SET total_spent = COALESCE(total_spent,0) +
-			COALESCE((SELECT total_amount FROM work_orders WHERE id = ?),0),
+			COALESCE((SELECT total_amount FROM active_work_orders WHERE id = ?),0),
 			unpaid_amount = 0
 		WHERE id = ?`, workOrderID, customerID)
 	if err != nil {

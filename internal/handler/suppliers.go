@@ -101,9 +101,9 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, vtype)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM suppliers s`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_suppliers s`+where, args...)
 
-	query := `SELECT ` + supplierCols + ` FROM suppliers s` + where +
+	query := `SELECT ` + supplierCols + ` FROM active_suppliers s` + where +
 		` ORDER BY s.vendor_type, s.name LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -139,8 +139,8 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	matCount := countRows(`SELECT COUNT(1) FROM suppliers WHERE COALESCE(vendor_type,'material')='material'`)
-	venCount := countRows(`SELECT COUNT(1) FROM suppliers WHERE vendor_type='vendor'`)
+	matCount := countRows(`SELECT COUNT(1) FROM active_suppliers WHERE COALESCE(vendor_type,'material')='material'`)
+	venCount := countRows(`SELECT COUNT(1) FROM active_suppliers WHERE vendor_type='vendor'`)
 
 	pages.ListSuppliersPage(supRows, total, page, size, q, vtype, matCount, venCount,
 		user.Role == "owner" || user.Role == "counter").Render(r.Context(), w)
@@ -161,7 +161,7 @@ func SearchSuppliersAPI(w http.ResponseWriter, r *http.Request) {
 		where += ` AND COALESCE(s.vendor_type,'material') = ?`
 		args = append(args, vtype)
 	}
-	rows, err := db.DB.Query(`SELECT `+supplierCols+` FROM suppliers s`+where+
+	rows, err := db.DB.Query(`SELECT `+supplierCols+` FROM active_suppliers s`+where+
 		` ORDER BY s.vendor_type, s.name LIMIT 50`, args...)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -241,7 +241,7 @@ func QuickCreateSupplier(w http.ResponseWriter, r *http.Request) {
 	// 名稱完全相同 → 直接用既有那筆（existing=true）。
 	var existID int64
 	var existName string
-	err := db.DB.QueryRow(`SELECT id, name FROM suppliers WHERE name = ? LIMIT 1`, name).Scan(&existID, &existName)
+	err := db.DB.QueryRow(`SELECT id, name FROM active_suppliers WHERE name = ? LIMIT 1`, name).Scan(&existID, &existName)
 	if err == nil {
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"ok": true, "id": existID, "name": existName, "existing": true,
@@ -251,7 +251,7 @@ func QuickCreateSupplier(w http.ResponseWriter, r *http.Request) {
 
 	// 模糊重複提醒（包含關係）：仍可建立，但告訴前端「可能已存在」。
 	similar := ""
-	_ = db.DB.QueryRow(`SELECT name FROM suppliers WHERE name LIKE ? LIMIT 1`, "%"+name+"%").Scan(&similar)
+	_ = db.DB.QueryRow(`SELECT name FROM active_suppliers WHERE name LIKE ? LIMIT 1`, "%"+name+"%").Scan(&similar)
 
 	res, err := db.DB.Exec(`INSERT INTO suppliers (name, vendor_type) VALUES (?, 'material')`, name)
 	if err != nil {
@@ -271,7 +271,7 @@ func EditSupplierForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	err := db.DB.QueryRow(`SELECT id, name, COALESCE(phone,''), COALESCE(contact_person,''),
 		COALESCE(address,''), COALESCE(notes,''), COALESCE(vendor_type,'material'),
 		COALESCE(payment_terms,''), COALESCE(active,1)
-		FROM suppliers WHERE id = ?`, id).Scan(
+		FROM active_suppliers WHERE id = ?`, id).Scan(
 		&s.ID, &s.Name, &s.Phone, &s.ContactPerson, &s.Address, &s.Notes, &s.VendorType,
 		&s.PaymentTerms, &s.Active)
 	if err != nil {

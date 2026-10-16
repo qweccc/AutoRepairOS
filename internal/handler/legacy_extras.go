@@ -30,8 +30,8 @@ func ListMaintenanceTemplates(w http.ResponseWriter, r *http.Request, user model
 	}
 
 	rows, err := db.DB.Query(`SELECT t.id, t.code, t.name, COALESCE(t.notes,''),
-		(SELECT COUNT(1) FROM maintenance_template_items i WHERE i.template_id = t.id)
-		FROM maintenance_templates t`+where+` ORDER BY t.code`, args...)
+		(SELECT COUNT(1) FROM active_maintenance_template_items i WHERE i.template_id = t.id)
+		FROM active_maintenance_templates t`+where+` ORDER BY t.code`, args...)
 	if err != nil {
 		fail(w, "查詢保養套餐失敗")
 		return
@@ -94,15 +94,15 @@ func ListMaintenanceTemplates(w http.ResponseWriter, r *http.Request, user model
 // templateDetail 某套餐的項目明細（HTML 片段）。
 func templateDetail(id int64) string {
 	var name, code string
-	if err := db.DB.QueryRow("SELECT code, name FROM maintenance_templates WHERE id = ?", id).
+	if err := db.DB.QueryRow("SELECT code, name FROM active_maintenance_templates WHERE id = ?", id).
 		Scan(&code, &name); err != nil {
 		return ""
 	}
 
 	rows, err := db.DB.Query(`SELECT i.sequence_no, COALESCE(i.part_number,''),
 		COALESCE(inv.name, i.description, ''), i.quantity, i.unit_price
-		FROM maintenance_template_items i
-		LEFT JOIN inventory_items inv ON inv.part_number = i.part_number
+		FROM active_maintenance_template_items i
+		LEFT JOIN active_inventory_items inv ON inv.part_number = i.part_number
 		WHERE i.template_id = ? ORDER BY i.sequence_no, i.id`, id)
 	if err != nil {
 		return ""

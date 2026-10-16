@@ -98,9 +98,10 @@
 
 ### 階段 1：文件與 Service Layer 基礎
 
-#### [ ] T1.1 補齊 SRS §6 資料模型
+#### [x] T1.1 補齊 SRS §6 資料模型
 - 以 migration 與 model 為準，列出主要資料表用途、主鍵／外鍵、重要欄位及關係圖。
-- 驗收：文件中的表格均存在；所有主要 migration 建立的業務表均有說明。
+- 實作：掃描 45 個 migration，整理 30 張資料表，新增 Mermaid 關係圖，区分 DB 外鍵與應用層關聯。
+- 驗證：docs/SRS.md +133 行，go build exit 0
 
 #### [x] T1.2 建立可測試的 Service Layer 基礎
 - 新增 `internal/service/`，使用 `*sql.DB` 依賴注入，避免 service 直接依賴全域 `db.DB`。

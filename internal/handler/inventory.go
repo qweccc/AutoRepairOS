@@ -55,10 +55,10 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM inventory_items i`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_inventory_items i`+where, args...)
 
-	query := `SELECT ` + inventoryCols + ` FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id` + where +
+	query := `SELECT ` + inventoryCols + ` FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id` + where +
 		` ORDER BY i.name LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -101,7 +101,7 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 	var catTabs strings.Builder
 	catTabs.WriteString(`<a class="btn ` + btnIf(category == "", "btn-p", "btn-s") + `" href="` + invTabURL(qv, "", lowOnly) + `">全部</a> `)
 	catRows, cerr := db.DB.Query(`SELECT COALESCE(NULLIF(category,''),'__none__') c, COUNT(1) n
-		FROM inventory_items GROUP BY 1 ORDER BY n DESC`)
+		FROM active_inventory_items GROUP BY 1 ORDER BY n DESC`)
 	if cerr == nil {
 		defer catRows.Close()
 		for catRows.Next() {
@@ -119,8 +119,8 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
-	lowCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < COALESCE(min_safety_stock,0)")
-	negCount := countRows("SELECT COUNT(1) FROM inventory_items WHERE COALESCE(stock_quantity,0) < 0")
+	lowCount := countRows("SELECT COUNT(1) FROM active_inventory_items WHERE COALESCE(stock_quantity,0) < COALESCE(min_safety_stock,0)")
+	negCount := countRows("SELECT COUNT(1) FROM active_inventory_items WHERE COALESCE(stock_quantity,0) < 0")
 
 	negBanner := ""
 	if negCount > 0 {
@@ -154,8 +154,8 @@ func SearchInventoryAPI(w http.ResponseWriter, r *http.Request, user model.User)
 		COALESCE(i.stock_quantity,0), COALESCE(i.min_safety_stock,0),
 		COALESCE(i.stock_quantity,0) < COALESCE(i.min_safety_stock,0),
 		COALESCE(i.item_kind,'')
-		FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id
+		FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id
 		WHERE i.name LIKE ? OR i.part_number LIKE ? OR COALESCE(i.barcode,'') LIKE ? OR i.bin_location LIKE ?
 		ORDER BY i.name LIMIT 50`, like, like, like, like)
 	if err != nil {
@@ -233,8 +233,8 @@ func CreateInventoryItem(w http.ResponseWriter, r *http.Request) {
 func EditInventoryForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
 
-	row := db.DB.QueryRow(`SELECT `+inventoryCols+` FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id WHERE i.id = ?`, id)
+	row := db.DB.QueryRow(`SELECT `+inventoryCols+` FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id WHERE i.id = ?`, id)
 	it, err := scanInventoryItem(row)
 	if err != nil {
 		http.NotFound(w, r)
@@ -307,8 +307,8 @@ func UpdateInventoryItem(w http.ResponseWriter, r *http.Request) {
 func StockAdjustForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
 
-	row := db.DB.QueryRow(`SELECT `+inventoryCols+` FROM inventory_items i
-		LEFT JOIN suppliers s ON s.id = i.supplier_id WHERE i.id = ?`, id)
+	row := db.DB.QueryRow(`SELECT `+inventoryCols+` FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id WHERE i.id = ?`, id)
 	it, err := scanInventoryItem(row)
 	if err != nil {
 		http.NotFound(w, r)
@@ -372,7 +372,7 @@ func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {
 	}
 	if updateErr == sql.ErrNoRows {
 		var current int
-		if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?", id).Scan(&current); err != nil {
+		if err := tx.QueryRow("SELECT COALESCE(stock_quantity,0) FROM active_inventory_items WHERE id = ?", id).Scan(&current); err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -411,7 +411,7 @@ func DeleteInventoryItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec("DELETE FROM inventory_items WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE inventory_items SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除零件失敗")
 		return
@@ -425,7 +425,7 @@ func DeleteInventoryItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func supplierOptions() string {
-	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name LIMIT 300")
+	rows, err := db.DB.Query("SELECT id, name FROM active_suppliers ORDER BY name LIMIT 300")
 	if err != nil {
 		return ""
 	}
@@ -444,7 +444,7 @@ func supplierOptions() string {
 }
 
 func supplierOptionsSel(selected int64) string {
-	rows, err := db.DB.Query("SELECT id, name FROM suppliers ORDER BY name LIMIT 300")
+	rows, err := db.DB.Query("SELECT id, name FROM active_suppliers ORDER BY name LIMIT 300")
 	if err != nil {
 		return ""
 	}
@@ -464,7 +464,7 @@ func supplierOptionsSel(selected int64) string {
 
 func inventoryOptions() string {
 	rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(selling_price,0), COALESCE(stock_quantity,0)
-		FROM inventory_items ORDER BY name LIMIT 300`)
+		FROM active_inventory_items ORDER BY name LIMIT 300`)
 	if err != nil {
 		return ""
 	}
@@ -495,7 +495,7 @@ func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	like := "%" + q + "%"
 	rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(selling_price,0), COALESCE(stock_quantity,0)
-		FROM inventory_items
+		FROM active_inventory_items
 		WHERE name LIKE ? OR part_number LIKE ? OR COALESCE(barcode,'') LIKE ?
 		ORDER BY name LIMIT 20`, like, like, like)
 	if err != nil {

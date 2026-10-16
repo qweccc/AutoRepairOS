@@ -43,10 +43,10 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	//   免額的會計歸屬待 owner 確認後再決定(不影響分欄結構)。
 	var insRevenue, selfRevenue float64
 	var insCount, selfCount int
-	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM work_orders
+	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM active_work_orders
 		WHERE status='paid' AND is_insurance=1 AND date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&insRevenue, &insCount)
-	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM work_orders
+	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM active_work_orders
 		WHERE status='paid' AND is_insurance=0 AND date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&selfRevenue, &selfCount)
 
@@ -61,7 +61,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// ============ 狀態分布（保險 / 自費分欄）============
 	// GROUP BY is_insurance, status 產生兩個並排表。
-	statusRows, _ := db.DB.Query(`SELECT is_insurance, status, COUNT(1) FROM work_orders
+	statusRows, _ := db.DB.Query(`SELECT is_insurance, status, COUNT(1) FROM active_work_orders
 		WHERE date(created_at) BETWEEN ? AND ?
 		GROUP BY is_insurance, status`, from, to)
 	statusCounts := map[int]map[string]int{}
@@ -106,7 +106,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	itemRows, _ := db.DB.Query(`SELECT wo.is_insurance, woi.description,
 		COALESCE(SUM(woi.quantity),0), COALESCE(SUM(woi.subtotal),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		WHERE date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY wo.is_insurance, woi.description
 		ORDER BY wo.is_insurance, SUM(woi.subtotal) DESC`, from, to)
@@ -150,7 +150,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// ============ 技師績效（不動）============
 	techRows, _ := db.DB.Query(`SELECT COALESCE(u.name,'-'), COUNT(wl.id),
 		COALESCE(SUM(wl.hours),0), COALESCE(SUM(wl.commission_amount),0)
-		FROM technician_worklogs wl JOIN users u ON u.id = wl.technician_id
+		FROM active_technician_worklogs wl JOIN users u ON u.id = wl.technician_id
 		WHERE date(wl.work_date) BETWEEN ? AND ?
 		GROUP BY u.id, u.name ORDER BY SUM(wl.commission_amount) DESC`, from, to)
 	var tb strings.Builder
@@ -177,7 +177,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// ============ 庫存低水位（不動）============
 	lowRows, _ := db.DB.Query(`SELECT part_number, name, stock_quantity, min_safety_stock
-		FROM inventory_items WHERE stock_quantity <= min_safety_stock ORDER BY stock_quantity ASC LIMIT 10`)
+		FROM active_inventory_items WHERE stock_quantity <= min_safety_stock ORDER BY stock_quantity ASC LIMIT 10`)
 	var lb strings.Builder
 	lb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th class="num">現有</th><th class="num">安全存量</th></tr>`)
 	lowCount := 0
@@ -212,7 +212,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	agingTotalAmount := 0.0
 	agingRows, _ := db.DB.Query(`SELECT wo.id, wo.total_amount, COALESCE(wo.updated_at, wo.created_at),
 		COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0)
-		FROM work_orders wo WHERE wo.status = 'completed'`)
+		FROM active_work_orders wo WHERE wo.status = 'completed'`)
 	if agingRows != nil {
 		for agingRows.Next() {
 			var total, received float64

@@ -37,7 +37,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 	// LINE 綁定：讀出客戶的 line_user_id，並用 Flex 估價單模板（明細兩欄 + 金額 + 線上核准）。
 	var lineBlock string
 	var lineUserID string
-	if err := db.DB.QueryRow("SELECT COALESCE(line_user_id,'') FROM customers WHERE id=?", wo.CustomerID).Scan(&lineUserID); err == nil && lineUserID != "" {
+	if err := db.DB.QueryRow("SELECT COALESCE(line_user_id,'') FROM active_customers WHERE id=?", wo.CustomerID).Scan(&lineUserID); err == nil && lineUserID != "" {
 		quoteItems := []line.ItemLine{}
 		for _, it := range items {
 			quoteItems = append(quoteItems, line.ItemLine{Desc: it.Description, Total: it.Subtotal})

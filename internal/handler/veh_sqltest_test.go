@@ -23,7 +23,8 @@ func TestCreateVehicleRealSQL(t *testing.T) {
 
 	// 建最小 vehicles 表（從 migration 021_vehicle_extra_fields 對應的結構）
 	stmts := []string{
-		`CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, phone TEXT)`,
+		`CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, phone TEXT, deleted_at TEXT)`,
+		`CREATE VIEW IF NOT EXISTS active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`,
 		`CREATE TABLE vehicles (id INTEGER PRIMARY KEY AUTOINCREMENT, customer_id INTEGER, plate_number TEXT UNIQUE,
 			brand_model TEXT, vehicle_type TEXT, driver_name TEXT, driver_phone TEXT, contact_name TEXT, contact_phone TEXT,
 			owner_name TEXT, owner_address TEXT, owner_id_number TEXT, license_expiry_date TEXT, color TEXT, door_count INTEGER,
@@ -31,7 +32,8 @@ func TestCreateVehicleRealSQL(t *testing.T) {
 			body_style TEXT, seating_capacity INTEGER, curb_weight INTEGER, gross_weight INTEGER, tire_size TEXT,
 			wheelbase INTEGER, vin TEXT, engine_number TEXT, inspection_due_date TEXT, next_maintenance_date TEXT,
 			next_maintenance_mileage INTEGER, last_maintenance_date TEXT, last_maintenance_mileage INTEGER,
-			next_maintenance_interval_months INTEGER, next_maintenance_interval_km INTEGER)`,
+			next_maintenance_interval_months INTEGER, next_maintenance_interval_km INTEGER,
+			deleted_at TEXT)`,
 		`INSERT INTO customers (id, name, phone) VALUES (1, '測試', '0912')`,
 	}
 	for _, s := range stmts {

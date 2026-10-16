@@ -17,10 +17,10 @@ const techWorklogCols = `wl.id, wl.work_order_id, wl.technician_id, wl.work_date
 	COALESCE(wl.commission_rate,0), COALESCE(wl.commission_amount,0),
 	COALESCE(wl.notes,'')`
 
-const techWorklogFrom = ` FROM technician_worklogs wl
-	JOIN work_orders wo ON wo.id = wl.work_order_id
+const techWorklogFrom = ` FROM active_technician_worklogs wl
+	JOIN active_work_orders wo ON wo.id = wl.work_order_id
 	JOIN users u ON u.id = wl.technician_id
-	JOIN vehicles v ON v.id = wo.vehicle_id `
+	JOIN active_vehicles v ON v.id = wo.vehicle_id `
 
 type techWorklog struct {
 	ID               int64
@@ -66,7 +66,7 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 	var woTotal float64
 	var woIsInsurance int
 	var woCreatedAt string
-	db.DB.QueryRow(`SELECT status, COALESCE(total_amount,0), COALESCE(is_insurance,0), COALESCE(created_at,'') FROM work_orders WHERE id = ?`, woID).Scan(&woStatus, &woTotal, &woIsInsurance, &woCreatedAt)
+	db.DB.QueryRow(`SELECT status, COALESCE(total_amount,0), COALESCE(is_insurance,0), COALESCE(created_at,'') FROM active_work_orders WHERE id = ?`, woID).Scan(&woStatus, &woTotal, &woIsInsurance, &woCreatedAt)
 	// 工時表單日期預設成工單建立日（補舊工單時不用手改）
 	woDateDefault := today()
 	if len(woCreatedAt) >= 10 {
@@ -186,7 +186,7 @@ func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 		techID = actor.ID
 	}
 
-	if countRows("SELECT COUNT(1) FROM work_orders WHERE id = ?", woID) == 0 {
+	if countRows("SELECT COUNT(1) FROM active_work_orders WHERE id = ?", woID) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -330,7 +330,8 @@ func DeleteTechnicianWorklog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec("DELETE FROM technician_worklogs WHERE id = ? AND work_order_id = ?", logID, woID)
+	res, err := db.DB.Exec(`UPDATE technician_worklogs SET deleted_at = datetime('now')
+		WHERE id = ? AND work_order_id = ? AND deleted_at IS NULL`, logID, woID)
 	if err != nil {
 		fail(w, "刪除工時紀錄失敗")
 		return
@@ -366,7 +367,7 @@ func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user mode
 		COALESCE(SUM(wl.hours),0), COALESCE(SUM(wl.labor_amount),0),
 		COALESCE(SUM(wl.commission_amount),0), COUNT(wl.id)
 		FROM users u
-		LEFT JOIN technician_worklogs wl
+		LEFT JOIN active_technician_worklogs wl
 		  ON wl.technician_id = u.id AND substr(wl.work_date,1,7) = ?
 		WHERE u.role = 'technician'
 		  AND COALESCE(u.staff_kind,'employee') = 'employee'

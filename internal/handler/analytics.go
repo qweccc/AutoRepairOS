@@ -93,17 +93,17 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	var revenue, partsCost float64
 	var paidCount, orderCount int
 	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount - COALESCE(discount_amount,0)),0), COUNT(1)
-		FROM work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
+		FROM active_work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&revenue, &paidCount)
-	db.DB.QueryRow(`SELECT COUNT(1) FROM work_orders WHERE date(created_at) BETWEEN ? AND ?`, from, to).
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders WHERE date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&orderCount)
 
 	// 零件成本：從 work_order_items.inventory_item_id 關回庫存主檔帶 cost_price。
 	// 找不到料號的零件不計成本（寧可低估毛利也不造假）。
 	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
+		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.item_type='part' AND wo.status='paid'
 			AND date(wo.created_at) BETWEEN ? AND ?`, from, to).Scan(&partsCost)
 
@@ -132,8 +132,8 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 			COALESCE(SUM(CASE WHEN woi.item_type='part'
 				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
+		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY woi.item_type`, from, to)
 	if itemRows != nil {
@@ -156,7 +156,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// vehicles 只有 brand_model（廠牌車型存在同一欄），沒有獨立的 make/model 欄。
 	// 用錯欄位名會讓整條查詢失敗、這張表靜默變空。
 	carRows, _ := db.DB.Query(`SELECT COALESCE(v.brand_model,'(未填車型)'), COUNT(1)
-		FROM work_orders wo JOIN vehicles v ON v.id = wo.vehicle_id
+		FROM active_work_orders wo JOIN active_vehicles v ON v.id = wo.vehicle_id
 		WHERE date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY COALESCE(v.brand_model,'(未填車型)')
 		ORDER BY COUNT(1) DESC LIMIT 10`, from, to)
@@ -185,8 +185,8 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	partRows, _ := db.DB.Query(`SELECT COALESCE(i.name, woi.description), COALESCE(SUM(woi.quantity),0),
 			COALESCE(SUM(woi.subtotal),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
+		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.item_type='part' AND wo.status='paid'
 			AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY COALESCE(i.name, woi.description)
@@ -219,20 +219,20 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	var newCust, oldCust, activeCust, repeatCust int
 	db.DB.QueryRow(`SELECT COUNT(1) FROM (
 		SELECT wo.customer_id
-		FROM work_orders wo
+		FROM active_work_orders wo
 		WHERE wo.status='paid'
 		GROUP BY wo.customer_id
 		HAVING MIN(date(wo.created_at)) BETWEEN ? AND ?)`, from, to).Scan(&newCust)
 	db.DB.QueryRow(`SELECT COUNT(1) FROM (
 		SELECT wo.customer_id
-		FROM work_orders wo
+		FROM active_work_orders wo
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY wo.customer_id
 		HAVING MIN(date(wo.created_at)) < ?)`, from, to, from).Scan(&oldCust)
-	db.DB.QueryRow(`SELECT COUNT(DISTINCT customer_id) FROM work_orders
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT customer_id) FROM active_work_orders
 		WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).Scan(&activeCust)
 	db.DB.QueryRow(`SELECT COUNT(1) FROM (
-		SELECT customer_id FROM work_orders
+		SELECT customer_id FROM active_work_orders
 		WHERE status='paid' AND date(created_at) BETWEEN ? AND ?
 		GROUP BY customer_id HAVING COUNT(1) >= 2)`, from, to).Scan(&repeatCust)
 
@@ -248,8 +248,8 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// ============ 行銷方案成效（FR-ANA-06）============
 	campRows, _ := db.DB.Query(`SELECT COALESCE(wo.campaign_code, c.campaign_code, '(未設定)'),
 			COUNT(1), COALESCE(SUM(wo.total_amount - COALESCE(wo.discount_amount,0)),0)
-		FROM work_orders wo
-		LEFT JOIN customers c ON c.id = wo.customer_id
+		FROM active_work_orders wo
+		LEFT JOIN active_customers c ON c.id = wo.customer_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY COALESCE(wo.campaign_code, c.campaign_code, '(未設定)')
 		ORDER BY SUM(wo.total_amount - COALESCE(wo.discount_amount,0)) DESC`, from, to)
@@ -278,9 +278,9 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// ============ 折扣與保固（FR-FIN-07）============
 	var discountTotal, warrantyRev float64
 	var warrantyCount int
-	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(discount_amount,0)),0) FROM work_orders
+	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(discount_amount,0)),0) FROM active_work_orders
 		WHERE date(created_at) BETWEEN ? AND ?`, from, to).Scan(&discountTotal)
-	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(total_amount),0) FROM work_orders
+	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(total_amount),0) FROM active_work_orders
 		WHERE is_warranty=1 AND date(created_at) BETWEEN ? AND ?`, from, to).Scan(&warrantyCount, &warrantyRev)
 
 	// ============ 死頭料（FR-INV-04）============
@@ -291,7 +291,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 			COALESCE(i.cost_price,0) * i.stock_quantity AS dead_cost,
 			COALESCE((SELECT MAX(im.created_at) FROM inventory_movements im
 				WHERE im.inventory_item_id = i.id), '') AS last_move
-		FROM inventory_items i
+		FROM active_inventory_items i
 		WHERE i.stock_quantity > 0
 			AND (last_move = '' OR date(last_move) < date('now','localtime','-180 day'))
 		ORDER BY dead_cost DESC LIMIT 20`)
@@ -453,14 +453,14 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 	var revenue, partsCost float64
 	var paidCount, orderCount int
 	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount - COALESCE(discount_amount,0)),0), COUNT(1)
-		FROM work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
+		FROM active_work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&revenue, &paidCount)
-	db.DB.QueryRow(`SELECT COUNT(1) FROM work_orders WHERE date(created_at) BETWEEN ? AND ?`, from, to).
+	db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders WHERE date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&orderCount)
 	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
+		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.item_type='part' AND wo.status='paid'
 			AND date(wo.created_at) BETWEEN ? AND ?`, from, to).Scan(&partsCost)
 
@@ -492,8 +492,8 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 	rows, _ := db.DB.Query(`SELECT woi.item_type, COALESCE(SUM(woi.subtotal),0), COALESCE(SUM(woi.quantity),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='part' THEN COALESCE(i.cost_price,0)*woi.quantity ELSE 0 END),0)
 		FROM work_order_items woi
-		JOIN work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+		JOIN active_work_orders wo ON wo.id = woi.work_order_id
+		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY woi.item_type`, from, to)
 	if rows != nil {
@@ -519,9 +519,9 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 			COALESCE(wo.total_amount,0), COALESCE(wo.discount_amount,0), COALESCE(wo.is_warranty,0),
 			COALESCE((SELECT SUM(COALESCE(i.cost_price,0)*woi.quantity)
 				FROM work_order_items woi
-				LEFT JOIN inventory_items i ON i.id = woi.inventory_item_id
+				LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 				WHERE woi.work_order_id = wo.id AND woi.item_type='part'),0)
-		FROM work_orders wo LEFT JOIN customers c ON c.id = wo.customer_id
+		FROM active_work_orders wo LEFT JOIN active_customers c ON c.id = wo.customer_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		ORDER BY wo.id`, from, to)
 	if woRows != nil {

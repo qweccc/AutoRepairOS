@@ -332,7 +332,7 @@ func processPendingNotifications() (int, error) {
 			COALESCE(n.subject,''), n.body, COALESCE(n.work_order_id,0),
 			COALESCE(c.line_user_id,'')
 		FROM notifications n
-		LEFT JOIN customers c ON c.id = n.customer_id
+		LEFT JOIN active_customers c ON c.id = n.customer_id
 		WHERE n.status='pending' AND n.scheduled_at <= ?
 		ORDER BY n.scheduled_at LIMIT 50`, nowDBTime())
 	if err != nil {
@@ -645,8 +645,8 @@ func scanMaintenanceDueInternal() (int, error) {
 	// 這裡改成全部撈回來、在 Go 端用字串前 10 碼比較，行為可預期且不受驅動格式影響。
 	rows, err := db.DB.Query(`SELECT v.id, v.customer_id, v.plate_number, v.next_maintenance_date,
 		COALESCE(c.name,''), COALESCE(c.notification_preference,'line')
-		FROM vehicles v
-		JOIN customers c ON c.id = v.customer_id
+		FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id
 		WHERE v.next_maintenance_date IS NOT NULL
 		  AND TRIM(COALESCE(v.next_maintenance_date,'')) != ''`)
 	if err != nil {
@@ -752,8 +752,8 @@ func scanWorkOrderReadyInternal() (int, error) {
 	rows, err := db.DB.Query(`SELECT wo.id, wo.customer_id, wo.total_amount,
 		COALESCE(c.name,''), COALESCE(c.phone,''), COALESCE(c.notification_preference,'line'),
 		wo.created_at
-		FROM work_orders wo
-		JOIN customers c ON c.id = wo.customer_id
+		FROM active_work_orders wo
+		JOIN active_customers c ON c.id = wo.customer_id
 		WHERE wo.status = 'completed'
 		  AND datetime(wo.created_at) > datetime(?)`, cutoff.UTC().Format(sqlTimeLayout))
 	if err != nil {

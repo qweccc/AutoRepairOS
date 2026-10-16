@@ -34,9 +34,9 @@ const vehInsuranceCols = `vi.id, vi.vehicle_id, COALESCE(vi.insurance_company_id
 	COALESCE(vi.license_date,''), COALESCE(vi.card_no,''), COALESCE(vi.amount_raw,''),
 	COALESCE(vi.notes,'')`
 
-const vehInsuranceFrom = ` FROM vehicle_insurances vi
-	JOIN vehicles v ON v.id = vi.vehicle_id
-	JOIN customers c ON c.id = v.customer_id
+const vehInsuranceFrom = ` FROM active_vehicle_insurances vi
+	JOIN active_vehicles v ON v.id = vi.vehicle_id
+	JOIN active_customers c ON c.id = v.customer_id
 	LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id `
 
 type insuranceRow struct {
@@ -93,7 +93,7 @@ func NewVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model.
 // CreateVehicleInsurance 建立投保紀錄。
 func CreateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	vehID := mustInt(r.FormValue("vehicle_id"))
-	if vehID == 0 || countRows("SELECT COUNT(1) FROM vehicles WHERE id = ?", vehID) == 0 {
+	if vehID == 0 || countRows("SELECT COUNT(1) FROM active_vehicles WHERE id = ?", vehID) == 0 {
 		fail(w, "請選擇有效的車輛")
 		return
 	}
@@ -180,7 +180,7 @@ func UpdateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 // DeleteVehicleInsurance 刪除投保紀錄。
 func DeleteVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
-	res, err := db.DB.Exec("DELETE FROM vehicle_insurances WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE vehicle_insurances SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除失敗")
 		return
@@ -197,8 +197,8 @@ func DeleteVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 const vehInspectionCols = `vi.id, vi.vehicle_id, COALESCE(vi.order_date,''),
 	COALESCE(vi.check_date,''), COALESCE(vi.firm_no,''), COALESCE(vi.notes,'')`
 
-const vehInspectionFrom = ` FROM vehicle_inspections vi
-	JOIN vehicles v ON v.id = vi.vehicle_id `
+const vehInspectionFrom = ` FROM active_vehicle_inspections vi
+	JOIN active_vehicles v ON v.id = vi.vehicle_id `
 
 type inspectionRow struct {
 	ID        int64
@@ -243,7 +243,7 @@ func NewVehicleInspectionForm(w http.ResponseWriter, r *http.Request, user model
 // CreateVehicleInspection 建立定檢排程。
 func CreateVehicleInspection(w http.ResponseWriter, r *http.Request) {
 	vehID := mustInt(r.FormValue("vehicle_id"))
-	if vehID == 0 || countRows("SELECT COUNT(1) FROM vehicles WHERE id = ?", vehID) == 0 {
+	if vehID == 0 || countRows("SELECT COUNT(1) FROM active_vehicles WHERE id = ?", vehID) == 0 {
 		fail(w, "請選擇有效的車輛")
 		return
 	}
@@ -319,7 +319,7 @@ func UpdateVehicleInspection(w http.ResponseWriter, r *http.Request) {
 // DeleteVehicleInspection 刪除定檢排程。
 func DeleteVehicleInspection(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
-	res, err := db.DB.Exec("DELETE FROM vehicle_inspections WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE vehicle_inspections SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除失敗")
 		return
@@ -338,7 +338,7 @@ func DeleteVehicleInspection(w http.ResponseWriter, r *http.Request) {
 func vehicleOptionsFor(selected int64) string {
 	rows, err := db.DB.Query(`SELECT v.id, COALESCE(v.plate_number,''), COALESCE(v.brand_model,''),
 		COALESCE(c.name,'')
-		FROM vehicles v JOIN customers c ON c.id = v.customer_id
+		FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id
 		ORDER BY v.plate_number`)
 	if err != nil {
 		return ""

@@ -27,7 +27,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	if preVehicle <= 0 && prePlate != "" {
 		var vid int64
 		if err := db.DB.QueryRow(
-			"SELECT id FROM vehicles WHERE UPPER(plate_number) = UPPER(?)", prePlate).Scan(&vid); err == nil {
+			"SELECT id FROM active_vehicles WHERE UPPER(plate_number) = UPPER(?)", prePlate).Scan(&vid); err == nil {
 			preVehicle = vid
 		}
 	}
@@ -36,8 +36,8 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	if preCustomer > 0 {
 		// 指定客戶 → 只顯示該客戶的車輛
-		rows, err := db.DB.Query(`SELECT `+vehicleCols+` FROM vehicles v
-			JOIN customers c ON c.id = v.customer_id
+		rows, err := db.DB.Query(`SELECT `+vehicleCols+` FROM active_vehicles v
+			JOIN active_customers c ON c.id = v.customer_id
 			WHERE v.customer_id = ? ORDER BY v.plate_number`, preCustomer)
 		if err == nil {
 			for rows.Next() {
@@ -52,8 +52,8 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		// 一般情況：列出可選車輛。
 		// 篩選交給前端的即時搜尋處理，這裡給完整清單；
 		// 只在明確帶入關鍵字（?q=）時才用 SQL 先篩一次，減少傳輸量。
-		query := `SELECT ` + vehicleCols + ` FROM vehicles v
-			JOIN customers c ON c.id = v.customer_id WHERE 1=1`
+		query := `SELECT ` + vehicleCols + ` FROM active_vehicles v
+			JOIN active_customers c ON c.id = v.customer_id WHERE 1=1`
 		var args []interface{}
 		if kw != "" {
 			query += ` AND (v.plate_number LIKE ? OR v.brand_model LIKE ?
@@ -79,8 +79,8 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 選了車輛就帶出該車主，讓櫃檯確認身分
 	var linkedCustomer string
 	if preVehicle > 0 {
-		rows, err := db.DB.Query(`SELECT c.id, c.name, c.phone FROM vehicles v
-			JOIN customers c ON c.id = v.customer_id WHERE v.id = ?`, preVehicle)
+		rows, err := db.DB.Query(`SELECT c.id, c.name, c.phone FROM active_vehicles v
+			JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, preVehicle)
 		if err == nil && rows.Next() {
 			var cid int64
 			var name, phone string
@@ -130,7 +130,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	mileage := ""
 	if preVehicle > 0 {
 		var last sql.NullInt64
-		if err := db.DB.QueryRow(`SELECT current_mileage FROM work_orders
+		if err := db.DB.QueryRow(`SELECT current_mileage FROM active_work_orders
 			WHERE vehicle_id = ? ORDER BY id DESC LIMIT 1`, preVehicle).Scan(&last); err == nil && last.Valid {
 			mileage = strconv.FormatInt(last.Int64, 10)
 		}
@@ -313,10 +313,10 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 
 	// 同車牌已存在：直接回傳既有 vehicle，不重複建立
 	var existingID int64
-	if err := db.DB.QueryRow(`SELECT id FROM vehicles WHERE UPPER(plate_number) = UPPER(?)`, plate).Scan(&existingID); err == nil {
+	if err := db.DB.QueryRow(`SELECT id FROM active_vehicles WHERE UPPER(plate_number) = UPPER(?)`, plate).Scan(&existingID); err == nil {
 		var label string
 		db.DB.QueryRow(`SELECT v.plate_number || ' / ' || COALESCE(v.brand_model,'') || ' / ' || COALESCE(c.name,'')
-			FROM vehicles v JOIN customers c ON c.id = v.customer_id WHERE v.id = ?`, existingID).Scan(&label)
+			FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, existingID).Scan(&label)
 		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "vehicle_id": existingID, "label": label, "mileage": ""})
 		return
 	}
@@ -330,7 +330,7 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 
 	// 客戶：同電話不重複建立
 	var customerID int64
-	err = tx.QueryRow(`SELECT id FROM customers WHERE phone = ?`, phone).Scan(&customerID)
+	err = tx.QueryRow(`SELECT id FROM active_customers WHERE phone = ?`, phone).Scan(&customerID)
 	if err != nil {
 		res, cerr := tx.Exec(`INSERT INTO customers (name, phone) VALUES (?, ?)`, name, phone)
 		if cerr != nil {

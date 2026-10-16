@@ -47,11 +47,11 @@ func ListPurchaseOrders(w http.ResponseWriter, r *http.Request, user model.User)
 		args = append(args, status)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM purchase_orders po
-		JOIN suppliers s ON s.id = po.supplier_id`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_purchase_orders po
+		JOIN active_suppliers s ON s.id = po.supplier_id`+where, args...)
 
-	query := `SELECT ` + purchaseOrderCols + ` FROM purchase_orders po
-		JOIN suppliers s ON s.id = po.supplier_id` + where +
+	query := `SELECT ` + purchaseOrderCols + ` FROM active_purchase_orders po
+		JOIN active_suppliers s ON s.id = po.supplier_id` + where +
 		` ORDER BY po.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -69,7 +69,7 @@ func ListPurchaseOrders(w http.ResponseWriter, r *http.Request, user model.User)
 			continue
 		}
 		var itemCount int
-		db.DB.QueryRow(`SELECT COUNT(1) FROM purchase_order_items WHERE order_id = ?`, po.ID).Scan(&itemCount)
+		db.DB.QueryRow(`SELECT COUNT(1) FROM active_purchase_order_items WHERE order_id = ?`, po.ID).Scan(&itemCount)
 		poRows = append(poRows, pages.PurchaseOrderRow{
 			ID:           po.ID,
 			SupplierID:   po.SupplierID,
@@ -100,8 +100,8 @@ func SearchPurchaseOrdersAPI(w http.ResponseWriter, r *http.Request) {
 		where += ` AND po.status = ?`
 		args = append(args, status)
 	}
-	rows, err := db.DB.Query(`SELECT `+purchaseOrderCols+` FROM purchase_orders po
-		JOIN suppliers s ON s.id = po.supplier_id`+where+
+	rows, err := db.DB.Query(`SELECT `+purchaseOrderCols+` FROM active_purchase_orders po
+		JOIN active_suppliers s ON s.id = po.supplier_id`+where+
 		` ORDER BY po.id DESC LIMIT 50`, args...)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -116,7 +116,7 @@ func SearchPurchaseOrdersAPI(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		var itemCount int
-		db.DB.QueryRow(`SELECT COUNT(1) FROM purchase_order_items WHERE order_id = ?`, po.ID).Scan(&itemCount)
+		db.DB.QueryRow(`SELECT COUNT(1) FROM active_purchase_order_items WHERE order_id = ?`, po.ID).Scan(&itemCount)
 		result = append(result, pages.PurchaseOrderRow{
 			ID:           po.ID,
 			SupplierID:   po.SupplierID,
@@ -257,8 +257,8 @@ func parseItemsJSON(raw string) []orderItemDraft {
 // ShowPurchaseOrder 進貨單詳情：主檔 + 品項 + 總額（要給廠商多少錢）。
 func ShowPurchaseOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
-	row := db.DB.QueryRow(`SELECT `+purchaseOrderCols+` FROM purchase_orders po
-		JOIN suppliers s ON s.id = po.supplier_id WHERE po.id = ?`, id)
+	row := db.DB.QueryRow(`SELECT `+purchaseOrderCols+` FROM active_purchase_orders po
+		JOIN active_suppliers s ON s.id = po.supplier_id WHERE po.id = ?`, id)
 	po, err := scanPurchaseOrder(row)
 	if err != nil {
 		http.NotFound(w, r)
@@ -276,7 +276,7 @@ func ShowPurchaseOrder(w http.ResponseWriter, r *http.Request, user model.User) 
 func loadPurchaseOrderItems(orderID int64) ([]model.PurchaseOrderItem, float64) {
 	rows, err := db.DB.Query(`SELECT id, order_id, COALESCE(inventory_item_id,0), description,
 		COALESCE(part_number,''), COALESCE(category,''), quantity, unit_cost, subtotal
-		FROM purchase_order_items WHERE order_id = ? ORDER BY id`, orderID)
+		FROM active_purchase_order_items WHERE order_id = ? ORDER BY id`, orderID)
 	if err != nil {
 		return nil, 0
 	}
@@ -301,7 +301,7 @@ func AddPurchaseOrderItem(w http.ResponseWriter, r *http.Request) {
 
 	// 已進貨的單據鎖定，不可再改（數量已入庫）。
 	var status string
-	if err := db.DB.QueryRow(`SELECT status FROM purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
+	if err := db.DB.QueryRow(`SELECT status FROM active_purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -319,7 +319,7 @@ func AddPurchaseOrderItem(w http.ResponseWriter, r *http.Request) {
 
 	if desc == "" && invID > 0 {
 		// 選了庫存零件但沒填描述：用零件名稱帶入。
-		db.DB.QueryRow(`SELECT name, COALESCE(part_number,'') FROM inventory_items WHERE id = ?`, invID).
+		db.DB.QueryRow(`SELECT name, COALESCE(part_number,'') FROM active_inventory_items WHERE id = ?`, invID).
 			Scan(&desc, &partNo)
 	}
 	if desc == "" || qty <= 0 {
@@ -349,7 +349,7 @@ func DeletePurchaseOrderItem(w http.ResponseWriter, r *http.Request) {
 	itemID := mustInt(r.PathValue("itemId"))
 
 	var status string
-	if err := db.DB.QueryRow(`SELECT status FROM purchase_orders WHERE id = ?`, orderID).Scan(&status); err != nil {
+	if err := db.DB.QueryRow(`SELECT status FROM active_purchase_orders WHERE id = ?`, orderID).Scan(&status); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -358,7 +358,11 @@ func DeletePurchaseOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.DB.Exec(`DELETE FROM purchase_order_items WHERE id = ? AND order_id = ?`, itemID, orderID)
+	if _, err := db.DB.Exec(`UPDATE purchase_order_items SET deleted_at = datetime('now')
+		WHERE id = ? AND order_id = ? AND deleted_at IS NULL`, itemID, orderID); err != nil {
+		fail(w, "刪除品項失敗")
+		return
+	}
 	recalcPurchaseOrderTotal(orderID)
 	items, total := loadPurchaseOrderItems(orderID)
 	pages.PurchaseOrderItemsTable(orderID, items, total, false).Render(r.Context(), w)
@@ -403,7 +407,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	if claimed == 0 {
 		var status string
-		if err := tx.QueryRow(`SELECT status FROM purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
+		if err := tx.QueryRow(`SELECT status FROM active_purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -414,7 +418,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	items := make([]model.PurchaseOrderItem, 0)
 	rows, err := tx.Query(`SELECT id, order_id, COALESCE(inventory_item_id,0), description,
 		COALESCE(part_number,''), COALESCE(category,''), quantity, unit_cost, subtotal
-		FROM purchase_order_items WHERE order_id = ? ORDER BY id`, id)
+		FROM active_purchase_order_items WHERE order_id = ? ORDER BY id`, id)
 	if err != nil {
 		log.Printf("讀取進貨品項失敗: %v", err)
 		fail(w, "進貨失敗")
@@ -445,7 +449,7 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 
 	// 供應商帶到自動建檔的零件上（與單據同來源）。
 	var supplierID int64
-	if err := tx.QueryRow(`SELECT supplier_id FROM purchase_orders WHERE id = ?`, id).Scan(&supplierID); err != nil {
+	if err := tx.QueryRow(`SELECT supplier_id FROM active_purchase_orders WHERE id = ?`, id).Scan(&supplierID); err != nil {
 		log.Printf("讀取進貨單供應商失敗: %v", err)
 		fail(w, "進貨失敗")
 		return
@@ -517,7 +521,7 @@ func autoCreatePartFromItem(tx db.TxExecutor, orderID, supplierID int64, it mode
 
 	// 類別：拍照辨識時猜到的（存於 purchase_order_items.category），沒有就未分類。
 	category := ""
-	_ = tx.QueryRow(`SELECT COALESCE(category,'') FROM purchase_order_items WHERE id = ?`, it.ID).Scan(&category)
+	_ = tx.QueryRow(`SELECT COALESCE(category,'') FROM active_purchase_order_items WHERE id = ?`, it.ID).Scan(&category)
 
 	// 料號：優先用品項料號；空或撞號則用 PO-單號-序號 後綴遞增。
 	base := strings.TrimSpace(it.PartNumber)
@@ -527,7 +531,7 @@ func autoCreatePartFromItem(tx db.TxExecutor, orderID, supplierID int64, it mode
 	part := base
 	for attempt := 0; attempt < 50; attempt++ {
 		var dup int64
-		if err := tx.QueryRow(`SELECT COUNT(1) FROM inventory_items WHERE part_number = ?`, part).Scan(&dup); err != nil {
+		if err := tx.QueryRow(`SELECT COUNT(1) FROM active_inventory_items WHERE part_number = ?`, part).Scan(&dup); err != nil {
 			return 0, err
 		}
 		if dup == 0 {
@@ -553,7 +557,7 @@ func autoCreatePartFromItem(tx db.TxExecutor, orderID, supplierID int64, it mode
 func DeletePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	var status string
-	if err := db.DB.QueryRow(`SELECT status FROM purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
+	if err := db.DB.QueryRow(`SELECT status FROM active_purchase_orders WHERE id = ?`, id).Scan(&status); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -561,15 +565,23 @@ func DeletePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 		fail(w, "已進貨的單據不可刪除")
 		return
 	}
-	db.DB.Exec(`DELETE FROM purchase_order_items WHERE order_id = ?`, id)
-	db.DB.Exec(`DELETE FROM purchase_orders WHERE id = ?`, id)
+	if _, err := db.DB.Exec(`UPDATE purchase_order_items SET deleted_at = datetime('now')
+		WHERE order_id = ? AND deleted_at IS NULL`, id); err != nil {
+		fail(w, "刪除進貨單品項失敗")
+		return
+	}
+	if _, err := db.DB.Exec(`UPDATE purchase_orders SET deleted_at = datetime('now')
+		WHERE id = ? AND deleted_at IS NULL`, id); err != nil {
+		fail(w, "刪除進貨單失敗")
+		return
+	}
 	redirectMsg(w, r, "/purchase-orders", "進貨單已刪除")
 }
 
 // recalcPurchaseOrderTotal 重算進貨單總額（品項小計加總）。
 func recalcPurchaseOrderTotal(orderID int64) {
 	db.DB.Exec(`UPDATE purchase_orders SET total_amount =
-		COALESCE((SELECT SUM(subtotal) FROM purchase_order_items WHERE order_id = ?), 0)
+		COALESCE((SELECT SUM(subtotal) FROM active_purchase_order_items WHERE order_id = ?), 0)
 		WHERE id = ?`, orderID, orderID)
 }
 

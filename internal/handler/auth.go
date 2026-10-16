@@ -170,12 +170,12 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			query string
 			href  string
 		}{
-			{"待收款", "SELECT COUNT(1) FROM work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
-			{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
-			{"進行中", "SELECT COUNT(1) FROM work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
-			{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
-			{"客戶數", "SELECT COUNT(1) FROM customers", "/customers"},
-			{"車輛數", "SELECT COUNT(1) FROM vehicles", "/vehicles"},
+			{"待收款", "SELECT COUNT(1) FROM active_work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
+			{"待結帳", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+			{"進行中", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
+			{"低庫存件", "SELECT COUNT(1) FROM active_inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+			{"客戶數", "SELECT COUNT(1) FROM active_customers", "/customers"},
+			{"車輛數", "SELECT COUNT(1) FROM active_vehicles", "/vehicles"},
 		}
 	case "counter":
 		stats = []struct {
@@ -183,10 +183,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			query string
 			href  string
 		}{
-			{"待處理工單", "SELECT COUNT(1) FROM work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
-			{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
-			{"待收款", "SELECT COUNT(1) FROM work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
-			{"低庫存件", "SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+			{"待處理工單", "SELECT COUNT(1) FROM active_work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
+			{"待結帳", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+			{"待收款", "SELECT COUNT(1) FROM active_work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
+			{"低庫存件", "SELECT COUNT(1) FROM active_inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
 		}
 	default: // technician
 		stats = []struct {
@@ -194,9 +194,9 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			query string
 			href  string
 		}{
-			{"我的工單", "SELECT COUNT(1) FROM work_orders WHERE technician_id = ? AND status IN ('pending','in_progress','waiting_parts')", "/work-orders?mine=1"},
-			{"進行中", "SELECT COUNT(1) FROM work_orders WHERE technician_id = ? AND status = 'in_progress'", "/work-orders?mine=1&status=in_progress"},
-			{"待結帳", "SELECT COUNT(1) FROM work_orders WHERE technician_id = ? AND status = 'completed'", "/work-orders?mine=1&status=completed"},
+			{"我的工單", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status IN ('pending','in_progress','waiting_parts')", "/work-orders?mine=1"},
+			{"進行中", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status = 'in_progress'", "/work-orders?mine=1&status=in_progress"},
+			{"待結帳", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status = 'completed'", "/work-orders?mine=1&status=completed"},
 		}
 	}
 
@@ -215,9 +215,9 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 	var recent string
 	// 排除種子/測試資料（車牌 TEST-* 或客戶名含「測試」），否則正式工單會被擠掉。
 	rows, err := db.DB.Query(`SELECT wo.id, v.plate_number, v.brand_model, c.name, wo.status
-		FROM work_orders wo
-		JOIN vehicles v ON v.id = wo.vehicle_id
-		JOIN customers c ON c.id = wo.customer_id
+		FROM active_work_orders wo
+		JOIN active_vehicles v ON v.id = wo.vehicle_id
+		JOIN active_customers c ON c.id = wo.customer_id
 		WHERE v.plate_number NOT LIKE 'TEST-%' AND c.name NOT LIKE '%測試%'
 		ORDER BY wo.created_at DESC LIMIT 8`)
 	if err == nil {

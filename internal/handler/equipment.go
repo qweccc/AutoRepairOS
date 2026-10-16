@@ -50,9 +50,8 @@ func ListEquipment(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, status)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM equipment e`+where, args...)
-
-	query := `SELECT ` + equipmentCols + ` FROM equipment e` + where +
+	total := countRows(`SELECT COUNT(1) FROM active_equipment e`+where, args...)
+	query := `SELECT ` + equipmentCols + ` FROM active_equipment e` + where +
 		` ORDER BY e.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -102,7 +101,7 @@ func SearchEquipmentAPI(w http.ResponseWriter, r *http.Request) {
 		like := "%" + q + "%"
 		args = append(args, like, like, like, like)
 	}
-	rows, err := db.DB.Query(`SELECT `+equipmentCols+` FROM equipment e`+where+
+	rows, err := db.DB.Query(`SELECT `+equipmentCols+` FROM active_equipment e`+where+
 		` ORDER BY e.id DESC LIMIT 50`, args...)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -158,7 +157,7 @@ func EditEquipmentForm(w http.ResponseWriter, r *http.Request, user model.User) 
 	id := mustInt(r.PathValue("id"))
 	var e model.Equipment
 	var createdAt string
-	err := db.DB.QueryRow(`SELECT `+equipmentCols+` FROM equipment WHERE id = ?`, id).
+	err := db.DB.QueryRow(`SELECT `+equipmentCols+` FROM active_equipment WHERE id = ?`, id).
 		Scan(&e.ID, &e.Name, &e.Model, &e.SerialNumber, &e.Location,
 			&e.PurchaseDate, &e.WarrantyExpiry, &e.Status, &e.Notes, &createdAt)
 	if err != nil {
@@ -218,7 +217,7 @@ func UpdateEquipment(w http.ResponseWriter, r *http.Request) {
 // DeleteEquipment 刪除設備。
 func DeleteEquipment(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
-	res, err := db.DB.Exec("DELETE FROM equipment WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE equipment SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除設備失敗")
 		return
@@ -235,7 +234,7 @@ func ListEquipmentMaintenance(w http.ResponseWriter, r *http.Request, user model
 	equipID := mustInt(r.PathValue("id"))
 
 	var equipName string
-	err := db.DB.QueryRow(`SELECT name FROM equipment WHERE id = ?`, equipID).Scan(&equipName)
+	err := db.DB.QueryRow(`SELECT name FROM active_equipment WHERE id = ?`, equipID).Scan(&equipName)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -245,8 +244,8 @@ func ListEquipmentMaintenance(w http.ResponseWriter, r *http.Request, user model
 		em.maintenance_date, COALESCE(em.maintenance_type,''), COALESCE(em.description,''),
 		COALESCE(em.cost,0), COALESCE(em.next_maintenance_date,''), COALESCE(em.technician_id,0),
 		COALESCE(u.name,''), COALESCE(em.notes,''), em.created_at
-		FROM equipment_maintenance em
-		JOIN equipment e ON e.id = em.equipment_id
+		FROM active_equipment_maintenance em
+		JOIN active_equipment e ON e.id = em.equipment_id
 		LEFT JOIN users u ON u.id = em.technician_id
 		WHERE em.equipment_id = ? ORDER BY em.maintenance_date DESC`, equipID)
 	if err != nil {
@@ -335,7 +334,8 @@ func CreateEquipmentMaintenance(w http.ResponseWriter, r *http.Request) {
 func DeleteEquipmentMaintenance(w http.ResponseWriter, r *http.Request) {
 	equipID := mustInt(r.PathValue("id"))
 	maintID := mustInt(r.PathValue("maint_id"))
-	res, err := db.DB.Exec("DELETE FROM equipment_maintenance WHERE id = ? AND equipment_id = ?", maintID, equipID)
+	res, err := db.DB.Exec(`UPDATE equipment_maintenance SET deleted_at = datetime('now')
+		WHERE id = ? AND equipment_id = ? AND deleted_at IS NULL`, maintID, equipID)
 	if err != nil {
 		fail(w, "刪除失敗")
 		return

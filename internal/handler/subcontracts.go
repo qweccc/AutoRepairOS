@@ -63,10 +63,10 @@ func ListSubcontracts(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, status)
 	}
 
-	total := countRows(`SELECT COUNT(1) FROM subcontracts sc LEFT JOIN suppliers sup ON sup.id=sc.supplier_id`+where, args...)
+	total := countRows(`SELECT COUNT(1) FROM active_subcontracts sc LEFT JOIN active_suppliers sup ON sup.id=sc.supplier_id`+where, args...)
 
 	query := `SELECT ` + subcontractCols + `
-		FROM subcontracts sc LEFT JOIN suppliers sup ON sup.id=sc.supplier_id` + where +
+		FROM active_subcontracts sc LEFT JOIN active_suppliers sup ON sup.id=sc.supplier_id` + where +
 		` ORDER BY sc.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -116,7 +116,7 @@ func SearchSubcontractsAPI(w http.ResponseWriter, r *http.Request) {
 		args = append(args, like, like)
 	}
 	rows, err := db.DB.Query(`SELECT `+subcontractCols+`
-		FROM subcontracts sc LEFT JOIN suppliers sup ON sup.id=sc.supplier_id`+where+
+		FROM active_subcontracts sc LEFT JOIN active_suppliers sup ON sup.id=sc.supplier_id`+where+
 		` ORDER BY sc.id DESC LIMIT 50`, args...)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -152,7 +152,7 @@ func CreateSubcontract(w http.ResponseWriter, r *http.Request) {
 		fail(w, "工單 ID 為必填")
 		return
 	}
-	if countRows("SELECT COUNT(1) FROM work_orders WHERE id = ?", workOrderID) == 0 {
+	if countRows("SELECT COUNT(1) FROM active_work_orders WHERE id = ?", workOrderID) == 0 {
 		fail(w, "工單不存在")
 		return
 	}
@@ -181,8 +181,8 @@ func EditSubcontractForm(w http.ResponseWriter, r *http.Request, user model.User
 	id := mustInt(r.PathValue("id"))
 	var s model.Subcontract
 	var createdAt string
-	err := db.DB.QueryRow(`SELECT `+subcontractCols+` FROM subcontracts sc
-		LEFT JOIN suppliers sup ON sup.id=sc.supplier_id WHERE sc.id = ?`, id).
+	err := db.DB.QueryRow(`SELECT `+subcontractCols+` FROM active_subcontracts sc
+		LEFT JOIN active_suppliers sup ON sup.id=sc.supplier_id WHERE sc.id = ?`, id).
 		Scan(&s.ID, &s.WorkOrderID, &s.SupplierID, &s.SupplierName,
 			&s.Description, &s.CostAmount, &s.ChargeAmount, &s.Status,
 			&s.ExpectedDate, &s.CompletedDate, &s.Notes, &createdAt)
@@ -252,7 +252,7 @@ func UpdateSubcontract(w http.ResponseWriter, r *http.Request) {
 // DeleteSubcontract 刪除外包工項。
 func DeleteSubcontract(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
-	res, err := db.DB.Exec("DELETE FROM subcontracts WHERE id = ?", id)
+	res, err := db.DB.Exec("UPDATE subcontracts SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	if err != nil {
 		fail(w, "刪除失敗")
 		return

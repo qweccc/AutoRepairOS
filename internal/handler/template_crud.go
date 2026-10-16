@@ -79,7 +79,7 @@ func EditMaintenanceTemplateForm(w http.ResponseWriter, r *http.Request, user mo
 	id := mustInt(r.PathValue("id"))
 
 	var code, name, notes string
-	if err := db.DB.QueryRow(`SELECT code, name, COALESCE(notes,'') FROM maintenance_templates WHERE id = ?`, id).
+	if err := db.DB.QueryRow(`SELECT code, name, COALESCE(notes,'') FROM active_maintenance_templates WHERE id = ?`, id).
 		Scan(&code, &name, &notes); err != nil {
 		http.NotFound(w, r)
 		return
@@ -87,8 +87,8 @@ func EditMaintenanceTemplateForm(w http.ResponseWriter, r *http.Request, user mo
 
 	rows, err := db.DB.Query(`SELECT i.sequence_no, COALESCE(i.part_number,''),
 		COALESCE(inv.name, i.description, ''), i.quantity, i.unit_price
-		FROM maintenance_template_items i
-		LEFT JOIN inventory_items inv ON inv.part_number = i.part_number
+		FROM active_maintenance_template_items i
+		LEFT JOIN active_inventory_items inv ON inv.part_number = i.part_number
 		WHERE i.template_id = ? ORDER BY i.sequence_no, i.id`, id)
 	if err != nil {
 		fail(w, "查詢套餐項目失敗")
@@ -196,7 +196,7 @@ func UpdateMaintenanceTemplate(w http.ResponseWriter, r *http.Request) {
 func ReplaceMaintenanceTemplateItems(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	if countRows("SELECT COUNT(1) FROM maintenance_templates WHERE id = ?", id) == 0 {
+	if countRows("SELECT COUNT(1) FROM active_maintenance_templates WHERE id = ?", id) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -223,7 +223,8 @@ func ReplaceMaintenanceTemplateItems(w http.ResponseWriter, r *http.Request) {
 
 	// 先清空再重填。整批在同一個 transaction 內，失敗會整個回滾，
 	// 不會出現「刪了舊的但新的沒寫入」的半套狀態。
-	if _, err := tx.Exec("DELETE FROM maintenance_template_items WHERE template_id = ?", id); err != nil {
+	if _, err := tx.Exec(`UPDATE maintenance_template_items SET deleted_at = datetime('now')
+		WHERE template_id = ? AND deleted_at IS NULL`, id); err != nil {
 		fail(w, "重設項目失敗")
 		return
 	}
@@ -277,11 +278,13 @@ func DeleteMaintenanceTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec("DELETE FROM maintenance_template_items WHERE template_id = ?", id); err != nil {
+	if _, err := tx.Exec(`UPDATE maintenance_template_items SET deleted_at = datetime('now')
+		WHERE template_id = ? AND deleted_at IS NULL`, id); err != nil {
 		fail(w, "刪除項目失敗")
 		return
 	}
-	res, err := tx.Exec("DELETE FROM maintenance_templates WHERE id = ?", id)
+	res, err := tx.Exec(`UPDATE maintenance_templates SET deleted_at = datetime('now')
+		WHERE id = ? AND deleted_at IS NULL`, id)
 	if err != nil {
 		fail(w, "刪除套餐失敗")
 		return

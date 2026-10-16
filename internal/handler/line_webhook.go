@@ -197,13 +197,13 @@ func phoneMatchSQL(col string) string {
 // 直接比對會讓 2,746 筆帶分隔符的手機永遠查不到。
 func customerCountByPhone(phone string) int {
 	var n int
-	db.DB.QueryRow("SELECT COUNT(1) FROM customers WHERE "+phoneMatchSQL("phone"), phone).Scan(&n)
+	db.DB.QueryRow("SELECT COUNT(1) FROM active_customers WHERE "+phoneMatchSQL("phone"), phone).Scan(&n)
 	return n
 }
 
 // isBound 查詢某個 LINE user ID 是否已綁定客戶。
 func isBound(lineUserID string) bool {
-	return countRows("SELECT COUNT(1) FROM customers WHERE line_user_id = ?", lineUserID) > 0
+	return countRows("SELECT COUNT(1) FROM active_customers WHERE line_user_id = ?", lineUserID) > 0
 }
 
 // bindLineUser 把 LINE user ID 綁到指定客戶。
@@ -216,10 +216,10 @@ func bindLineUser(lineUserID string, customerID int64) error {
 		return fmt.Errorf("LINE user ID 為空")
 	}
 
-	if countRows("SELECT COUNT(1) FROM customers WHERE line_user_id = ?", lineUserID) > 0 {
+	if countRows("SELECT COUNT(1) FROM active_customers WHERE line_user_id = ?", lineUserID) > 0 {
 		return fmt.Errorf("此 LINE 帳號已綁定其他客戶")
 	}
-	if countRows("SELECT COUNT(1) FROM customers WHERE id = ? AND COALESCE(line_user_id,'') <> ''", customerID) > 0 {
+	if countRows("SELECT COUNT(1) FROM active_customers WHERE id = ? AND COALESCE(line_user_id,'') <> ''", customerID) > 0 {
 		return fmt.Errorf("此客戶已綁定其他 LINE 帳號")
 	}
 
@@ -299,7 +299,7 @@ func tryBindByPhone(client *line.Client, ev line.MessageEvent) (string, bool) {
 
 	default:
 		var customerID int64
-		if err := db.DB.QueryRow("SELECT id FROM customers WHERE "+phoneMatchSQL("phone"), phone).Scan(&customerID); err != nil {
+		if err := db.DB.QueryRow("SELECT id FROM active_customers WHERE "+phoneMatchSQL("phone"), phone).Scan(&customerID); err != nil {
 			return "系統忙碌中，請稍後再試。", true
 		}
 		if err := bindLineUser(ev.UserID, customerID); err != nil {
@@ -308,12 +308,12 @@ func tryBindByPhone(client *line.Client, ev line.MessageEvent) (string, bool) {
 		}
 
 		var cname string
-		db.DB.QueryRow("SELECT name FROM customers WHERE id = ?", customerID).Scan(&cname)
+		db.DB.QueryRow("SELECT name FROM active_customers WHERE id = ?", customerID).Scan(&cname)
 		log_line("LINE %s 已自動綁定客戶 #%d（%s）", ev.UserID, customerID, cname)
 
 		var vehicleCount int
-		db.DB.QueryRow(`SELECT COUNT(1) FROM vehicles v
-			JOIN work_orders w ON w.vehicle_id = v.id
+		db.DB.QueryRow(`SELECT COUNT(1) FROM active_vehicles v
+			JOIN active_work_orders w ON w.vehicle_id = v.id
 			WHERE v.customer_id = ?`, customerID).Scan(&vehicleCount)
 
 		msg := "已為您連結客戶資料（" + cname + "）。\n\n傳「進度」可查詢車輛狀態，傳「工單 編號」可查指定工單。"
@@ -362,8 +362,8 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 	case q == "進度" || q == "查詢" || q == "工單":
 		var plate, status string
 		err := db.DB.QueryRow(`SELECT v.plate_number, wo.status
-			FROM work_orders wo JOIN vehicles v ON v.id = wo.vehicle_id
-			JOIN customers c ON c.id = wo.customer_id
+			FROM active_work_orders wo JOIN active_vehicles v ON v.id = wo.vehicle_id
+			JOIN active_customers c ON c.id = wo.customer_id
 			WHERE c.line_user_id = ? ORDER BY wo.id DESC LIMIT 1`, ev.UserID).
 			Scan(&plate, &status)
 		if err != nil {
@@ -384,9 +384,9 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 		}
 		var plate, status string
 		err = db.DB.QueryRow(`SELECT v.plate_number, wo.status
-			FROM work_orders wo
-			JOIN vehicles v ON v.id = wo.vehicle_id
-			JOIN customers c ON c.id = wo.customer_id
+			FROM active_work_orders wo
+			JOIN active_vehicles v ON v.id = wo.vehicle_id
+			JOIN active_customers c ON c.id = wo.customer_id
 			WHERE wo.id = ? AND c.line_user_id = ?`, woID, ev.UserID).Scan(&plate, &status)
 		if err != nil {
 			return "找不到這張工單，或它不是您的車輛。"
