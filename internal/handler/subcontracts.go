@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -162,14 +164,39 @@ func CreateSubcontract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := db.DB.Exec(`INSERT INTO subcontracts
+	tx, err := db.BeginImmediate()
+	if err != nil {
+		fail(w, "新增外包失敗")
+		return
+	}
+	defer tx.Rollback()
+	supplierID := mustInt(r.FormValue("supplier_id"))
+	costAmount := atofDefault(r.FormValue("cost_amount"), 0)
+	status := subcontractStatusArg(r.FormValue("status"))
+	res, err := tx.Exec(`INSERT INTO subcontracts
 		(work_order_id, supplier_id, description, cost_amount, charge_amount, status, expected_date, notes)
 		VALUES (?,?,?,?,?,?,?,?)`,
 		workOrderID, supplierIDArg(r.FormValue("supplier_id")), description,
-		atofDefault(r.FormValue("cost_amount"), 0), atofDefault(r.FormValue("charge_amount"), 0),
-		subcontractStatusArg(r.FormValue("status")),
+		costAmount, atofDefault(r.FormValue("charge_amount"), 0),
+		status,
 		nullStr(r.FormValue("expected_date")), nullStr(r.FormValue("notes")))
 	if err != nil {
+		fail(w, "新增外包失敗")
+		return
+	}
+	subcontractID, err := res.LastInsertId()
+	if err != nil {
+		fail(w, "新增外包失敗")
+		return
+	}
+	if supplierID > 0 && costAmount > 0 && status != "cancelled" {
+		if err := createAPPayable(tx, "subcontract", subcontractID, supplierID, costAmount, today()); err != nil {
+			log.Printf("建立外包應付帳款失敗: %v", err)
+			fail(w, "建立外包應付帳款失敗")
+			return
+		}
+	}
+	if err := tx.Commit(); err != nil {
 		fail(w, "新增外包失敗")
 		return
 	}
@@ -232,11 +259,31 @@ func UpdateSubcontract(w http.ResponseWriter, r *http.Request) {
 	if status == "completed" && completed == "" {
 		completed = today()
 	}
-	res, err := db.DB.Exec(`UPDATE subcontracts SET work_order_id=?, supplier_id=?,
+	supplierID := mustInt(r.FormValue("supplier_id"))
+	costAmount := atofDefault(r.FormValue("cost_amount"), 0)
+	tx, err := db.BeginImmediate()
+	if err != nil {
+		fail(w, "更新外包失敗")
+		return
+	}
+	defer tx.Rollback()
+	var payable model.APPayable
+	err = tx.QueryRow(`SELECT supplier_id, amount FROM ap_payables
+		WHERE source_type='subcontract' AND source_id=?`, id).Scan(&payable.SupplierID, &payable.Amount)
+	hasPayable := err == nil
+	if err != nil && err != sql.ErrNoRows {
+		fail(w, "讀取外包應付帳款失敗")
+		return
+	}
+	if hasPayable && (supplierID != payable.SupplierID || roundAPMoney(costAmount) != roundAPMoney(payable.Amount)) {
+		fail(w, "外包已建立應付帳款，供應商與成本不可修改")
+		return
+	}
+	res, err := tx.Exec(`UPDATE subcontracts SET work_order_id=?, supplier_id=?,
 		description=?, cost_amount=?, charge_amount=?, status=?, expected_date=?,
 		completed_date=?, notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
 		workOrderID, supplierIDArg(r.FormValue("supplier_id")), description,
-		atofDefault(r.FormValue("cost_amount"), 0), atofDefault(r.FormValue("charge_amount"), 0),
+		costAmount, atofDefault(r.FormValue("charge_amount"), 0),
 		status, nullStr(r.FormValue("expected_date")), completed, nullStr(r.FormValue("notes")), id)
 	if err != nil {
 		fail(w, "更新外包失敗")
@@ -244,6 +291,17 @@ func UpdateSubcontract(w http.ResponseWriter, r *http.Request) {
 	}
 	if n, _ := res.RowsAffected(); n == 0 {
 		http.NotFound(w, r)
+		return
+	}
+	if !hasPayable && supplierID > 0 && costAmount > 0 && status != "cancelled" {
+		if err := createAPPayable(tx, "subcontract", id, supplierID, costAmount, today()); err != nil {
+			log.Printf("建立外包應付帳款失敗: %v", err)
+			fail(w, "建立外包應付帳款失敗")
+			return
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		fail(w, "更新外包失敗")
 		return
 	}
 	redirectMsg(w, r, "/subcontracts", "外包已更新")

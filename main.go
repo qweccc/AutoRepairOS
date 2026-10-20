@@ -284,6 +284,12 @@ func main() {
 	mux.HandleFunc("GET /customers/{id}/ar-statement", handler.CounterUpPage(handler.PrintARStatement))
 	// AP 月結對帳單（FR-PRINT-05）
 	mux.HandleFunc("GET /suppliers/{id}/ap-statement", handler.CounterUpPage(handler.PrintAPStatement))
+	// T2.12：供應商應付帳款、帳齡、付款沖銷與可列印／匯出的月結對帳單。
+	mux.HandleFunc("GET /ap", handler.CounterUpPage(handler.APHome))
+	mux.HandleFunc("GET /ap/statement", handler.CounterUpPage(handler.APStatement))
+	mux.HandleFunc("GET /ap/statement.csv", handler.CounterUp(handler.APStatementCSV))
+	mux.HandleFunc("POST /ap/{id}/payments", handler.CounterUp(handler.RecordAPPayment))
+	mux.HandleFunc("POST /ap/{id}/void", handler.OwnerOnly(handler.VoidAPPayable))
 	// 日結報表（FR-PRINT-06）
 	mux.HandleFunc("GET /reports/daily", handler.CounterUpPage(handler.PrintDailyReport))
 

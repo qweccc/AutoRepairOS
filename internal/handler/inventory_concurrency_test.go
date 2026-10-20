@@ -29,6 +29,10 @@ func setupConcurrentInventoryDB(t *testing.T) {
 	t.Cleanup(func() { _ = d.Close() })
 	db.DB = d
 	createPurchaseTestSchema(t, d)
+	addAPTestSchema(t)
+	if _, err := d.Exec(`INSERT INTO suppliers (id,name,payment_terms) VALUES (1,'測試供應商','')`); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func insertStockAndPurchase(t *testing.T, stock int, quantity float64, status string) {

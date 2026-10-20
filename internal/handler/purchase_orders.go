@@ -454,6 +454,15 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 		fail(w, "進貨失敗")
 		return
 	}
+	var payableAmount float64
+	for _, it := range items {
+		payableAmount += it.Subtotal
+	}
+	if err := createAPPayable(tx, "purchase_receive", id, supplierID, payableAmount, today()); err != nil {
+		log.Printf("建立進貨應付帳款失敗: %v", err)
+		fail(w, "建立應付帳款失敗")
+		return
+	}
 
 	autoCreated := 0
 	for _, it := range items {
