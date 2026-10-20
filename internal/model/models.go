@@ -374,3 +374,18 @@ type TechnicianPhrase struct {
 	Active     int    `json:"active"`
 	CreatedAt  string `json:"created_at,omitempty"`
 }
+
+// ApprovalRequest 追加維修授權紀錄（FR-WO-06、FR-NOTI-05）。
+type ApprovalRequest struct {
+	ID             int64  `json:"id"`
+	WorkOrderID    int64  `json:"work_order_id"`
+	CustomerID     int64  `json:"customer_id"`
+	Token          string `json:"token"`
+	ItemSummary    string `json:"item_summary,omitempty"`
+	Status         string `json:"status"` // pending/approved/rejected/expired
+	ExpiresAt      string `json:"expires_at"`
+	CreatedAt      string `json:"created_at,omitempty"`
+	DecidedAt      string `json:"decided_at,omitempty"`
+	DecisionSource string `json:"decision_source,omitempty"`
+	Notes          string `json:"notes,omitempty"`
+}

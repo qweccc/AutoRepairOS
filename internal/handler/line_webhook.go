@@ -328,27 +328,14 @@ func tryBindByPhone(client *line.Client, ev line.MessageEvent) (string, bool) {
 //
 // client 允許為 nil：核准本身不依賴 LINE 連線，只有要回覆客戶時才需要。
 func handlePostback(client *line.Client, ev line.PostbackEvent) {
-	// 目前支援的格式：approve:<work_order_id>
+	// 舊的 approve:<work_order_id> 格式已停用（T2.11）
+	// 現在使用 token 授權流程，透過 CreateApprovalRequest 產生授權連結
 	if strings.HasPrefix(ev.Data, "approve:") {
-		idStr := strings.TrimPrefix(ev.Data, "approve:")
-		woID, err := strconv.ParseInt(idStr, 10, 64)
-		if err != nil {
-			return
+		if ev.ReplyToken != "" && client != nil {
+			_ = client.ReplyMessage(ev.ReplyToken,
+				"舊版授權格式已停用，請使用新的授權連結。如有問題請連絡車廠。")
 		}
-		res, err := db.DB.Exec(
-			"UPDATE work_orders SET approval_status='approved', updated_at=CURRENT_TIMESTAMP WHERE id=? AND status != 'paid'",
-			woID)
-		if err != nil || res == nil {
-			log_line("核准工單 #%d 失敗: %v", woID, err)
-			return
-		}
-		if n, _ := res.RowsAffected(); n > 0 {
-			log_line("客戶 %s 透過 LINE 核准工單 #%d", ev.UserID, woID)
-			if ev.ReplyToken != "" && client != nil {
-				_ = client.ReplyMessage(ev.ReplyToken,
-					fmt.Sprintf("已收到您的核准，工單 #%d 我們會盡快安排。", woID))
-			}
-		}
+		log_line("收到舊版 approve postback，已拒絕: %q", ev.Data)
 		return
 	}
 	log_line("收到未知的 postback: %q", ev.Data)

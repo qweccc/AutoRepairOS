@@ -113,6 +113,11 @@ func main() {
 	// 網址需經 Cloudflare Tunnel 對外公開，例如 https://<hostname>/webhook/line
 	mux.HandleFunc("POST /webhook/line", handler.LineWebhook)
 
+	// T2.11: 追加維修授權（公開頁面，客戶透過 LINE 連結存取）
+	mux.HandleFunc("GET /approval/{token}", handler.ApprovalPageHandler)
+	mux.HandleFunc("POST /approval/approve/{token}", handler.ApproveRequestHandler)
+	mux.HandleFunc("POST /approval/reject/{token}", handler.RejectRequestHandler)
+
 	// 總覽
 	mux.HandleFunc("GET /{$}", handler.AllStaff(handler.IndexHandler))
 
@@ -155,6 +160,17 @@ func main() {
 	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
 	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))
 	mux.HandleFunc("POST /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))
+
+	// T2.9：獨立估價草稿。估價寫入與轉換限櫃檯、管理員。
+	mux.HandleFunc("GET /estimates", handler.AllStaff(handler.ListEstimates))
+	mux.HandleFunc("GET /estimates/new", handler.CounterUpPage(handler.NewEstimate))
+	mux.HandleFunc("POST /estimates", handler.CounterUp(handler.CreateEstimate))
+	mux.HandleFunc("GET /estimates/{id}", handler.AllStaff(handler.ShowEstimate))
+	mux.HandleFunc("POST /estimates/{id}/items", handler.CounterUp(handler.AddEstimateItem))
+	mux.HandleFunc("POST /estimates/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteEstimateItem))
+	mux.HandleFunc("POST /estimates/{id}/discount", handler.CounterUp(handler.SetEstimateDiscount))
+	mux.HandleFunc("POST /estimates/{id}/convert", handler.CounterUp(handler.ConvertEstimate))
+	mux.HandleFunc("GET /work-orders/{id}/estimate-source", handler.AllStaff(handler.ShowWorkOrderEstimateSource))
 
 	// 庫存
 	mux.HandleFunc("GET /inventory", handler.AllStaff(handler.ListInventory))
@@ -293,6 +309,7 @@ func main() {
 	mux.HandleFunc("POST /scheduled-tasks/work-order-ready/run", handler.OwnerOnly(handler.RunWorkOrderReadyNow))
 	mux.HandleFunc("POST /notifications/{id}/cancel", handler.OwnerOnly(handler.CancelNotification))
 	mux.HandleFunc("GET /reports", handler.AllStaff(handler.ReportsHome))
+	mux.HandleFunc("GET /reports/export", handler.AllStaff(handler.ReportsExport))
 
 	// 經營分析（SRS 5.12）：KPI、損益分拆、留存、方案成效、死頭料、CSV 匯出
 	mux.HandleFunc("GET /analytics", handler.CounterUpPage(handler.AnalyticsHome))
