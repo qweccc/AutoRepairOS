@@ -354,6 +354,10 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		`</b></td><td class="num"><b>` + money(partsCost) + `</b></td><td class="num"><b>` +
 		money(gross) + `</b></td><td class="num"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b></td></tr></table>`)
 
+	exportLink := ""
+	if canExportReportCosts(user) {
+		exportLink = `<a class="btn btn-s" href="/analytics/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出 CSV</a>`
+	}
 	body := flash(r) + `
     <div class="card">
       <h2>經營分析</h2>
@@ -369,7 +373,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
         <input name="to" value="` + htmlEsc(to) + `" placeholder="YYYY-MM-DD"
                style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
         <button class="btn btn-p" type="submit">查詢</button>
-        <a class="btn btn-s" href="/analytics/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出 CSV</a>
+        ` + exportLink + `
       </form>
       <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">統計區間：` + htmlEsc(from) + ` ~ ` + htmlEsc(to) + `</p>
 
@@ -440,8 +444,8 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	if !canSeeMoney(user) {
-		http.Error(w, "權限不足：經營分析僅限櫃檯人員與系統管理員使用", http.StatusForbidden)
+	if !canExportReportCosts(user) {
+		http.Error(w, "權限不足：含成本的經營分析匯出僅限系統管理員使用", http.StatusForbidden)
 		return
 	}
 	from := strings.TrimSpace(r.URL.Query().Get("from"))
@@ -546,6 +550,7 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 
 // csvField 處理 CSV 欄位：含逗號/引號/換行的值要用引號包住並把引號加倍。
 func csvField(s string) string {
+	s = safeSpreadsheetText(s)
 	if strings.ContainsAny(s, ",\"\n\r") {
 		return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
 	}
