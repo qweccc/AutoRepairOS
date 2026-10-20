@@ -272,6 +272,29 @@ type PurchaseOrderItem struct {
 	Subtotal        float64 `json:"subtotal"`
 }
 
+// APPayable 供應商應付帳款。金額在來源成立時快照，不隨來源單據後續編輯變動。
+type APPayable struct {
+	ID         int64   `json:"id"`
+	SourceType string  `json:"source_type"`
+	SourceID   int64   `json:"source_id"`
+	SupplierID int64   `json:"supplier_id"`
+	Amount     float64 `json:"amount"`
+	PaidAmount float64 `json:"paid_amount"`
+	Balance    float64 `json:"balance"`
+	DueDate    string  `json:"due_date"`
+	Status     string  `json:"status"`
+	CreatedAt  string  `json:"created_at"`
+	PaidAt     string  `json:"paid_at,omitempty"`
+}
+
+// APPayment 應付帳款的單次付款流水。
+type APPayment struct {
+	ID        int64   `json:"id"`
+	PayableID int64   `json:"payable_id"`
+	Amount    float64 `json:"amount"`
+	PaidAt    string  `json:"paid_at"`
+}
+
 type Equipment struct {
 	ID             int64     `json:"id"`
 	Name           string    `json:"name"`

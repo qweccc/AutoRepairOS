@@ -1,0 +1,206 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/web/components"
+)
+
+type APPayableRow struct {
+	ID           int64
+	SourceLabel  string
+	SupplierName string
+	Amount       float64
+	PaidAmount   float64
+	Balance      float64
+	DueDate      string
+	CreatedAt    string
+	PaidAt       string
+	Status       string
+	StatusLabel  string
+	StatusPill   string
+	Aging        string
+	AgeDays      int
+	Payments     []APPaymentRow
+}
+
+type APPaymentRow struct {
+	Amount float64
+	PaidAt string
+}
+
+type APAgingSummary struct {
+	Name  string
+	Count int
+	Total float64
+}
+
+type APSupplierOption struct {
+	ID   int64
+	Name string
+}
+
+templ APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSupplierOption,
+	supplierID int64, status, today, username, role string) {
+	@components.Layout("應付帳款", "/ap", username, role, "AutoRepair OS") {
+		<div class="card">
+			<h2>供應商應付帳款</h2>
+			<p style="color:#94a3b8">採購於確認進貨、外包於成立時建立應付快照；付款以分次流水累計，沖銷保留原帳款紀錄。</p>
+			<form class="frm" method="GET" action="/ap">
+				<label>供應商
+					<select name="supplier_id">
+						<option value="0">全部供應商</option>
+						for _, supplier := range suppliers {
+							<option value={ strconv.FormatInt(supplier.ID, 10) } selected?={ supplier.ID == supplierID }>{ supplier.Name }</option>
+						}
+					</select>
+				</label>
+				<label>帳款狀態
+					<select name="status">
+						<option value="" selected?={ status == "" }>未結帳款</option>
+						<option value="all" selected?={ status == "all" }>全部狀態</option>
+						<option value="open" selected?={ status == "open" }>未付款</option>
+						<option value="partial" selected?={ status == "partial" }>部分付款</option>
+						<option value="paid" selected?={ status == "paid" }>已付清</option>
+						<option value="void" selected?={ status == "void" }>已沖銷</option>
+					</select>
+				</label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">篩選</button>
+					<a class="btn btn-s" href="/ap/statement">供應商月結對帳單</a>
+				</div>
+			</form>
+		</div>
+		<div class="card">
+			<h3>未結帳齡（截至 { today }）</h3>
+			<p style="color:#94a3b8;font-size:13px">以到期日計算；到期日未到者歸入 0–30 天。沒有到期日則以應付成立日計算。彙總金額為未付餘額。</p>
+			for _, bucket := range aging {
+				<div class="stat"><b>{ moneyFmt(bucket.Total) }</b><span>{ bucket.Name } 天・{ strconv.Itoa(bucket.Count) } 筆</span></div>
+			}
+		</div>
+		<div class="card">
+			<h3>應付明細（最多顯示 500 筆）</h3>
+			if len(rows) == 0 {
+				<div class="empty">沒有符合條件的應付帳款</div>
+			}
+			if len(rows) > 0 {
+				<table>
+					<thead><tr><th>成立日期／來源</th><th>供應商</th><th class="num">應付</th><th class="num">已付</th><th class="num">餘額</th><th>到期日</th><th>帳齡</th><th>狀態</th><th>付款登記</th></tr></thead>
+					<tbody>
+						for _, row := range rows {
+						@APPayableRowContent(row, today, role)
+						}
+					</tbody>
+				</table>
+			}
+		</div>
+	}
+}
+
+templ APPayableRowContent(row APPayableRow, today, role string) {
+	<tr>
+		<td>{ row.CreatedAt }<br/><small>{ row.SourceLabel }</small></td>
+		<td>{ row.SupplierName }</td>
+		<td class="num">{ moneyFmt(row.Amount) }</td>
+		<td class="num">{ moneyFmt(row.PaidAmount) }</td>
+		<td class="num"><b>{ moneyFmt(row.Balance) }</b></td>
+		<td>{ row.DueDate }</td>
+		<td>
+			if row.Status == "open" || row.Status == "partial" {
+				{ row.Aging } 天（{ strconv.Itoa(row.AgeDays) }）
+			}
+		</td>
+		<td><span class={ "pill " + row.StatusPill }>{ row.StatusLabel }</span></td>
+		<td>
+			if row.Status == "open" || row.Status == "partial" {
+				<form class="frm" method="POST" action={ "/ap/" + strconv.FormatInt(row.ID, 10) + "/payments" }>
+					@components.CSRFInput()
+					<label>本次付款
+						<input type="number" name="amount" min="0.01" max={ strconv.FormatFloat(row.Balance, 'f', 2, 64) } step="0.01" required/>
+					</label>
+					<label>付款日<input type="date" name="paid_at" value={ today } required/></label>
+					<button class="btn btn-p" type="submit">登記付款</button>
+				</form>
+			}
+			if role == "owner" && row.Status != "paid" && row.Status != "void" && row.PaidAmount == 0 {
+				<form method="POST" action={ "/ap/" + strconv.FormatInt(row.ID, 10) + "/void" } data-confirm="確定沖銷這筆尚未付款的應付帳款？">
+					@components.CSRFInput()
+					<button class="btn btn-d" type="submit">沖銷</button>
+				</form>
+			}
+			if len(row.Payments) > 0 {
+				<details>
+					<summary>付款流水（{ strconv.Itoa(len(row.Payments)) }）</summary>
+					for _, payment := range row.Payments {
+						<div>{ payment.PaidAt }・{ moneyFmt(payment.Amount) }</div>
+					}
+				</details>
+			}
+		</td>
+	</tr>
+}
+
+templ APStatementPage(rows []APPayableRow, supplierName, from, to string, amount, paid, balance float64,
+	suppliers []APSupplierOption, supplierID int64, csvURL, username, role string) {
+	@components.Layout("供應商月結對帳單", "/ap", username, role, "AutoRepair OS") {
+		<style>
+			@templ.Raw(`@media print {
+				nav, header, .no-print { display: none !important; }
+				body, .card { background: white !important; color: black !important; box-shadow: none !important; }
+				table th, table td { color: black !important; border-color: #999 !important; }
+			}`)
+		</style>
+		<div class="card no-print">
+			<h2>供應商月結對帳單</h2>
+			<form class="frm" method="GET" action="/ap/statement">
+				<label>供應商
+					<select name="supplier_id" required>
+						<option value="">請選擇供應商</option>
+						for _, supplier := range suppliers {
+							<option value={ strconv.FormatInt(supplier.ID, 10) } selected?={ supplier.ID == supplierID }>{ supplier.Name }</option>
+						}
+					</select>
+				</label>
+				<label>期間起<input type="date" name="from" value={ from } required/></label>
+				<label>期間迄<input type="date" name="to" value={ to } required/></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">查詢</button>
+					<a class="btn btn-s" href="/ap">返回應付帳款</a>
+					if csvURL != "" {
+						<a class="btn btn-s" href={ csvURL }>匯出 CSV</a>
+						<button class="btn btn-s" type="button" onclick="window.print()">列印／另存 PDF</button>
+					}
+				</div>
+			</form>
+		</div>
+		if supplierName != "" {
+			<div class="card">
+				<h2>{ supplierName }・應付對帳單</h2>
+				<p>期間：{ from } 至 { to }</p>
+				<div class="stat"><b>{ moneyFmt(amount) }</b><span>應付合計</span></div>
+				<div class="stat"><b>{ moneyFmt(paid) }</b><span>期間內成立帳款的已付金額</span></div>
+				<div class="stat"><b>{ moneyFmt(balance) }</b><span>目前餘額合計</span></div>
+				if len(rows) == 0 {
+					<div class="empty">此期間沒有應付帳款</div>
+				}
+				if len(rows) > 0 {
+					<table>
+						<thead><tr><th>成立日期</th><th>來源單據</th><th>到期日</th><th class="num">應付金額</th><th class="num">已付金額</th><th class="num">目前餘額</th><th>狀態</th></tr></thead>
+						<tbody>
+							for _, row := range rows {
+								<tr>
+									<td>{ row.CreatedAt }</td><td>{ row.SourceLabel }</td><td>{ row.DueDate }</td>
+									<td class="num">{ moneyFmt(row.Amount) }</td><td class="num">{ moneyFmt(row.PaidAmount) }</td>
+									<td class="num">{ moneyFmt(row.Balance) }</td>
+									<td><span class={ "pill " + row.StatusPill }>{ row.StatusLabel }</span></td>
+								</tr>
+							}
+						</tbody>
+						<tfoot><tr><th colspan="3">合計</th><th class="num">{ moneyFmt(amount) }</th><th class="num">{ moneyFmt(paid) }</th><th class="num">{ moneyFmt(balance) }</th><th></th></tr></tfoot>
+					</table>
+				}
+				<p class="no-print" style="color:#94a3b8">列印使用瀏覽器「列印／另存 PDF」，未提供伺服器端 PDF。</p>
+			</div>
+		}
+	}
+}
