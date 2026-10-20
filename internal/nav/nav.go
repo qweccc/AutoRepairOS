@@ -34,6 +34,7 @@ var Routes = []Route{
 	{"/customers", "客戶", "日常作業"},
 	{"/vehicles", "車輛", "日常作業"},
 	{"/work-orders", "工單", "日常作業"},
+	{"/estimates", "估價草稿", "日常作業"},
 	{"/appointments", "預約", "日常作業"},
 	{"/receivables", "收款", "日常作業"},
 	{"/inspections", "定檢", "日常作業"},

@@ -1,0 +1,286 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/web/components"
+)
+
+type EstimateListRow struct {
+	ID                    int64
+	CustomerName          string
+	PlateNumber           string
+	BrandModel            string
+	Status                string
+	TotalAmount           float64
+	DiscountAmount        float64
+	CreatedAt             string
+	ConvertedWorkOrderID  int64
+}
+
+type EstimateVehicleOption struct {
+	ID           int64
+	PlateNumber  string
+	BrandModel   string
+	CustomerName string
+}
+
+type EstimateDetail struct {
+	ID                   int64
+	CustomerName         string
+	CustomerPhone        string
+	PlateNumber          string
+	BrandModel           string
+	Status               string
+	CurrentMileage       int
+	CustomerComplaint    string
+	DiscountAmount       float64
+	TotalAmount          float64
+	CreatedAt            string
+	ConvertedWorkOrderID int64
+}
+
+type EstimateItemRow struct {
+	ID          int64
+	ItemType    string
+	Description string
+	Quantity    int
+	UnitPrice   float64
+	Subtotal    float64
+}
+
+templ EstimateListPage(rows []EstimateListRow, username, role string) {
+	@components.Layout("估價草稿", "/estimates", username, role, "AutoRepair OS") {
+		<div class="card">
+			<h2>估價草稿</h2>
+			if role == "owner" || role == "counter" {
+				<p><a class="btn btn-p" href="/estimates/new">＋ 建立估價</a></p>
+			}
+			if len(rows) == 0 {
+				<div class="empty">尚無估價草稿</div>
+			}
+			if len(rows) > 0 {
+				<table>
+					<tr><th>估價編號</th><th>車牌 / 車型</th><th>客戶</th><th>狀態</th><th class="num">報價總額</th><th>建立時間</th><th>操作</th></tr>
+					for _, e := range rows {
+						<tr>
+							<td>#{ strconv.FormatInt(e.ID, 10) }</td>
+							<td>{ e.PlateNumber } / { e.BrandModel }</td>
+							<td>{ e.CustomerName }</td>
+							<td>
+								if e.Status == "converted" {
+									<span class="pill p-completed">已轉工單</span>
+								}
+								if e.Status != "converted" {
+									<span class="pill p-pending">草稿</span>
+								}
+							</td>
+							<td class="num">{ estimateMoney(e.TotalAmount) }</td>
+							<td>{ e.CreatedAt }</td>
+							<td>
+								<a class="btn btn-s" href={ estimateURL(e.ID) }>查看</a>
+								if e.ConvertedWorkOrderID > 0 {
+									<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) }>工單</a>
+								}
+							</td>
+						</tr>
+					}
+				</table>
+			}
+		</div>
+	}
+}
+
+templ EstimateNewPage(vehicles []EstimateVehicleOption, username, role string) {
+	@components.Layout("建立估價", "/estimates", username, role, "AutoRepair OS") {
+		<div class="card">
+			<h2>建立估價草稿</h2>
+			if len(vehicles) == 0 {
+				<div class="msg msg-err">目前沒有可用車輛，請先建立客戶與車輛資料。</div>
+			}
+			<form class="frm" method="POST" action="/estimates">
+				@components.CSRFInput()
+				<label class="full">車牌（輸入車牌可帶出已建檔車輛）
+					<input name="plate_number" id="estimatePlate" list="estimateVehicleList"
+						placeholder="例：ABC-1234" autocomplete="off" required>
+					<datalist id="estimateVehicleList">
+						for _, v := range vehicles {
+							<option value={ v.PlateNumber } data-vehicle-id={ strconv.FormatInt(v.ID, 10) }
+								data-details={ v.BrandModel + " / " + v.CustomerName }></option>
+						}
+					</datalist>
+					<input type="hidden" name="vehicle_id" id="estimateVehicleID" value="0">
+					<span id="estimateVehicleDetails" style="color:#94a3b8;font-size:12px">選取既有車牌後會顯示車型與車主。</span>
+				</label>
+				<label>目前里程
+					<input name="current_mileage" type="number" min="0" value="0" placeholder="例：85000">
+				</label>
+				<label class="full">客戶反映
+					<textarea name="customer_complaint" placeholder="例：冷氣怠速時不冷，行駛後恢復"></textarea>
+				</label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">建立草稿並加入估價項目</button>
+					<a class="btn btn-s" href="/estimates">取消</a>
+				</div>
+			</form>
+		</div>
+		<script>
+			(function() {
+				var plate = document.getElementById('estimatePlate');
+				var vehicleID = document.getElementById('estimateVehicleID');
+				var details = document.getElementById('estimateVehicleDetails');
+				var options = document.querySelectorAll('#estimateVehicleList option');
+				plate.addEventListener('input', function() {
+					vehicleID.value = '0';
+					details.textContent = '車牌未選取既有車輛，送出時會依輸入車牌查詢。';
+					for (var i = 0; i < options.length; i++) {
+						if (options[i].value.toUpperCase() === plate.value.trim().toUpperCase()) {
+							vehicleID.value = options[i].getAttribute('data-vehicle-id');
+							details.textContent = options[i].getAttribute('data-details');
+							return;
+						}
+					}
+				});
+			})();
+		</script>
+	}
+}
+
+templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, username, role string, canEdit bool) {
+	@components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", username, role, "AutoRepair OS") {
+		<div class="card">
+			<h2>估價草稿 #{ strconv.FormatInt(e.ID, 10) }</h2>
+			<table>
+				<tr><th>車輛</th><td>{ e.PlateNumber } / { e.BrandModel }</td><th>客戶</th><td>{ e.CustomerName } / { e.CustomerPhone }</td></tr>
+				<tr><th>目前里程</th><td>{ strconv.Itoa(e.CurrentMileage) } km</td><th>建立時間</th><td>{ e.CreatedAt }</td></tr>
+				<tr><th>客戶反映</th><td colspan="3">{ e.CustomerComplaint }</td></tr>
+			</table>
+			if e.Status == "converted" {
+				<div class="msg msg-ok">已轉為工單 #{ strconv.FormatInt(e.ConvertedWorkOrderID, 10) }；原始報價金額 { estimateMoney(e.TotalAmount) }。</div>
+				<p>
+					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) }>開啟正式工單</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) + "/estimate-source" }>查看工單估價來源</a>
+				</p>
+			}
+		</div>
+		<div class="card">
+			<h2>估價項目</h2>
+			if len(items) == 0 {
+				<div class="empty">尚未加入任何工資服務或零件</div>
+			}
+			if len(items) > 0 {
+				<table>
+					<tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th><th>操作</th></tr>
+					for _, item := range items {
+						<tr>
+							<td><span class="pill p-progress">{ estimateItemType(item.ItemType) }</span></td>
+							<td>{ item.Description }</td><td class="num">{ strconv.Itoa(item.Quantity) }</td>
+							<td class="num">{ estimateMoney(item.UnitPrice) }</td><td class="num">{ estimateMoney(item.Subtotal) }</td>
+							<td>
+								if canEdit && e.Status == "draft" {
+									<form method="POST" action={ estimateURL(e.ID) + "/items/" + strconv.FormatInt(item.ID, 10) + "/delete" }>
+										@components.CSRFInput()
+										<button class="btn btn-d" type="submit">刪除</button>
+									</form>
+								}
+							</td>
+						</tr>
+					}
+				</table>
+			}
+			if canEdit && e.Status == "draft" {
+				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
+					@components.CSRFInput()
+					<label>類型
+						<select name="item_type">
+							<option value="labor">工資 / 服務</option><option value="part">零件</option><option value="subcontract">外包</option>
+						</select>
+					</label>
+					<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
+					<label class="full">描述
+						<input name="description" placeholder="例：更換引擎機油與機油芯" required>
+					</label>
+					<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
+					<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+				</form>
+				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/discount" }>
+					@components.CSRFInput()
+					<label>折扣金額<input name="discount_amount" type="number" min="0" max={ strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64) } step="1" value={ strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64) }></label>
+					<div><button class="btn btn-s" type="submit">更新折扣</button></div>
+				</form>
+			}
+		</div>
+		<div class="card">
+			<h2>報價總計</h2>
+			<table>
+				<tr><th>項目小計</th><td class="num">{ estimateMoney(estimateSubtotal(items)) }</td></tr>
+				<tr><th>折扣</th><td class="num">-{ estimateMoney(e.DiscountAmount) }</td></tr>
+				<tr><th>估價總額</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">{ estimateMoney(e.TotalAmount) }</td></tr>
+			</table>
+			if canEdit && e.Status == "draft" {
+				<form method="POST" action={ estimateURL(e.ID) + "/convert" } style="margin-top:16px">
+					@components.CSRFInput()
+					<button class="btn btn-p" type="submit" data-confirm="將此估價轉為正式工單？轉換後草稿將鎖定。">轉為正式工單</button>
+				</form>
+			}
+			<p><a class="btn btn-s" href="/estimates">回估價列表</a></p>
+		</div>
+	}
+}
+
+templ EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID int64, quoteTotal, quoteDiscount float64, username, role string) {
+	@components.Layout("工單估價來源", "/estimates", username, role, "AutoRepair OS") {
+		<div class="card">
+			<h2>工單 #{ strconv.FormatInt(workOrderID, 10) } 的估價來源</h2>
+			<p>來源估價 #{ strconv.FormatInt(e.ID, 10) }，車輛 { e.PlateNumber } / { e.BrandModel }，客戶 { e.CustomerName }。</p>
+			<p>原始報價總額：<strong>{ estimateMoney(quoteTotal) }</strong>；原始折扣：{ estimateMoney(quoteDiscount) }</p>
+			<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) }>開啟正式工單</a>
+			<a class="btn btn-s" href={ estimateURL(e.ID) }>查看估價草稿</a>
+		</div>
+		<div class="card">
+			<h2>原始報價項目（轉換時封存）</h2>
+			if len(items) == 0 {
+				<div class="empty">原估價沒有項目</div>
+			}
+			if len(items) > 0 {
+				<table>
+					<tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>
+					for _, item := range items {
+						<tr><td>{ estimateItemType(item.ItemType) }</td><td>{ item.Description }</td>
+							<td class="num">{ strconv.Itoa(item.Quantity) }</td><td class="num">{ estimateMoney(item.UnitPrice) }</td>
+							<td class="num">{ estimateMoney(item.Subtotal) }</td></tr>
+					}
+				</table>
+			}
+		</div>
+	}
+}
+
+func estimateURL(id int64) string {
+	return "/estimates/" + strconv.FormatInt(id, 10)
+}
+
+func estimateMoney(amount float64) string {
+	return "$" + strconv.FormatFloat(amount, 'f', 0, 64)
+}
+
+func estimateItemType(itemType string) string {
+	switch itemType {
+	case "labor":
+		return "工資 / 服務"
+	case "part":
+		return "零件"
+	case "subcontract":
+		return "外包"
+	default:
+		return itemType
+	}
+}
+
+func estimateSubtotal(items []EstimateItemRow) float64 {
+	var total float64
+	for _, item := range items {
+		total += item.Subtotal
+	}
+	return total
+}
