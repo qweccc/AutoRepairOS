@@ -5,9 +5,10 @@
   'use strict';
 
   const DB_NAME = 'autorepairos-offline';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const DRAFT_STORE = 'drafts';
   const QUEUE_STORE = 'uploadQueue';
+  const PHOTO_QUEUE_STORE = 'photoUploadQueue';
 
   // ---------- IndexedDB 包裝 ----------
 
@@ -27,6 +28,11 @@
         if (!db.objectStoreNames.contains(QUEUE_STORE)) {
           const s = db.createObjectStore(QUEUE_STORE, { keyPath: 'id', autoIncrement: true });
           s.createIndex('createdAt', 'createdAt');
+        }
+        if (!db.objectStoreNames.contains(PHOTO_QUEUE_STORE)) {
+          const s = db.createObjectStore(PHOTO_QUEUE_STORE, { keyPath: 'id', autoIncrement: true });
+          s.createIndex('createdAt', 'createdAt');
+          s.createIndex('status', 'status');
         }
       };
       req.onsuccess = () => resolve(req.result);
@@ -80,6 +86,52 @@
           const t = db.transaction(DRAFT_STORE, 'readonly');
           const req = t.objectStore(DRAFT_STORE).getAll();
           req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      });
+    }
+  };
+
+  // ---------- 照片 Blob 佇列 ----------
+
+  const PhotoQueue = {
+    add: function (record) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          const t = db.transaction(PHOTO_QUEUE_STORE, 'readwrite');
+          const req = t.objectStore(PHOTO_QUEUE_STORE).add(record);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      });
+    },
+    list: function () {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          const t = db.transaction(PHOTO_QUEUE_STORE, 'readonly');
+          const req = t.objectStore(PHOTO_QUEUE_STORE).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      });
+    },
+    remove: function (id) {
+      return tx(PHOTO_QUEUE_STORE, 'readwrite', function (s) { return s.delete(id); });
+    },
+    update: function (id, changes) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          const t = db.transaction(PHOTO_QUEUE_STORE, 'readwrite');
+          const store = t.objectStore(PHOTO_QUEUE_STORE);
+          const req = store.get(id);
+          req.onsuccess = function () {
+            const rec = req.result;
+            if (!rec) { resolve(null); return; }
+            Object.keys(changes).forEach(function (key) { rec[key] = changes[key]; });
+            const put = store.put(rec);
+            put.onsuccess = () => resolve(rec);
+            put.onerror = () => reject(put.error);
+          };
           req.onerror = () => reject(req.error);
         });
       });
@@ -183,11 +235,27 @@
         });
 
         return chain.then(function () {
-          if (done > 0) {
-            console.log('[offline] 已重試上傳', done, '筆');
-            Retry.schedule(5000);
-          }
-          return done;
+          return PhotoQueue.list().then(function (photos) {
+            let photoDone = 0;
+            let photoChain = Promise.resolve();
+            photos.forEach(function (photo) {
+              photoChain = photoChain.then(function () {
+                return Retry.sendPhoto(photo).then(function (ok) {
+                  if (ok) photoDone++;
+                });
+              });
+            });
+            return photoChain.then(function () {
+              const totalDone = done + photoDone;
+              if (totalDone > 0) {
+                console.log('[offline] 已重試上傳', totalDone, '筆');
+                Retry.schedule(5000);
+              } else if (items.length > 0 || photos.length > 0) {
+                Retry.schedule(30000);
+              }
+              return totalDone;
+            });
+          });
         });
       }).catch(function (e) {
         console.warn('[offline] 重試失敗', e);
@@ -206,6 +274,53 @@
         credentials: 'same-origin'
       }).then(function (r) {
         return r.ok;
+      });
+    },
+    sendPhoto: function (item) {
+      return PhotoQueue.update(item.id, {
+        status: 'uploading',
+        lastAttemptAt: Date.now()
+      }).then(function () {
+        const body = new FormData();
+        Object.keys(item.fields || {}).forEach(function (key) {
+          body.append(key, item.fields[key]);
+        });
+        body.append('photo', item.blob, item.fileName || 'photo');
+        return fetch(item.url, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: body,
+          credentials: 'same-origin'
+        }).then(function (response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          if (new URL(response.url).pathname === '/login') {
+            throw new Error('登入狀態已失效，請重新登入後重試');
+          }
+          return PhotoQueue.remove(item.id).then(function () {
+            window.dispatchEvent(new CustomEvent('autorepair:photo-upload', {
+              detail: { id: item.id, status: 'done', fileName: item.fileName }
+            }));
+            Retry.schedule(5000);
+            return true;
+          });
+        });
+      }).catch(function (error) {
+        return PhotoQueue.update(item.id, {
+          status: 'failed',
+          retryCount: (item.retryCount || 0) + 1,
+          lastError: error && error.message ? error.message : '照片上傳失敗'
+        }).then(function () {
+          window.dispatchEvent(new CustomEvent('autorepair:photo-upload', {
+            detail: {
+              id: item.id,
+              status: 'failed',
+              fileName: item.fileName,
+              error: error && error.message ? error.message : '照片上傳失敗'
+            }
+          }));
+          Retry.schedule(30000);
+          return false;
+        });
       });
     }
   };
@@ -246,6 +361,107 @@
     });
   }
 
+  function autoBindPhotoUploads() {
+    var forms = document.querySelectorAll('form[enctype="multipart/form-data"]');
+    Array.prototype.forEach.call(forms, function (form) {
+      var fileInput = form.querySelector('input[type="file"][name="photo"]');
+      if (!fileInput) return;
+      var action = form.getAttribute('action') || location.pathname;
+      var status = document.createElement('div');
+      status.className = 'full msg';
+      status.setAttribute('role', 'status');
+      status.hidden = true;
+      form.appendChild(status);
+      var submitting = false;
+
+      form.addEventListener('submit', function (event) {
+        var file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        event.preventDefault();
+        if (submitting) return;
+        submitting = true;
+        status.hidden = false;
+        status.className = 'full msg';
+        status.textContent = '照片已安全暫存，正在上傳…';
+
+        var fields = {};
+        Array.prototype.forEach.call(form.elements, function (el) {
+          if (el.name && el.type !== 'file' && el.type !== 'submit' && el.type !== 'button') {
+            fields[el.name] = el.value;
+          }
+        });
+        var match = action.match(/\/work-orders\/(\d+)\/photos/);
+        var record = {
+          url: action,
+          work_order_id: match ? Number(match[1]) : 0,
+          item_id: Number(fields.item_id || 0),
+          description: fields.description || fields.note || '',
+          photo_type: fields.photo_type || 'damage',
+          fields: fields,
+          blob: file,
+          fileName: file.name,
+          mimeType: file.type,
+          fileSize: file.size,
+          createdAt: Date.now(),
+          retryCount: 0,
+          status: 'pending'
+        };
+        status.textContent = '正在壓縮並保存照片…';
+        compressPhoto(file).then(function (blob) {
+          record.blob = blob;
+          record.mimeType = blob.type || file.type;
+          record.fileSize = blob.size;
+          return PhotoQueue.add(record);
+        }).then(function (id) {
+          record.id = id;
+          return Retry.sendPhoto(record);
+        }).then(function (ok) {
+          if (ok) {
+            status.className = 'full msg msg-ok';
+            status.textContent = '照片上傳成功。';
+            fileInput.value = '';
+          } else {
+            status.className = 'full msg msg-err';
+            status.textContent = '照片已保存在本機佇列，連線恢復後會自動重試；請勿清除瀏覽器資料。';
+          }
+        }).catch(function (error) {
+          status.className = 'full msg msg-err';
+          status.textContent = '無法將照片保存至本機佇列：' +
+            (error && error.message ? error.message : 'IndexedDB 寫入失敗');
+        }).then(function () {
+          submitting = false;
+        });
+      });
+    });
+  }
+
+  function compressPhoto(file) {
+    if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif' ||
+        typeof window.createImageBitmap !== 'function') {
+      return Promise.resolve(file);
+    }
+    return window.createImageBitmap(file).then(function (bitmap) {
+      var scale = Math.min(1, 1920 / Math.max(bitmap.width, bitmap.height));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      return new Promise(function (resolve, reject) {
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            reject(new Error('照片壓縮失敗'));
+            return;
+          }
+          resolve(blob.size < file.size ? blob : file);
+        }, 'image/jpeg', 0.82);
+      });
+    }).catch(function (error) {
+      console.warn('[offline] 照片壓縮失敗，保留原始照片', error);
+      return file;
+    });
+  }
+
   // ---------- 離線提示 UI ----------
 
   function mountOfflineBanner() {
@@ -272,15 +488,37 @@
     Connection.onChange(paint);
     paint();
 
+    window.addEventListener('autorepair:photo-upload', function (event) {
+      var detail = event.detail || {};
+      bar.style.display = 'block';
+      if (detail.status === 'done') {
+        bar.style.background = '#166534';
+        bar.style.color = '#dcfce7';
+        bar.textContent = '✓ 照片已上傳成功：' + (detail.fileName || '');
+      } else {
+        bar.style.background = '#991b1b';
+        bar.style.color = '#fee2e2';
+        bar.textContent = '照片上傳失敗，已保存在本機佇列等待重試：' +
+          (detail.error || detail.fileName || '未知錯誤');
+      }
+      if (detail.status === 'done') {
+        setTimeout(paint, 6000);
+      }
+    });
+
     // 每 15 秒檢查一次佇列數量並顯示
     setInterval(function () {
       if (!Connection.isOnline()) return;
-      UploadQueue.list().then(function (items) {
-        if (items.length > 0) {
+      Promise.all([UploadQueue.list(), PhotoQueue.list()]).then(function (queues) {
+        var items = queues[0];
+        var photos = queues[1];
+        if (items.length > 0 || photos.length > 0) {
           bar.style.display = 'block';
           bar.style.background = '#1d4ed8';
           bar.style.color = '#dbeafe';
-          bar.textContent = '⟳ 正在重試上傳 ' + items.length + ' 筆離線資料…';
+          var failed = photos.filter(function (item) { return item.status === 'failed'; }).length;
+          bar.textContent = '⟳ 待上傳 ' + (items.length + photos.length) + ' 筆資料' +
+            (failed ? '，其中 ' + failed + ' 筆照片上次失敗，將繼續重試' : '') + '…';
         } else if (bar.style.background === 'rgb(29, 78, 216)') {
           paint();
         }
@@ -348,6 +586,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     registerSW();
     autoBindDrafts();
+    autoBindPhotoUploads();
     mountOfflineBanner();
     Retry.schedule(3000);
   });
@@ -356,6 +595,7 @@
   window.AutoRepairOffline = {
     Drafts: Drafts,
     UploadQueue: UploadQueue,
+    PhotoQueue: PhotoQueue,
     Connection: Connection,
     Retry: Retry,
     // 離線時嘗試上傳，失敗則入列

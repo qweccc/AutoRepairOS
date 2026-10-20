@@ -1,6 +1,8 @@
 package cron
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -570,7 +572,15 @@ type BackupConfig struct {
 	PhotoDir  string
 }
 
-var backupCfg = BackupConfig{BackupDir: "data/backups", PhotoDir: "data/photos"}
+var backupCfg = defaultBackupConfig()
+
+func defaultBackupConfig() BackupConfig {
+	dir := strings.TrimSpace(os.Getenv("BACKUP_DIR"))
+	if dir == "" {
+		dir = "data/backups"
+	}
+	return BackupConfig{BackupDir: dir, PhotoDir: "data/photos"}
+}
 
 // SetBackupDir 覆寫備份輸出目錄。
 func SetBackupDir(dir string) {
@@ -579,31 +589,59 @@ func SetBackupDir(dir string) {
 	}
 }
 
-// DailyBackup 備份 SQLite DB 與統計照片數量/大小。
+// DailyBackup 將一致性 SQLite 快照與完整照片目錄封裝成 gzip tar 備份。
 func DailyBackup() error {
+	// Load .env before resolving BACKUP_DIR so local and container deployments agree.
+	config.Load()
+	if configured := strings.TrimSpace(os.Getenv("BACKUP_DIR")); configured != "" {
+		backupCfg.BackupDir = configured
+	}
 	if err := os.MkdirAll(backupCfg.BackupDir, 0755); err != nil {
-		return recordBackup("", 0, 0, 0, "建立備份目錄失敗: "+err.Error())
+		return recordBackupFailure("", "建立備份目錄失敗: "+err.Error())
 	}
 
 	stamp := time.Now().Format("20060102_150405")
 	dbDst := filepath.Join(backupCfg.BackupDir, "autorepair_"+stamp+".db")
+	archiveDst := filepath.Join(backupCfg.BackupDir, "autorepair_"+stamp+".tar.gz")
 
 	// WAL 模式下直接複製 .db 會漏掉尚未 checkpoint 的資料（-wal/-shm），
 	// 必須走 SQLite 線上備份 API 或先做 WAL checkpoint。
-	size, err := backupDB(dbDst)
+	dbSize, err := backupDB(dbDst)
 	if err != nil {
-		return recordBackup(dbDst, 0, 0, 0, "備份 DB 失敗: "+err.Error())
+		return recordBackupFailure(archiveDst, "備份 DB 失敗: "+err.Error())
 	}
 
-	// 保留最近 30 天
+	photoCount, photoSize, err := dirStats(backupCfg.PhotoDir)
+	if err != nil {
+		_ = os.Remove(dbDst)
+		return recordBackupFailure(archiveDst, "統計照片目錄失敗: "+err.Error())
+	}
+	if err := createBackupArchive(dbDst, archiveDst, backupCfg.PhotoDir); err != nil {
+		_ = os.Remove(dbDst)
+		return recordBackupFailure(archiveDst, "建立照片備份封存失敗: "+err.Error())
+	}
+	if err := os.Remove(dbDst); err != nil && !os.IsNotExist(err) {
+		log.Printf("移除暫存 DB 備份 %s 失敗: %v", dbDst, err)
+	}
+
+	// 保留最近 30 天；同一天重跑只保留最新的完整封存。
 	pruneBackups(30 * 24 * time.Hour)
+	pruneSameDay(stamp[:8], archiveDst)
 
-	// 同一天重複執行（例如排程器誤判或手動重試）只保留最新一份，避免堆積無用備份。
-	pruneSameDay(stamp[:8])
+	info, err := os.Stat(archiveDst)
+	if err != nil {
+		return recordBackupFailure(archiveDst, "查詢備份封存大小失敗: "+err.Error())
+	}
+	log.Printf("每日備份完成: %s (%d bytes, DB %d bytes, 照片 %d 張 / %d bytes)",
+		archiveDst, info.Size(), dbSize, photoCount, photoSize)
+	return recordBackup(archiveDst, dbSize, int64(photoCount), photoSize, "")
+}
 
-	photoCount, photoSize := dirStats(backupCfg.PhotoDir)
-	log.Printf("每日備份完成: %s (%d bytes, 照片 %d 張 / %d bytes)", dbDst, size, photoCount, photoSize)
-	return recordBackup(dbDst, int64(size), int64(photoCount), int64(photoSize), "")
+func recordBackupFailure(path, cause string) error {
+	if err := recordBackup(path, 0, 0, 0, cause); err != nil {
+		return fmt.Errorf("%s；記錄備份失敗也失敗: %w", cause, err)
+	}
+	return errors.New(cause)
 }
 
 func recordBackup(path string, size int64, photoCount, photoSize int64, errMsg string) error {
@@ -619,21 +657,20 @@ func recordBackup(path string, size int64, photoCount, photoSize int64, errMsg s
 }
 
 // pruneSameDay 刪除同一日期（YYYYMMDD）的舊備份，只保留剛寫入的 keepFile。
-func pruneSameDay(day string) {
+func pruneSameDay(day, keepPath string) {
 	entries, err := os.ReadDir(backupCfg.BackupDir)
 	if err != nil {
 		return
 	}
 	prefix := "autorepair_" + day
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".db") {
+		if e.IsDir() || (!strings.HasSuffix(e.Name(), ".db") && !strings.HasSuffix(e.Name(), ".tar.gz")) {
 			continue
 		}
 		if !strings.HasPrefix(e.Name(), prefix) {
 			continue
 		}
-		// 檔名格式 autorepair_YYYYMMDD_HHMMSS.db；跳過目前時間戳（最新那份）
-		if len(e.Name()) == len(prefix)+10 {
+		if filepath.Join(backupCfg.BackupDir, e.Name()) == keepPath {
 			continue
 		}
 		os.Remove(filepath.Join(backupCfg.BackupDir, e.Name()))
@@ -647,7 +684,7 @@ func pruneBackups(maxAge time.Duration) {
 	}
 	cutoff := time.Now().Add(-maxAge)
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".db") {
+		if e.IsDir() || (!strings.HasSuffix(e.Name(), ".db") && !strings.HasSuffix(e.Name(), ".tar.gz")) {
 			continue
 		}
 		info, err := e.Info()
@@ -716,21 +753,154 @@ func copyFile(src, dst string) (int64, error) {
 	return n, nil
 }
 
-func dirStats(dir string) (count int, size int64) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return 0, 0
+func dirStats(dir string) (count int, size int64, err error) {
+	rootInfo, statErr := os.Stat(dir)
+	if os.IsNotExist(statErr) {
+		return 0, 0, nil
 	}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
+	if statErr != nil {
+		return 0, 0, statErr
+	}
+	if !rootInfo.IsDir() {
+		return 0, 0, fmt.Errorf("照片來源不是目錄: %s", dir)
+	}
+	err = filepath.WalkDir(dir, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("照片目錄含不支援的檔案類型: %s", path)
 		}
 		count++
-		if info, err := e.Info(); err == nil {
-			size += info.Size()
-		}
+		size += info.Size()
+		return nil
+	})
+	return count, size, err
+}
+
+func createBackupArchive(dbPath, archivePath, photoDir string) error {
+	out, err := os.Create(archivePath)
+	if err != nil {
+		return err
 	}
-	return
+	gz := gzip.NewWriter(out)
+	tw := tar.NewWriter(gz)
+	writeErr := func() error {
+		if err := addArchiveFile(tw, dbPath, filepath.Base(dbPath)); err != nil {
+			return fmt.Errorf("加入 SQLite 快照失敗: %w", err)
+		}
+		info, err := os.Stat(photoDir)
+		if os.IsNotExist(err) {
+			if err := tw.WriteHeader(&tar.Header{Name: "photos/", Typeflag: tar.TypeDir, Mode: 0755, ModTime: time.Now()}); err != nil {
+				return err
+			}
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("照片來源不是目錄: %s", photoDir)
+		}
+		rootHeader, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		rootHeader.Name = "photos/"
+		if err := tw.WriteHeader(rootHeader); err != nil {
+			return err
+		}
+		return filepath.WalkDir(photoDir, func(path string, entry os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			if path == photoDir {
+				return nil
+			}
+			rel, err := filepath.Rel(photoDir, path)
+			if err != nil {
+				return err
+			}
+			info, err := entry.Info()
+			if err != nil {
+				return err
+			}
+			if !info.Mode().IsRegular() && !info.IsDir() {
+				return fmt.Errorf("照片目錄含不支援的檔案類型: %s", path)
+			}
+			header, err := tar.FileInfoHeader(info, "")
+			if err != nil {
+				return err
+			}
+			header.Name = "photos/" + filepath.ToSlash(rel)
+			if info.IsDir() {
+				header.Name += "/"
+			}
+			if err := tw.WriteHeader(header); err != nil {
+				return err
+			}
+			if !info.Mode().IsRegular() {
+				return nil
+			}
+			return addArchiveContents(tw, path)
+		})
+	}()
+	tarErr := tw.Close()
+	gzipErr := gz.Close()
+	closeErr := out.Close()
+	if writeErr != nil {
+		_ = os.Remove(archivePath)
+		return writeErr
+	}
+	if tarErr != nil {
+		_ = os.Remove(archivePath)
+		return tarErr
+	}
+	if gzipErr != nil {
+		_ = os.Remove(archivePath)
+		return gzipErr
+	}
+	if closeErr != nil {
+		_ = os.Remove(archivePath)
+		return closeErr
+	}
+	return nil
+}
+
+func addArchiveFile(tw *tar.Writer, path, archiveName string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	header, err := tar.FileInfoHeader(info, "")
+	if err != nil {
+		return err
+	}
+	header.Name = archiveName
+	if err := tw.WriteHeader(header); err != nil {
+		return err
+	}
+	return addArchiveContents(tw, path)
+}
+
+func addArchiveContents(tw *tar.Writer, path string) error {
+	in, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	_, copyErr := io.Copy(tw, in)
+	closeErr := in.Close()
+	if copyErr != nil {
+		return copyErr
+	}
+	return closeErr
 }
 
 // --- 內建任務 ---
