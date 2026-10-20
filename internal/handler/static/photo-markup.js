@@ -266,7 +266,7 @@
             button.className = "btn btn-d";
             button.textContent = "刪除";
             button.addEventListener("click", function () {
-              requestJSON("/work-orders/walkaround-marks/" + mark.id + "/delete", "POST")
+              requestJSON("/work-orders/" + woID + "/walkaround-marks/" + mark.id + "/delete", "POST")
                 .then(loadMarks)
                 .catch(showError);
             });
