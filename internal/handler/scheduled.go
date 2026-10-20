@@ -60,7 +60,7 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		"work_order_ready":  "完工通知",
 		"estimate_approval": "估價核准",
 	}
-	channelLabels := map[string]string{"line": "LINE", "sms": "SMS", "internal": "內部", "none": "不通知"}
+	channelLabels := map[string]string{"line": "LINE", "telegram": "Telegram", "internal": "內部", "none": "不通知"}
 
 	type statusStyle struct{ Label, Pill string }
 	statusPills := map[string]statusStyle{

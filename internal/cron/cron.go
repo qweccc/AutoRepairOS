@@ -335,9 +335,9 @@ type notificationItem struct {
 
 func processPendingNotifications() (int, error) {
 	cfg, client := line.Shared()
-	_, telegramClient := telegram.Shared()
+	telegramCfg, telegramClient := telegram.Shared()
 	return processPendingNotificationsWithSender(func(it notificationItem) error {
-		return deliver(cfg, client, telegramClient, it)
+		return deliver(cfg, client, telegramCfg, telegramClient, it)
 	})
 }
 
@@ -395,7 +395,7 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 			}
 			sent++
 
-		case "line", "sms":
+		case "line":
 			if it.lineUserID == "" {
 				if err := markFailed(it.id, "客戶未綁定 LINE user ID", true, now, claimToken); err != nil {
 					return claimed, err
@@ -414,6 +414,14 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 				return claimed, err
 			}
 			sent++
+
+		case "sms":
+			// SMS 通道已停用（FR-CRM-04），必須標記為永久失敗並提示更新
+			if err := markFailed(it.id, "SMS 通道已停用，請將客戶通知偏好更新為 LINE 或 Telegram", true, now, claimToken); err != nil {
+				return claimed, err
+			}
+			failed++
+			continue
 
 		case "telegram":
 			if strings.TrimSpace(it.telegramUserID) == "" {
@@ -450,14 +458,18 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 }
 
 // deliver 實際外送一則通知。LINE 未設定憑證時由 client 進入 MOCK，只記錄不外送。
-func deliver(cfg *line.Config, client *line.Client, telegramClient *telegram.Client, it notificationItem) error {
+func deliver(cfg *line.Config, client *line.Client, telegramCfg *telegram.Config, telegramClient *telegram.Client, it notificationItem) error {
 	if it.channel == "telegram" {
+		// 未設定 token 時為永久失敗（不應假成功）
+		if telegramCfg == nil || !telegramCfg.Valid() {
+			return permanentNotificationError(fmt.Errorf("Telegram Bot Token 未設定"))
+		}
 		return telegramClient.SendMessage(it.telegramUserID, it.body)
 	}
-	// SMS 通道尚未接電信商商；LINE 已接。SMS 改走 LINE 推播並在訊息標註，
-	// 避免整筆失敗造成佇列堆積。真正接 SMS 時應拆成獨立分支。
-	if it.channel == "sms" && !cfg.Ready() {
-		return permanentNotificationError(fmt.Errorf("SMS 通道尚未整合，且 LINE 未設定憑證"))
+	// SMS 通道已停用（FR-CRM-04），應在 processPendingNotifications 中標記失敗
+	// 不應到達此處。若到達視為程式錯誤。
+	if it.channel == "sms" {
+		return permanentNotificationError(fmt.Errorf("SMS 通道已停用"))
 	}
 	return client.PushMessage(it.lineUserID, it.body)
 }

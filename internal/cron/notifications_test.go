@@ -3,6 +3,8 @@ package cron
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -244,5 +246,55 @@ func TestProcessPendingNotificationsClaimsOnlyOnce(t *testing.T) {
 	status, retries := notificationState(t, d, id)
 	if len(sent) != 1 || status != "sent" || retries != 0 {
 		t.Fatalf("deliveries=%d status=%q retries=%d", len(sent), status, retries)
+	}
+}
+
+func TestProcessPendingSMSChannelFailsPermanently(t *testing.T) {
+	d := notificationTestDB(t)
+	id := insertNotification(t, d, "sms")
+	sent := false
+
+	_, err := processPendingNotificationsWithSender(func(notificationItem) error {
+		sent = true
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, retries := notificationState(t, d, id)
+	var errMsg string
+	if err := d.QueryRow(`SELECT error_message FROM notifications WHERE id=?`, id).Scan(&errMsg); err != nil {
+		t.Fatal(err)
+	}
+	if sent || status != "permanent_failure" || retries != 1 {
+		t.Fatalf("sent=%v status=%q retries=%d err=%q", sent, status, retries, errMsg)
+	}
+	if !strings.Contains(errMsg, "SMS 通道已停用") {
+		t.Fatalf("error message %q does not mention SMS deprecation", errMsg)
+	}
+}
+
+func TestProcessPendingTelegramChannelFailsWithoutToken(t *testing.T) {
+	d := notificationTestDB(t)
+	id := insertNotification(t, d, "telegram")
+	if _, err := d.Exec(`UPDATE customers SET telegram_user_id='TG-CUSTOMER' WHERE id=1`); err != nil {
+		t.Fatal(err)
+	}
+	sent := false
+
+	_, err := processPendingNotificationsWithSender(func(item notificationItem) error {
+		if item.channel == "telegram" {
+			// 模擬 Telegram token 未設定的情況
+			return permanentNotificationError(fmt.Errorf("Telegram Bot Token 未設定"))
+		}
+		sent = true
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, retries := notificationState(t, d, id)
+	if sent || status != "permanent_failure" || retries != 1 {
+		t.Fatalf("sent=%v status=%q retries=%d; want false/permanent_failure/1", sent, status, retries)
 	}
 }

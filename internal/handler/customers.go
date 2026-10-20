@@ -60,7 +60,7 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		case "telegram":
 			notif = "Telegram"
 		case "sms":
-			notif = "SMS"
+			notif = "SMS（需更新）"
 		case "none":
 			notif = "不通知"
 		}
@@ -113,7 +113,7 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		case "telegram":
 			c.Notification = "Telegram"
 		case "sms":
-			c.Notification = "SMS"
+			c.Notification = "SMS（需更新）"
 		case "none":
 			c.Notification = "不通知"
 		default:
@@ -169,6 +169,11 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
+	var smsWarning string
+	if c.NotificationPref == "sms" {
+		smsWarning = `<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">⚠️ 原本偏好 SMS，請重新選擇 LINE 或 Telegram 通知通道</div>`
+	}
+
 	body := `
     <div class="card">
       <h2>編輯客戶 #` + strconv.FormatInt(c.ID, 10) + `</h2>
@@ -180,9 +185,8 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
             <option value="none"` + selIf(c.NotificationPref == "none") + `>不通知</option>
             <option value="line"` + selIf(c.NotificationPref == "line") + `>LINE</option>
             <option value="telegram"` + selIf(c.NotificationPref == "telegram") + `>Telegram</option>
-            <option value="sms"` + selIf(c.NotificationPref == "sms") + `>SMS</option>
           </select>
-        </label>
+        </label>` + smsWarning + `
         <label class="full">地址<input name="address" value="` + htmlEsc(c.Address) + `"></label>
         <label class="full">LINE User ID<input name="line_user_id" value="` + htmlEsc(c.LineUserID) + `" placeholder="例：U1234567890abcdef"></label>
         <label class="full">Telegram User ID<input name="telegram_user_id" value="` + htmlEsc(c.TelegramUserID) + `" placeholder="例：123456789"></label>
@@ -258,8 +262,11 @@ func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 
 func notifPref(v string) string {
 	switch v {
-	case "line", "sms", "telegram", "none":
+	case "line", "telegram", "none":
 		return v
+	case "sms":
+		// 保留 SMS 值但不當作有效通道；通知發送時會標記為失敗
+		return "sms"
 	default:
 		return "none"
 	}
