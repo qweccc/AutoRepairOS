@@ -171,10 +171,12 @@
 - 實作：migration 036 建立 technician_phrases 表；internal/handler/phrases.go 提供 CRUD 與 API；main.go 註冊路由；internal/nav 加入選單；工單項目表單加入「📝 常用片語」按鈕與即時搜尋 UI；預設 25 個常見片語（煞車、引擎、冷卻、輪胎、底盤、電路、空調、變速箱、離合器）。
 - 驗證：templ generate、go build ./... 成功；測試通過（config/cron/db/service）；片語搜尋 API 回傳 JSON；工單描述欄位支援點選帶入。
 
-#### [ ] T2.8 車身舊傷預檢圖與照片標記（FR-VH-06、FR-WO-05）
+#### [x] T2.8 車身舊傷預檢圖與照片標記（FR-VH-06、FR-WO-05）
 - 進廠預檢可在車身示意圖標記位置，記錄舊傷類型並附加照片。
 - 工單照片支援畫線／圈選等標記，照片可關聯工單及明細。
 - 保留原始照片及標記資料；後端驗證工單、明細及照片的關聯權限。
+- 實作：migration 037 建立 photo_annotations / walkaround_marks 與 active_* view，並灌入 walkaround_mark_type 六種舊傷類型；internal/handler/photo_markup.go 的標記 CRUD 由 photo_id 反查 work_order_id 寫入、驗證 item_id 屬於該工單、對象不存在回 404；workorder.templ 新增「舊傷預檢」區塊（車身圖點擊標記）；photos.go ＋ photo_markup.templ ＋ photo-markup.js 讓照片頁可展開 canvas 標記（座標正規化、可重繪刪除、fetch 帶 X-CSRF-Token）。
+- 驗證：templ generate、go build ./... exit 0、go test ./... -count=1 全綠（handler 新增 3 個測試：跨工單照片／明細拒絕、刪除不存在標記回 404）。
 
 #### [x] T2.9 獨立估價草稿及轉正式工單（FR-WO-01）
 - 可先建立估價草稿與項目，客戶／車輛關聯後轉為正式工單，保留估價內容及金額。
@@ -233,11 +235,13 @@
 - 依既有活動代碼呈現工單數、營收、成本及毛利；同一工單代碼優先順序需固定並文件化。
 - 先確認現有 `campaign_code` 欄位可涵蓋需求；只有確有資料缺口才新增欄位／migration。
 
-#### [ ] T2.19 支援 Telegram 客戶通知並停用 SMS（FR-CRM-04）
+#### [x] T2.19 支援 Telegram 客戶通知並停用 SMS（FR-CRM-04）
 - 通知佇列依客戶偏好分流 LINE／Telegram，Telegram 使用該客戶的 `telegram_user_id`，不得誤用內部預設 Chat ID 發送客戶資料。
-- 整合既有 Telegram Bot client，處理缺少 Telegram ID、未設定 token、API 失敗及訊息格式跳脫；與 T2.1 重試狀態及去重行為一致。
+- 整合既有 Telegram Bot client，處理缺少 Telegram ID、未設定 token、API 失敗及訊息格式跳躍；與 T2.1 重試狀態及去重行為一致。
 - 客戶表單停用 SMS；既有 SMS 偏好須明確提示需要更新，不得靜默改成其他通道或假裝已送達。
 - SRS FR-CRM-04 已更新為 LINE／Telegram／不通知；實作須符合該規格及客戶 ID 綁定要求。
+- 實作：internal/cron/cron.go 將 sms 獨立為永久失敗分支（不重試、不假送達），Telegram 用該客戶的 telegram_user_id、缺 token 或 ID 皆為永久失敗；internal/handler/customers.go 表單移除 SMS 選項，既有 sms 偏好顯示「⚠️ 原本偏好 SMS，請重新選擇」警告且不靜默改值；internal/handler/scheduled.go 的 channelLabels 補 telegram、移除 sms。
+- 驗證：go build ./... exit 0、go test ./... -count=1 全綠（cron 新增 2 個測試：SMS 永久失敗、Telegram 缺 token 永久失敗；既有測試含 legacy SMS 不被當成 LINE）。
 
 #### [ ] T2.20 完工通知卡（FR-NOTI-03）
 - 完工時依客戶偏好通知已綁定的 LINE／Telegram 客戶，提供領車資訊及核對過的工單摘要。
