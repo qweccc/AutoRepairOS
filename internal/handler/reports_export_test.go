@@ -101,10 +101,10 @@ func TestReportsExportRoleAndDownloadHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read owner CSV: %v", err)
 	}
-	if got, want := records[0], []string{"工單編號", "客戶", "日期", "工資收入", "零件收入", "外包收入", "零件成本", "支付方式", "折扣", "總計"}; !reflect.DeepEqual(got, want) {
+	if got, want := records[0], []string{"工單編號", "客戶", "日期", "工資收入", "零件收入", "外包收入", "零件成本", "外包成本", "支付方式", "折扣", "總計"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("owner columns = %#v, want %#v", got, want)
 	}
-	if got, want := records[1], []string{"7", "客戶, \"甲\"\n丙", "2026-01-02", "20.00", "50.00", "30.00", "16.00", "現金、信用卡", "5.00", "100.00"}; !reflect.DeepEqual(got, want) {
+	if got, want := records[1], []string{"7", "客戶, \"甲\"\n丙", "2026-01-02", "20.00", "50.00", "30.00", "16.00", "30.00", "現金、信用卡", "5.00", "100.00"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("owner row = %#v, want %#v", got, want)
 	}
 

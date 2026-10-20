@@ -16,16 +16,17 @@ import (
 )
 
 type reportExportRow struct {
-	WorkOrderID  int64
-	Customer     string
-	Date         string
-	LaborRevenue float64
-	PartsRevenue float64
-	Subcontract  float64
-	PartsCost    float64
-	Payment      string
-	Discount     float64
-	Total        float64
+	WorkOrderID     int64
+	Customer        string
+	Date            string
+	LaborRevenue    float64
+	PartsRevenue    float64
+	Subcontract     float64
+	PartsCost       float64
+	SubcontractCost float64
+	Payment         string
+	Discount        float64
+	Total           float64
 }
 
 // ReportsExport downloads paid work orders using the same created-date period as ReportsHome.
@@ -92,18 +93,26 @@ func loadReportExportRows(ctx context.Context, from, to string, showCost bool) (
 	if db.DB == nil {
 		return nil, errors.New("database is not configured")
 	}
-	costColumn := ""
+	// 零件成本與外包成本各自獨立子查詢：零件取庫存主檔的 cost_price，
+	// 外包取工單明細自己記錄的外包金額（外包沒有庫存成本主檔）。
+	// 兩者都只在 Owner 匯出時出現，口徑與經營分析圖表一致。
+	partsCostColumn := ""
+	subcontractCostColumn := ""
 	if showCost {
-		costColumn = `COALESCE((SELECT SUM(COALESCE(i.cost_price,0) * cost_item.quantity)
+		partsCostColumn = `COALESCE((SELECT SUM(COALESCE(i.cost_price,0) * cost_item.quantity)
 			FROM work_order_items cost_item
 			LEFT JOIN active_inventory_items i ON i.id = cost_item.inventory_item_id
 			WHERE cost_item.work_order_id = wo.id AND cost_item.item_type='part'),0),`
+		subcontractCostColumn = `COALESCE((SELECT SUM(sub_item.subtotal)
+			FROM work_order_items sub_item
+			WHERE sub_item.work_order_id = wo.id AND sub_item.item_type='subcontract'),0),`
 	}
 	query := `SELECT wo.id, COALESCE(c.name,''), date(wo.created_at),
 		COALESCE(SUM(CASE WHEN item.item_type='labor' THEN item.subtotal ELSE 0 END),0),
 		COALESCE(SUM(CASE WHEN item.item_type='part' THEN item.subtotal ELSE 0 END),0),
 		COALESCE(SUM(CASE WHEN item.item_type='subcontract' THEN item.subtotal ELSE 0 END),0),
-		` + costColumn + `
+		` + partsCostColumn + `
+		` + subcontractCostColumn + `
 		COALESCE((
 			SELECT group_concat(method, '、') FROM (
 				SELECT method FROM (
@@ -159,7 +168,7 @@ func loadReportExportRows(ctx context.Context, from, to string, showCost bool) (
 			&row.LaborRevenue, &row.PartsRevenue, &row.Subcontract,
 		}
 		if showCost {
-			values = append(values, &row.PartsCost)
+			values = append(values, &row.PartsCost, &row.SubcontractCost)
 		}
 		values = append(values, &row.Payment, &row.Discount, &row.Total)
 		if err := rows.Scan(values...); err != nil {
@@ -181,7 +190,7 @@ func encodeReportExportCSV(rows []reportExportRow, showCost bool) ([]byte, error
 	writer := csv.NewWriter(&output)
 	header := []string{"工單編號", "客戶", "日期", "工資收入", "零件收入", "外包收入"}
 	if showCost {
-		header = append(header, "零件成本")
+		header = append(header, "零件成本", "外包成本")
 	}
 	header = append(header, "支付方式", "折扣", "總計")
 	if err := writer.Write(header); err != nil {
@@ -197,7 +206,7 @@ func encodeReportExportCSV(rows []reportExportRow, showCost bool) ([]byte, error
 			formatReportAmount(row.Subcontract),
 		}
 		if showCost {
-			record = append(record, formatReportAmount(row.PartsCost))
+			record = append(record, formatReportAmount(row.PartsCost), formatReportAmount(row.SubcontractCost))
 		}
 		record = append(record,
 			safeSpreadsheetText(row.Payment),
