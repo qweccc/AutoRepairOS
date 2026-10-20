@@ -118,6 +118,10 @@ func main() {
 	mux.HandleFunc("POST /approval/approve/{token}", handler.ApproveRequestHandler)
 	mux.HandleFunc("POST /approval/reject/{token}", handler.RejectRequestHandler)
 
+	// T2.10: LINE 數位維修履歷與保養收據（公開 API，客戶透過 LINE 連結存取）
+	// 身份驗證靠 customers.line_user_id 綁定，不是登入 session。
+	mux.HandleFunc("GET /api/passbook", handler.PassbookAPI)
+
 	// 總覽
 	mux.HandleFunc("GET /{$}", handler.AllStaff(handler.IndexHandler))
 
