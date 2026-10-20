@@ -1,0 +1,110 @@
+package pages
+
+import "strconv"
+
+type AnalyticsTrendPoint struct {
+	Label       string
+	Revenue     string
+	Cost        string
+	Gross       string
+	RevenueX    int
+	GrossX      int
+	LabelX      int
+	RevenueY    int
+	GrossY      int
+	RevenueSize int
+	GrossSize   int
+}
+
+type AnalyticsGroupRow struct {
+	Label        string
+	Orders       string
+	Revenue      string
+	Cost         string
+	Gross        string
+	RevenueWidth int
+}
+
+templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, svgWidth int, showCost bool) {
+	<div class="card">
+		<h2>月營收與毛利趨勢</h2>
+		<p style="color:#94a3b8;font-size:12.5px">依工單建立日期及已結帳工單統計；營收、零件成本與匯出報表相同。</p>
+		<div style="overflow-x:auto">
+			<svg role="img" aria-label="月營收趨勢圖" viewBox={ "0 0 " + strconv.Itoa(svgWidth) + " 270" } style="display:block;width:100%;min-width:680px;height:auto">
+				<line x1="24" y1="210" x2={ strconv.Itoa(svgWidth - 24) } y2="210" stroke="#475569" stroke-width="1"/>
+				for _, point := range points {
+					<rect x={ strconv.Itoa(point.RevenueX) } y={ strconv.Itoa(point.RevenueY) } width="20" height={ strconv.Itoa(point.RevenueSize) } rx="3" fill="#38bdf8">
+						<title>{ point.Label + " 營收 " + point.Revenue }</title>
+					</rect>
+					if showCost {
+						<rect x={ strconv.Itoa(point.GrossX) } y={ strconv.Itoa(point.GrossY) } width="20" height={ strconv.Itoa(point.GrossSize) } rx="3" fill="#34d399">
+							<title>{ point.Label + " 毛利 " + point.Gross + "；成本 " + point.Cost }</title>
+						</rect>
+					}
+					<text x={ strconv.Itoa(point.LabelX) } y="238" fill="#cbd5e1" font-size="12" text-anchor="middle">{ point.Label }</text>
+				}
+			</svg>
+		</div>
+		<p style="display:flex;gap:16px;color:#cbd5e1;font-size:12px">
+			<span><i style="display:inline-block;width:10px;height:10px;background:#38bdf8;margin-right:5px"></i>營收</span>
+			if showCost {
+				<span><i style="display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px"></i>毛利（營收－零件成本）</span>
+			}
+		</p>
+		<table>
+			<tr>
+				<th>月份</th>
+				<th class="num">營收</th>
+				if showCost {
+					<th class="num">零件成本</th>
+					<th class="num">毛利</th>
+				}
+			</tr>
+			for _, point := range points {
+				<tr>
+					<td>{ point.Label }</td>
+					<td class="num">{ point.Revenue }</td>
+					if showCost {
+						<td class="num">{ point.Cost }</td>
+						<td class="num">{ point.Gross }</td>
+					}
+				</tr>
+			}
+		</table>
+	</div>
+	<div class="card">
+		<h2>分組分析</h2>
+		if len(groups) == 0 {
+			<div class="empty">期間沒有可分組的已結帳工單</div>
+		}
+		if len(groups) > 0 {
+			<table>
+				<tr>
+					<th>分組</th>
+					<th class="num">工單數</th>
+					<th class="num">營收</th>
+					if showCost {
+						<th class="num">零件成本</th>
+						<th class="num">毛利</th>
+					}
+				</tr>
+				for _, group := range groups {
+					<tr>
+						<td>
+							{ group.Label }
+							<div style="height:5px;background:#1e293b;border-radius:4px;margin-top:5px">
+								<div style={ "height:5px;width:" + strconv.Itoa(group.RevenueWidth) + "%;background:#38bdf8;border-radius:4px" }></div>
+							</div>
+						</td>
+						<td class="num">{ group.Orders }</td>
+						<td class="num">{ group.Revenue }</td>
+						if showCost {
+							<td class="num">{ group.Cost }</td>
+							<td class="num">{ group.Gross }</td>
+						}
+					</tr>
+				}
+			</table>
+		}
+	</div>
+}

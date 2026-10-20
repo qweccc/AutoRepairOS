@@ -2,14 +2,18 @@
 package handler
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ============================================================
@@ -24,11 +28,10 @@ import (
 //   - FR-ANA-07 現金流：labor/parts/subcontract 收入與成本概況
 //   - FR-INV-04  死頭料：長期未動用零件與對應成本
 //
-// 毛利口徑：毛利 = 售價 - 成本。零件成本從 work_order_items.inventory_item_id
-// 關回 inventory_items.cost_price（這個表沒有 part_number，用外鍵取成本）。
-// 工資與外包在 work_order_items 沒有成本欄（舊系統未記錄），
-// 因此這兩類的毛利等同售價——頁面上明確標示「工資/外包未記錄成本」，
-// 不假裝有毛利數字。
+// FR-ANA-01 圖表沿用 reports_export.go 的已結帳工單、建立日期、折扣及零件成本口徑。
+// T2.15 工單 CSV 沒有外包成本欄，依需求以 CSV 口徑優先，圖表毛利只扣零件成本。
+// 工單分組沿用 work_order_items.item_type 的既有 labor/part/subcontract 值；
+// customer.tags 為逗號分隔標籤，vehicle.vehicle_type 以 lookup label 顯示。
 // ============================================================
 
 // periodRange 把日/週/月視圖轉成 [from, to]（含尾日）。
@@ -46,6 +49,9 @@ func periodRange(gran, from, to string) (string, string) {
 	case "month":
 		f := now.Format("2006-01") + "-01"
 		return f, now.Format("2006-01-02")
+	case "year":
+		start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, -11, 0)
+		return start.Format("2006-01-02"), now.Format("2006-01-02")
 	default:
 		if from != "" && to != "" {
 			return from, to
@@ -70,6 +76,268 @@ var itemTypeLabel = map[string]string{
 	"subcontract": "外包加工",
 }
 
+type analyticsChartDimensions struct {
+	CustomerTags string
+	VehicleType  string
+}
+
+type analyticsMonthTotal struct {
+	Revenue float64
+	Cost    float64
+}
+
+type analyticsGroupTotal struct {
+	Revenue float64
+	Cost    float64
+	Orders  map[int64]struct{}
+}
+
+type analyticsChartData struct {
+	Points   []pages.AnalyticsTrendPoint
+	Groups   []pages.AnalyticsGroupRow
+	SVGWidth int
+}
+
+func loadAnalyticsChartData(ctx context.Context, from, to, groupBy string, showCost bool) (analyticsChartData, error) {
+	// Keep the paid-order population, revenue split, discount, and parts-cost
+	// definitions tied to the T2.15 CSV loader. That CSV has no subcontract-cost
+	// column, so its documented export basis takes precedence here: gross profit
+	// subtracts parts cost only rather than presenting a non-reconciling figure.
+	rows, err := loadReportExportRows(ctx, from, to, showCost)
+	if err != nil {
+		return analyticsChartData{}, fmt.Errorf("load analytics report rows: %w", err)
+	}
+	dimensions := make(map[int64]analyticsChartDimensions, len(rows))
+	dimensionRows, err := db.DB.QueryContext(ctx, `SELECT wo.id, COALESCE(c.tags,''),
+			COALESCE((SELECT li.label FROM lookup_items li
+				WHERE li.category='vehicle_type' AND li.code=v.vehicle_type
+				ORDER BY li.sort_order LIMIT 1), NULLIF(v.vehicle_type,''), '(未填車款)')
+		FROM active_work_orders wo
+		LEFT JOIN active_customers c ON c.id=wo.customer_id
+		LEFT JOIN active_vehicles v ON v.id=wo.vehicle_id
+		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?`, from, to)
+	if err != nil {
+		return analyticsChartData{}, fmt.Errorf("query analytics chart dimensions: %w", err)
+	}
+	for dimensionRows.Next() {
+		var id int64
+		var item analyticsChartDimensions
+		if err := dimensionRows.Scan(&id, &item.CustomerTags, &item.VehicleType); err != nil {
+			_ = dimensionRows.Close()
+			return analyticsChartData{}, fmt.Errorf("scan analytics chart dimensions: %w", err)
+		}
+		dimensions[id] = item
+	}
+	if err := dimensionRows.Err(); err != nil {
+		_ = dimensionRows.Close()
+		return analyticsChartData{}, fmt.Errorf("read analytics chart dimensions: %w", err)
+	}
+	if err := dimensionRows.Close(); err != nil {
+		return analyticsChartData{}, fmt.Errorf("close analytics chart dimensions: %w", err)
+	}
+	return aggregateAnalyticsChart(rows, dimensions, from, to, groupBy, showCost)
+}
+
+func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyticsChartDimensions, from, to, groupBy string, showCost bool) (analyticsChartData, error) {
+	start, err := time.Parse("2006-01-02", from)
+	if err != nil {
+		return analyticsChartData{}, fmt.Errorf("parse analytics start date: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", to)
+	if err != nil {
+		return analyticsChartData{}, fmt.Errorf("parse analytics end date: %w", err)
+	}
+	if start.After(end) {
+		return analyticsChartData{}, fmt.Errorf("analytics start date is after end date")
+	}
+
+	months := make([]string, 0)
+	monthly := make(map[string]analyticsMonthTotal)
+	for month := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.UTC); !month.After(time.Date(end.Year(), end.Month(), 1, 0, 0, 0, 0, time.UTC)); month = month.AddDate(0, 1, 0) {
+		key := month.Format("2006-01")
+		months = append(months, key)
+		monthly[key] = analyticsMonthTotal{}
+	}
+
+	groups := make(map[string]*analyticsGroupTotal)
+	groupLabels := make([]string, 0)
+	addGroup := func(label string, id int64, revenue, cost float64) {
+		total, ok := groups[label]
+		if !ok {
+			total = &analyticsGroupTotal{Orders: make(map[int64]struct{})}
+			groups[label] = total
+			groupLabels = append(groupLabels, label)
+		}
+		total.Revenue += revenue
+		if showCost {
+			total.Cost += cost
+		}
+		total.Orders[id] = struct{}{}
+	}
+
+	for _, row := range rows {
+		netRevenue := row.Total - row.Discount
+		month := row.Date[:min(len(row.Date), 7)]
+		monthTotal, ok := monthly[month]
+		if !ok {
+			continue
+		}
+		monthTotal.Revenue += netRevenue
+		if showCost {
+			monthTotal.Cost += row.PartsCost
+		}
+		monthly[month] = monthTotal
+
+		dimension := dimensions[row.WorkOrderID]
+		switch groupBy {
+		case "kind":
+			// Work orders have no separate kind column; use the three existing
+			// work_order_items.item_type values and prorate discounts to keep totals reconciled.
+			items := []struct {
+				kind   string
+				amount float64
+			}{
+				{"labor", row.LaborRevenue},
+				{"part", row.PartsRevenue},
+				{"subcontract", row.Subcontract},
+			}
+			itemRevenue := row.LaborRevenue + row.PartsRevenue + row.Subcontract
+			if itemRevenue <= 0 {
+				addGroup("(未分類)", row.WorkOrderID, netRevenue, row.PartsCost)
+				continue
+			}
+			for _, item := range items {
+				if item.amount == 0 {
+					continue
+				}
+				allocatedRevenue := netRevenue * item.amount / itemRevenue
+				cost := 0.0
+				if item.kind == "part" {
+					cost = row.PartsCost
+				}
+				addGroup(itemTypeLabel[item.kind], row.WorkOrderID, allocatedRevenue, cost)
+			}
+		case "customer":
+			tags := splitAnalyticsTags(dimension.CustomerTags)
+			share := 1 / float64(len(tags))
+			for _, tag := range tags {
+				addGroup(tag, row.WorkOrderID, netRevenue*share, row.PartsCost*share)
+			}
+		case "vehicle":
+			label := strings.TrimSpace(dimension.VehicleType)
+			if label == "" {
+				label = "(未填車款)"
+			}
+			addGroup(label, row.WorkOrderID, netRevenue, row.PartsCost)
+		}
+	}
+
+	var maxRevenue float64
+	for _, total := range monthly {
+		if total.Revenue > maxRevenue {
+			maxRevenue = total.Revenue
+		}
+	}
+	if maxRevenue < 0 {
+		maxRevenue = 0
+	}
+	width := max(960, len(months)*72+48)
+	band := float64(width) / float64(max(1, len(months)))
+	points := make([]pages.AnalyticsTrendPoint, 0, len(months))
+	for i, month := range months {
+		total := monthly[month]
+		revenueSize := 0
+		grossSize := 0
+		if maxRevenue > 0 && total.Revenue > 0 {
+			revenueSize = int(total.Revenue / maxRevenue * 160)
+		}
+		if showCost {
+			gross := total.Revenue - total.Cost
+			if maxRevenue > 0 && gross > 0 {
+				grossSize = int(gross / maxRevenue * 160)
+			}
+		}
+		center := int((float64(i) + 0.5) * band)
+		points = append(points, pages.AnalyticsTrendPoint{
+			Label:       month,
+			Revenue:     formatReportAmount(total.Revenue),
+			Cost:        formatReportAmount(total.Cost),
+			Gross:       formatReportAmount(total.Revenue - total.Cost),
+			RevenueX:    center - 24,
+			GrossX:      center + 2,
+			LabelX:      center,
+			RevenueY:    210 - revenueSize,
+			GrossY:      210 - grossSize,
+			RevenueSize: revenueSize,
+			GrossSize:   grossSize,
+		})
+	}
+
+	sort.Slice(groupLabels, func(i, j int) bool {
+		if groups[groupLabels[i]].Revenue == groups[groupLabels[j]].Revenue {
+			return groupLabels[i] < groupLabels[j]
+		}
+		return groups[groupLabels[i]].Revenue > groups[groupLabels[j]].Revenue
+	})
+	var groupMax float64
+	for _, total := range groups {
+		if total.Revenue > groupMax {
+			groupMax = total.Revenue
+		}
+	}
+	groupRows := make([]pages.AnalyticsGroupRow, 0, len(groupLabels))
+	for _, label := range groupLabels {
+		total := groups[label]
+		width := 0
+		if groupMax > 0 && total.Revenue > 0 {
+			width = int(total.Revenue / groupMax * 100)
+		}
+		groupRows = append(groupRows, pages.AnalyticsGroupRow{
+			Label:        label,
+			Orders:       strconv.Itoa(len(total.Orders)),
+			Revenue:      formatReportAmount(total.Revenue),
+			Cost:         formatReportAmount(total.Cost),
+			Gross:        formatReportAmount(total.Revenue - total.Cost),
+			RevenueWidth: width,
+		})
+	}
+	return analyticsChartData{Points: points, Groups: groupRows, SVGWidth: width}, nil
+}
+
+func splitAnalyticsTags(tags string) []string {
+	seen := make(map[string]struct{})
+	result := make([]string, 0)
+	for _, tag := range strings.Split(tags, ",") {
+		tag = strings.TrimSpace(tag)
+		if tag == "" {
+			continue
+		}
+		if _, ok := seen[tag]; ok {
+			continue
+		}
+		seen[tag] = struct{}{}
+		result = append(result, tag)
+	}
+	if len(result) == 0 {
+		return []string{"(未標記)"}
+	}
+	return result
+}
+
+func selectedAttr(selected bool) string {
+	if selected {
+		return ` selected`
+	}
+	return ""
+}
+
+func ownerOnlyStat(user model.User, value, label string) string {
+	if !canExportReportCosts(user) {
+		return ""
+	}
+	return `<div class="stat"><b>` + value + `</b><span>` + label + `</span></div>`
+}
+
 func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	if !canSeeMoney(user) {
 		http.Error(w, "權限不足：經營分析僅限櫃檯人員與系統管理員使用", http.StatusForbidden)
@@ -81,12 +349,36 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	from := strings.TrimSpace(qv.Get("from"))
 	to := strings.TrimSpace(qv.Get("to"))
 	if gran == "" {
-		gran = "month"
+		gran = "year"
 	}
-	if gran != "day" && gran != "week" && gran != "month" {
-		gran = "month"
+	if gran != "day" && gran != "week" && gran != "month" && gran != "year" && gran != "custom" {
+		gran = "year"
 	}
-	from, to = periodRange(gran, from, to)
+	if gran == "custom" {
+		var err error
+		from, to, err = reportExportPeriod(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	} else {
+		from, to = periodRange(gran, from, to)
+	}
+	groupBy := strings.TrimSpace(qv.Get("group"))
+	if groupBy != "kind" && groupBy != "customer" && groupBy != "vehicle" {
+		groupBy = "kind"
+	}
+	showCost := canExportReportCosts(user)
+	chartData, err := loadAnalyticsChartData(r.Context(), from, to, groupBy, showCost)
+	if err != nil {
+		http.Error(w, "經營分析圖表載入失敗", http.StatusInternalServerError)
+		return
+	}
+	var chartHTML bytes.Buffer
+	if err := pages.AnalyticsCharts(chartData.Points, chartData.Groups, chartData.SVGWidth, showCost).Render(r.Context(), &chartHTML); err != nil {
+		http.Error(w, "經營分析圖表載入失敗", http.StatusInternalServerError)
+		return
+	}
 
 	// ============ KPI（FR-ANA-04）============
 	// ARO = 已結帳工單平均金額；進場數 = 期間開立的工單張數（含未結帳）。
@@ -100,12 +392,14 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// 零件成本：從 work_order_items.inventory_item_id 關回庫存主檔帶 cost_price。
 	// 找不到料號的零件不計成本（寧可低估毛利也不造假）。
-	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
-		FROM work_order_items woi
-		JOIN active_work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
-		WHERE woi.item_type='part' AND wo.status='paid'
-			AND date(wo.created_at) BETWEEN ? AND ?`, from, to).Scan(&partsCost)
+	if showCost {
+		db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
+			FROM work_order_items woi
+			JOIN active_work_orders wo ON wo.id = woi.work_order_id
+			LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
+			WHERE woi.item_type='part' AND wo.status='paid'
+				AND date(wo.created_at) BETWEEN ? AND ?`, from, to).Scan(&partsCost)
+	}
 
 	aro := 0.0
 	if paidCount > 0 {
@@ -330,48 +624,70 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		if gran == key {
 			cls = "btn-p"
 		}
-		return `<a class="btn ` + cls + `" href="/analytics?gran=` + key + `">` + label + `</a>`
+		return `<a class="btn ` + cls + `" href="/analytics?gran=` + key + `&amp;group=` + groupBy + `">` + label + `</a>`
 	}
 
 	var plBody strings.Builder
-	plBody.WriteString(`<table><tr><th>類別</th><th class="num">營收</th><th class="num">成本</th><th class="num">毛利</th><th class="num">毛利率</th></tr>`)
+	plBody.WriteString(`<table><tr><th>類別</th><th class="num">營收</th>`)
+	if showCost {
+		plBody.WriteString(`<th class="num">成本</th><th class="num">毛利</th><th class="num">毛利率</th>`)
+	}
+	plBody.WriteString(`</tr>`)
 	for _, p := range plRows {
 		g := p.Revenue - p.Cost
 		gp := 0.0
 		if p.Revenue > 0 {
 			gp = g / p.Revenue * 100
 		}
-		costCell := money(p.Cost)
-		if p.Type != "part" {
-			// 工資與外包在舊系統未記錄成本，明確標示而非顯示 0 假裝算過。
-			costCell = `<span style="color:#64748b">未記錄</span>`
+		plBody.WriteString(`<tr><td>` + p.Label + `</td><td class="num">` + money(p.Revenue) + `</td>`)
+		if showCost {
+			costCell := money(p.Cost)
+			if p.Type != "part" {
+				// 工資與外包成本未出現在 T2.15 CSV，避免把缺失成本顯示成零。
+				costCell = `<span style="color:#64748b">未記錄</span>`
+			}
+			plBody.WriteString(`<td class="num">` + costCell + `</td><td class="num">` + money(g) +
+				`</td><td class="num">` + fmt.Sprintf("%.1f%%", gp) + `</td>`)
 		}
-		plBody.WriteString(`<tr><td>` + p.Label + `</td><td class="num">` + money(p.Revenue) +
-			`</td><td class="num">` + costCell + `</td><td class="num">` + money(g) +
-			`</td><td class="num">` + fmt.Sprintf("%.1f%%", gp) + `</td></tr>`)
+		plBody.WriteString(`</tr>`)
 	}
-	plBody.WriteString(`<tr><td><b>合計</b></td><td class="num"><b>` + money(revenue) +
-		`</b></td><td class="num"><b>` + money(partsCost) + `</b></td><td class="num"><b>` +
-		money(gross) + `</b></td><td class="num"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b></td></tr></table>`)
+	plBody.WriteString(`<tr><td><b>合計</b></td><td class="num"><b>` + money(revenue) + `</b></td>`)
+	if showCost {
+		plBody.WriteString(`<td class="num"><b>` + money(partsCost) + `</b></td><td class="num"><b>` +
+			money(gross) + `</b></td><td class="num"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b></td>`)
+	}
+	plBody.WriteString(`</tr></table>`)
 
-	exportLink := ""
+	exportLink := `<a class="btn btn-s" href="/reports/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出工單 CSV</a>`
 	if canExportReportCosts(user) {
-		exportLink = `<a class="btn btn-s" href="/analytics/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出 CSV</a>`
+		exportLink += ` <a class="btn btn-s" href="/analytics/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出分析摘要 CSV</a>`
+	}
+	grossNote := `成本與毛利僅限系統管理員檢視。`
+	if showCost {
+		grossNote = `毛利與報表匯出一致，僅扣除 CSV 有列出的零件成本；CSV 未列外包成本，因此不計入。`
 	}
 	body := flash(r) + `
     <div class="card">
       <h2>經營分析</h2>
       <div style="margin-bottom:12px">` +
 		granTab("今日", "day") + ` ` + granTab("本週", "week") + ` ` + granTab("本月", "month") +
+		` ` + granTab("近 12 個月", "year") +
 		`</div>
       <form method="GET" action="/analytics" style="margin-bottom:14px">
         <input type="hidden" name="gran" value="custom">
+        <input type="hidden" name="group" value="` + htmlEsc(groupBy) + `">
         <label style="font-size:12px;color:#94a3b8">起</label>
         <input name="from" value="` + htmlEsc(from) + `" placeholder="YYYY-MM-DD"
                style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
         <label style="font-size:12px;color:#94a3b8;margin-left:10px">迄</label>
         <input name="to" value="` + htmlEsc(to) + `" placeholder="YYYY-MM-DD"
                style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
+        <label style="font-size:12px;color:#94a3b8;margin-left:10px">分組</label>
+        <select name="group" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+          <option value="kind"` + selectedAttr(groupBy == "kind") + `>工單項目類型</option>
+          <option value="customer"` + selectedAttr(groupBy == "customer") + `>客群標籤</option>
+          <option value="vehicle"` + selectedAttr(groupBy == "vehicle") + `>車種</option>
+        </select>
         <button class="btn btn-p" type="submit">查詢</button>
         ` + exportLink + `
       </form>
@@ -380,14 +696,14 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
       <div style="margin-bottom:14px">
         <div class="stat"><b>` + money(aro) + `</b><span>ARO 平均工單金額</span></div>
         <div class="stat"><b>` + strconv.Itoa(orderCount) + `</b><span>車輛進場數</span></div>
-        <div class="stat"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b><span>毛利率</span></div>
+        ` + ownerOnlyStat(user, fmt.Sprintf("%.1f%%", grossPct), "毛利率") + `
         <div class="stat"><b>` + fmt.Sprintf("%.1f%%", repeatRate) + `</b><span>顧客回訪率</span></div>
       </div>
       <p style="color:#64748b;font-size:12.5px">
-        毛利只計入零件成本（工資與外包在舊系統未記錄成本，故不計）。
+        ` + grossNote + `
         ARO 以已結帳工單計算，進場數含未結帳工單。
       </p>
-    </div>
+    </div>` + chartHTML.String() + `
 
     <div class="card">
       <h2>損益分拆（工資 / 零件 / 外包）</h2>` + plBody.String() + `
@@ -425,13 +741,17 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
       </div>
     </div>
 
+    </div>`
+	if showCost {
+		body += `
     <div class="card">
       <h2>死頭料分析（180 天未動用，前 20 名）</h2>
       <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
         滯銷成本合計 <b style="color:#f87171">` + money(deadCostTotal) + `</b>，共 ` +
-		strconv.Itoa(deadCount) + ` 項。這些是長期沒人領用的零件，可考慮退貨或降價出清。
+			strconv.Itoa(deadCount) + ` 項。這些是長期沒人領用的零件，可考慮退貨或降價出清。
       </p>` + deadTable + `
     </div>`
+	}
 
 	renderPage(w, "經營分析", "/analytics", user.Username, user.Role, body)
 }
