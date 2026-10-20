@@ -770,6 +770,13 @@ func init() {
 		Interval: 24 * time.Hour,
 		Run:      scanAppointmentReminders,
 	})
+
+	Register(Task{
+		Key:      "birthday_reminder_scan",
+		Name:     "客戶生日關懷掃描",
+		Interval: 24 * time.Hour,
+		Run:      scanBirthdayReminders,
+	})
 }
 
 // scanMaintenanceDue 每日掃描保養、定檢及保單到期項目，寫入通知佇列。
@@ -800,6 +807,61 @@ func scanMaintenanceDueInternal() (int, error) {
 	queued += insuranceCount
 	if queued > 0 {
 		log.Printf("車輛到期提醒掃描：新增 %d 筆提醒", queued)
+	}
+	return queued, nil
+}
+
+// scanBirthdayReminders 每日將當天生日的客戶排入生日關懷通知佇列。
+// 去重靠 notifications 表的 (customer_id, kind, body, created_at) 判斷，
+// 因此服務重啟後同一年度同一天不會重複產生。
+func scanBirthdayReminders() error {
+	_, err := ScanBirthdayRemindersNow()
+	return err
+}
+
+// ScanBirthdayRemindersNow 供測試及手動觸發使用，回傳新增筆數。
+func ScanBirthdayRemindersNow() (int, error) {
+	now := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60))
+	// 比對「月-日」，跨年不受影響；未設定生日（空值）會被 TRIM 濾掉。
+	today := now.Format("01-02")
+	rows, err := db.DB.Query(`SELECT c.id, COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		FROM active_customers c
+		WHERE TRIM(COALESCE(c.birthday,'')) != ''
+		  AND strftime('%m-%d', c.birthday) = ?
+		ORDER BY c.id`, today)
+	if err != nil {
+		return 0, err
+	}
+
+	var candidates []reminderCandidate
+	for rows.Next() {
+		var c reminderCandidate
+		if err := rows.Scan(&c.customerID, &c.name, &c.pref, &c.lineID, &c.telegramID); err != nil {
+			rows.Close()
+			return 0, err
+		}
+		candidates = append(candidates, c)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, err
+	}
+	rows.Close()
+
+	queued := 0
+	for _, c := range candidates {
+		body := fmt.Sprintf("親愛的 %s 您好，祝您生日快樂！感謝您長期的支持，期待再次為您服務。", c.name)
+		added, err := queueVehicleReminder("customer_birthday", "生日祝福", body, c)
+		if err != nil {
+			return queued, err
+		}
+		if added {
+			queued++
+		}
+	}
+	if queued > 0 {
+		log.Printf("生日關懷掃描：新增 %d 筆祝福", queued)
 	}
 	return queued, nil
 }

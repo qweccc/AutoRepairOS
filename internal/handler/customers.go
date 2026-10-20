@@ -30,7 +30,8 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 	query := `SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
 		COALESCE(address,''), COALESCE(notification_preference,'none'), COALESCE(notes,''),
 		COALESCE(tags,''), COALESCE(campaign_code,''),
-		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), created_at
+		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), created_at,
+		COALESCE(birthday,'')
 		FROM active_customers` + where + ` ORDER BY id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
@@ -46,7 +47,8 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		var c model.Customer
 		var createdAt string
 		if err := rows.Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.TelegramUserID, &c.Address,
-			&c.NotificationPref, &c.Notes, &c.Tags, &c.CampaignCode, &c.TotalSpent, &c.UnpaidAmount, &createdAt); err != nil {
+			&c.NotificationPref, &c.Notes, &c.Tags, &c.CampaignCode, &c.TotalSpent, &c.UnpaidAmount, &createdAt,
+			&c.Birthday); err != nil {
 			continue
 		}
 		c.CreatedAt = parseFlexTime(createdAt)
@@ -134,12 +136,13 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.DB.Exec(`INSERT INTO customers
-		(name, phone, line_user_id, telegram_user_id, address, notification_preference, notes, tags, campaign_code)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		(name, phone, line_user_id, telegram_user_id, address, notification_preference, notes, tags, campaign_code, birthday)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		strings.TrimSpace(name), strings.TrimSpace(phone),
 		nullStr(r.FormValue("line_user_id")), nullStr(r.FormValue("telegram_user_id")), nullStr(r.FormValue("address")),
 		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")),
 		normTags(r.FormValue("tags")), nullStr(r.FormValue("campaign_code")),
+		nullStr(r.FormValue("birthday")),
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
@@ -160,10 +163,10 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	err := db.DB.QueryRow(`SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
 		COALESCE(address,''), COALESCE(notification_preference,'none'), COALESCE(notes,''),
 		COALESCE(tags,''), COALESCE(campaign_code,''),
-		COALESCE(total_spent,0), COALESCE(unpaid_amount,0)
+		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), COALESCE(birthday,'')
 		FROM active_customers WHERE id = ?`, id).
 		Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.TelegramUserID, &c.Address,
-			&c.NotificationPref, &c.Notes, &c.Tags, &c.CampaignCode, &c.TotalSpent, &c.UnpaidAmount)
+			&c.NotificationPref, &c.Notes, &c.Tags, &c.CampaignCode, &c.TotalSpent, &c.UnpaidAmount, &c.Birthday)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -187,6 +190,7 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
             <option value="telegram"` + selIf(c.NotificationPref == "telegram") + `>Telegram</option>
           </select>
         </label>` + smsWarning + `
+        <label>生日<input name="birthday" type="date" value="` + htmlEsc(c.Birthday) + `" placeholder="例：1990-05-20"></label>
         <label class="full">地址<input name="address" value="` + htmlEsc(c.Address) + `"></label>
         <label class="full">LINE User ID<input name="line_user_id" value="` + htmlEsc(c.LineUserID) + `" placeholder="例：U1234567890abcdef"></label>
         <label class="full">Telegram User ID<input name="telegram_user_id" value="` + htmlEsc(c.TelegramUserID) + `" placeholder="例：123456789"></label>
@@ -211,10 +215,11 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := db.DB.Exec(`UPDATE customers SET name=?, phone=?, line_user_id=?, telegram_user_id=?,
-		address=?, notification_preference=?, notes=?, tags=?, campaign_code=? WHERE id=?`,
+		address=?, notification_preference=?, notes=?, tags=?, campaign_code=?, birthday=? WHERE id=?`,
 		name, phone, nullStr(r.FormValue("line_user_id")), nullStr(r.FormValue("telegram_user_id")), nullStr(r.FormValue("address")),
 		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")),
-		normTags(r.FormValue("tags")), nullStr(r.FormValue("campaign_code")), id)
+		normTags(r.FormValue("tags")), nullStr(r.FormValue("campaign_code")),
+		nullStr(r.FormValue("birthday")), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			fail(w, "電話號碼已存在")

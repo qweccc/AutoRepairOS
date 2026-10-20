@@ -69,6 +69,7 @@ type Customer struct {
 	TelegramUserID   string    `json:"telegram_user_id,omitempty"`
 	Address          string    `json:"address,omitempty"`
 	NotificationPref string    `json:"notification_preference"`
+	Birthday         string    `json:"birthday,omitempty"`
 	Notes            string    `json:"notes,omitempty"`
 	Tags             string    `json:"tags,omitempty"`
 	CampaignCode     string    `json:"campaign_code,omitempty"`
@@ -306,17 +307,17 @@ type SOPItem struct {
 
 // SOPRecord 工單逐項 SOP 勾選紀錄（含完成者與完成時間追溯）。
 type SOPRecord struct {
- 	ID              int64  `json:"id"`
- 	WorkOrderID     int64  `json:"work_order_id"`
- 	SOPItemID       int64  `json:"sop_item_id"`
- 	TemplateID      int64  `json:"template_id"`
- 	Description     string `json:"description"`
- 	Required        bool   `json:"required"`
- 	Completed       bool   `json:"completed"`
- 	CompletedBy     int64  `json:"completed_by,omitempty"`
- 	CompletedByName string `json:"completed_by_name,omitempty"` // 非 DB 欄位：JOIN 取得
- 	CompletedAtText string `json:"completed_at_text,omitempty"`   // 非 DB 欄位：格式化後的的操作時間
-	SortOrder     int    `json:"sort_order"`
+	ID              int64  `json:"id"`
+	WorkOrderID     int64  `json:"work_order_id"`
+	SOPItemID       int64  `json:"sop_item_id"`
+	TemplateID      int64  `json:"template_id"`
+	Description     string `json:"description"`
+	Required        bool   `json:"required"`
+	Completed       bool   `json:"completed"`
+	CompletedBy     int64  `json:"completed_by,omitempty"`
+	CompletedByName string `json:"completed_by_name,omitempty"` // 非 DB 欄位：JOIN 取得
+	CompletedAtText string `json:"completed_at_text,omitempty"` // 非 DB 欄位：格式化後的的操作時間
+	SortOrder       int    `json:"sort_order"`
 }
 
 // PhotoAnnotation 照片標記（Canvas 劃線/圈選/箭頭/文字標註）。
@@ -337,16 +338,16 @@ type PhotoAnnotation struct {
 
 // WalkaroundMark 車身舊傷預檢標記（FR-VH-06）。
 type WalkaroundMark struct {
-	ID          int64  `json:"id"`
-	WorkOrderID int64  `json:"work_order_id"`
-	VehicleID   int64  `json:"vehicle_id"`
-	MarkType    string `json:"mark_type"`
+	ID          int64   `json:"id"`
+	WorkOrderID int64   `json:"work_order_id"`
+	VehicleID   int64   `json:"vehicle_id"`
+	MarkType    string  `json:"mark_type"`
 	X           float64 `json:"x"`
 	Y           float64 `json:"y"`
-	Note        string `json:"note,omitempty"`
-	PhotoID     int64  `json:"photo_id,omitempty"`
-	CreatedBy   int64  `json:"created_by,omitempty"`
-	CreatedAt   string `json:"created_at,omitempty"`
+	Note        string  `json:"note,omitempty"`
+	PhotoID     int64   `json:"photo_id,omitempty"`
+	CreatedBy   int64   `json:"created_by,omitempty"`
+	CreatedAt   string  `json:"created_at,omitempty"`
 }
 
 // EquipmentMaintenance 設備保養紀錄（SRS 5.11）。
@@ -367,12 +368,12 @@ type EquipmentMaintenance struct {
 
 // TechnicianPhrase 技師常用片語（FR-WO-07）。
 type TechnicianPhrase struct {
-	ID         int64  `json:"id"`
-	Phrase     string `json:"phrase"`
-	Category   string `json:"category,omitempty"`
-	SortOrder  int    `json:"sort_order"`
-	Active     int    `json:"active"`
-	CreatedAt  string `json:"created_at,omitempty"`
+	ID        int64  `json:"id"`
+	Phrase    string `json:"phrase"`
+	Category  string `json:"category,omitempty"`
+	SortOrder int    `json:"sort_order"`
+	Active    int    `json:"active"`
+	CreatedAt string `json:"created_at,omitempty"`
 }
 
 // ApprovalRequest 追加維修授權紀錄（FR-WO-06、FR-NOTI-05）。

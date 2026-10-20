@@ -26,7 +26,7 @@ func reminderTestDB(t *testing.T) *sql.DB {
 	for _, stmt := range []string{
 		`CREATE TABLE customers (
 			id INTEGER PRIMARY KEY, name TEXT, notification_preference TEXT,
-			line_user_id TEXT, telegram_user_id TEXT, deleted_at TEXT
+			line_user_id TEXT, telegram_user_id TEXT, birthday TEXT, deleted_at TEXT
 		)`,
 		`CREATE VIEW active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`,
 		`CREATE TABLE vehicles (
@@ -330,5 +330,91 @@ func TestInspectionScheduleReminderAndCompletedExclusion(t *testing.T) {
 	}
 	if kind != "inspection_due" || !strings.Contains(body, dueDate) {
 		t.Fatalf("kind=%q body=%q; want pending inspection reminder", kind, body)
+	}
+}
+
+func addBirthdayCustomer(t *testing.T, d *sql.DB, id int64, name, birthday, pref, lineID, telegramID string) {
+	t.Helper()
+	if _, err := d.Exec(`INSERT INTO customers
+		(id,name,birthday,notification_preference,line_user_id,telegram_user_id)
+		VALUES (?,?,?,?,?,?)`, id, name, birthday, pref, lineID, telegramID); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBirthdayReminderQueuesOnlyToday(t *testing.T) {
+	d := reminderTestDB(t)
+	now := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60))
+	today := now.Format("2006-01-02")
+	yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
+	tomorrow := now.AddDate(0, 0, 1).Format("2006-01-02")
+
+	// 今天生日、已綁 LINE → 應產生
+	addBirthdayCustomer(t, d, 1, "今天生日", today, "line", "LINE-1", "")
+	// 今天生日、偏好不通知 → 不應產生
+	addBirthdayCustomer(t, d, 2, "不通知", today, "none", "LINE-2", "")
+	// 今天生日但未綁定任何通道 → 不應產生
+	addBirthdayCustomer(t, d, 3, "未綁定", today, "line", "", "")
+	// 不是今天生日 → 不應產生
+	addBirthdayCustomer(t, d, 4, "昨天", yesterday, "line", "LINE-4", "")
+	addBirthdayCustomer(t, d, 5, "明天", tomorrow, "line", "LINE-5", "")
+	// 未設定生日 → 不應產生
+	addBirthdayCustomer(t, d, 6, "沒生日", "", "line", "LINE-6", "")
+
+	queued, err := ScanBirthdayRemindersNow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued != 1 {
+		t.Fatalf("queued %d birthday reminders; want 1", queued)
+	}
+	var channel, body, name string
+	if err := d.QueryRow(`SELECT n.channel, n.body, c.name FROM notifications n
+		JOIN customers c ON c.id = n.customer_id`).Scan(&channel, &body, &name); err != nil {
+		t.Fatal(err)
+	}
+	if channel != "line" || name != "今天生日" {
+		t.Fatalf("channel=%q name=%q; want LINE to 今天生日", channel, name)
+	}
+	if !strings.Contains(body, "生日快樂") {
+		t.Fatalf("body=%q; want birthday greeting", body)
+	}
+}
+
+func TestBirthdayReminderDeduplicatesAcrossRuns(t *testing.T) {
+	d := reminderTestDB(t)
+	today := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).Format("2006-01-02")
+	addBirthdayCustomer(t, d, 1, "壽星", today, "line", "LINE-1", "")
+
+	if queued, err := ScanBirthdayRemindersNow(); err != nil || queued != 1 {
+		t.Fatalf("first run queued=%d err=%v; want 1", queued, err)
+	}
+	// 模擬服務重啟後再跑一次：同一天同一客戶不得重複產生
+	if queued, err := ScanBirthdayRemindersNow(); err != nil || queued != 0 {
+		t.Fatalf("second run queued=%d err=%v; want 0 (dedup across restart)", queued, err)
+	}
+	if got := countQueuedReminders(t, d); got != 1 {
+		t.Fatalf("notifications=%d; want 1", got)
+	}
+}
+
+func TestBirthdayReminderRoutesByPreference(t *testing.T) {
+	d := reminderTestDB(t)
+	today := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).Format("2006-01-02")
+	addBirthdayCustomer(t, d, 1, "電客戶", today, "telegram", "", "TG-1")
+
+	queued, err := ScanBirthdayRemindersNow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued != 1 {
+		t.Fatalf("queued %d; want 1", queued)
+	}
+	var channel string
+	if err := d.QueryRow(`SELECT channel FROM notifications`).Scan(&channel); err != nil {
+		t.Fatal(err)
+	}
+	if channel != "telegram" {
+		t.Fatalf("channel=%q; want telegram", channel)
 	}
 }
