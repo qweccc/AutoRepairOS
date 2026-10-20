@@ -91,6 +91,17 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 		</div>
 
 		<div class="card">
+			<h2>舊傷預檢</h2>
+			<p style="color:#64748b;font-size:12.5px">選擇舊傷類型後，點擊車身示意圖記錄位置；既有標記可於下方刪除。</p>
+			@WalkaroundCanvas(wo.ID, nil)
+			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+				@WalkaroundMarkTypeSelect("scratch")
+				<label>備註<input id="walkaround-note" type="text" placeholder="選填"></label>
+			</div>
+			<div id="walkaround-status" role="status" style="margin-top:6px;color:#94a3b8"></div>
+		</div>
+
+		<div class="card">
 			<h2>合計</h2>
 			<table>
 				<tr><th>項目小計</th><td class="num" id="item-total">{ money(itemTotal) }</td></tr>
@@ -101,6 +112,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 			</table>
 			<p style="color:#64748b;font-size:12.5px;margin-top:10px">新增或刪除項目時自動重算工單總額。</p>
 		</div>
+		<script src="/static/photo-markup.js"></script>
 	}
 }
 
@@ -184,7 +196,16 @@ templ AddItemForm(woID int64) {
 			<div id="partResults" class="part-results"></div>
 			<input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
 		</label>
-		<label class="full">描述<input name="description" id="itemDesc" required></label>
+		<label class="full">描述
+			<input name="description" id="itemDesc" required>
+			<div style="margin-top:4px">
+				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">📝 常用片語</button>
+				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a">
+					<input type="text" id="phraseSearch" class="search-input" placeholder="搜尋片語..." style="width:100%;margin-bottom:8px">
+					<div id="phraseResults" style="max-height:150px;overflow-y:auto"></div>
+				</div>
+			</div>
+		</label>
 		<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
 		<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
 		<label>主技師<input name="primary_technician_id" type="number" min="0" value="0"></label>
@@ -192,6 +213,7 @@ templ AddItemForm(woID int64) {
 		<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
 	</form>
 	@PartSearchScript()
+	@PhrasePickerScript()
 }
 
 // StatusControls 狀態切換控制（HTMX 無刷新）。
@@ -352,6 +374,52 @@ templ PartSearchScript() {
 			});
 			document.addEventListener('click', function(e){
 				if (!results.contains(e.target) && e.target !== search) results.style.display = 'none';
+			});
+		})();
+	</script>
+}
+
+// PhrasePickerScript 技師片語選擇 JS（T2.7）。
+templ PhrasePickerScript() {
+	<script>
+		function togglePhrasePicker() {
+			var picker = document.getElementById('phrasePicker');
+			if (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+		}
+		(function(){
+			var search = document.getElementById('phraseSearch');
+			var results = document.getElementById('phraseResults');
+			var desc = document.getElementById('itemDesc');
+			var timer;
+			if (!search || !results) return;
+			search.addEventListener('input', function(){
+				clearTimeout(timer);
+				var q = search.value.trim();
+				if (q.length < 1) { results.innerHTML = ''; return; }
+				timer = setTimeout(function(){
+					fetch('/api/phrases/search?q=' + encodeURIComponent(q))
+						.then(function(r){ return r.json(); })
+						.then(function(list){
+							results.innerHTML = '';
+							if (!list || list.length === 0) {
+								results.innerHTML = '<div style="padding:8px;color:#64748b;font-size:12px">查無片語</div>';
+								return;
+							}
+							list.forEach(function(p){
+								var div = document.createElement('div');
+								div.style.cssText = 'padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:12.5px';
+								div.innerHTML = '<span style="color:#94a3b">[' + (p.category || '未分類') + ']</span> ' + p.phrase;
+								div.addEventListener('click', function(){
+									desc.value = p.phrase;
+									results.innerHTML = '';
+									search.value = '';
+								});
+								div.addEventListener('mouseenter', function(){ div.style.background = '#1e293b'; });
+								div.addEventListener('mouseleave', function(){ div.style.background = ''; });
+								results.appendChild(div);
+							});
+						});
+				}, 300);
 			});
 		})();
 	</script>

@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 const (
@@ -53,11 +55,19 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 		var size int64
 		if err := rows.Scan(&id, &woIDv, &itemID, &filename, &origName, &mime,
 			&size, &photoType, &note, &createdAt, &uploader); err != nil {
-			continue
+			log.Printf("讀取工單照片失敗: %v", err)
+			fail(w, "讀取照片失敗")
+			return
+		}
+		var marker strings.Builder
+		if err := pages.PhotoMarkerOverlay("/photos/"+filename, id).Render(r.Context(), &marker); err != nil {
+			log.Printf("產生照片標記介面失敗: %v", err)
+			fail(w, "產生照片標記介面失敗")
+			return
 		}
 		typeLabel := map[string]string{"damage": "車損", "repair": "維修", "part": "零件", "other": "其他"}[photoType]
-		b.WriteString(`<figure class="pcard">
-          <img src="/photos/` + htmlEsc(filename) + `" alt="` + htmlEsc(origName) + `" loading="lazy">
+		b.WriteString(`<figure class="pcard" data-work-order-id="` + strconv.FormatInt(woIDv, 10) + `">
+          ` + marker.String() + `
           <figcaption>
             <span class="pill p-progress">` + typeLabel + `</span>
             <div class="pname">` + htmlEsc(orDash(origName)) + `</div>
@@ -68,6 +78,11 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
           </figcaption>
         </figure>`)
 		n++
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("列舉工單照片失敗: %v", err)
+		fail(w, "讀取照片失敗")
+		return
 	}
 	b.WriteString(`</div>`)
 
@@ -98,7 +113,8 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
         <div class="full"><button class="btn btn-p" type="submit">上傳</button>
           <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) + `">返回工單</a></div>
       </form>
-    </div>`
+    </div>
+    <script src="/static/photo-markup.js"></script>`
 
 	renderPage(w, "工單照片", "/work-orders", user.Username, user.Role, body)
 }

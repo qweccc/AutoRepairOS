@@ -319,6 +319,36 @@ type SOPRecord struct {
 	SortOrder     int    `json:"sort_order"`
 }
 
+// PhotoAnnotation 照片標記（Canvas 劃線/圈選/箭頭/文字標註）。
+type PhotoAnnotation struct {
+	ID             int64   `json:"id"`
+	PhotoID        int64   `json:"photo_id"`
+	WorkOrderID    int64   `json:"work_order_id"`
+	AnnotationType string  `json:"annotation_type"`
+	X1             float64 `json:"x1"`
+	Y1             float64 `json:"y1"`
+	X2             float64 `json:"x2"`
+	Y2             float64 `json:"y2"`
+	Color          string  `json:"color"`
+	Note           string  `json:"note"`
+	CreatedBy      int64   `json:"created_by,omitempty"`
+	CreatedAt      string  `json:"created_at,omitempty"`
+}
+
+// WalkaroundMark 車身舊傷預檢標記（FR-VH-06）。
+type WalkaroundMark struct {
+	ID          int64  `json:"id"`
+	WorkOrderID int64  `json:"work_order_id"`
+	VehicleID   int64  `json:"vehicle_id"`
+	MarkType    string `json:"mark_type"`
+	X           float64 `json:"x"`
+	Y           float64 `json:"y"`
+	Note        string `json:"note,omitempty"`
+	PhotoID     int64  `json:"photo_id,omitempty"`
+	CreatedBy   int64  `json:"created_by,omitempty"`
+	CreatedAt   string `json:"created_at,omitempty"`
+}
+
 // EquipmentMaintenance 設備保養紀錄（SRS 5.11）。
 type EquipmentMaintenance struct {
 	ID                  int64     `json:"id"`
