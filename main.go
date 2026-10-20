@@ -220,7 +220,7 @@ func main() {
 	mux.HandleFunc("POST /api/annotations/{annotation_id}/delete", handler.AllStaff(handler.DeletePhotoAnnotation))
 	mux.HandleFunc("POST /work-orders/{id}/walkaround-marks", handler.AllStaff(handler.AddWalkaroundMark))
 	mux.HandleFunc("GET /work-orders/{id}/walkaround-marks", handler.AllStaff(handler.ListWalkaroundMarks))
-	mux.HandleFunc("POST /work-orders/walkaround-marks/{mark_id}/delete", handler.AllStaff(handler.DeleteWalkaroundMark))
+	mux.HandleFunc("POST /work-orders/{id}/walkaround-marks/{mark_id}/delete", handler.AllStaff(handler.DeleteWalkaroundMark))
 
 	// 舊系統補遷移：車輛投保紀錄 / 定檢排程 / 保養套餐 / 零用金
 	mux.HandleFunc("GET /insurances", handler.AllStaff(handler.ListVehicleInsurances))

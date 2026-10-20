@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS approval_requests (
     created_at      TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
     decided_at      TEXT,                           -- 決定時間
     decision_source TEXT    NOT NULL DEFAULT 'line',  -- LINE/other/web
-    notes           TEXT                            -- 備註
+    notes           TEXT,                           -- 備註
     deleted_at      TEXT
 );
 
