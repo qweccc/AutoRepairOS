@@ -254,6 +254,95 @@ func QueueNotification(kind, channel, subject, body string, customerID, workOrde
 	return err
 }
 
+// QueueWorkOrderCompletedNotification 寫入完工通知卡，並以工單 ID 冪等去重。
+// 未設定有效的客戶通道綁定時只保留 internal 紀錄，不送往任何預設收件人。
+func QueueWorkOrderCompletedNotification(woID, customerID int64) error {
+	_, err := queueWorkOrderCompletedNotification(woID, customerID)
+	return err
+}
+
+func queueWorkOrderCompletedNotification(woID, customerID int64) (bool, error) {
+	var customerName, plate, preference, lineUserID, telegramUserID string
+	var totalAmount float64
+	err := db.DB.QueryRow(`SELECT COALESCE(c.name,''), COALESCE(v.plate_number,''),
+		COALESCE(wo.total_amount,0), COALESCE(c.notification_preference,'none'),
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		FROM active_work_orders wo
+		JOIN active_customers c ON c.id = wo.customer_id
+		JOIN active_vehicles v ON v.id = wo.vehicle_id AND v.customer_id = wo.customer_id
+		WHERE wo.id = ? AND wo.customer_id = ? AND wo.status = 'completed'`, woID, customerID).
+		Scan(&customerName, &plate, &totalAmount, &preference, &lineUserID, &telegramUserID)
+	if err != nil {
+		return false, fmt.Errorf("讀取完工工單 #%d 通知資料失敗: %w", woID, err)
+	}
+
+	rows, err := db.DB.Query(`SELECT description, COALESCE(quantity,1)
+		FROM work_order_items WHERE work_order_id = ? ORDER BY id`, woID)
+	if err != nil {
+		return false, fmt.Errorf("讀取工單 #%d 項目摘要失敗: %w", woID, err)
+	}
+	type completedItem struct {
+		description string
+		quantity    int
+	}
+	var items []completedItem
+	for rows.Next() {
+		var item completedItem
+		if err := rows.Scan(&item.description, &item.quantity); err != nil {
+			rows.Close()
+			return false, fmt.Errorf("讀取工單 #%d 項目摘要失敗: %w", woID, err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return false, fmt.Errorf("列舉工單 #%d 項目摘要失敗: %w", woID, err)
+	}
+	if err := rows.Close(); err != nil {
+		return false, fmt.Errorf("關閉工單 #%d 項目摘要查詢失敗: %w", woID, err)
+	}
+
+	channel := "internal"
+	switch {
+	case preference == "line" && strings.TrimSpace(lineUserID) != "":
+		channel = "line"
+	case preference == "telegram" && strings.TrimSpace(telegramUserID) != "":
+		channel = "telegram"
+	}
+
+	var body strings.Builder
+	fmt.Fprintf(&body, "親愛的 %s 您好\n車牌：%s\n工單編號：#%d\n維修項目：",
+		customerName, plate, woID)
+	if len(items) == 0 {
+		body.WriteString("\n- 無明細")
+	} else {
+		for i, item := range items {
+			if i == 3 {
+				fmt.Fprintf(&body, "\n另有 %d 項", len(items)-3)
+				break
+			}
+			fmt.Fprintf(&body, "\n- %s x%d", item.description, item.quantity)
+		}
+	}
+	fmt.Fprintf(&body, "\n工單總金額：$%.0f\n車輛已完成維修，歡迎來廠取車並結帳", totalAmount)
+
+	subject := "完工通知 — 您的愛車已完成維修"
+	result, err := db.DB.Exec(`INSERT INTO notifications
+		(work_order_id, customer_id, channel, kind, subject, body, scheduled_at)
+		SELECT ?, ?, ?, 'work_order_completed', ?, ?, ?
+		WHERE NOT EXISTS (SELECT 1 FROM notifications
+			WHERE kind='work_order_completed' AND work_order_id=?)`,
+		woID, customerID, channel, subject, body.String(), dbTime(time.Now()), woID)
+	if err != nil {
+		return false, fmt.Errorf("寫入工單 #%d 完工通知失敗: %w", woID, err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("檢查工單 #%d 完工通知寫入結果失敗: %w", woID, err)
+	}
+	return affected == 1, nil
+}
+
 // PendingNotifications 列出待處理的佇列項目（供 UI 檢視）。
 func PendingNotifications(limit int) []Notification {
 	return queryNotifications(` WHERE status='pending' ORDER BY scheduled_at`, limit)
@@ -1353,7 +1442,7 @@ func scanInsuranceReminders() (int, error) {
 	return queued, nil
 }
 
-// scanWorkOrderReady 找出「已完成」但尚未「結帳」的工單，寫入完工通知佇列。
+// scanWorkOrderReady 補掃尚未建立完工通知的已完成工單。
 func scanWorkOrderReady() error {
 	_, err := scanWorkOrderReadyInternal()
 	return err
@@ -1365,64 +1454,53 @@ func ScanWorkOrderReadyNow() (int, error) {
 }
 
 func scanWorkOrderReadyInternal() (int, error) {
-	// 以台北當地時間為準，不能用 SQLite 的 now()（UTC，會差 8 小時）。
-	now := time.Now()
-	cutoff := now.Add(-1 * time.Hour)
-
-	// 篩選條件改在 SQL 內用 datetime() 解析後比較，不做字串比對。
-	//
-	// work_orders.created_at 的 DEFAULT 是 CURRENT_TIMESTAMP，實際寫出來是
-	// SQL datetime（"2026-10-05 06:55:07"）；而這裡若帶入 RFC3339
-	// cutoff，因為 空格(0x20) < 'T'(0x54)，每筆 SQL datetime 都會被判為
-	// 「小於」cutoff，條件恆不成立、掃描永遠找不到工單。
-	// datetime() 兩邊都解析成時間點再比，才不受字面格式影響。
-	rows, err := db.DB.Query(`SELECT wo.id, wo.customer_id, wo.total_amount,
-		COALESCE(c.name,''), COALESCE(c.phone,''), COALESCE(c.notification_preference,'line'),
-		wo.created_at
+	rows, err := db.DB.Query(`SELECT wo.id, wo.customer_id
 		FROM active_work_orders wo
 		JOIN active_customers c ON c.id = wo.customer_id
 		WHERE wo.status = 'completed'
-		  AND datetime(wo.created_at) > datetime(?)`, cutoff.UTC().Format(sqlTimeLayout))
+		  AND NOT EXISTS (
+			SELECT 1 FROM notifications n
+			WHERE n.kind='work_order_completed' AND n.work_order_id=wo.id
+		  )
+		ORDER BY wo.id`)
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	type candidate struct{ woID, customerID int64 }
+	var candidates []candidate
+	for rows.Next() {
+		var item candidate
+		if err := rows.Scan(&item.woID, &item.customerID); err != nil {
+			rows.Close()
+			return 0, fmt.Errorf("讀取待補掃完工工單失敗: %w", err)
+		}
+		candidates = append(candidates, item)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, fmt.Errorf("列舉待補掃完工工單失敗: %w", err)
+	}
+	if err := rows.Close(); err != nil {
+		return 0, fmt.Errorf("關閉待補掃工單查詢失敗: %w", err)
+	}
 
 	queued := 0
-	for rows.Next() {
-		var woID, custID int64
-		var amount float64
-		var custName, phone, pref string
-		var createdAt time.Time
-		if err := rows.Scan(&woID, &custID, &amount, &custName, &phone, &pref, &createdAt); err != nil {
+	var queueErrors []error
+	for _, item := range candidates {
+		added, err := queueWorkOrderCompletedNotification(item.woID, item.customerID)
+		if err != nil {
+			queueErrors = append(queueErrors, fmt.Errorf("補掃工單 #%d 通知失敗: %w", item.woID, err))
 			continue
 		}
-
-		// 避免重複排程：檢查是否已有未處理的同工單通知
-		dup := 0
-		db.DB.QueryRow(`SELECT COUNT(1) FROM notifications
-			WHERE kind='work_order_ready' AND status='pending' AND body LIKE ?`, "%工單 #"+strconv.FormatInt(woID, 10)+"").Scan(&dup)
-		if dup > 0 {
-			continue
+		if added {
+			queued++
 		}
-
-		channel := pref
-		if channel != "line" && channel != "sms" {
-			channel = "internal"
-		}
-
-		msg := fmt.Sprintf("親愛的 %s 您好，您的工單 #%d 已完成，歡迎來取車並結帳。", custName, woID)
-
-		if err := QueueNotification("work_order_ready", channel, "完工通知", msg, custID, woID, now); err != nil {
-			continue
-		}
-		queued++
 	}
 
 	if queued > 0 {
-		log.Printf("完工通知掃描：新增 %d 筆提醒", queued)
+		log.Printf("完工通知補掃：新增 %d 筆通知", queued)
 	}
-	return queued, nil
+	return queued, errors.Join(queueErrors...)
 }
 
 // --- 除錯用 ---

@@ -3,12 +3,14 @@ package handler
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
 	"autorepairos/internal/service"
@@ -647,10 +649,14 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 			fail(w, "結帳失敗："+err.Error())
 			return
 		}
+		if err := RecordPassbookForWorkOrder(id); err != nil {
+			log.Printf("工單 #%d 結帳成功，但建立 Passbook 失敗: %v", id, err)
+		}
 		redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
 		return
 	}
 
+	previousStatus := countStatus(id)
 	// 一般狀態轉換仍以條件更新避免覆寫已結帳工單。
 	tx, err := db.DB.Begin()
 	if err != nil {
@@ -678,6 +684,15 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit(); err != nil {
 		fail(w, "提交失敗")
 		return
+	}
+
+	if status == "completed" && previousStatus != "completed" {
+		var customerID int64
+		if err := db.DB.QueryRow("SELECT customer_id FROM active_work_orders WHERE id = ?", id).Scan(&customerID); err != nil {
+			log.Printf("工單 #%d 已完工，但讀取通知客戶失敗: %v", id, err)
+		} else if err := cron.QueueWorkOrderCompletedNotification(id, customerID); err != nil {
+			log.Printf("工單 #%d 已完工，但排入完工通知失敗: %v", id, err)
+		}
 	}
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")

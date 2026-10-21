@@ -2,7 +2,9 @@ package handler
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -174,10 +176,10 @@ func normalizePhone(s string) string {
 // 客戶回報手機號碼一律得到「查無此號碼」。
 //
 // 正規化規則（必須與 normalizePhone 一致）：
-//   1. 只留數字，去掉 '-'、' '、'#' 等
-//   2. 移除結尾的「#N」續號 —— 續號是舊系統用來區分同門號的第二人，
-//      語意上仍是同一支手機
-//   3. 10 碼且 09 開頭者直接比對；否則不視為手機
+//  1. 只留數字，去掉 '-'、' '、'#' 等
+//  2. 移除結尾的「#N」續號 —— 續號是舊系統用來區分同門號的第二人，
+//     語意上仍是同一支手機
+//  3. 10 碼且 09 開頭者直接比對；否則不視為手機
 //
 // 回傳的片段不含參數佔位符，呼叫端自行 append phone。
 func phoneMatchSQL(col string) string {
@@ -346,6 +348,9 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 	q := strings.TrimSpace(ev.Text)
 
 	switch {
+	case q == "履歷" || q == "維修紀錄" || q == "保養紀錄":
+		return customerPassbookSummary(ev.UserID)
+
 	case q == "進度" || q == "查詢" || q == "工單":
 		var plate, status string
 		err := db.DB.QueryRow(`SELECT v.plate_number, wo.status
@@ -385,7 +390,86 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 		return fmt.Sprintf("工單 #%d（%s）狀態：%s", woID, plate, label)
 
 	default:
-		return "您好，請輸入「進度」查詢車輛狀態，或「工單 編號」查指定工單。"
+		return "您好，請輸入「進度」查詢車輛狀態、「工單 編號」查指定工單，或「履歷」查詢維修紀錄。"
+	}
+}
+
+func customerPassbookSummary(lineUserID string) string {
+	var customerID int64
+	if err := db.DB.QueryRow(`SELECT id FROM active_customers WHERE line_user_id = ?`, lineUserID).
+		Scan(&customerID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "查不到您的客戶綁定資料，請確認手機號碼是否已登錄。"
+		}
+		log_line("查詢維修履歷綁定失敗: %v", err)
+		return "目前無法查詢維修履歷，請稍後再試。"
+	}
+
+	rows, err := db.DB.Query(`SELECT COALESCE(v.plate_number,''), COALESCE(date(pb.created_at),''),
+		COALESCE(pb.service_type,''), COALESCE(pb.description,''),
+		COALESCE(pb.total_amount,0), COALESCE(pb.status,'')
+		FROM passbook pb
+		JOIN active_customers c ON c.id = pb.customer_id
+		JOIN active_vehicles v ON v.id = pb.vehicle_id AND v.customer_id = c.id
+		JOIN active_work_orders wo ON wo.id = pb.work_order_id AND wo.vehicle_id = v.id
+		WHERE c.id = ? AND c.line_user_id = ?
+		ORDER BY pb.created_at DESC, pb.id DESC`, customerID, lineUserID)
+	if err != nil {
+		log_line("查詢客戶 #%d 維修履歷失敗: %v", customerID, err)
+		return "目前無法查詢維修履歷，請稍後再試。"
+	}
+	defer rows.Close()
+
+	var summary strings.Builder
+	summary.WriteString("您的維修履歷：")
+	count := 0
+	for rows.Next() {
+		var plate, date, serviceType, description, status string
+		var amount float64
+		if err := rows.Scan(&plate, &date, &serviceType, &description, &amount, &status); err != nil {
+			log_line("讀取客戶 #%d 維修履歷失敗: %v", customerID, err)
+			return "目前無法查詢維修履歷，請稍後再試。"
+		}
+		count++
+		fmt.Fprintf(&summary, "\n\n%s｜%s｜%s\n項目：%s\n總金額：$%.0f｜狀態：%s",
+			plate, date, passbookServiceTypeLabel(serviceType), description,
+			amount, passbookStatusLabel(status))
+	}
+	if err := rows.Err(); err != nil {
+		log_line("列舉客戶 #%d 維修履歷失敗: %v", customerID, err)
+		return "目前無法查詢維修履歷，請稍後再試。"
+	}
+	if count == 0 {
+		return "目前沒有維修履歷紀錄"
+	}
+	return summary.String()
+}
+
+func passbookServiceTypeLabel(serviceType string) string {
+	switch serviceType {
+	case "inspection":
+		return "檢查"
+	case "maintenance":
+		return "保養"
+	case "parts":
+		return "零件"
+	default:
+		return "維修"
+	}
+}
+
+func passbookStatusLabel(status string) string {
+	switch status {
+	case "pending":
+		return "待付款"
+	case "approved":
+		return "已核准"
+	case "paid":
+		return "已付款"
+	case "rejected":
+		return "已拒絕"
+	default:
+		return status
 	}
 }
 
