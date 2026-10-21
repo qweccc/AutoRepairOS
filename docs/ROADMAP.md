@@ -330,16 +330,31 @@
 - 驗證：`go build` exit 0、`go test ./... -count=1` 全綠。新增兩則測試：`TestBothLayoutsLoadOfflineJS`（兩種版面都必須載入，防止再只補一半）、`TestOfflineJSServedAtRootPath`（`NETWORK_FIRST` 必須含根路徑版本）。
 - **端到端實測（8099，templ 頁 `/work-orders/1/photos`）**：`window.AutoRepairOffline` = `object`、`PhotoQueue` 存在（修前為 `undefined`）；以 CDP 斷網後對真實端點 `POST /work-orders/1/photos` 入列 → 瀏覽器 IndexedDB 佇列長度 1；恢復連線後佇列自動清空為 0。**獨立於頁面的證據**：`work_order_photos` 出現 `original_name='offline-test.png'`、`file_size=16`（與送入的 blob 相符）、`created_at` 為當下時間，磁碟上檔案 16 bytes 且 mtime 相符；伺服器端 `photo_upload_queue` 該筆為 `status='done'`、`photo_id=1`（伺服器會改名為 `wo1_q1.png`，原名保留在 `original_name`）。
 
-#### [ ] T4.4 追加維修授權接成完整流程（FR-WO-06、FR-NOTI-05）
+#### [x] T4.4 追加維修授權接成完整流程（FR-WO-06、FR-NOTI-05）
 - `main.go` 有客戶端的開啟／同意／拒絕三個路由，但**沒有任何地方建立授權請求**——`CreateApprovalRequest` 全 repo 只出現在一行註解裡（`line_webhook.go:333`），`approvals.go` 的「加入工單項目」仍是 TODO。手冊描述的「產生連結 → 客戶確認 → 工單加入追加項目」從 UI 走不完。
 - 驗收：`item_summary` 由自由文字改為結構化 JSON（`approvalItem`），並以單一 `parseApprovalItems` 集中驗證；客戶同意時在**同一交易**內寫入 `work_order_items`（失敗整筆回滾，避免「已核准但工單沒項目」的錢務不一致）；新增 `POST /work-orders/{id}/approval-request`（`CounterUp`）與工單詳情頁的「追加維修授權」區塊；已結帳工單不可建立授權。
 - 測試：完整流程、重複同意冪等、拒絕不加項目、四種格式錯誤、已結帳被擋。
 - 依賴：T4.1（工單詳情頁需傳 `user` 判斷權限）。
+- 實作：`approvalItem` + `parseApprovalItems`（集中驗證：品名非空、數量>0、單價≥0、類別限 labor/part/subcontract）；補完 TODO 為交易內插入；新增 `CreateApprovalFromWorkOrder` handler、`web/pages/approval_request.templ` 的 `ApprovalRequestBlock`、`main.go` 路由；建立後以 `cron.QueueNotification` 推播連結（走通知佇列，外送失敗會重試）。技師看得到區塊但沒有表單。
+- **交易內必須呼叫 `recalcWorkOrderTotal`**：少了這步，項目進得了明細卻不算進 `total_amount`＝帳務漏收。`AddWorkOrderItem` 也有同樣的呼叫，兩條路徑口徑必須一致（已用紅燈驗證：停用後測試 FAIL 並指出「實際 0（漏收）」）。
+- **行為變更（刻意）**：自由文字的 `item_summary` 在同意時 fail-closed 被拒絕，而非默默核准——「已核准但工單沒有項目」是錢務不一致。既有測試的 `'測試項目'` 因此改為合法 JSON，並新增 `TestApproveRejectsLegacyFreeTextSummary` 明確記錄此決定。
+- **同時修掉一個獨立的 CSRF 破口**（見下）——兩個破口都要補，流程才走得完。
+- 驗證：`templ generate`、`go build` exit 0、`go test ./... -count=1` 全綠。新增 8 則測試（完整流程含總額重算、重複同意冪等、拒絕不加項目、舊格式 fail-closed、11 種非法項目、已結帳被擋、未綁 LINE 被擋、5 種表單驗證）。
+- **實機端到端（8099，真實 HTTP）**：櫃檯建立 → DB 出現 pending + JSON；`notifications` 出現 `approval_request`/`line`；車主**無 session** 開啟核准頁 200；以頁面原樣表單送出同意 → 200；授權 `approved`；工單項目 `('part','煞車油管老化更換',2,500,1000)`；**總額重算為 1000.0**、`approval_status=approved`。技師：看得到區塊與說明、無表單、直接 POST 被擋 403。拒絕路徑：`rejected`、項目 0 筆、總額不變。
 
-#### [ ] T4.5 移除新增客戶表單的 LINE User ID 欄位
+#### [x] T4.4b 車主端授權端點免 CSRF（T4.4 執行中發現的獨立破口）
+- **症狀**：車主點「同意」一律 **403**。`POST /approval/approve/{token}`、`/approval/reject/{token}` 是公開端點（車主在 LINE 點連結，沒有登入），核准頁也不發 cookie（實測 `Set-Cookie` 數量 0）。而 CSRF 檢查綁 session——沒有 session 就永遠沒有可比對的 token，`csrfToken == ""` 必定成立。不是偶發，是必然。
+- 影響：整個客戶端授權流程完全不能用。與「`CreateApprovalRequest` 沒有呼叫點」是**兩個獨立的破口**，兩個都補完流程才走得完。
+- 實作：抽出 `csrfExempt(path)`，把原本硬寫在條件裡的 `/login`、`/webhook/line` 收進去，並補上 `/approval/approve/`、`/approval/reject/` 前綴。判斷標準寫進註解：呼叫者「根本沒有 session」的端點——CSRF 要防的是「已登入使用者的瀏覽器被騙去執行操作」，沒有 session 就沒有可被冒用的身分；這些端點的安全性由別的機制承擔（`/login` 在建立 session 前、`/webhook/line` 靠簽章、授權端點靠不可猜測的 32-byte 一次性 token 且狀態轉移冪等）。
+- 驗證：新增 `TestCSRFExemptions` 涵蓋兩側——免責路徑無 cookie 無 token 的 POST 必須通過（修復前 403），且**免責不可外溢**：`/work-orders/1/items`、`/customers/1/line-bind`、`/approval/123`、`/approval/approve`（無 token 的裸前綴）、`/approvalX/approve/abc`、`/loginx` 沒有 token 仍必須 403。實機：車主以頁面原樣表單送出 → 200（修復前 403）。
+
+#### [x] T4.5 移除新增客戶表單的 LINE User ID 欄位
 - `web/pages/customer.templ` 的新增表單有 `line_user_id` 輸入框，但 `CreateCustomer` 明確不讀它（只讀 `telegram_user_id`），填了會被靜默丟棄——使用者以為綁好了，通知卻永遠送不到。編輯頁已改為專用綁定流程，新增頁是漏掉的那一半。
 - 驗收：欄位移除並加說明文字指向編輯頁的綁定區塊；`Telegram User ID` **保留**（客戶用 `@userinfobot` 查得到）；新增回歸測試斷言新增表單不含 `line_user_id`。
 - 依賴：無。
+- 實作：移除欄位並補上說明（解釋為什麼這裡不放 LINE、以及 LINE 綁定要走編輯頁）。新增 `TestNewCustomerFormHasNoLineUserIDField`——**只掃 `action="/customers"` 到 `</form>` 之間的區塊**，不掃全檔：客戶列表的 `<th>LINE ID</th>` 是顯示欄位，掃全檔會誤判。
+- 踩到的坑：說明文字原本寫 `@userinfobot`，templ 把 `@` 當成元件呼叫的起點，產生 `undefined: userinfobot` 的編譯錯誤。
+- 驗證：`templ generate`、`go build` exit 0、`go test ./... -count=1` 全綠；實機 HTTP（8099）確認表單內 `name="line_user_id"` 為 False、`name="telegram_user_id"` 為 True、說明文字出現。
 
 #### [ ] T4.6 預約與工單的關聯（預約「已進廠」直接開單）
 - `appointment_id` 在任何 migration 與 Go 程式碼裡都不存在，預約列表只有編輯／刪除。櫃檯已知車到了、預約資料也填好了，卻要重打一次車牌。
@@ -377,9 +392,10 @@
 4. T2.6 完成後才可把 SOP 檢查納入完工限制；T2.8 → T2.22（照片儲存／上傳整合）。
 5. T2.12 依賴現有採購單及外包資料；T2.13 → T2.14、T2.17、T2.18，成本口徑需共用。
 6. T3.1 應在影響查詢、索引或背景工作量的功能完成後執行，並記錄基準環境。
-7. 階段 4：T4.1 → T4.2、T4.4；T4.4 → T4.7；T4.3 → T4.8；T4.2／T4.4／T4.8 → T4.10。T4.5、T4.6、T4.9 無依賴，可與任何任務平行。
+7. 階段 4：T4.1 → T4.2、T4.4；T4.4 → T4.4b、T4.7；T4.3 → T4.8；T4.2／T4.4／T4.8 → T4.10。T4.5、T4.6、T4.9 無依賴，可與任何任務平行。
    - 平行限制：T4.1 與 T4.4 都動 `web/pages/workorder.templ`，**不可同時進行**。
    - `templ generate` **不可與其他 agent 並行執行**（會產出損毀的 `*_templ.go`），一律由單一方在合併後統一跑。
+   - T4.4 與 T4.4b 是同一條流程上的**兩個獨立破口**（一個沒有建立入口、一個被 CSRF 擋死），只補一個流程仍然走不完。
 
 ### Migration 編號
 
