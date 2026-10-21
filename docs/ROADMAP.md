@@ -406,6 +406,29 @@
 - **手寫清單漏了一項，靠比對才發現**：25 個選單項目扣掉 6 項受限，技師應看得到 **19** 項，我手寫成 18 項（漏了「排程」）。這種漏字用眼睛看不出來，因此新增 `TestManualRoleVisibilityMatchesNav`——把手冊的清單與 `nav.go` 的實際設定放在一起比對（並檢查「看不到這 N 項」的數字）。**紅燈驗證**：從手冊移除「排程」→ FAIL 並並列兩份清單（手冊 18 / nav 19）。
 - 驗證：`go build` exit 0、`go test ./... -count=1` 全綠（SETUP_FAILED=0）。
 
+### 階段 4 驗收（殺測試服務 → 流程重檢 → code review → release）
+
+使用者要求「殺測試服務 → 重新檢視流程 + code review → 沒問題再 release」。以下為該輪結果，發現 3 個真問題（2 個是我自己這輪引入的）。
+
+#### [x] T4.R1 殺測試服務並清理
+- 8095–8099 五個 smoke 服務（都是 `hermes\cache\scratch\smoke80xx\ar.exe`）逐一以 PID 核對身分後 `taskkill /F /PID`，確認埠全數釋放；scratch 目錄一併刪除（釋放約 131MB）。8090 正式服務未動。
+
+#### [x] T4.R2 流程重檢（實機，全新資料庫）
+- 起乾淨實例（8094）以真實 HTTP 走完 10 段流程、35 項斷言全通過：登入 → 建立未綁 LINE 的客戶與車輛 → 建立預約 → 從預約開單（橫幅、`appointment_id` 隱藏欄位、工單記錄來源、預約轉 `arrived`、列表顯示已開單）→ 建立追加授權 → 未決授權擋完工與結帳（HTTP 400）→ 電話同意 → 項目入帳與總額重算 → 取得同意後可完工 → 重複車牌回報 `duplicate` 且不重複建車。
+- 三角色（owner／counter／technician）各登入一次，48 項斷言全通過：頁首顯示的**使用者名稱與角色**都正確、技師看不到 6 項受限選單、直接開受限頁面被擋、AllStaff 頁面三種角色都看得到。
+- 過程中兩次「失敗」都是**我的斷言寫錯**，不是產品問題，但都值得記下來：① CSRF token 不能從總覽頁抓（該頁沒有 `<form>`，middleware 的 `withCSRFFormFields` 沒有注入點）——可靠來源是 layout 的 `<body hx-headers>`；② 完工關卡用 `fail()` → `http.Error(400)`，訊息在 body 而非重導的 `err=` 參數，只看 Location 會誤判成「沒擋」。
+
+#### [x] T4.R3 code review（逐檔）
+- **沒綁 LINE 的客戶無法建立授權 → 電話同意形同不存在**（真缺口，T2.11 遺留）：`CreateApprovalRequest` 硬性要求 `line_user_id` 非空。後果是沒綁 LINE 的客戶（多數臨時客）根本不會有授權紀錄，「客戶電話同意」也無處可按——而電話同意正是為他們設計的。修法：LINE 綁定從「硬性要求」改成「送達能力判斷」（新增 `customerHasLINE`，未綁則不推播但**仍建立授權**並把連結給櫃檯）；通知進佇列失敗改用成功樣式訊息（原本用錯誤樣式，會誘使櫃檯重複建立 → 兩筆未決授權同時擋完工）。新增端到端測試把整條路徑走完，並有紅燈驗證。
+- **`//` 註解被寫在 HTML 字串裡 → 會直接顯示在開單畫面上**（本輪 T4.6 引入）：Go 的 `//` 只在程式碼裡有意義，寫在字串裡就是普通文字。編譯器不會講話、HTML 也還是有效的，只有實際打開頁面才看得到。修法：說明移到字串外的 Go 註解，並新增 `TestNoGoCommentsInsideHTMLStrings` 掃描守門（需排除 `<script>` 區塊——那裡的 `//` 是合法 JS 註解；第一版沒排除，誤報 6 處）。
+- **CSRF 免責用路徑前綴比對的繞過風險**（安全宣稱，實測而非推理）：`csrfExempt` 用 `strings.HasPrefix` 判斷，且中介層看的是**已解碼**的 `r.URL.Path`（`%2e%2e` 會變成 `..`）。新增 `csrf_bypass_test.go` 實測 5 種路徑穿越都無法執行到敏感端點，並補完攻擊鏈第二步——ServeMux 對非 GET 用 **307（保留 method）**，瀏覽器會再送一次到清理後的路徑，該次請求確實被 CSRF 擋下（403）。另驗證免責不外溢到 `/approval/approve`（無 token 段）、`/approval/approved/`、櫃檯端的 `approve-phone` 與 `cancel`。
+- **migration 045 的 down 用 `DROP COLUMN`**：該欄位有 `REFERENCES`，SQLite 對此有限制。實測（Python sqlite 3.53 與實際 driver modernc.org/sqlite 內建的 **3.46.0**）都可執行，up→down 來回後欄位與索引都正確移除，回滾不是空話。
+- **`nav.go` 的註解寫「實際只有 5 項受限」，實際是 6 項**：已修正並補上 `/reports` 是特例（`main.go` 包 `AllStaff` 但 `ReportsHome` 內部 `canSeeMoney` 讓技師 403）與「手冊有同一份清單、由測試交叉比對」的提示。
+- 其餘審查項目（交易內誤用 `db.DB`、`applyApprovalItems` 的原子性與總額重算、冪等條件更新、越權防護、`CanSee` fail-closed、離線草稿清除的涵蓋範圍、`sw.js` 的 NETWORK_FIRST）皆無問題。
+
+#### [x] T4.R4 release
+- 見下方「Release 紀錄」。
+
 ## 4. 依賴與建議執行順序
 
 此順序反映真正的技術依賴，不代表同階段所有任務必須串行：
