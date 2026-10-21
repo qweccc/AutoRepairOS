@@ -261,8 +261,7 @@ func beginBinding(client *line.Client, ev line.FollowEvent) {
 		"LINE user ID: "+ev.UserID+" — 等待客戶報手機號碼，或請櫃檯手動綁定")
 
 	if ev.ReplyToken != "" {
-		msg := "您好，歡迎加入汽車修。\n\n請直接傳送您的手機號碼 we'll 為您自動連結車輛紀錄。\n完成後即可查詢工單進度。"
-		msg = "您好，歡迎加入汽車修。\n\n請傳送您的手機號碼，我們會為您連結車輛紀錄。\n連結後即可查詢工單進度。"
+		msg := "您好，歡迎加入汽車修。\n\n請傳送您的手機號碼，我們會為您連結車輛紀錄。\n連結後即可查詢工單進度。"
 		if err := client.ReplyMessage(ev.ReplyToken, msg); err != nil {
 			log_line("follow 回訊失敗（可能是官方帳號的歡迎訊息已消耗 token）: %v", err)
 		}
