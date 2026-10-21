@@ -266,15 +266,26 @@ func TestCreateApprovalFromWorkOrderBlocksPaidWorkOrder(t *testing.T) {
 	}
 }
 
-// TestCreateApprovalFromWorkOrderRequiresLineBinding 未綁定 LINE 的客戶無法收到連結。
+// TestCreateApprovalFromWorkOrderWithoutLineStillCreates 未綁定 LINE 的客戶
+// 仍然建立授權，並明確告訴櫃檯「通知沒送出、請走電話同意」。
 //
-// 這裡要的是「明確的錯誤訊息」而不是靜默失敗：櫃檯必須知道要改用電話聯絡，
-// 而不是以為連結已經送出去了。
-func TestCreateApprovalFromWorkOrderRequiresLineBinding(t *testing.T) {
+// 這是刻意的行為變更。原本的做法是「送不到就不要建立」，理由看似合理
+// （免得櫃檯以為通知已送出）——但代價是這些客戶根本沒有授權紀錄，於是
+// 「客戶電話同意」也無處可按，電話同意形同不存在。而沒綁 LINE 的客戶
+// （多數是臨時進廠、從沒加過 LINE 的客人）正是電話同意要服務的對象。
+// 現在改成：建立授權 + 訊息說清楚 + 把連結給櫃檯。
+func TestCreateApprovalFromWorkOrderWithoutLineStillCreates(t *testing.T) {
 	oldDB := db.DB
 	defer func() { db.DB = oldDB }()
 	d := setupApprovalTestDB(t)
 	db.DB = d
+
+	// 建立 notifications 表，才能斷言「沒有推播」
+	if _, err := d.Exec(`CREATE TABLE notifications (
+		id INTEGER PRIMARY KEY, work_order_id INTEGER, customer_id INTEGER,
+		channel TEXT, kind TEXT, subject TEXT, body TEXT, scheduled_at TEXT)`); err != nil {
+		t.Fatal(err)
+	}
 
 	// 工單 101 屬於客戶 2（未綁定 LINE）
 	form := url.Values{
@@ -291,19 +302,43 @@ func TestCreateApprovalFromWorkOrderRequiresLineBinding(t *testing.T) {
 	CreateApprovalFromWorkOrder(w, r)
 
 	if w.Code != http.StatusFound {
-		t.Fatalf("未綁定 LINE 應被導回（302），得到 %d", w.Code)
+		t.Fatalf("應導回（302），得到 %d", w.Code)
 	}
 	loc := w.Header().Get("Location")
-	if !strings.Contains(loc, "err=") {
-		t.Errorf("未綁定 LINE 時應帶 err= 參數，實際 Location=%q", loc)
+
+	// 不該用錯誤樣式回報：授權已經成功建立，顯示成錯誤會誘使櫃檯重複建立，
+	// 結果變成兩筆未決授權同時擋住完工。
+	if strings.Contains(loc, "err=") {
+		t.Errorf("授權已成功建立，不該用錯誤樣式回報（會誘使櫃檯重複建立），Location=%q", loc)
 	}
 
+	// 訊息必須說清楚「沒送出」與下一步（電話同意）
+	decoded, err := url.QueryUnescape(loc)
+	if err != nil {
+		t.Fatalf("Location 解碼失敗: %v", err)
+	}
+	for _, want := range []string{"未綁定 LINE", "客戶電話同意"} {
+		if !strings.Contains(decoded, want) {
+			t.Errorf("訊息應包含 %q，實際 %q", want, decoded)
+		}
+	}
+
+	// 授權必須建立——否則電話同意無處可按
 	var n int
 	if err := d.QueryRow(`SELECT COUNT(*) FROM approval_requests WHERE work_order_id = 101`).Scan(&n); err != nil {
 		t.Fatal(err)
 	}
-	if n != 0 {
-		t.Errorf("無法送達的授權不該建立（會讓櫃檯以為通知已送出），實際 %d 筆", n)
+	if n != 1 {
+		t.Errorf("未綁 LINE 時仍應建立 1 筆授權（電話同意的依據），實際 %d 筆", n)
+	}
+
+	// 但不該推播：送不出去，進佇列只會留下一筆永遠失敗的通知
+	var notif int
+	if err := d.QueryRow(`SELECT COUNT(*) FROM notifications WHERE work_order_id = 101`).Scan(&notif); err != nil {
+		t.Fatal(err)
+	}
+	if notif != 0 {
+		t.Errorf("未綁 LINE 不該推播通知，實際 %d 筆", notif)
 	}
 }
 

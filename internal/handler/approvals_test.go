@@ -74,13 +74,27 @@ func TestCreateApprovalRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("未綁定 LINE 的客戶無法產生授權", func(t *testing.T) {
-		_, err := CreateApprovalRequest(101, 2, "更換機油")
-		if err == nil {
-			t.Error("未綁定 LINE 的客戶應該失敗")
+	t.Run("未綁定 LINE 的客戶仍可建立授權（走電話同意）", func(t *testing.T) {
+		// 這是刻意的行為變更（原本沒綁 LINE 就失敗）。
+		// 原因：沒綁 LINE 就失敗會讓「客戶電話同意」完全無路可走，而電話同意
+		// 正是為沒綁 LINE 的客戶設計的——推不了 LINE，就只能打電話。
+		// 授權紀錄（token + 待決狀態）本身才是重點，LINE 只是送達管道之一；
+		// 送不送得出去由呼叫端用 customerHasLINE 判斷。
+		req, err := CreateApprovalRequest(101, 2, "更換機油")
+		if err != nil {
+			t.Fatalf("未綁定 LINE 的客戶應該仍能建立授權（否則電話同意無路可走），得到: %v", err)
 		}
-		if !strings.Contains(err.Error(), "尚未綁定 LINE") {
-			t.Errorf("錯誤訊息應包含「尚未綁定 LINE」，得到: %v", err)
+		if req.Status != "pending" {
+			t.Errorf("新建立的授權狀態應為 pending，得到 %q", req.Status)
+		}
+		if req.Token == "" {
+			t.Error("應產生 token（電話同意與事後查核都靠它識別）")
+		}
+		if customerHasLINE(2) {
+			t.Error("客戶 2 未綁定 LINE，customerHasLINE 應回 false")
+		}
+		if !customerHasLINE(1) {
+			t.Error("客戶 1 已綁定 LINE，customerHasLINE 應回 true")
 		}
 	})
 

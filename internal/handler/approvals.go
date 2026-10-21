@@ -115,15 +115,32 @@ func CreateApprovalFromWorkOrder(w http.ResponseWriter, r *http.Request) {
 	// 推播給客戶。走通知佇列（與其他通知一致）而不是直接外送：
 	// 外送失敗時佇列會重試，而且車廠端不需要知道 LINE 當下是否可達。
 	approveURL := "/approval/" + req.Token
+
+	// 客戶沒綁 LINE：推播根本送不出去。這正是「客戶電話同意」存在的理由——
+	// 授權仍然建立（不可猜測的 token 與待決狀態才是紀錄的重點），
+	// 並把連結直接給櫃檯，讓他想辦法送到客戶手上。
+	if !customerHasLINE(customerID) {
+		log.Printf("追加維修授權已建立（客戶未綁 LINE，未推播）: id=%d work_order=%d token=%s",
+			req.ID, woID, req.Token)
+		redirectMsg(w, r, woPath, fmt.Sprintf(
+			"已建立追加維修授權。客戶未綁定 LINE，通知沒有送出——"+
+				"請以電話取得同意後按「客戶電話同意」，或把這個連結給客戶：%s", approveURL))
+		return
+	}
+
 	subject := "追加維修項目授權"
 	body := fmt.Sprintf("您的車輛需要追加維修項目：\n%s × %d，單價 %s\n\n"+
 		"請點選以下連結確認是否同意（24 小時內有效）：\n%s\n\n"+
 		"若不同意，車廠將不進行此項維修。",
 		item.Description, item.Quantity, line.Money(item.UnitPrice), approveURL)
 	if err := cron.QueueNotification("approval_request", "line", subject, body, customerID, woID, time.Now()); err != nil {
-		// 授權已建立，只是通知沒進佇列——不能讓櫃檯以為整件事失敗而重複建立
+		// 授權**已經建立**了，只是通知沒進佇列。
+		// 這裡刻意用成功樣式的訊息而不是錯誤：顯示成錯誤會讓櫃檯以為整件事失敗
+		// 而重新建立一次，結果變成兩筆未決授權同時擋住完工。
 		log.Printf("追加維修授權 %d 已建立，但通知進佇列失敗: %v", req.ID, err)
-		redirectErrMsg(w, r, woPath, "授權已建立，但通知客戶失敗（請改以電話聯絡客戶並手動提供連結）")
+		redirectMsg(w, r, woPath, fmt.Sprintf(
+			"授權已建立，但通知客戶失敗——請以電話取得同意後按「客戶電話同意」，"+
+				"或把這個連結給客戶：%s", approveURL))
 		return
 	}
 
@@ -140,29 +157,46 @@ func generateSecureToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
+// customerHasLINE 回報客戶是否已綁定 LINE——決定追加維修的授權連結
+// 送不送得出去（送不出去時只能走電話同意）。
+func customerHasLINE(customerID int64) bool {
+	var lineUserID string
+	if err := db.DB.QueryRow(
+		`SELECT COALESCE(line_user_id,'') FROM active_customers WHERE id = ?`, customerID,
+	).Scan(&lineUserID); err != nil {
+		return false
+	}
+	return strings.TrimSpace(lineUserID) != ""
+}
+
 // CreateApprovalRequest 為工單建立授權請求
 //
 // 必須驗證：
-// - 客戶已綁定 LINE（customers.line_user_id 不為空）
+// - 客戶存在
 // - 工單存在且屬於該客戶
+//
+// **不要求**客戶綁定 LINE：沒綁 LINE 時仍建立授權（走電話同意），
+// 由呼叫端決定要不要推播。見本函式內部的說明。
 //
 // 授權連結格式：/approval/<token>
 // 預設有效期：24 小時
 func CreateApprovalRequest(workOrderID, customerID int64, itemSummary string) (*model.ApprovalRequest, error) {
-	// 1. 驗證客戶是否綁定 LINE
-	var lineUserID string
+	// 1. 客戶必須存在。
+	//
+	// 注意：這裡**不再**要求客戶綁定 LINE。原本沒綁 LINE 就直接失敗，但那會讓
+	// 「客戶電話同意」完全無路可走——而電話同意正是為沒綁 LINE 的客戶（多數是
+	// 臨時進廠、從沒加過 LINE 的客人）設計的：既然推不了 LINE，就只能打電話。
+	// 授權紀錄本身（不可猜測的 token + 待決狀態）才是重點，LINE 只是送達管道之一。
+	// 送不送得出去由呼叫端判斷（見 CreateApprovalFromWorkOrder）。
+	var exists int64
 	err := db.DB.QueryRow(
-		"SELECT line_user_id FROM active_customers WHERE id = ?",
-		customerID,
-	).Scan(&lineUserID)
+		"SELECT id FROM active_customers WHERE id = ?", customerID,
+	).Scan(&exists)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("客戶不存在")
 		}
-		return nil, fmt.Errorf("查詢客戶 LINE 綁定失敗: %w", err)
-	}
-	if lineUserID == "" {
-		return nil, errors.New("客戶尚未綁定 LINE，無法產生授權連結")
+		return nil, fmt.Errorf("查詢客戶失敗: %w", err)
 	}
 
 	// 2. 驗證工單存在且屬於該客戶
