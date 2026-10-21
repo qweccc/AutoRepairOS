@@ -186,9 +186,12 @@
 - 可先建立估價草稿與項目，客戶／車輛關聯後轉為正式工單，保留估價內容及金額。
 - 轉換需冪等並保留來源關係，避免重複建立工單或遺失報價歷史。
 
-#### [ ] T2.10 車主 LINE 數位維修 Passbook（FR-VH-05）
+#### [x] T2.10 車主 LINE 數位維修 Passbook（FR-VH-05）
 - 綁定客戶只能查閱其關聯車輛的維修摘要、日期、項目與保養建議。
 - 驗收：未綁定或非該客戶車輛不得取得履歷；只公開必要資訊。
+- 實作：migration 043 建立 passbook 表；`PassbookAPI`（GET /api/passbook）以 `customers.line_user_id` 綁定作為公開端點的身份依據，並對「非該客戶／未綁定／查無紀錄」一律回 200 + 空陣列（避免用狀態碼差異枚舉車牌）；`RecordPassbookForWorkOrder` 在**結帳**時以單條 `INSERT ... SELECT ... WHERE NOT EXISTS` 建立履歷（原子且冪等，重放不會產生第二筆），寫入失敗只 log、不影響結帳；`line_webhook.go` 新增「履歷／維修紀錄／保養紀錄」查詢入口，只回傳該綁定客戶自己車輛的資料。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠且 `grep -c "setup failed"` 為 0；passbook_test 6 則（含跨客戶拒絕、未綁定、缺參數、空陣列、只公開必要欄位）＋ passbook_write_test（結帳冪等、寫入失敗隔離、LINE 綁定範圍）。
+- 待留意：公開端點靠 LINE 綁定而非登入，取得連結者仍可見該工單摘要；若日後要求更高的身分確認需另案處理。
 
 #### [x] T2.11 LINE 追加維修同意／拒絕（FR-WO-06、FR-NOTI-05）
 - 追加項目產生具時效且不可猜測的授權連結／識別碼，客戶可同意或拒絕。
@@ -200,17 +203,25 @@
 - 修正現有核准按鈕指向內部收據頁的問題；核准狀態與項目更新須具冪等性並保留授權紀錄。
 - 驗收：過期、重複、被竄改或屬於其他客戶的授權不能生效；同意與拒絕都能正確回寫。
 
-#### [ ] T2.12 AP 帳款與帳齡分析（FR-FIN-05、FR-PRINT-05）
+#### [x] T2.12 AP 帳款與帳齡分析（FR-FIN-05、FR-PRINT-05）
 - 建立供應商應付帳款、付款／沖銷狀態與到期日；涵蓋採購及外包應付來源。
 - 提供 0–30、31–60、61–90、90+ 帳齡明細與供應商月結對帳單。
 - 收貨、應付建立及付款狀態需避免重複計算；已進貨採購單不可因後續編輯造成帳款失真。
+- 實作：migration 041 建立 `ap_payables`（`UNIQUE(source_type, source_id)` 確保來源唯一，`ON CONFLICT DO NOTHING` 使既有單據重跑不重複入帳）與 `ap_payments`，並一次性回填既有的已收貨採購與外包來源；`internal/handler/ap.go` 提供列表（未結帳齡彙總 + 明細）、付款登記（餘額檢查、累加拒付）、沖銷（限未付款）、供應商月結對帳單與 CSV；`web/pages/ap.templ` 為明細表、帳齡摘要、付款表單與對帳單；`internal/nav` 補上「應付帳款」選單項。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠（ap_test 9 則：收貨快照鎖定、冪等、外包來源、付款累計與超付拒絕、沖銷限制、帳齡分桶、CSV 公式注入防護、到期日、migration 回填）；實機 `GET /ap`、`/ap/statement` 皆 200。
 
-#### [ ] T2.13 損益納入工資與外包成本（FR-FIN-06、FR-ANA-07）
+#### [x] T2.13 損益納入工資與外包成本（FR-FIN-06、FR-ANA-07）
 - 定義並文件化工資成本、外包成本來源及跨期歸屬規則，再納入損益分拆。
 - 避免將技師佣金、工時成本或外包成本重複計入；未知成本應標示未記錄，不以零冒充已計算。
+- 成本口徑（`internal/handler/analytics_cost.go` 為唯一來源）：零件＝`cost_price × quantity`、外包＝明細 `subtotal`、工資＝技師佣金（`technician_worklogs.commission_amount`）。**零件／外包歸工單建立日，工資歸工時日**（成本屬於實際施工日）；`work_order_items` 的 labor 是收入不是成本，故不再把 `labor_amount` 也算一次，避免同一筆錢算兩次。
+- 未知成本處理：期間／工單完全沒有技師工時紀錄時 `LaborRecorded=false`，成本、毛利、毛利率一律顯示「未記錄」，不以 0 冒充（0 一定會被看成「算過且成本為零」）。
+- 套用範圍（同一套口徑，避免同一頁兩個毛利率）：KPI 毛利率、損益分拆表、月趨勢圖（`Cost` 欄改為三類成本合計）、分析摘要 CSV（三類成本分列、類別明細補外包成本、工單明細補外包成本欄）。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠；analytics_cost_test 涵蓋三類成本加總、查不到料號不計成本、單張工單缺工時標記未記錄、批次查詢；實機以 10 月測試資料核對：損益分拆 營收 3900／成本 1630／毛利 2270（58.2%）與逐類加總一致。
 
-#### [ ] T2.14 保固成本統計（FR-FIN-07）
+#### [x] T2.14 保固成本統計（FR-FIN-07）
 - 依確認的成本口徑統計保固工單數、收入／折讓與成本；與 T2.13 使用相同成本來源及期間規則。
+- 實作：`warrantyStats` 回傳保固工單數、**折扣後**收入與折讓（保固收入必須與損益分拆同口徑，否則同一張保固工單在「保固毛利」與「損益毛利」會算出兩個不同數字）；`warrantyCostTotals` 批次查回保固工單的三類成本並標記是否有工時紀錄；頁面「折扣與保固」卡新增保固折讓、保固成本與保固毛利（成本僅管理員可見，缺工時紀錄時顯示「未記錄」）。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠；analytics_cost_test 新增 `TestWarrantyStatsUsesNetRevenue`（保固 1000 折讓 250 → 淨收入 750）與 `TestWarrantyCostTotals`（零件＋外包＋工資加總與未記錄標記）；實機核對保固工單金額（折扣後）3000、保固成本 1380、保固毛利 1620，與方案毛利同張工單的數字一致。
 
 #### [x] T2.15 報表匯出（FR-FIN-08、FR-PRINT-07）
 - 對主要報表提供符合權限的 CSV 匯出；涵蓋工單編號、客戶、收入拆分、零件成本、支付方式及折扣。
@@ -223,17 +234,24 @@
 - CSV 使用 Excel 可辨識的 UTF-8；正確處理公式注入風險、逗號、引號及換行。
 - PDF 若以瀏覽器列印／另存方式提供，需清楚標示；不宣稱已支援伺服器端 PDF，除非實際完成。
 
-#### [ ] T2.16 經營分析圖表與分組（FR-ANA-01）
+#### [x] T2.16 經營分析圖表與分組（FR-ANA-01）
 - 提供月營收與毛利趨勢，依 SRS 支援的工單類型、客群及車款分組。
 - 採本地資源或原生 SVG/CSS，離線環境可用；圖表統計口徑與匯出一致。
+- 實作：`loadAnalyticsChartData`／`aggregateAnalyticsChart` 產出近 12 個月月營收與毛利，分组沿用 `work_order_items.item_type`（工資／零件／外包）、`customers.tags`（逗號分隔標籤）與 `vehicle.vehicle_type`（以 lookup label 顯示）；`web/pages/analytics.templ` 以**原生 SVG** 繪製長條圖與分組表，不使用任何 CDN 或外網資源；成本與毛利僅 Owner 可見，櫃檯看得到營收但看不到成本，技師遭拒。
+- T2.13 起圖表的 `Cost` 欄改為三類成本合計（零件＋外包＋工資），與損益分拆、CSV 匯出同口徑；工资以「工時月」歸屬（與其他成本的工單建立月不同軸，頁面有說明）。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠（analytics_test 以固定日期資料檢查月趨勢、分組加總與毛利計算，含三類成本合計 76／30 的修正後期望值）；grep 確認無 `http(s)://`、`cdn`、`unpkg`、`jsdelivr`、`googleapis` 等外部資源引用。
 
-#### [ ] T2.17 技師效率指標（FR-ANA-02）
+#### [x] T2.17 技師效率指標（FR-ANA-02）
 - 依技師呈現完成工單數、工時、每工時計價及每工時計毛利。
 - 定義多人共同派工、工時跨期及無工時工單的計算方式，避免工單重複計數。
+- 計算規則（`internal/handler/analytics_tech.go`）：以 `technician_worklogs` 為完成工單依據；**完成工單數＝`COUNT(DISTINCT work_order_id)`**（同一工單多筆工時不會重複計）；**工時總計＝`SUM(hours)`**；**每工時計價＝`SUM(labor_amount)/SUM(hours)`**（工時 0 顯示「—」）；**每工時計毛利＝`(SUM(labor_amount) − SUM(commission_amount))/SUM(hours)`**（工資收入扣佣金成本）；跨期歸屬以 `work_date` 為準；無工時工單不列入，但另列「期間內已完成但無工時紀錄的工單 N 張」讓缺口可見；佣金為 0 但已有工時紀錄者顯示 0 而非「未記錄」。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠（analytics_tech_test 8 則：DISTINCT 不重複計、多人派工各自獨立、每工時計價與毛利、showCost=false 不顯示毛利欄、無工時工單備註、跨期歸屬、工時 0 顯示「—」、空資料）；實機以測試資料核對：工單數 2、工時 5、每工時計價 300、佣金 150、每工時計毛利 270。
 
-#### [ ] T2.18 行銷方案毛利分析（FR-ANA-06）
+#### [x] T2.18 行銷方案毛利分析（FR-ANA-06）
 - 依既有活動代碼呈現工單數、營收、成本及毛利；同一工單代碼優先順序需固定並文件化。
 - 先確認現有 `campaign_code` 欄位可涵蓋需求；只有確有資料缺口才新增欄位／migration。
+- 實作：沿用 migration 020 已建立的 `customers.campaign_code` 與 `work_orders.campaign_code`（**不新增 migration**）；`internal/handler/analytics_campaign.go` 的 `campaignAnalysisBlock` 以 `COALESCE(NULLIF(wo.campaign_code,''), NULLIF(c.campaign_code,''), '(未設定)')` 分組——**歸屬優先順序固定為：工單自己的代碼 ＞ 客戶的代碼 ＞ (未設定)**；成本以 `workOrderCostsByIDs` 批次查回（不做 N+1），毛利＝營收－三類成本；成本與毛利僅 Owner 可見，工資未記錄時兩者皆顯示「未記錄」。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠（analytics_campaign_test 6 則：基本、含成本、優先順序、空字串歸「(未設定)」、工資未記錄、空資料）；實機核對：方案 1 營收 3000／成本 1380／毛利 1620，空白代碼歸為「(未設定)」而非空白列。
 
 #### [x] T2.19 支援 Telegram 客戶通知並停用 SMS（FR-CRM-04）
 - 通知佇列依客戶偏好分流 LINE／Telegram，Telegram 使用該客戶的 `telegram_user_id`，不得誤用內部預設 Chat ID 發送客戶資料。
@@ -243,9 +261,11 @@
 - 實作：internal/cron/cron.go 將 sms 獨立為永久失敗分支（不重試、不假送達），Telegram 用該客戶的 telegram_user_id、缺 token 或 ID 皆為永久失敗；internal/handler/customers.go 表單移除 SMS 選項，既有 sms 偏好顯示「⚠️ 原本偏好 SMS，請重新選擇」警告且不靜默改值；internal/handler/scheduled.go 的 channelLabels 補 telegram、移除 sms。
 - 驗證：go build ./... exit 0、go test ./... -count=1 全綠（cron 新增 2 個測試：SMS 永久失敗、Telegram 缺 token 永久失敗；既有測試含 legacy SMS 不被當成 LINE）。
 
-#### [ ] T2.20 完工通知卡（FR-NOTI-03）
+#### [x] T2.20 完工通知卡（FR-NOTI-03）
 - 完工時依客戶偏好通知已綁定的 LINE／Telegram 客戶，提供領車資訊及核對過的工單摘要。
 - 外送失敗不得回滾核心完工操作；交由 T2.1 佇列重試。
+- 實作：`internal/cron/cron.go` 的 `QueueWorkOrderCompletedNotification(woID, customerID)` 組出完工通知卡——主旨「完工通知 — 您的愛車已完成維修」，內容含客戶姓名、車牌、工單編號、項目摘要（前 3 項，超過顯示「另有 N 項」）、工單總金額與領車提醒；以 `kind='work_order_completed' + work_order_id` 的 `INSERT ... WHERE NOT EXISTS` 去重；channel 依 `notification_preference` 走 line／telegram，`none` 或未綁定該通道則寫入 `internal`（**不可誤用內部預設 Chat ID 發送客戶資料**）。`UpdateWorkOrderStatus` 在狀態轉為 `completed` 且原本不是 completed 時觸發；通知失敗只 log，**不可回滾完工**。`scanWorkOrderReadyInternal` 保留為補掃（改為掃「已完成且尚無該 kind 通知」的工單），避免與立即觸發重疊。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠；cron 新增測試涵蓋通知卡內容、通道偏好與綁定、補掃去重及佇列錯誤；handler 新增通知失敗不影響工單狀態變更的測試。
 
 #### [x] T2.21 生日關懷（FR-NOTI-03）
 - 依客戶生日及 LINE／Telegram 通知偏好每日產生一次關懷；去重須跨服務重啟仍有效。
@@ -255,10 +275,13 @@
 - 依客戶生日及 LINE／Telegram 通知偏好每日產生一次關懷；去重須跨服務重啟仍有效。
 - 先確認目前客戶資料是否保存生日，若無則新增欄位並提供維護方式。
 
-#### [ ] T2.22 照片備份與離線上傳佇列（§7.2）
+#### [x] T2.22 照片備份與離線上傳佇列（§7.2）
 - 每日備份需涵蓋 SQLite 與照片，支援設定至外部 NAS／儲存目標並保留至少 30 日；記錄備份失敗並驗證可還原。
 - IndexedDB 佇列需保存實際照片 Blob、表單欄位及重試狀態；恢復連線後可上傳並回報成功／失敗。
 - 避免重複建立照片或工單；驗收需涵蓋重整頁面及瀏覽器重新開啟後的佇列恢復。
+- 實作：`internal/cron/cron.go` 的 `DailyBackup`（每 24 小時註冊為 `daily_backup` 排程）以 `VACUUM INTO` 產生一致性 SQLite 快照（失敗退回 checkpoint＋複製），連同照片目錄封裝成 gzip tar（`autorepair_YYYYMMDD_HHMMSS.tar.gz`）；`pruneBackups(30 天)` 保留 30 日、`pruneSameDay` 讓同日重跑只留最新；`recordBackup`／`recordBackupFailure` 寫入 `backup_records` 供「排程」頁顯示；`BACKUP_DIR`（.env）可指向 NAS／隨身碟。migration 042 建立 `photo_upload_queue`（`UNIQUE(work_order_id, COALESCE(item_id,0), file_name)` 防重複、狀態 `pending/uploading/done/failed`、重試次數與錯誤訊息）；`photos.go` 的上傳先寫入持久化佇列、`processPhotoUpload` 以原子交易建立照片紀錄並檢查既有照片避免重複；`offline.js` 的 `PhotoQueue`（IndexedDB）保存實際 Blob、欄位與重試狀態，`Retry.flush` 在網路恢復與頁面載入時自動重試，並廣播 `autorepair:photo-upload` 事件顯示成功／失敗。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠；`internal/cron/backup_test.go` 涵蓋「每日備份含照片且 30 日後過期」與「照片封存失敗要記錄」（並以 `verifyBackupArchive` 實際解檔驗證可還原）；`internal/db/photo_upload_queue_migration_test.go` 驗證 up/down；`photos_upload_test.go` 涵蓋上傳成功與去重、失敗後可重試、未知工單／項目拒絕；`offline.js` 的佇列恢復以 IndexedDB 於頁面重啟後仍存在（重整不遺失）。
+- 已知落差：系統**不會**在每次備份後自動解檔檢查（還原驗證目前是自動化測試在把關），長期部署仍應定期手動還原演練。
 
 #### [x] T2.23 條碼掃描及庫位優先顯示（FR-INV-05）
 - 將既有掃描能力接入庫存與工單領料操作，掃描後帶入零件資料。
@@ -267,10 +290,12 @@
 
 ### 階段 3：效能驗證
 
-#### [ ] T3.1 建立並執行效能基準（§7.1）
+#### [x] T3.1 建立並執行效能基準（§7.1）
 - 可重複產生 10,000 筆具代表性的測試資料，量測工單、庫存、客戶常用列表及通知批次處理。
 - 驗收：列表常用查詢在 10,000 筆資料下低於 300ms；1,000 筆通知在 1 分鐘內處理完成。記錄環境、資料量及結果；未達標時先分析查詢與索引再修正。
 - 基準工具不得意外修改正式資料庫，並須明確指定測試 DB。
+- 實作：`cmd/bench/main.go`——`--db` 必填且指向預設 `data/autorepair.db` 時拒絕執行、`--reset` 重建測試資料、`--dry-run` 只印計畫不寫入、`--scale` 調整資料量（預設 10000）；量測工單／庫存／客戶列表查詢（門檻 300ms）與 1,000 筆通知批次處理（門檻 1 分鐘，經 `cron.ProcessNotificationsNow`）；印出 Go 版本、OS、DB 路徑、筆數、每項耗時與 PASS/FAIL，並以 exit code 表示是否全部達標。
+- 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠；實跑 scale=10000 結果——資料產生（客戶 10,000／車輛 15,000／庫存 5,000／工單 20,000／通知 1,000）耗時 2m43s；工單列表 3.77ms、庫存列表 515.9µs、客戶列表 1.61ms（皆 < 300ms）；通知 1,000 筆 721.1ms（< 1 分鐘）；**全部 PASS，exit code 0**。
 
 ## 4. 依賴與建議執行順序
 
