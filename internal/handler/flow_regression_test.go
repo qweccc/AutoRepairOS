@@ -150,3 +150,40 @@ func TestLayoutAlwaysReceivesUser(t *testing.T) {
 	}
 	t.Logf("已檢查 %d 個 Layout 呼叫", checked)
 }
+
+// TestNewCustomerFormHasNoLineUserIDField 斷言「新增客戶」表單裡沒有
+// line_user_id 欄位。
+//
+// 為什麼：CreateCustomer 明確不讀這個欄位（只讀 telegram_user_id），
+// 留著輸入框只會讓人以為填了就會綁定——實際被靜默丟棄，通知永遠送不到，
+// 而且不會有任何錯誤訊息。LINE 綁定必須走編輯頁的專用端點（有唯一性約束）。
+//
+// 只掃表單區塊而非整個檔案：客戶列表的 <th>LINE ID</th> 是顯示欄位，
+// 掃全檔會誤判。
+func TestNewCustomerFormHasNoLineUserIDField(t *testing.T) {
+	path := filepath.Join("..", "..", "web", "pages", "customer.templ")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(raw)
+
+	const formOpen = `action="/customers"`
+	i := strings.Index(src, formOpen)
+	if i < 0 {
+		t.Fatal("找不到 action=\"/customers\" 的新增客戶表單，路徑或寫法可能已變，測試等於沒在檢查")
+	}
+	j := strings.Index(src[i:], "</form>")
+	if j < 0 {
+		t.Fatal("新增客戶表單沒有 </form>，無法界定範圍")
+	}
+	form := src[i : i+j]
+
+	if strings.Contains(form, `name="line_user_id"`) {
+		t.Error("新增客戶表單不該有 line_user_id 欄位：CreateCustomer 不讀它，填了會被靜默丟棄；" +
+			"LINE 綁定應走編輯頁的 /customers/{id}/line-bind 專用端點")
+	}
+	if !strings.Contains(form, `name="telegram_user_id"`) {
+		t.Error("新增客戶表單應保留 telegram_user_id（客戶可用 @userinfobot 查到自己的 ID，直接輸入是合理的）")
+	}
+}

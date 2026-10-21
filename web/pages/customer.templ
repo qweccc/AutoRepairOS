@@ -38,13 +38,18 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, use
 					</select>
 				</label>
 				<label class="full">地址<input name="address"></label>
-				<label class="full">LINE User ID<input name="line_user_id" placeholder="例：U1234567890abcdef"></label>
 				<label class="full">Telegram User ID<input name="telegram_user_id" placeholder="例：123456789"></label>
 				<label class="full">標籤<input name="tags" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
 				<label class="full">行銷活動代碼<input name="campaign_code" placeholder="例：2026Q4-煞車促銷"></label>
 				<label class="full">備註<textarea name="notes"></textarea></label>
 				<div class="full"><button class="btn btn-p" type="submit">建立客戶</button></div>
 			</form>
+			<p style="color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6">
+				建立後要綁定 LINE，請到該客戶的編輯頁使用「LINE 綁定」區塊產生綁定碼。
+				這裡刻意不放 LINE User ID 欄位：客戶看不到自己的 LINE User ID，
+				手打容易錯，而填錯不會有任何錯誤訊息——通知會靜默送不到。
+				Telegram 因為客戶可用 Telegram 的 userinfobot 查到自己的 ID，可直接在上方填寫。
+			</p>
 		</div>
 		<div class="card">
 			<h2>客戶列表（符合條件 { strconv.Itoa(total) } 筆）</h2>

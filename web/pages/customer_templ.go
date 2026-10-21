@@ -70,14 +70,14 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<label>姓名<input name=\"name\" required></label> <label>電話<input name=\"phone\" required></label> <label>通知偏好 <select name=\"notification_preference\"><option value=\"none\" selected>不通知</option> <option value=\"line\">LINE</option> <option value=\"telegram\">Telegram</option> <option value=\"sms\">SMS</option></select></label> <label class=\"full\">地址<input name=\"address\"></label> <label class=\"full\">LINE User ID<input name=\"line_user_id\" placeholder=\"例：U1234567890abcdef\"></label> <label class=\"full\">Telegram User ID<input name=\"telegram_user_id\" placeholder=\"例：123456789\"></label> <label class=\"full\">標籤<input name=\"tags\" placeholder=\"以逗號分隔，例：VIP,奧客警示\"></label> <label class=\"full\">行銷活動代碼<input name=\"campaign_code\" placeholder=\"例：2026Q4-煞車促銷\"></label> <label class=\"full\">備註<textarea name=\"notes\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立客戶</button></div></form></div><div class=\"card\"><h2>客戶列表（符合條件 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<label>姓名<input name=\"name\" required></label> <label>電話<input name=\"phone\" required></label> <label>通知偏好 <select name=\"notification_preference\"><option value=\"none\" selected>不通知</option> <option value=\"line\">LINE</option> <option value=\"telegram\">Telegram</option> <option value=\"sms\">SMS</option></select></label> <label class=\"full\">地址<input name=\"address\"></label> <label class=\"full\">Telegram User ID<input name=\"telegram_user_id\" placeholder=\"例：123456789\"></label> <label class=\"full\">標籤<input name=\"tags\" placeholder=\"以逗號分隔，例：VIP,奧客警示\"></label> <label class=\"full\">行銷活動代碼<input name=\"campaign_code\" placeholder=\"例：2026Q4-煞車促銷\"></label> <label class=\"full\">備註<textarea name=\"notes\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立客戶</button></div></form><p style=\"color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6\">建立後要綁定 LINE，請到該客戶的編輯頁使用「LINE 綁定」區塊產生綁定碼。 這裡刻意不放 LINE User ID 欄位：客戶看不到自己的 LINE User ID， 手打容易錯，而填錯不會有任何錯誤訊息——通知會靜默送不到。 Telegram 因為客戶可用 Telegram 的 userinfobot 查到自己的 ID，可直接在上方填寫。</p></div><div class=\"card\"><h2>客戶列表（符合條件 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 50, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 55, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -90,7 +90,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(q)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 52, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 57, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +108,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(c.ID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 68, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 73, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -121,7 +121,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 69, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 74, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -134,7 +134,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(c.Phone)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 70, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 75, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(c.Address)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 72, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 77, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -168,7 +168,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(c.Notification)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 73, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 78, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -181,7 +181,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(c.LineUserID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 74, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 79, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -194,7 +194,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(c.TelegramUserID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 75, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 80, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -207,7 +207,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(c.TotalSpent))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 76, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 81, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -220,7 +220,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(c.UnpaidAmount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 77, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 82, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var14 templ.SafeURL
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 79, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 84, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -246,7 +246,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var15 templ.SafeURL
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs("/customers/" + strconv.FormatInt(c.ID, 10) + "/edit")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 80, Col: 89}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 85, Col: 89}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -259,7 +259,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var16 templ.SafeURL
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles?customer=" + strconv.FormatInt(c.ID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 81, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 86, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -272,7 +272,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var17 templ.SafeURL
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs("/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 82, Col: 97}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 87, Col: 97}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -285,7 +285,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var18 templ.SafeURL
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs("/customers/" + strconv.FormatInt(c.ID, 10) + "/delete")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 83, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 88, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -298,7 +298,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue("/customers/" + strconv.FormatInt(c.ID, 10) + "/delete")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 84, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 89, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 				if templ_7745c5c3_Err != nil {
@@ -373,7 +373,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(c.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 106, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 111, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -386,7 +386,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 107, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 112, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -399,7 +399,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(c.Phone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 108, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 113, Col: 16}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -420,7 +420,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(c.Address)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 110, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 115, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -433,7 +433,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(c.Notification)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 111, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 116, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -446,7 +446,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(c.LineUserID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 112, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 117, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -459,7 +459,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(c.TelegramUserID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 113, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 118, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -472,7 +472,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(c.TotalSpent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 114, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 119, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -485,7 +485,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(c.UnpaidAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 115, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 120, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -498,7 +498,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var30 templ.SafeURL
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 117, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 122, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -511,7 +511,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var31 templ.SafeURL
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinURLErrs("/customers/" + strconv.FormatInt(c.ID, 10) + "/edit")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 118, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 123, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -524,7 +524,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var32 templ.SafeURL
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles?customer=" + strconv.FormatInt(c.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 119, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 124, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -537,7 +537,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var33 templ.SafeURL
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinURLErrs("/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 120, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 125, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -550,7 +550,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var34 templ.SafeURL
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinURLErrs("/customers/" + strconv.FormatInt(c.ID, 10) + "/delete")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 121, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 126, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
@@ -563,7 +563,7 @@ func CustomerSearchRows(rows []CustomerRow) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("/customers/" + strconv.FormatInt(c.ID, 10) + "/delete")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 122, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/customer.templ`, Line: 127, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
