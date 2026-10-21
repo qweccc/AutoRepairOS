@@ -1,7 +1,7 @@
 // AutoRepair OS Service Worker
 // 快取靜態資源，並在離線時提供應用程式外殼。
 
-const CACHE = 'autorepairos-v2';
+const CACHE = 'autorepairos-v3';
 const SHELL = [
   '/offline.js',
   '/offline.css'
@@ -15,8 +15,21 @@ const SHELL = [
 //
 // 判斷標準：內容會隨 release 改變的都列進來。純 vendor 函式庫（htmx.min.js、
 // html5-qrcode.min.js）版本固定、內容不變，留在 cache-first 沒有問題。
+//
+// /offline.js、/offline.css 是我們自己維護、會隨 release 改的檔案（它們同時
+// 也在 SHELL 被預快取）。只放 SHELL 的話它們會落到最後的 cache-first 分支，
+// 修好 offline.js 的 bug 之後既有瀏覽器永遠拿到舊版——而這個檔案正是負責
+// 離線佇列的，錯了會靜默丟資料。路徑注意：這兩支掛在根路徑（internal/handler
+// /static.go 的 RegisterStatic），不是 /static/ 底下。
+//
+// /offline.css 目前沒有任何頁面引用（它樣式化的是 body.offline-shell 這個
+// 獨立離線頁，實際上沒被產生——SW 的 offlineResponse 用 inline style）。
+// 仍留在清單裡：SHELL 本來就會預快取它，列進 network-first 只是避免日後
+// 真的接上時踩到同一種 stale 問題。
 const NETWORK_FIRST = [
-  '/static/app.css'
+  '/static/app.css',
+  '/offline.js',
+  '/offline.css'
 ];
 
 // 純 vendor 靜態檔：版本固定、內容不變，cache-first 沒有 stale 風險，

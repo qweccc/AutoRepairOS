@@ -187,3 +187,57 @@ func TestNewCustomerFormHasNoLineUserIDField(t *testing.T) {
 		t.Error("新增客戶表單應保留 telegram_user_id（客戶可用 @userinfobot 查到自己的 ID，直接輸入是合理的）")
 	}
 }
+
+// TestBothLayoutsLoadOfflineJS 斷言兩種版面都載入 /offline.js。
+//
+// 為什麼需要這支測試：全站有兩個版面——templ 頁用 web/components/layout.templ，
+// 字串拼接頁用 internal/handler/layout.go 的 renderPage。離線模組原本只掛在
+// 後者，於是所有 templ 頁（含工單照片頁）都拿不到手冊承諾的「離線暫存、
+// 恢復連線後補傳」。這種「只補了一半」的症狀是靜默的：頁面看起來完全正常，
+// 只有真的斷線時才發現資料沒被暫存。
+func TestBothLayoutsLoadOfflineJS(t *testing.T) {
+	layouts := []string{
+		filepath.Join("..", "..", "web", "components", "layout.templ"),
+		filepath.Join("..", "..", "internal", "handler", "layout.go"),
+	}
+	for _, f := range layouts {
+		raw, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(raw), `src="/offline.js"`) {
+			t.Errorf("%s 沒有載入 /offline.js——該版面渲染的頁面拿不到離線暫存與上傳佇列（頁面看起來正常，只有斷線時才發現資料沒被保存）",
+				filepath.Base(f))
+		}
+	}
+}
+
+// TestOfflineJSServedAtRootPath 斷言 /offline.js 掛在根路徑，且 sw.js 把它
+// 列在 NETWORK_FIRST。
+//
+// 為什麼：/offline.js 同時被 SHELL 預快取，若不在 NETWORK_FIRST 就會落到
+// service worker 最後的 cache-first 分支——修好 offline.js 之後既有瀏覽器
+// 永遠拿到舊版（而這個檔案負責離線佇列，錯了會靜默丟資料）。車廠人員不會
+// 按 Shift+F5。
+func TestOfflineJSServedAtRootPath(t *testing.T) {
+	sw, err := os.ReadFile(filepath.Join("..", "..", "internal", "handler", "static", "sw.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(sw)
+
+	nf := src
+	if i := strings.Index(src, "const NETWORK_FIRST"); i >= 0 {
+		if j := strings.Index(src[i:], "];"); j >= 0 {
+			nf = src[i : i+j]
+		}
+	}
+	if !strings.Contains(nf, "'/offline.js'") {
+		t.Error("sw.js 的 NETWORK_FIRST 沒有 '/offline.js'——它同時在 SHELL 被預快取，" +
+			"會落到 cache-first 分支，改版後既有瀏覽器永遠拿到舊檔")
+	}
+	if strings.Contains(nf, "'/static/offline.js'") {
+		t.Error("/offline.js 掛在根路徑（internal/handler/static.go 的 RegisterStatic），" +
+			"不是 /static/ 底下；寫成 /static/offline.js 會讓 network-first 判斷永遠不命中")
+	}
+}

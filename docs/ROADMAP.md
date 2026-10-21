@@ -320,11 +320,15 @@
 - 驗證：`go build` exit 0、`go test ./... -count=1` 全綠；nav 測試 9 則全過。**新增 `internal/handler/nav_roles_sync_test.go` 交叉比對 nav.go 與 main.go**（把兩份定義放在一起比對，這是唯一能防漂移的方式）；有效性已驗證：把 `/staff` 誤標為 `counterUp` → FAIL 並同時列出 nav 寫的角色與 main.go 允許的角色。實機 HTTP（8099）以 owner／counter／technician 各登入驗證導覽與三個按鈕，**不符 0 項**。
 - **實機驗證抓到的額外缺陷**：`/reports` 在 `main.go` 註冊為 `AllStaff`，但 `ReportsHome` 開頭即 `canSeeMoney(user)` → 技師得到 **403**。只比對包裝器的測試抓不到這件事（handler 內部的檢查），因此 nav 的 `/reports` 改為 `counterUp`，並在 `nav_roles_sync_test.go` 以 `effectiveRoleOverrides` 明確記錄這個例外。
 
-#### [ ] T4.3 離線模組接上共用 templ 版面
+#### [x] T4.3 離線模組接上共用 templ 版面
 - `offline.js` 只載入於 `internal/handler/layout.go`（字串拼接頁），`web/components/layout.templ` 沒有載入，因此工單照片頁（templ 頁）拿不到手冊承諾的「離線暫存、恢復連線後補傳」。
 - **隱藏陷阱**：`sw.js` 對未知路徑的預設是 cache-first，`/offline.js` 不在 `NETWORK_FIRST`；只補 script 標籤的話既有瀏覽器仍會跑舊版。
 - 驗收：`layout.templ` 的 body 結尾載入 `/offline.js`；`sw.js` 的 `NETWORK_FIRST` 加入 `/offline.js` 與 `/static/offline.css` 並遞增 `CACHE` 版本號；瀏覽器實測 `/work-orders/{id}/photos` 的 `window.AutoRepairOffline.PhotoQueue` 存在（修前為 `undefined`）；模擬離線送出照片後佇列長度為 1。
 - 依賴：無。
+- 實作：`layout.templ` 的 body 結尾補 `<script src="/offline.js"></script>`（與字串版面同位置）；`sw.js` 的 `NETWORK_FIRST` 加入 `/offline.js`、`/offline.css`，`CACHE` 由 `autorepairos-v2` 遞增為 `v3`。
+- **計畫的路徑假設有誤，已修正**：`/offline.css` 掛在**根路徑**（`internal/handler/static.go` 的 `RegisterStatic`），不是 `/static/offline.css`；寫錯會讓 network-first 判斷永遠不命中。另外 `/offline.css` 目前沒有任何頁面引用（它樣式化的是 `body.offline-shell` 這個從未產生的獨立離線頁——SW 的 `offlineResponse` 用 inline style），保留在清單是為了避免日後接上時踩到同樣的 stale 問題。
+- 驗證：`go build` exit 0、`go test ./... -count=1` 全綠。新增兩則測試：`TestBothLayoutsLoadOfflineJS`（兩種版面都必須載入，防止再只補一半）、`TestOfflineJSServedAtRootPath`（`NETWORK_FIRST` 必須含根路徑版本）。
+- **端到端實測（8099，templ 頁 `/work-orders/1/photos`）**：`window.AutoRepairOffline` = `object`、`PhotoQueue` 存在（修前為 `undefined`）；以 CDP 斷網後對真實端點 `POST /work-orders/1/photos` 入列 → 瀏覽器 IndexedDB 佇列長度 1；恢復連線後佇列自動清空為 0。**獨立於頁面的證據**：`work_order_photos` 出現 `original_name='offline-test.png'`、`file_size=16`（與送入的 blob 相符）、`created_at` 為當下時間，磁碟上檔案 16 bytes 且 mtime 相符；伺服器端 `photo_upload_queue` 該筆為 `status='done'`、`photo_id=1`（伺服器會改名為 `wo1_q1.png`，原名保留在 `original_name`）。
 
 #### [ ] T4.4 追加維修授權接成完整流程（FR-WO-06、FR-NOTI-05）
 - `main.go` 有客戶端的開啟／同意／拒絕三個路由，但**沒有任何地方建立授權請求**——`CreateApprovalRequest` 全 repo 只出現在一行註解裡（`line_webhook.go:333`），`approvals.go` 的「加入工單項目」仍是 TODO。手冊描述的「產生連結 → 客戶確認 → 工單加入追加項目」從 UI 走不完。
