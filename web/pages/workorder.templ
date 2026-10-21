@@ -13,7 +13,8 @@ import (
 templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTotal float64,
 	statusLabels map[string]string, statusPill map[string]string, approvalLabels map[string]string, approvalPill map[string]string,
 	techNames map[int64]string, canEdit bool, flashMsg string,
-	sopRecords []model.SOPRecord, sopTemplateOpts string, attachedTemplates []int64, user model.User) {
+	sopRecords []model.SOPRecord, sopTemplateOpts string, attachedTemplates []int64,
+	canCreateApproval bool, user model.User) {
 
 	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, "AutoRepair OS") {
 		if flashMsg != "" {
@@ -89,6 +90,8 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 				@AddItemForm(wo.ID)
 			}
 		</div>
+
+		@ApprovalRequestBlock(wo.ID, canCreateApproval)
 
 		<div class="card">
 			<h2>舊傷預檢</h2>

@@ -1,0 +1,53 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/web/components"
+)
+
+// ApprovalRequestBlock 工單詳情頁的「追加維修授權」區塊。
+//
+// 為什麼放在工單詳情頁而不是另開一頁：追加維修是維修過程中發現的動作，
+// 技師回報要追加時櫃檯就在同一張工單上操作，多一次跳頁只會讓人漏做。
+//
+// canCreate 由 handler 依角色決定（POST 端點是 CounterUp），技師看得到區塊
+// 但沒有表單——顯示一個送不出去的表單只會讓人以為系統壞了。
+templ ApprovalRequestBlock(woID int64, canCreate bool) {
+	<div class="card">
+		<h2>追加維修授權</h2>
+		if canCreate == false {
+			<div class="empty">僅櫃檯人員與系統管理員可建立追加維修授權</div>
+		}
+		if canCreate {
+			<p style="color:#94a3b8;font-size:12.5px;line-height:1.7;margin:0 0 12px">
+				填寫追加項目後按「建立授權並通知客戶」。系統會產生一組 24 小時有效的連結，
+				透過 LINE 推播給已綁定 LINE 的客戶。<br/>
+				客戶同意後，這些項目才會加入工單明細並計入總金額；不同意則不會變更工單。
+			</p>
+			<form class="frm" method="POST"
+				action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-request" }>
+				@components.CSRFInput()
+				<label class="full">品名
+					<input name="description" required placeholder="例：煞車油管老化更換"/>
+				</label>
+				<label>數量
+					<input name="quantity" type="number" min="1" value="1" required/>
+				</label>
+				<label>單價
+					<input name="unit_price" type="number" min="0" step="1" value="0" required/>
+				</label>
+				<label>類別
+					<select name="item_type">
+						<option value="labor">工資</option>
+						<option value="part">零件</option>
+						<option value="subcontract">外包加工</option>
+					</select>
+				</label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">建立授權並通知客戶</button>
+				</div>
+			</form>
+		}
+	</div>
+}

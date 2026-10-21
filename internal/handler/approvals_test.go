@@ -167,7 +167,13 @@ func TestApproveRequestHandler(t *testing.T) {
 	db.DB = d
 
 	// 建立一個授權請求
-	req, err := CreateApprovalRequest(100, 1, "測試項目")
+	//
+	// item_summary 自 T4.4 起是結構化 JSON（approvalItem 陣列）。原本這裡傳的是
+	// 自由文字「測試項目」——那正是客戶同意後無法還原成工單項目的原因（舊 TODO
+	// 卡住的地方）。改為 JSON 後，自由文字的授權會在同意時被 fail-closed 拒絕，
+	// 而不是默默核准（見 TestApproveRejectsLegacyFreeTextSummary）。
+	req, err := CreateApprovalRequest(100, 1,
+		`[{"description":"測試項目","quantity":1,"unit_price":500,"item_type":"labor"}]`)
 	if err != nil {
 		t.Fatalf("建立授權請求失敗: %v", err)
 	}

@@ -166,6 +166,8 @@ func main() {
 	mux.HandleFunc("GET /work-orders/{id}", handler.AllStaff(handler.ShowWorkOrder))
 	mux.HandleFunc("POST /work-orders/{id}/status", handler.CounterUp(handler.UpdateWorkOrderStatus))
 	mux.HandleFunc("POST /work-orders/{id}/approval", handler.CounterUp(handler.UpdateWorkOrderApproval))
+	// 追加維修授權：櫃檯建立（客戶端的三個 /approval/... 路由在更上方）
+	mux.HandleFunc("POST /work-orders/{id}/approval-request", handler.CounterUp(handler.CreateApprovalFromWorkOrder))
 	mux.HandleFunc("POST /work-orders/{id}/claim", handler.CounterUp(handler.UpdateWorkOrderClaim))
 	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
 	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))

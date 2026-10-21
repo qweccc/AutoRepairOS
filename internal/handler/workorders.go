@@ -586,6 +586,10 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	locked := wo.Status == "paid"
 	canEdit := !locked
 
+	// 追加維修授權僅限櫃檯以上（POST /work-orders/{id}/approval-request 是
+	// CounterUp），且已結帳的工單不能再追加。兩者都符合才顯示表單。
+	canCreateApproval := canEdit && (user.Role == "owner" || user.Role == "counter")
+
 	// 技師名稱對照表（供項目表格顯示）。
 	techNames := map[int64]string{}
 	for _, it := range items {
@@ -610,7 +614,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
 		techNames, canEdit, flash(r),
 		sopRecords, sopTemplateOpts, attachedTemplates,
-		user).Render(r.Context(), w)
+		canCreateApproval, user).Render(r.Context(), w)
 }
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {

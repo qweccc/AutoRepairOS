@@ -4,16 +4,132 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
+	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
 )
+
+// approvalItem 是追加維修項目在 approval_requests.item_summary 裡的元素。
+//
+// 為什麼要結構化：原設計把 item_summary 當自由文字，導致客戶同意後無法可靠地
+// 還原成工單項目（approvals.go 的 TODO 就是卡在這裡）。存 JSON 讓「客戶同意
+// 什麼」與「工單加了什麼」是同一份資料，不會各說各話。
+type approvalItem struct {
+	Description string  `json:"description"`
+	Quantity    int     `json:"quantity"`
+	UnitPrice   float64 `json:"unit_price"`
+	ItemType    string  `json:"item_type"` // labor / part / subcontract
+}
+
+// parseApprovalItems 驗證並解析追加項目 JSON。
+//
+// 集中在這裡驗證（而不是 UI 與解析端各寫一份）：授權一旦成立就會寫進工單並
+// 影響帳務，兩邊規則不一致會產生「客戶同意的內容」與「工單實際項目」不符。
+func parseApprovalItems(raw string) ([]approvalItem, error) {
+	var items []approvalItem
+	if strings.TrimSpace(raw) == "" {
+		return nil, errors.New("追加項目不可為空")
+	}
+	if err := json.Unmarshal([]byte(raw), &items); err != nil {
+		return nil, fmt.Errorf("追加項目格式錯誤: %w", err)
+	}
+	if len(items) == 0 {
+		return nil, errors.New("追加項目不可為空")
+	}
+	for i, it := range items {
+		if strings.TrimSpace(it.Description) == "" {
+			return nil, fmt.Errorf("第 %d 項缺少品名", i+1)
+		}
+		if it.Quantity <= 0 {
+			return nil, fmt.Errorf("第 %d 項數量必須大於 0", i+1)
+		}
+		if it.UnitPrice < 0 {
+			return nil, fmt.Errorf("第 %d 項單價不可為負", i+1)
+		}
+		switch it.ItemType {
+		case "labor", "part", "subcontract":
+		default:
+			return nil, fmt.Errorf("第 %d 項類別無效: %q", i+1, it.ItemType)
+		}
+	}
+	return items, nil
+}
+
+// CreateApprovalFromWorkOrder 由櫃檯在工單詳情頁建立追加維修授權。
+//
+// 為什麼需要這支：CreateApprovalRequest 原本沒有任何呼叫點（全 repo 只出現在
+// 一行註解裡），所以「產生連結 → 客戶確認 → 工單加入追加項目」這條流程從 UI
+// 根本走不完，手冊描述的步驟無法操作。
+func CreateApprovalFromWorkOrder(w http.ResponseWriter, r *http.Request) {
+	woID := mustInt(r.PathValue("id"))
+	woPath := "/work-orders/" + strconv.FormatInt(woID, 10)
+
+	var customerID int64
+	var status string
+	if err := db.DB.QueryRow(
+		`SELECT customer_id, status FROM active_work_orders WHERE id = ?`, woID,
+	).Scan(&customerID, &status); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	// 已結帳的工單是財務憑證，不能再追加項目（與 requireOrderMutable 一致）
+	if status == "paid" {
+		redirectErrMsg(w, r, woPath, "此工單已結帳，不可再追加項目。如需更正請另行開立沖銷單")
+		return
+	}
+
+	item := approvalItem{
+		Description: strings.TrimSpace(r.FormValue("description")),
+		Quantity:    atoiDefault(r.FormValue("quantity"), 0),
+		UnitPrice:   atofDefault(r.FormValue("unit_price"), 0),
+		ItemType:    strings.TrimSpace(r.FormValue("item_type")),
+	}
+	raw, err := json.Marshal([]approvalItem{item})
+	if err != nil {
+		fail(w, "建立授權失敗")
+		return
+	}
+	// 用同一支驗證函式，UI 與解析端不會各有一套規則
+	if _, err := parseApprovalItems(string(raw)); err != nil {
+		redirectErrMsg(w, r, woPath, err.Error())
+		return
+	}
+
+	req, err := CreateApprovalRequest(woID, customerID, string(raw))
+	if err != nil {
+		log.Printf("建立追加維修授權失敗（工單 #%d）: %v", woID, err)
+		redirectErrMsg(w, r, woPath, "建立授權失敗："+err.Error())
+		return
+	}
+
+	// 推播給客戶。走通知佇列（與其他通知一致）而不是直接外送：
+	// 外送失敗時佇列會重試，而且車廠端不需要知道 LINE 當下是否可達。
+	approveURL := "/approval/" + req.Token
+	subject := "追加維修項目授權"
+	body := fmt.Sprintf("您的車輛需要追加維修項目：\n%s × %d，單價 %s\n\n"+
+		"請點選以下連結確認是否同意（24 小時內有效）：\n%s\n\n"+
+		"若不同意，車廠將不進行此項維修。",
+		item.Description, item.Quantity, line.Money(item.UnitPrice), approveURL)
+	if err := cron.QueueNotification("approval_request", "line", subject, body, customerID, woID, time.Now()); err != nil {
+		// 授權已建立，只是通知沒進佇列——不能讓櫃檯以為整件事失敗而重複建立
+		log.Printf("追加維修授權 %d 已建立，但通知進佇列失敗: %v", req.ID, err)
+		redirectErrMsg(w, r, woPath, "授權已建立，但通知客戶失敗（請改以電話聯絡客戶並手動提供連結）")
+		return
+	}
+
+	log.Printf("追加維修授權已建立: id=%d work_order=%d token=%s", req.ID, woID, req.Token)
+	redirectMsg(w, r, woPath, "已建立追加維修授權，並已通知客戶（連結 24 小時內有效）")
+}
 
 // generateSecureToken 產生密碼學隨機 token（32 bytes = 64 hex chars）
 func generateSecureToken() (string, error) {
@@ -303,9 +419,37 @@ func ApproveRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. 解析 item_summary 並加入工單項目（如果是 JSON 格式）
-	// TODO: 這裡需要根據實際的 item_summary 格式來解析並插入 work_order_items
-	// 目前先更新工單狀態
+	// 2. 解析 item_summary 並加入工單項目。
+	//
+	//    必須與「把授權標成 approved」在同一個交易內：分開做的話，中途失敗會
+	//    留下「已核准但工單沒有項目」或反向的不一致狀態，而這是錢的問題
+	//    （客戶以為同意了、工單卻沒加，或反之）。
+	items, err := parseApprovalItems(req.ItemSummary)
+	if err != nil {
+		log.Printf("授權 %d 的追加項目無法解析，已中止: %v", req.ID, err)
+		renderApprovalResult(w, "error", "追加項目資料異常，已通知車廠處理")
+		return
+	}
+	for _, it := range items {
+		if _, err := tx.Exec(`INSERT INTO work_order_items
+			(work_order_id, item_type, description, quantity, unit_price, subtotal)
+			VALUES (?, ?, ?, ?, ?, ?)`,
+			req.WorkOrderID, it.ItemType, it.Description, it.Quantity, it.UnitPrice,
+			float64(it.Quantity)*it.UnitPrice); err != nil {
+			log.Printf("授權 %d 加入工單項目失敗: %v", req.ID, err)
+			renderApprovalResult(w, "error", "加入追加項目失敗")
+			return
+		}
+	}
+
+	// 重算工單金額。少了這一步，追加項目會進得了工單明細卻不算進總額——
+	// 帳務上等於漏收（AddWorkOrderItem 也有同樣的呼叫，口徑必須一致）。
+	if err := recalcWorkOrderTotal(tx, req.WorkOrderID); err != nil {
+		log.Printf("授權 %d 重算工單金額失敗: %v", req.ID, err)
+		renderApprovalResult(w, "error", "重算工單金額失敗")
+		return
+	}
+
 	_, err = tx.Exec(
 		"UPDATE work_orders SET approval_status='approved', updated_at=? WHERE id = ?",
 		now, req.WorkOrderID,
