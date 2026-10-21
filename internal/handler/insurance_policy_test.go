@@ -177,7 +177,8 @@ func TestCreateWorkOrderWithClaimFields(t *testing.T) {
 			status TEXT, current_mileage INTEGER, customer_complaint TEXT, approval_status TEXT,
 			total_amount REAL DEFAULT 0, sop_completed INTEGER DEFAULT 0, insurance_company_id INTEGER,
 			claim_no TEXT, is_insurance INTEGER DEFAULT 0, accident_date TEXT, deductible_amount REAL DEFAULT 0,
-			claim_amount REAL NOT NULL DEFAULT 0, claim_date TEXT NOT NULL DEFAULT '', claim_note TEXT NOT NULL DEFAULT '')`,
+			claim_amount REAL NOT NULL DEFAULT 0, claim_date TEXT NOT NULL DEFAULT '', claim_note TEXT NOT NULL DEFAULT '',
+			appointment_id INTEGER)`,
 		`INSERT INTO customers (id,name) VALUES (1,'王小明')`,
 		`INSERT INTO vehicles (id,customer_id) VALUES (1,1)`,
 	}

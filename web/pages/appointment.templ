@@ -19,6 +19,8 @@ type AppointmentRow struct {
 	Status          string
 	StatusLabel     string
 	StatusPill      string
+	// HasWorkOrder 這張預約是否已經有工單（用於顯示「→ 開工單」或「已開單」）。
+	HasWorkOrder bool
 }
 
 type CalendarDay struct {
@@ -125,6 +127,14 @@ templ AppointmentRowContent(a AppointmentRow) {
 		<td>{ a.ServiceType }</td>
 		<td><span class={ "pill " + a.StatusPill }>{ a.StatusLabel }</span></td>
 		<td>
+			// 已進廠／已預約／已確認且尚未開單 → 提供直接開單（帶入預約 id，
+			// 客戶與車輛自動帶出，並在建立工單時把預約標記為已進廠）
+			if a.HasWorkOrder == false && a.Status != "cancelled" && a.Status != "completed" {
+				<a class="btn btn-p" href={ "/work-orders/new?appointment_id=" + strconv.FormatInt(a.ID, 10) }>→ 開工單</a>
+			}
+			if a.HasWorkOrder {
+				<span class="pill p-completed" title="這筆預約已經有工單">已開單</span>
+			}
 			<a class="btn btn-s" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/edit" }>編輯</a>
 			<a class="btn btn-d" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }
 				hx-post={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }

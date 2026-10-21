@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -74,6 +75,13 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 當天工位佔用總覽（一次查詢，避免每列一次 N+1）
 	bayUsage := baySchedule(date)
 
+	// 哪些預約已經有工單（一次查完，避免逐列 N+1）
+	ids := make([]int64, 0, len(list))
+	for _, a := range list {
+		ids = append(ids, a.ID)
+	}
+	woIDs := appointmentWorkOrderIDs(ids)
+
 	var apptRows []pages.AppointmentRow
 	for _, a := range list {
 		bayLbl := ""
@@ -92,6 +100,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 			Status:          a.Status,
 			StatusLabel:     appointmentLabel(a.Status),
 			StatusPill:      appointmentPill(a.Status),
+			HasWorkOrder:    woIDs[a.ID],
 		})
 	}
 
@@ -284,6 +293,17 @@ func SearchAppointmentsAPI(w http.ResponseWriter, r *http.Request) {
 			StatusPill:      appointmentPill(a.Status),
 		})
 	}
+	// 補上「是否已有工單」（批次查詢，避免 N+1）
+	if len(result) > 0 {
+		sids := make([]int64, 0, len(result))
+		for _, r := range result {
+			sids = append(sids, r.ID)
+		}
+		woMap := appointmentWorkOrderIDs(sids)
+		for i := range result {
+			result[i].HasWorkOrder = woMap[result[i].ID]
+		}
+	}
 	pages.AppointmentSearchRows(result).Render(r.Context(), w)
 }
 
@@ -465,6 +485,41 @@ func DeleteAppointment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectMsg(w, r, "/appointments", "預約已刪除")
+}
+
+// appointmentWorkOrderIDs 回傳「已經有工單」的預約 id 集合。
+//
+// 為什麼一次查完：預約列表一頁可能 50 筆，逐筆查會變成 N+1。
+// 回傳 map 讓呼叫端 O(1) 查詢；空集合時不發 SQL（SQLite 的 IN () 語法無效）。
+// 查失敗時回空集合（按鈕不出現）而不是讓整個預約列表失敗——
+// 預約資料本身是完整的，不該被一個輔助顯示拖垮。
+func appointmentWorkOrderIDs(ids []int64) map[int64]bool {
+	out := map[int64]bool{}
+	if len(ids) == 0 {
+		return out
+	}
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+	q := `SELECT DISTINCT appointment_id FROM work_orders
+		WHERE appointment_id IS NOT NULL AND appointment_id IN (` +
+		strings.Join(placeholders, ",") + `)`
+	rows, err := db.DB.Query(q, args...)
+	if err != nil {
+		log.Printf("查詢預約的工單關聯失敗: %v", err)
+		return out
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		if rows.Scan(&id) == nil {
+			out[id] = true
+		}
+	}
+	return out
 }
 
 func appointmentLabel(status string) string {

@@ -23,6 +23,49 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	preCustomer := mustInt(r.URL.Query().Get("customer"))
 	kw := strings.TrimSpace(r.URL.Query().Get("q"))
 
+	// 從預約進廠開單：把預約的客戶、車輛帶進來。
+	// 為什麼需要：櫃檯已經知道車到了、預約資料也填好了，卻要在開單時重打一次
+	// 車牌與客戶——既慢又容易選錯車。
+	preAppointment := mustInt(r.URL.Query().Get("appointment_id"))
+	apptBanner := ""
+	if preAppointment > 0 {
+		var apptVehicle, apptCustomer int64
+		var apptService, apptStatus, apptDate, apptTime string
+		err := db.DB.QueryRow(`SELECT vehicle_id, customer_id, COALESCE(service_type,''),
+				status, COALESCE(appointment_date,''), COALESCE(appointment_time,'')
+			FROM appointments WHERE id = ?`, preAppointment).
+			Scan(&apptVehicle, &apptCustomer, &apptService, &apptStatus, &apptDate, &apptTime)
+		switch {
+		case err != nil || apptVehicle <= 0:
+			apptBanner = `<div class="msg msg-err">找不到預約紀錄，已改為一般開單。</div>`
+			preAppointment = 0
+		case apptStatus == "cancelled" || apptStatus == "completed":
+			// 已取消／已完成的預約不該再開單：開了也無法回寫狀態，
+			// 而且車主可能根本沒來。明確告知而不是靜默開一張空單。
+			apptBanner = `<div class="msg msg-err">這筆預約已` +
+				map[string]string{"cancelled": "取消", "completed": "結案"}[apptStatus] +
+				`，不能據以開單。</div>`
+			preAppointment = 0
+		default:
+			preVehicle = apptVehicle
+			preCustomer = apptCustomer
+			label := map[string]string{"booked": "已預約", "confirmed": "已確認", "arrived": "已進廠"}[apptStatus]
+			if label == "" {
+				label = apptStatus
+			}
+			apptBanner = `<div class="msg msg-ok">由預約進廠開單（` + htmlEsc(label) +
+				" · " + htmlEsc(apptDate)
+			if apptTime != "" {
+				apptBanner += " " + htmlEsc(apptTime)
+			}
+			apptBanner += "）"
+			if apptService != "" {
+				apptBanner += "，預約服務：" + htmlEsc(apptService)
+			}
+			apptBanner += `。客戶與車輛已帶入，請確認無誤後再送出。</div>`
+		}
+	}
+
 	// 指定了車牌就先查出車輛 id，讓表單預選
 	if preVehicle <= 0 && prePlate != "" {
 		var vid int64
@@ -146,13 +189,17 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 			請確認車牌是否正確，或先到「車輛」頁新增。</div>`
 	}
 
-	body := flash(r) + notFound + `
+	body := flash(r) + notFound + apptBanner + `
     <div class="card">
       <h2>開立工單</h2>
       <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
         在下方輸入車牌、車型或車主姓名即可即時篩選，點選後確認車主再填里程。
       </p>
       <form class="frm" method="POST" action="/work-orders" id="woForm">
+        // 由預約開單時帶回預約 id；建立工單一併把預約標記為已進廠。
+        // 留在表單裡而不是只看 URL：櫃檯可能中途改了其他欄位，
+        // 若以重新帶入的參數為準會失去來源。
+        <input type="hidden" name="appointment_id" value="` + strconv.FormatInt(preAppointment, 10) + `">
         <label class="full">車輛
           <div class="vsearch" data-vsearch data-options="` + optsJSON + `"` +
 		selAttr(preVehicle > 0) + `>

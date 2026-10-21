@@ -504,22 +504,73 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec(`INSERT INTO work_orders
+	// 預約來源：由預約進廠開單時，工單與預約要在同一交易內一起寫入。
+	// 分開做的話，中途失敗會留下「工單建了但預約沒標記」（或反之），
+	// 於是預約列表與工單列表對不起來。
+	appointmentID := mustInt(r.FormValue("appointment_id"))
+
+	tx, err := db.DB.Begin()
+	if err != nil {
+		fail(w, "資料庫忙碌")
+		return
+	}
+	defer tx.Rollback()
+
+	var apptArg interface{}
+	if appointmentID > 0 {
+		var apptVehicle, apptCustomer int64
+		var apptStatus string
+		err := tx.QueryRow(`SELECT vehicle_id, customer_id, status
+			FROM appointments WHERE id = ?`, appointmentID).
+			Scan(&apptVehicle, &apptCustomer, &apptStatus)
+		switch {
+		case err != nil:
+			// 預約不存在：退回一般開單。不該因為來源不見就擋下整張工單——
+			// 車已經在廠裡了，先能開單比計較來源重要。
+			appointmentID = 0
+		case apptVehicle != vehicleID || apptCustomer != customerID:
+			// 預約與工單的車輛／客戶不符（櫃檯改選了車）。此時不能把這筆預約
+			// 標記成已進廠，那會讓預約狀態與事實不符。
+			appointmentID = 0
+		case apptStatus == "cancelled" || apptStatus == "completed":
+			appointmentID = 0
+		default:
+			apptArg = appointmentID
+		}
+	}
+
+	res, err := tx.Exec(`INSERT INTO work_orders
 		(vehicle_id, customer_id, technician_id, status, current_mileage,
 		 customer_complaint, approval_status, total_amount, sop_completed,
 		 insurance_company_id, claim_no, is_insurance, accident_date, deductible_amount,
-		 claim_amount, claim_date, claim_note)
-		VALUES (?,?,?,'pending',?,?,?,0,0,?,?,?,?,?,?,?,?)`,
+		 claim_amount, claim_date, claim_note, appointment_id)
+		VALUES (?,?,?,'pending',?,?,?,0,0,?,?,?,?,?,?,?,?,?)`,
 		vehicleID, customerID, techArg, mileage,
 		nullStr(r.FormValue("customer_complaint")), approval,
 		insArg, nullStr(claimNo), isIns, nullStr(accidentDate), deductible,
-		claimAmount, claimDate, strings.TrimSpace(r.FormValue("claim_note")))
+		claimAmount, claimDate, strings.TrimSpace(r.FormValue("claim_note")),
+		apptArg)
 	if err != nil {
 		fail(w, "建立工單失敗")
 		return
 	}
 
 	id, _ := res.LastInsertId()
+
+	// 預約標記為已進廠。限定狀態：已在 arrived 的不重複寫、已取消／已完成的不改。
+	if apptArg != nil {
+		if _, err := tx.Exec(`UPDATE appointments
+			SET status = 'arrived', updated_at = CURRENT_TIMESTAMP
+			WHERE id = ? AND status IN ('booked','confirmed')`, appointmentID); err != nil {
+			fail(w, "更新預約狀態失敗")
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		fail(w, "建立工單失敗")
+		return
+	}
 
 	// 里程履歷（FR-VH-03）：進廠工單的里程自動帶入履歷，
 	// 來源標記 work_order 供追溯。寫入失敗不擋開單——里程是輔助資訊，
