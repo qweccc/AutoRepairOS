@@ -29,10 +29,12 @@ func ListPhrases(w http.ResponseWriter, r *http.Request, user model.User) {
 		list = append(list, p)
 	}
 
-	// 簡單的字串頁面，不需要 Templ
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(generatePhrasesHTML(list)))
+	// 為什麼走 renderPage：這個頁面原本是自行拼 `<!DOCTYPE html>...`，完全沒有
+	// shell 與 nav，等于「整頁沒有右側導覽」——使用者在其他頁面都有右側選單，
+	// 只有這裡會突然失去導覽。全站版面只有 renderPage（字串頁）與
+	// components.Layout（templ 頁）兩種來源，頁面就必須走其中之一。
+	body := flash(r) + generatePhrasesHTML(list)
+	renderPage(w, "技師片語庫", "/phrases", user.Username, user.Role, body)
 }
 
 // CreatePhrase 新增技師片語。
@@ -67,9 +69,8 @@ func EditPhraseForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(generatePhraseEditForm(p)))
+	body := flash(r) + generatePhraseEditForm(p)
+	renderPage(w, "編輯片語", "/phrases", user.Username, user.Role, body)
 }
 
 // UpdatePhrase 更新片語。
@@ -151,13 +152,14 @@ func SearchPhrasesAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, results)
 }
 
-// generatePhrasesHTML 產生片語列表 HTML（簡單頁面，不需 Templ）。
+// generatePhrasesHTML 產生片語列表的「頁面內容」HTML。
+//
+// 只回傳 body 內容（不自造 DOCTYPE/html/head）：版面外壳（含右側導覽）由
+// renderPage 統一提供。少了這層，這頁就不會有右側選單，使用者會覺得「只有
+// 這一頁沒有導覽」。
 func generatePhrasesHTML(phrases []model.TechnicianPhrase) string {
 	var b strings.Builder
-	b.WriteString(`<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>技師片語庫</title>`)
-	b.WriteString(`<link rel="stylesheet" href="/static/app.css">`)
-	b.WriteString(`<style>.phrase-item { padding: 8px 12px; border-bottom: 1px solid #334155; }</style>`)
-	b.WriteString(`</head><body><div class="card"><h2>技師常用片語庫</h2>`)
+	b.WriteString(`<div class="card"><h2>技師常用片語庫</h2>`)
 	b.WriteString(`<form method="POST" action="/phrases/new" class="frm">`)
 	b.WriteString(`<label>片語內容<input name="phrase" required placeholder="例：煞車皮剩2mm"></label>`)
 	b.WriteString(`<label>分類<input name="category" placeholder="例：煞車、引擎"></label>`)
@@ -175,21 +177,19 @@ func generatePhrasesHTML(phrases []model.TechnicianPhrase) string {
 			active = "停用"
 		}
 		b.WriteString(`<td>` + active + `</td>`)
-		b.WriteString(`<td><a class="btn btn-s" href="/phrases/` + strconv.FormatInt(p.ID, 10) + `/edit">編輯</a>`)
+		b.WriteString(`<td><a class="btn btn-s" href="/phrases/` + strconv.FormatInt(p.ID, 10) + `/edit">編輯</a> `)
 		b.WriteString(`<a class="btn btn-d" href="/phrases/` + strconv.FormatInt(p.ID, 10) + `/delete" hx-post="/phrases/` + strconv.FormatInt(p.ID, 10) + `/delete" data-confirm="確定刪除此片語？">刪除</a></td>`)
 		b.WriteString(`</tr>`)
 	}
-	b.WriteString(`</table></div></body></html>`)
+	b.WriteString(`</table></div>`)
 	return b.String()
 }
 
-// generatePhraseEditForm 產生編輯表單 HTML。
+// generatePhraseEditForm 產生編輯表單的「頁面內容」HTML（同樣交給 renderPage 包殼）。
 func generatePhraseEditForm(p model.TechnicianPhrase) string {
 	var b strings.Builder
-	b.WriteString(`<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><title>編輯片語</title>`)
-	b.WriteString(`<link rel="stylesheet" href="/static/app.css">`)
-	b.WriteString(`</head><body><div class="card"><h2>編輯片語 #` + strconv.FormatInt(p.ID, 10) + `</h2>`)
-	b.WriteString(`<form method="POST" action="/phrases/` + strconv.FormatInt(p.ID, 10) + "/update\" class=\"frm\">")
+	b.WriteString(`<div class="card"><h2>編輯片語 #` + strconv.FormatInt(p.ID, 10) + `</h2>`)
+	b.WriteString(`<form method="POST" action="/phrases/` + strconv.FormatInt(p.ID, 10) + `/update" class="frm">`)
 	b.WriteString(`<label>片語內容<input name="phrase" value="` + htmlEsc(p.Phrase) + `" required></label>`)
 	b.WriteString(`<label>分類<input name="category" value="` + htmlEsc(p.Category) + `"></label>`)
 	b.WriteString(`<label>排序<input name="sort_order" type="number" value="` + strconv.Itoa(p.SortOrder) + `"></label>`)
@@ -199,6 +199,6 @@ func generatePhraseEditForm(p model.TechnicianPhrase) string {
 	b.WriteString(`</select></label>`)
 	b.WriteString(`<div class="full"><button class="btn btn-p" type="submit">更新</button>`)
 	b.WriteString(`<a class="btn btn-s" href="/phrases">取消</a></div>`)
-	b.WriteString(`</form></div></body></html>`)
+	b.WriteString(`</form></div>`)
 	return b.String()
 }
