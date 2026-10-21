@@ -51,11 +51,11 @@ func TestLoadAnalyticsChartDataGroupsRevenueAndGrossProfit(t *testing.T) {
 				t.Fatalf("got %d months, want 2", len(got.Points))
 			}
 			assertClose(t, parseChartAmount(t, got.Points[0].Revenue), 90)
-			assertClose(t, parseChartAmount(t, got.Points[0].Cost), 16)
-			assertClose(t, parseChartAmount(t, got.Points[0].Gross), 74)
+			assertClose(t, parseChartAmount(t, got.Points[0].Cost), 76) // 零件 16 + 外包 20 + 工資 40
+			assertClose(t, parseChartAmount(t, got.Points[0].Gross), 14)
 			assertClose(t, parseChartAmount(t, got.Points[1].Revenue), 60)
-			assertClose(t, parseChartAmount(t, got.Points[1].Cost), 10)
-			assertClose(t, parseChartAmount(t, got.Points[1].Gross), 50)
+			assertClose(t, parseChartAmount(t, got.Points[1].Cost), 30) // 零件 10 + 外包 0 + 工資 20
+			assertClose(t, parseChartAmount(t, got.Points[1].Gross), 30)
 
 			sums := make(map[string]analyticsMonthTotal, len(got.Groups))
 			for _, group := range got.Groups {
@@ -132,6 +132,11 @@ func setupAnalyticsChartTestDB(t *testing.T) {
 		)`,
 		`CREATE TABLE receivable_payments (receivable_id INTEGER, work_order_id INTEGER)`,
 		`CREATE TABLE lookup_items (category TEXT, code TEXT, label TEXT, sort_order INTEGER)`,
+		`CREATE TABLE technician_worklogs (
+			id INTEGER PRIMARY KEY, work_order_id INTEGER, technician_id INTEGER,
+			work_date TEXT, hours REAL, commission_amount REAL, deleted_at TEXT
+		)`,
+		`CREATE VIEW active_technician_worklogs AS SELECT * FROM technician_worklogs WHERE deleted_at IS NULL`,
 		`INSERT INTO customers (id, name, tags) VALUES (1, '甲客戶', 'VIP, returning'), (2, '乙客戶', 'Fleet')`,
 		`INSERT INTO vehicles (id, vehicle_type) VALUES (1, '01'), (2, '02')`,
 		`INSERT INTO lookup_items (category, code, label, sort_order)
@@ -143,6 +148,10 @@ func setupAnalyticsChartTestDB(t *testing.T) {
 		`INSERT INTO work_order_items (work_order_id, item_type, inventory_item_id, quantity, subtotal)
 			VALUES (1, 'labor', NULL, 1, 40), (1, 'part', 1, 2, 50), (1, 'subcontract', NULL, 1, 20),
 				(2, 'labor', NULL, 1, 30), (2, 'part', 2, 2, 30)`,
+		// T2.13：工資成本（技師佣金）以工時月歸屬。工單 1 的工時在 1 月、
+		// 工單 2 的在 2 月，正好與各自的工單建立月相同，方便驗證歸屬。
+		`INSERT INTO technician_worklogs (work_order_id, work_date, hours, commission_amount)
+			VALUES (1, '2026-01-10', 2, 40), (2, '2026-02-10', 2, 20)`,
 	}
 	for _, statement := range statements {
 		if _, err := d.Exec(statement); err != nil {

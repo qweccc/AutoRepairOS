@@ -28,8 +28,18 @@ import (
 //   - FR-ANA-07 現金流：labor/parts/subcontract 收入與成本概況
 //   - FR-INV-04  死頭料：長期未動用零件與對應成本
 //
-// FR-ANA-01 圖表沿用 reports_export.go 的已結帳工單、建立日期、折扣及零件成本口徑。
-// T2.15 工單 CSV 沒有外包成本欄，依需求以 CSV 口徑優先，圖表毛利只扣零件成本。
+// T2.13 起的成本口徑（詳見 internal/handler/analytics_cost.go）：
+//
+//	毛利 = 營收 － 零件成本 － 外包成本 － 工資成本
+//	工資成本 = 技師佣金（technician_worklogs.commission_amount）
+//
+// 零件／外包歸「工單建立日」，工資歸「工時日」（成本屬於實際施工日）。
+// 期間內完全沒有技師工時紀錄時，成本與毛利顯示「未記錄」，不以 0 冒充——
+// 0 一定會被看成「算過且成本為零」，而「未記錄」才會讓人知道要補資料。
+//
+// 口徑一致是這頁的鐵律：KPI 毛利率、損益分拆、月趨勢圖、分析摘要 CSV 全部
+// 走同一套成本，任何一處分開算就會出現「同一頁兩個不一樣的毛利率」。
+//
 // 工單分組沿用 work_order_items.item_type 的既有 labor/part/subcontract 值；
 // customer.tags 為逗號分隔標籤，vehicle.vehicle_type 以 lookup label 顯示。
 // ============================================================
@@ -61,12 +71,18 @@ func periodRange(gran, from, to string) (string, string) {
 }
 
 // plRow 是損益分拆的一列。
+//
+// T2.13：Cost 是三類成本中「歸給這一類」的部分——零件取庫存成本、外包取明細
+// 小計、工資取技師佣金。CostRecorded 表示這筆成本是否真的有來源可算：
+// 工資在完全沒有技師工時紀錄時為 false，畫面必須顯示「未記錄」而非 0，
+// 否則會被當成「算過且成本為零」。
 type plRow struct {
-	Type     string
-	Label    string
-	Revenue  float64
-	Cost     float64
-	Quantity int
+	Type         string
+	Label        string
+	Revenue      float64
+	Cost         float64
+	Quantity     int
+	CostRecorded bool
 }
 
 // itemTypeLabel 對應 work_order_items.item_type（CHECK 約束的三值）。
@@ -82,8 +98,21 @@ type analyticsChartDimensions struct {
 }
 
 type analyticsMonthTotal struct {
-	Revenue float64
-	Cost    float64
+	Revenue       float64
+	Cost          float64 // 零件成本（歸工單建立月）
+	Subcontract   float64 // 外包成本（歸工單建立月）
+	Labor         float64 // 工資成本＝技師佣金（歸工時月，與上面兩者歸屬不同）
+	LaborRecorded bool    // 當月是否有任何技師工時紀錄
+}
+
+// TotalCost 回傳三類成本合計。工資未記錄時只加已知的兩類。
+func (m analyticsMonthTotal) TotalCost() float64 {
+	return m.Cost + m.Subcontract + m.Labor
+}
+
+// Gross 回傳毛利；工資未記錄時回傳 0 並搭配 GrossRecorded 判斷。
+func (m analyticsMonthTotal) Gross() float64 {
+	return m.Revenue - m.TotalCost()
 }
 
 type analyticsGroupTotal struct {
@@ -159,6 +188,33 @@ func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyt
 		monthly[key] = analyticsMonthTotal{}
 	}
 
+	// T2.13：圖表的毛利要與損益分拆、CSV 匯出同口徑，因此工資成本（技師佣金）
+	// 也要入圖。它的歸屬是「工時月」而非「工單建立月」，與營收不同軸是刻意的
+	// ——成本屬於實際施工日，強行塞回工單月會讓跨月工單的毛利失真。
+	// 當月完全沒有工時紀錄時標記未記錄，不以 0 冒充已計算。
+	if showCost && db.DB != nil {
+		laborRows, err := db.DB.Query(`SELECT strftime('%Y-%m', work_date),
+				COALESCE(SUM(commission_amount),0), COUNT(1)
+			FROM active_technician_worklogs
+			WHERE date(work_date) BETWEEN ? AND ?
+			GROUP BY strftime('%Y-%m', work_date)`, from, to)
+		if err == nil {
+			for laborRows.Next() {
+				var key string
+				var labor float64
+				var n int
+				if laborRows.Scan(&key, &labor, &n) == nil {
+					if total, ok := monthly[key]; ok {
+						total.Labor = labor
+						total.LaborRecorded = n > 0
+						monthly[key] = total
+					}
+				}
+			}
+			laborRows.Close()
+		}
+	}
+
 	groups := make(map[string]*analyticsGroupTotal)
 	groupLabels := make([]string, 0)
 	addGroup := func(label string, id int64, revenue, cost float64) {
@@ -184,7 +240,9 @@ func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyt
 		}
 		monthTotal.Revenue += netRevenue
 		if showCost {
+			// 零件與外包都歸工單建立月（與營收同軸），工資另以工時月歸屬。
 			monthTotal.Cost += row.PartsCost
+			monthTotal.Subcontract += row.SubcontractCost
 		}
 		monthly[month] = monthTotal
 
@@ -252,24 +310,31 @@ func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyt
 			revenueSize = int(total.Revenue / maxRevenue * 160)
 		}
 		if showCost {
-			gross := total.Revenue - total.Cost
+			gross := total.Gross()
 			if maxRevenue > 0 && gross > 0 {
 				grossSize = int(gross / maxRevenue * 160)
 			}
 		}
 		center := int((float64(i) + 0.5) * band)
+		costText := formatReportAmount(total.TotalCost())
+		grossText := formatReportAmount(total.Gross())
+		if showCost && !total.LaborRecorded {
+			costText = "未記錄"
+			grossText = "未記錄"
+		}
 		points = append(points, pages.AnalyticsTrendPoint{
-			Label:       month,
-			Revenue:     formatReportAmount(total.Revenue),
-			Cost:        formatReportAmount(total.Cost),
-			Gross:       formatReportAmount(total.Revenue - total.Cost),
-			RevenueX:    center - 24,
-			GrossX:      center + 2,
-			LabelX:      center,
-			RevenueY:    210 - revenueSize,
-			GrossY:      210 - grossSize,
-			RevenueSize: revenueSize,
-			GrossSize:   grossSize,
+			Label:        month,
+			Revenue:      formatReportAmount(total.Revenue),
+			Cost:         costText,
+			Gross:        grossText,
+			CostRecorded: !showCost || total.LaborRecorded,
+			RevenueX:     center - 24,
+			GrossX:       center + 2,
+			LabelX:       center,
+			RevenueY:     210 - revenueSize,
+			GrossY:       210 - grossSize,
+			RevenueSize:  revenueSize,
+			GrossSize:    grossSize,
 		})
 	}
 
@@ -382,7 +447,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// ============ KPI（FR-ANA-04）============
 	// ARO = 已結帳工單平均金額；進場數 = 期間開立的工單張數（含未結帳）。
-	var revenue, partsCost float64
+	var revenue float64
 	var paidCount, orderCount int
 	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount - COALESCE(discount_amount,0)),0), COUNT(1)
 		FROM active_work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
@@ -390,32 +455,32 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders WHERE date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&orderCount)
 
-	// 零件成本：從 work_order_items.inventory_item_id 關回庫存主檔帶 cost_price。
-	// 找不到料號的零件不計成本（寧可低估毛利也不造假）。
+	// T2.13：三類成本（零件／外包／工資）统一由 analyticsPeriodCosts 計算，
+	// 口径與損益分拆、分析摘要 CSV 相同，避免同一頁出現兩個不一樣的毛利率。
+	// 工资沒有工時紀錄時不可用 0 冒充，改以「未記錄」顯示。
+	var costs analyticsCosts
 	if showCost {
-		db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
-			FROM work_order_items woi
-			JOIN active_work_orders wo ON wo.id = woi.work_order_id
-			LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
-			WHERE woi.item_type='part' AND wo.status='paid'
-				AND date(wo.created_at) BETWEEN ? AND ?`, from, to).Scan(&partsCost)
+		costs = analyticsPeriodCosts(from, to)
 	}
 
 	aro := 0.0
 	if paidCount > 0 {
 		aro = revenue / float64(paidCount)
 	}
-	gross := revenue - partsCost
+	gross := revenue - costs.Total()
 	grossPct := 0.0
 	if revenue > 0 {
 		grossPct = gross / revenue * 100
 	}
 
 	// ============ 損益分拆（FR-ANA-01 / FR-FIN-06 / FR-ANA-07）============
+	// T2.13：三類成本都要納入，不再只有零件成本。
+	// 零件／外包由同一條查詢带回（各自獨立 CASE），工资由 analyticsPeriodCosts
+	// 以 work_date 歸屬（與零件／外包的工單建立日歸屬刻意不同，見該函式註解）。
 	plRows := []plRow{
-		{Type: "labor", Label: itemTypeLabel["labor"]},
-		{Type: "part", Label: itemTypeLabel["part"]},
-		{Type: "subcontract", Label: itemTypeLabel["subcontract"]},
+		{Type: "labor", Label: itemTypeLabel["labor"], CostRecorded: false},
+		{Type: "part", Label: itemTypeLabel["part"], CostRecorded: true},
+		{Type: "subcontract", Label: itemTypeLabel["subcontract"], CostRecorded: true},
 	}
 	plIdx := map[string]int{}
 	for i, p := range plRows {
@@ -424,7 +489,9 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	itemRows, _ := db.DB.Query(`SELECT woi.item_type,
 			COALESCE(SUM(woi.subtotal),0), COALESCE(SUM(woi.quantity),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='part'
-				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0)
+				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0),
+			COALESCE(SUM(CASE WHEN woi.item_type='subcontract'
+				THEN woi.subtotal ELSE 0 END),0)
 		FROM work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
@@ -433,17 +500,27 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	if itemRows != nil {
 		for itemRows.Next() {
 			var t string
-			var rev, cost float64
+			var rev, partCost, subCost float64
 			var qty int
-			if itemRows.Scan(&t, &rev, &qty, &cost) == nil {
+			if itemRows.Scan(&t, &rev, &qty, &partCost, &subCost) == nil {
 				if i, ok := plIdx[t]; ok {
 					plRows[i].Revenue = rev
-					plRows[i].Cost = cost
 					plRows[i].Quantity = qty
+					switch t {
+					case "part":
+						plRows[i].Cost = partCost
+					case "subcontract":
+						plRows[i].Cost = subCost
+					}
 				}
 			}
 		}
 		itemRows.Close()
+	}
+	// 工資成本：技師佣金。完全沒有工時紀錄時標成未記錄（不可用 0 冒充）。
+	if i, ok := plIdx["labor"]; ok {
+		plRows[i].Cost = costs.LaborCost
+		plRows[i].CostRecorded = costs.LaborRecorded
 	}
 
 	// ============ 高頻維修車款（FR-ANA-03）============
@@ -539,43 +616,25 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		avgPerCust = revenue / float64(activeCust)
 	}
 
-	// ============ 行銷方案成效（FR-ANA-06）============
-	campRows, _ := db.DB.Query(`SELECT COALESCE(wo.campaign_code, c.campaign_code, '(未設定)'),
-			COUNT(1), COALESCE(SUM(wo.total_amount - COALESCE(wo.discount_amount,0)),0)
-		FROM active_work_orders wo
-		LEFT JOIN active_customers c ON c.id = wo.customer_id
-		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
-		GROUP BY COALESCE(wo.campaign_code, c.campaign_code, '(未設定)')
-		ORDER BY SUM(wo.total_amount - COALESCE(wo.discount_amount,0)) DESC`, from, to)
-	var cb strings.Builder
-	cb.WriteString(`<table><tr><th>方案代碼</th><th class="num">工單數</th><th class="num">營收</th></tr>`)
-	campCount := 0
-	if campRows != nil {
-		for campRows.Next() {
-			var code string
-			var n int
-			var amt float64
-			if campRows.Scan(&code, &n, &amt) == nil {
-				cb.WriteString(`<tr><td><code>` + htmlEsc(code) + `</code></td><td class="num">` +
-					strconv.Itoa(n) + `</td><td class="num">` + money(amt) + `</td></tr>`)
-				campCount++
-			}
-		}
-		campRows.Close()
-	}
-	cb.WriteString(`</table>`)
-	campTable := cb.String()
-	if campCount == 0 {
-		campTable = `<div class="empty">期間無已結帳工單</div>`
-	}
+	// ============ 行銷方案成效（FR-ANA-06 / T2.18）============
+	// 由 analytics_campaign.go 的 campaignAnalysisBlock 產生——工單數、營收之外，
+	// 依 T2.13 的成本口徑補上成本與毛利（同一個方案的成本用批次查詢取回，不做 N+1）。
+	campTable := campaignAnalysisBlock(from, to, showCost)
 
-	// ============ 折扣與保固（FR-FIN-07）============
-	var discountTotal, warrantyRev float64
-	var warrantyCount int
+	// ============ 技師效率（FR-ANA-02 / T2.17）============
+	// 由 analytics_tech.go 的 technicianEfficiencyBlock 產生。
+	techEfficiencyTable := technicianEfficiencyBlock(from, to, showCost)
+
+	// ============ 折扣與保固（FR-FIN-07 / T2.14 保固成本統計）============
+	var discountTotal float64
 	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(discount_amount,0)),0) FROM active_work_orders
 		WHERE date(created_at) BETWEEN ? AND ?`, from, to).Scan(&discountTotal)
-	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(total_amount),0) FROM active_work_orders
-		WHERE is_warranty=1 AND date(created_at) BETWEEN ? AND ?`, from, to).Scan(&warrantyCount, &warrantyRev)
+
+	// 保固收入用「折扣後」金額（warrantyStats 內），與損益分拆、方案毛利同口徑——
+	// 若用未折扣金額，同一張保固工單在「保固毛利」與「損益毛利」會算出兩個不同數字。
+	warrantyCount, warrantyRev, warrantyDiscount := warrantyStats(from, to)
+	warrantyCostTotal, warrantyLaborRecorded := warrantyCostTotals(from, to)
+	warrantyGross := warrantyRev - warrantyCostTotal
 
 	// ============ 死頭料（FR-INV-04）============
 	// 長期未動用 = 沒有任何異動紀錄，或最後一次異動在 180 天前。
@@ -634,27 +693,36 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	plBody.WriteString(`</tr>`)
 	for _, p := range plRows {
-		g := p.Revenue - p.Cost
-		gp := 0.0
-		if p.Revenue > 0 {
-			gp = g / p.Revenue * 100
-		}
 		plBody.WriteString(`<tr><td>` + p.Label + `</td><td class="num">` + money(p.Revenue) + `</td>`)
 		if showCost {
-			costCell := money(p.Cost)
-			if p.Type != "part" {
-				// 工資與外包成本未出現在 T2.15 CSV，避免把缺失成本顯示成零。
-				costCell = `<span style="color:#64748b">未記錄</span>`
+			if !p.CostRecorded {
+				// T2.13：未知成本不可用 0 冒充。成本、毛利、毛利率全部標記未記錄，
+				// 否則「毛利」會被看成一個已計算的數字。
+				plBody.WriteString(`<td class="num"><span style="color:#64748b">未記錄</span></td>` +
+					`<td class="num"><span style="color:#64748b">未記錄</span></td>` +
+					`<td class="num"><span style="color:#64748b">—</span></td>`)
+			} else {
+				g := p.Revenue - p.Cost
+				gp := 0.0
+				if p.Revenue > 0 {
+					gp = g / p.Revenue * 100
+				}
+				plBody.WriteString(`<td class="num">` + money(p.Cost) + `</td><td class="num">` + money(g) +
+					`</td><td class="num">` + fmt.Sprintf("%.1f%%", gp) + `</td>`)
 			}
-			plBody.WriteString(`<td class="num">` + costCell + `</td><td class="num">` + money(g) +
-				`</td><td class="num">` + fmt.Sprintf("%.1f%%", gp) + `</td>`)
 		}
 		plBody.WriteString(`</tr>`)
 	}
 	plBody.WriteString(`<tr><td><b>合計</b></td><td class="num"><b>` + money(revenue) + `</b></td>`)
 	if showCost {
-		plBody.WriteString(`<td class="num"><b>` + money(partsCost) + `</b></td><td class="num"><b>` +
-			money(gross) + `</b></td><td class="num"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b></td>`)
+		if costs.LaborRecorded {
+			plBody.WriteString(`<td class="num"><b>` + money(costs.Total()) + `</b></td><td class="num"><b>` +
+				money(gross) + `</b></td><td class="num"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b></td>`)
+		} else {
+			plBody.WriteString(`<td class="num"><b><span style="color:#64748b">未記錄</span></b></td>` +
+				`<td class="num"><b><span style="color:#64748b">未記錄</span></b></td>` +
+				`<td class="num"><b><span style="color:#64748b">—</span></b></td>`)
+		}
 	}
 	plBody.WriteString(`</tr></table>`)
 
@@ -664,7 +732,9 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	grossNote := `成本與毛利僅限系統管理員檢視。`
 	if showCost {
-		grossNote = `毛利與報表匯出一致，僅扣除 CSV 有列出的零件成本；CSV 未列外包成本，因此不計入。`
+		grossNote = `毛利＝營收－零件成本－外包成本－工資成本（工資為技師佣金）。` +
+			`工資若該期間沒有任何技師工時紀錄，會顯示「未記錄」而不是 0，` +
+			`此時毛利與毛利率同樣標記未記錄，不以 0 冒充已計算。`
 	}
 	body := flash(r) + `
     <div class="card">
@@ -696,7 +766,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
       <div style="margin-bottom:14px">
         <div class="stat"><b>` + money(aro) + `</b><span>ARO 平均工單金額</span></div>
         <div class="stat"><b>` + strconv.Itoa(orderCount) + `</b><span>車輛進場數</span></div>
-        ` + ownerOnlyStat(user, fmt.Sprintf("%.1f%%", grossPct), "毛利率") + `
+        ` + ownerOnlyStat(user, grossStatValue(showCost, costs, grossPct), "毛利率") + `
         <div class="stat"><b>` + fmt.Sprintf("%.1f%%", repeatRate) + `</b><span>顧客回訪率</span></div>
       </div>
       <p style="color:#64748b;font-size:12.5px">
@@ -707,6 +777,10 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 
     <div class="card">
       <h2>損益分拆（工資 / 零件 / 外包）</h2>` + plBody.String() + `
+    </div>
+
+    <div class="card">
+      <h2>技師效率</h2>` + techEfficiencyTable + `
     </div>
 
     <div class="card">
@@ -735,10 +809,12 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
     <div class="card">
       <h2>折扣與保固</h2>
       <div style="margin-bottom:12px">
-        <div class="stat"><b>` + money(discountTotal) + `</b><span>折扣總額</span></div>
+        <div class="stat"><b>` + money(discountTotal) + `</b><span>折扣總額（全部工單）</span></div>
         <div class="stat"><b>` + strconv.Itoa(warrantyCount) + `</b><span>保固工單數</span></div>
-        <div class="stat"><b>` + money(warrantyRev) + `</b><span>保固工單金額</span></div>
-      </div>
+        <div class="stat"><b>` + money(warrantyRev) + `</b><span>保固工單金額（折扣後）</span></div>
+        <div class="stat"><b>` + money(warrantyDiscount) + `</b><span>保固折讓</span></div>
+      </div>` +
+		warrantyCostBlock(showCost, warrantyCostTotal, warrantyGross, warrantyLaborRecorded) + `
     </div>
 
     </div>`
@@ -774,22 +850,19 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 		from, to = periodRange("month", "", "")
 	}
 
-	var revenue, partsCost float64
+	// T2.13：三類成本由 analyticsPeriodCosts 統一計算，與頁面損益分拆同口徑。
+	costs := analyticsPeriodCosts(from, to)
+
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="analytics_`+from+`_`+to+`.csv"`)
+
+	var revenue float64
 	var paidCount, orderCount int
 	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount - COALESCE(discount_amount,0)),0), COUNT(1)
 		FROM active_work_orders WHERE status='paid' AND date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&revenue, &paidCount)
 	db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders WHERE date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&orderCount)
-	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
-		FROM work_order_items woi
-		JOIN active_work_orders wo ON wo.id = woi.work_order_id
-		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
-		WHERE woi.item_type='part' AND wo.status='paid'
-			AND date(wo.created_at) BETWEEN ? AND ?`, from, to).Scan(&partsCost)
-
-	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="analytics_`+from+`_`+to+`.csv"`)
 
 	var b strings.Builder
 	b.WriteString("指標,數值\n")
@@ -803,18 +876,27 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 		aro = revenue / float64(paidCount)
 	}
 	b.WriteString("ARO 平均工單金額," + fmt.Sprintf("%.0f", aro) + "\n")
-	b.WriteString("零件成本," + fmt.Sprintf("%.0f", partsCost) + "\n")
-	b.WriteString("毛利（營收-零件成本）," + fmt.Sprintf("%.0f", revenue-partsCost) + "\n")
-	if revenue > 0 {
-		b.WriteString("毛利率(%)," + fmt.Sprintf("%.1f", (revenue-partsCost)/revenue*100) + "\n")
+	// T2.13：三類成本分列，毛利＝營收－三類成本。工資未記錄時標記未記錄（不以 0 冒充）。
+	b.WriteString("零件成本," + fmt.Sprintf("%.0f", costs.PartsCost) + "\n")
+	b.WriteString("外包成本," + fmt.Sprintf("%.0f", costs.SubcontractCost) + "\n")
+	if costs.LaborRecorded {
+		b.WriteString("工資成本（技師佣金）," + fmt.Sprintf("%.0f", costs.LaborCost) + "\n")
+		b.WriteString("毛利（營收-三類成本）," + fmt.Sprintf("%.0f", revenue-costs.Total()) + "\n")
 	} else {
-		b.WriteString("毛利率(%),0.0\n")
+		b.WriteString("工資成本（技師佣金）,未記錄\n")
+		b.WriteString("毛利（營收-三類成本）,未記錄\n")
+	}
+	if revenue > 0 && costs.LaborRecorded {
+		b.WriteString("毛利率(%)," + fmt.Sprintf("%.1f", (revenue-costs.Total())/revenue*100) + "\n")
+	} else {
+		b.WriteString("毛利率(%),未記錄\n")
 	}
 
 	// 類別明細
 	b.WriteString("\n類別,營收,成本,數量\n")
 	rows, _ := db.DB.Query(`SELECT woi.item_type, COALESCE(SUM(woi.subtotal),0), COALESCE(SUM(woi.quantity),0),
-			COALESCE(SUM(CASE WHEN woi.item_type='part' THEN COALESCE(i.cost_price,0)*woi.quantity ELSE 0 END),0)
+			COALESCE(SUM(CASE WHEN woi.item_type='part' THEN COALESCE(i.cost_price,0)*woi.quantity ELSE 0 END),0),
+			COALESCE(SUM(CASE WHEN woi.item_type='subcontract' THEN woi.subtotal ELSE 0 END),0)
 		FROM work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
@@ -823,28 +905,38 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 	if rows != nil {
 		for rows.Next() {
 			var t string
-			var rev, cost float64
+			var rev, partCost, subCost float64
 			var qty int
-			if rows.Scan(&t, &rev, &qty, &cost) == nil {
+			if rows.Scan(&t, &rev, &qty, &partCost, &subCost) == nil {
 				label := itemTypeLabel[t]
 				if label == "" {
 					label = t
 				}
+				// 工資成本是「期間匯總的技師佣金」（見上方指標區），無法在不造假的前提下
+				// 拆給明細列，因此該列顯示「-」而不是 0。
+				costCell := fmt.Sprintf("%.0f", partCost+subCost)
+				if t == "labor" {
+					costCell = "-"
+				}
 				b.WriteString(csvField(label) + "," + fmt.Sprintf("%.0f", rev) + "," +
-					fmt.Sprintf("%.0f", cost) + "," + strconv.Itoa(qty) + "\n")
+					costCell + "," + strconv.Itoa(qty) + "\n")
 			}
 		}
 		rows.Close()
 	}
 
 	// 工單明細（FR-FIN-08：工單編號、客戶、收入拆分、零件成本、支付方式、折扣）
-	b.WriteString("\n工單編號,客戶,日期,營收,折扣,保固,零件成本\n")
+	// T2.13：多列外包成本（與零件成本同一條查詢可取得）。工資成本為期間匯總的
+	// 技師佣金，無法誠實歸給單張工單時不硬湊，故不在此列出。
+	b.WriteString("\n工單編號,客戶,日期,營收,折扣,保固,零件成本,外包成本\n")
 	woRows, _ := db.DB.Query(`SELECT wo.id, COALESCE(c.name,''), date(wo.created_at),
 			COALESCE(wo.total_amount,0), COALESCE(wo.discount_amount,0), COALESCE(wo.is_warranty,0),
 			COALESCE((SELECT SUM(COALESCE(i.cost_price,0)*woi.quantity)
 				FROM work_order_items woi
 				LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
-				WHERE woi.work_order_id = wo.id AND woi.item_type='part'),0)
+				WHERE woi.work_order_id = wo.id AND woi.item_type='part'),0),
+			COALESCE((SELECT SUM(sub.subtotal) FROM work_order_items sub
+				WHERE sub.work_order_id = wo.id AND sub.item_type='subcontract'),0)
 		FROM active_work_orders wo LEFT JOIN active_customers c ON c.id = wo.customer_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		ORDER BY wo.id`, from, to)
@@ -852,12 +944,13 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 		for woRows.Next() {
 			var id int64
 			var name, d string
-			var total, disc, pcost float64
+			var total, disc, pcost, subCost float64
 			var warr int
-			if woRows.Scan(&id, &name, &d, &total, &disc, &warr, &pcost) == nil {
+			if woRows.Scan(&id, &name, &d, &total, &disc, &warr, &pcost, &subCost) == nil {
 				b.WriteString(strconv.FormatInt(id, 10) + "," + csvField(name) + "," + csvField(d) + "," +
 					fmt.Sprintf("%.0f", total) + "," + fmt.Sprintf("%.0f", disc) + "," +
-					strconv.Itoa(warr) + "," + fmt.Sprintf("%.0f", pcost) + "\n")
+					strconv.Itoa(warr) + "," + fmt.Sprintf("%.0f", pcost) + "," +
+					fmt.Sprintf("%.0f", subCost) + "\n")
 			}
 		}
 		woRows.Close()

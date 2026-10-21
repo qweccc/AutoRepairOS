@@ -3,17 +3,18 @@ package pages
 import "strconv"
 
 type AnalyticsTrendPoint struct {
-	Label       string
-	Revenue     string
-	Cost        string
-	Gross       string
-	RevenueX    int
-	GrossX      int
-	LabelX      int
-	RevenueY    int
-	GrossY      int
-	RevenueSize int
-	GrossSize   int
+	Label        string
+	Revenue      string
+	Cost         string
+	Gross        string
+	CostRecorded bool
+	RevenueX     int
+	GrossX       int
+	LabelX       int
+	RevenueY     int
+	GrossY       int
+	RevenueSize  int
+	GrossSize    int
 }
 
 type AnalyticsGroupRow struct {
@@ -28,7 +29,7 @@ type AnalyticsGroupRow struct {
 templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, svgWidth int, showCost bool) {
 	<div class="card">
 		<h2>月營收與毛利趨勢</h2>
-		<p style="color:#94a3b8;font-size:12.5px">依工單建立日期及已結帳工單統計；營收、零件成本與匯出報表相同。</p>
+		<p style="color:#94a3b8;font-size:12.5px">依工單建立日期及已結帳工單統計；營收、成本與匯出報表相同。工資成本（技師佣金）以「工時月」歸屬，與其他成本歸工單建立月不同，故跨月工單的毛利可能與該月營收不同軸。</p>
 		<div style="overflow-x:auto">
 			<svg role="img" aria-label="月營收趨勢圖" viewBox={ "0 0 " + strconv.Itoa(svgWidth) + " 270" } style="display:block;width:100%;min-width:680px;height:auto">
 				<line x1="24" y1="210" x2={ strconv.Itoa(svgWidth - 24) } y2="210" stroke="#475569" stroke-width="1"/>
@@ -48,15 +49,16 @@ templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, 
 		<p style="display:flex;gap:16px;color:#cbd5e1;font-size:12px">
 			<span><i style="display:inline-block;width:10px;height:10px;background:#38bdf8;margin-right:5px"></i>營收</span>
 			if showCost {
-				<span><i style="display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px"></i>毛利（營收－零件成本）</span>
+				<span><i style="display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px"></i>毛利（營收－零件成本－外包成本－工資成本）</span>
 			}
 		</p>
+		<p style="color:#64748b;font-size:12px">成本欄在完全沒有技師工時紀錄的月份顯示「未記錄」，不以 0 冒充已計算。</p>
 		<table>
 			<tr>
 				<th>月份</th>
 				<th class="num">營收</th>
 				if showCost {
-					<th class="num">零件成本</th>
+					<th class="num">成本</th>
 					<th class="num">毛利</th>
 				}
 			</tr>
@@ -84,7 +86,7 @@ templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, 
 					<th class="num">工單數</th>
 					<th class="num">營收</th>
 					if showCost {
-						<th class="num">零件成本</th>
+						<th class="num">成本</th>
 						<th class="num">毛利</th>
 					}
 				</tr>

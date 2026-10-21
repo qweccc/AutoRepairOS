@@ -11,17 +11,18 @@ import templruntime "github.com/a-h/templ/runtime"
 import "strconv"
 
 type AnalyticsTrendPoint struct {
-	Label       string
-	Revenue     string
-	Cost        string
-	Gross       string
-	RevenueX    int
-	GrossX      int
-	LabelX      int
-	RevenueY    int
-	GrossY      int
-	RevenueSize int
-	GrossSize   int
+	Label        string
+	Revenue      string
+	Cost         string
+	Gross        string
+	CostRecorded bool
+	RevenueX     int
+	GrossX       int
+	LabelX       int
+	RevenueY     int
+	GrossY       int
+	RevenueSize  int
+	GrossSize    int
 }
 
 type AnalyticsGroupRow struct {
@@ -54,14 +55,14 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"card\"><h2>月營收與毛利趨勢</h2><p style=\"color:#94a3b8;font-size:12.5px\">依工單建立日期及已結帳工單統計；營收、零件成本與匯出報表相同。</p><div style=\"overflow-x:auto\"><svg role=\"img\" aria-label=\"月營收趨勢圖\" viewBox=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"card\"><h2>月營收與毛利趨勢</h2><p style=\"color:#94a3b8;font-size:12.5px\">依工單建立日期及已結帳工單統計；營收、成本與匯出報表相同。工資成本（技師佣金）以「工時月」歸屬，與其他成本歸工單建立月不同，故跨月工單的毛利可能與該月營收不同軸。</p><div style=\"overflow-x:auto\"><svg role=\"img\" aria-label=\"月營收趨勢圖\" viewBox=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue("0 0 " + strconv.Itoa(svgWidth) + " 270")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 33, Col: 101}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 34, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -74,7 +75,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(svgWidth - 24))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 34, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 35, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -92,7 +93,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.RevenueX))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 36, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 37, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -105,7 +106,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.RevenueY))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 36, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 37, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -118,7 +119,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.RevenueSize))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 36, Col: 132}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 37, Col: 132}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
@@ -131,7 +132,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(point.Label + " 營收 " + point.Revenue)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 37, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 38, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -149,7 +150,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.GrossX))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 40, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 41, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 				if templ_7745c5c3_Err != nil {
@@ -162,7 +163,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.GrossY))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 40, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 41, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 				if templ_7745c5c3_Err != nil {
@@ -175,7 +176,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.GrossSize))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 40, Col: 127}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 41, Col: 127}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 				if templ_7745c5c3_Err != nil {
@@ -188,7 +189,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(point.Label + " 毛利 " + point.Gross + "；成本 " + point.Cost)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 41, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 42, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -206,7 +207,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(point.LabelX))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 44, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 45, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -219,7 +220,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(point.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 44, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 45, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -235,17 +236,17 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			return templ_7745c5c3_Err
 		}
 		if showCost {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<span><i style=\"display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px\"></i>毛利（營收－零件成本）</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<span><i style=\"display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px\"></i>毛利（營收－零件成本－外包成本－工資成本）</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</p><table><tr><th>月份</th><th class=\"num\">營收</th>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</p><p style=\"color:#64748b;font-size:12px\">成本欄在完全沒有技師工時紀錄的月份顯示「未記錄」，不以 0 冒充已計算。</p><table><tr><th>月份</th><th class=\"num\">營收</th>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if showCost {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<th class=\"num\">零件成本</th><th class=\"num\">毛利</th>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<th class=\"num\">成本</th><th class=\"num\">毛利</th>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -262,7 +263,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(point.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 65, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 67, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -275,7 +276,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(point.Revenue)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 66, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 68, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -293,7 +294,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(point.Cost)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 68, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 70, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -306,7 +307,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(point.Gross)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 69, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 71, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -338,7 +339,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				return templ_7745c5c3_Err
 			}
 			if showCost {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<th class=\"num\">零件成本</th><th class=\"num\">毛利</th>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<th class=\"num\">成本</th><th class=\"num\">毛利</th>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -355,7 +356,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(group.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 94, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 96, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -368,7 +369,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("height:5px;width:" + strconv.Itoa(group.RevenueWidth) + "%;background:#38bdf8;border-radius:4px")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 96, Col: 118}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 98, Col: 118}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -381,7 +382,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(group.Orders)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 99, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 101, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -394,7 +395,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(group.Revenue)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 100, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 102, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -412,7 +413,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(group.Cost)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 102, Col: 35}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 104, Col: 35}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -425,7 +426,7 @@ func AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, s
 					var templ_7745c5c3_Var23 string
 					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(group.Gross)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 103, Col: 36}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/analytics.templ`, Line: 105, Col: 36}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 					if templ_7745c5c3_Err != nil {
