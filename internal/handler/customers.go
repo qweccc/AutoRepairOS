@@ -82,7 +82,7 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	pages.ListCustomersPage(customerRows, total, page, size, q).Render(r.Context(), w)
+	pages.ListCustomersPage(customerRows, total, page, size, q, user).Render(r.Context(), w)
 }
 
 // SearchCustomersAPI 客戶即時搜尋 API（HTMX 用），回傳純 HTML 列。

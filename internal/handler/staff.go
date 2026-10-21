@@ -147,7 +147,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	pages.ListStaffPage(staffRows, total, page, size, q, kind, empCount, depCount, insuredCount,
 		user.Role == "owner" || user.Role == "counter", roleOpts, lookupOptions("branch", ""),
-	).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 // SearchStaffAPI 員工即時搜尋 API（HTMX 用）。

@@ -22,8 +22,8 @@ type SupplierRow struct {
 
 // ListSuppliersPage 廠商列表頁（HTMX 即時搜尋）。
 templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype string,
-	matCount, venCount int, showAddForm bool) {
-	@components.Layout("廠商管理", "/suppliers", "owner", "owner", "AutoRepair OS") {
+	matCount, venCount int, showAddForm bool, user model.User) {
+	@components.Layout("廠商管理", "/suppliers", user, "AutoRepair OS") {
 		if showAddForm {
 			<div class="card">
 				<h2>新增廠商</h2>

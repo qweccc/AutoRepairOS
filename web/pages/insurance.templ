@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"autorepairos/internal/model"
 	"strconv"
 
 	"autorepairos/web/components"
@@ -17,8 +18,8 @@ type InsuranceCompanyRow struct {
 }
 
 // ListInsurancePage 保險公司列表頁（HTMX 即時搜尋）。
-templ ListInsurancePage(rows []InsuranceCompanyRow, total, page, size int, q string) {
-	@components.Layout("保險公司", "/insurance-companies", "owner", "owner", "AutoRepair OS") {
+templ ListInsurancePage(rows []InsuranceCompanyRow, total, page, size int, q string, user model.User) {
+	@components.Layout("保險公司", "/insurance-companies", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>新增保險公司</h2>
 			<form class="frm" method="POST" action="/insurance-companies">

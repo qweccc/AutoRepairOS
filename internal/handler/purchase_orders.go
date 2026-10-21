@@ -82,7 +82,7 @@ func ListPurchaseOrders(w http.ResponseWriter, r *http.Request, user model.User)
 		})
 	}
 
-	pages.ListPurchaseOrdersPage(poRows, total, page, size, q, status).Render(r.Context(), w)
+	pages.ListPurchaseOrdersPage(poRows, total, page, size, q, status, user).Render(r.Context(), w)
 }
 
 // SearchPurchaseOrdersAPI 進貨單即時搜尋（HTMX 用）。
@@ -133,7 +133,7 @@ func SearchPurchaseOrdersAPI(w http.ResponseWriter, r *http.Request) {
 
 // NewPurchaseOrderForm 開立進貨單。
 func NewPurchaseOrderForm(w http.ResponseWriter, r *http.Request, user model.User) {
-	pages.NewPurchaseOrderPage(today(), supplierOptionsSel(0), "").Render(r.Context(), w)
+	pages.NewPurchaseOrderPage(today(), supplierOptionsSel(0), "", user).Render(r.Context(), w)
 }
 
 // CreatePurchaseOrder 建立進貨單主檔，並可一次帶入品項。
@@ -269,7 +269,8 @@ func ShowPurchaseOrder(w http.ResponseWriter, r *http.Request, user model.User) 
 	locked := po.Status == "received"
 
 	pages.ShowPurchaseOrderPage(po, items, total, locked, supplierOptionsSel(po.SupplierID),
-		lookupOptions("category", ""), r.URL.Query().Get("msg")).Render(r.Context(), w)
+		lookupOptions("category", ""), r.URL.Query().Get("msg"),
+		user).Render(r.Context(), w)
 }
 
 // loadPurchaseOrderItems 取進貨單品項與總額。

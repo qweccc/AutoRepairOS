@@ -3,6 +3,7 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
@@ -41,8 +42,8 @@ type APSupplierOption struct {
 }
 
 templ APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSupplierOption,
-	supplierID int64, status, today, username, role string) {
-	@components.Layout("應付帳款", "/ap", username, role, "AutoRepair OS") {
+	supplierID int64, status, today string, user model.User) {
+	@components.Layout("應付帳款", "/ap", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>供應商應付帳款</h2>
 			<p style="color:#94a3b8">採購於確認進貨、外包於成立時建立應付快照；付款以分次流水累計，沖銷保留原帳款紀錄。</p>
@@ -88,7 +89,7 @@ templ APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSupp
 					<thead><tr><th>成立日期／來源</th><th>供應商</th><th class="num">應付</th><th class="num">已付</th><th class="num">餘額</th><th>到期日</th><th>帳齡</th><th>狀態</th><th>付款登記</th></tr></thead>
 					<tbody>
 						for _, row := range rows {
-						@APPayableRowContent(row, today, role)
+						@APPayableRowContent(row, today, user.Role)
 						}
 					</tbody>
 				</table>
@@ -141,8 +142,8 @@ templ APPayableRowContent(row APPayableRow, today, role string) {
 }
 
 templ APStatementPage(rows []APPayableRow, supplierName, from, to string, amount, paid, balance float64,
-	suppliers []APSupplierOption, supplierID int64, csvURL, username, role string) {
-	@components.Layout("供應商月結對帳單", "/ap", username, role, "AutoRepair OS") {
+	suppliers []APSupplierOption, supplierID int64, csvURL string, user model.User) {
+	@components.Layout("供應商月結對帳單", "/ap", user, "AutoRepair OS") {
 		<style>
 			@templ.Raw(`@media print {
 				nav, header, .no-print { display: none !important; }

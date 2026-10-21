@@ -189,7 +189,7 @@ func ListExpenses(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	pages.ListExpensesPage(expRows, total, page, size, q, sumIn, sumOut).Render(r.Context(), w)
+	pages.ListExpensesPage(expRows, total, page, size, q, sumIn, sumOut, user).Render(r.Context(), w)
 }
 
 // SearchExpensesAPI 支出即時搜尋 API（HTMX 用）。

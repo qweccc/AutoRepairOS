@@ -21,8 +21,8 @@ type SubcontractRow struct {
 
 // ListSubcontractsPage 外包加工列表頁（HTMX 即時搜尋）。
 templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, status string,
-	supplierOpts string) {
-	@components.Layout("外包加工", "/subcontracts", "owner", "owner", "AutoRepair OS") {
+	supplierOpts string, user model.User) {
+	@components.Layout("外包加工", "/subcontracts", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>新增外包工項</h2>
 			<form class="frm" method="POST" action="/subcontracts">

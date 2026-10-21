@@ -148,7 +148,7 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		strconv.Itoa(len(pending)), strconv.Itoa(len(recent)),
 		linePill, lineCfg.StatusLine(),
 		len(statuses) > 0, len(recent) > 0, backupRows > 0,
-	).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 func retryStatusDetail(n cron.Notification) string {

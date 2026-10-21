@@ -25,8 +25,8 @@ type InventoryRow struct {
 // ListInventoryPage 庫存列表頁（HTMX 即時搜尋）。
 templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, size int,
 	q string, lowOnly bool, showMoney bool, catTabsHTML string, negBannerHTML string,
-	categoryOptionsHTML string) {
-	@components.Layout("庫存管理", "/inventory", "owner", "owner", "AutoRepair OS") {
+	categoryOptionsHTML string, user model.User) {
+	@components.Layout("庫存管理", "/inventory", user, "AutoRepair OS") {
 		if negBannerHTML != "" {
 			@templ.Raw(negBannerHTML)
 		}

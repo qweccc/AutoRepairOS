@@ -374,7 +374,7 @@ func APHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		pageSuppliers = append(pageSuppliers, pages.APSupplierOption{ID: supplier.ID, Name: supplier.Name})
 	}
 	pages.APHomePage(pageRows, pageAging, pageSuppliers, supplierID, status, today(),
-		user.Username, user.Role).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 func RecordAPPayment(w http.ResponseWriter, r *http.Request) {
@@ -475,7 +475,8 @@ func APStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	if supplierID <= 0 || name == "" {
 		pages.APStatementPage(nil, "", from, to, 0, 0, 0, convertAPSuppliers(suppliers),
-			supplierID, "", user.Username, user.Role).Render(r.Context(), w)
+			supplierID, "",
+			user).Render(r.Context(), w)
 		return
 	}
 	var amount, paid, balance float64
@@ -493,7 +494,7 @@ func APStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	pages.APStatementPage(rows, name, from, to, amount, paid, balance,
 		convertAPSuppliers(suppliers), supplierID, apStatementCSVURL(supplierID, from, to),
-		user.Username, user.Role).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 func convertAPSuppliers(suppliers []apSupplierOption) []pages.APSupplierOption {

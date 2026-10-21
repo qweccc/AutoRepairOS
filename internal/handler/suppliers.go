@@ -143,7 +143,8 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 	venCount := countRows(`SELECT COUNT(1) FROM active_suppliers WHERE vendor_type='vendor'`)
 
 	pages.ListSuppliersPage(supRows, total, page, size, q, vtype, matCount, venCount,
-		user.Role == "owner" || user.Role == "counter").Render(r.Context(), w)
+		user.Role == "owner" || user.Role == "counter",
+		user).Render(r.Context(), w)
 }
 
 // SearchSuppliersAPI 廠商即時搜尋 API（HTMX 用）。

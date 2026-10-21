@@ -257,7 +257,8 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.ListReceivablesPage(recRows, total, page, size, q, method, from, to,
-		showVoided, unpaidOnly, sumPay, sumCash, sumCard, sumCheck, sumTransfer).Render(r.Context(), w)
+		showVoided, unpaidOnly, sumPay, sumCash, sumCard, sumCheck, sumTransfer,
+		user).Render(r.Context(), w)
 }
 
 // SearchReceivablesAPI 收款即時搜尋 API（HTMX 用）。

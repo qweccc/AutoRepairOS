@@ -127,7 +127,8 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	pages.ListAppointmentsPage(apptRows, total, page, size, date, status,
 		calendarDate, calendarView, calendarDays,
-		customerOptions(), vehicleOptions(), bayOptions(""), bayCard).Render(r.Context(), w)
+		customerOptions(), vehicleOptions(), bayOptions(""), bayCard,
+		user).Render(r.Context(), w)
 }
 
 // AppointmentCalendarAPI 回傳行事曆片段，供日／週切換與日期導覽透過 HTMX 更新。

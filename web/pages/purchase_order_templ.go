@@ -27,7 +27,7 @@ type PurchaseOrderRow struct {
 }
 
 // ListPurchaseOrdersPage 進貨單列表（HTMX 即時搜尋）。
-func ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, status string) templ.Component {
+func ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, status string, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -116,7 +116,7 @@ func ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, s
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("進貨單", "/purchase-orders", "owner", "owner", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("進貨單", "/purchase-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -335,7 +335,7 @@ func PurchaseOrderSearchRows(rows []PurchaseOrderRow) templ.Component {
 }
 
 // NewPurchaseOrderPage 開立進貨單。
-func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) templ.Component {
+func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -434,7 +434,7 @@ func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) templ.Componen
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("開立進貨單", "/purchase-orders", "owner", "owner", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("開立進貨單", "/purchase-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -444,9 +444,9 @@ func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) templ.Componen
 
 // ShowPurchaseOrderPage 進貨單詳情：主檔 + 品項 + 應付總額。
 // flashMsg 是 redirectMsg 留下的訊息（如「已進貨（自動建立 N 個新零件）」）；
-// templ 頁面不像字串拼接頁面有全域 flash()，必須由 handler 取值後傳進來顯示。
+// templ 頁面不像字串拼接頁面有全域 flash(user model.User)，必須由 handler 取值後傳進來顯示。
 func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderItem,
-	total float64, locked bool, supplierOpts string, partCategoryOptions string, flashMsg string) templ.Component {
+	total float64, locked bool, supplierOpts string, partCategoryOptions string, flashMsg string, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -774,7 +774,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", "owner", "owner", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

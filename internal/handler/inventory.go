@@ -132,7 +132,8 @@ func ListInventory(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	pages.ListInventoryPage(invRows, total, lowCount, negCount, page, size,
 		q, lowOnly, showMoney, catTabs.String(), negBanner,
-		lookupOptions("category", "")).Render(r.Context(), w)
+		lookupOptions("category", ""),
+		user).Render(r.Context(), w)
 }
 
 // SearchInventoryAPI 庫存即時搜尋 API（HTMX 用）。

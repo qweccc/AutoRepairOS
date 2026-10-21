@@ -3,6 +3,7 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
@@ -49,11 +50,11 @@ type EstimateItemRow struct {
 	Subtotal    float64
 }
 
-templ EstimateListPage(rows []EstimateListRow, username, role string) {
-	@components.Layout("估價草稿", "/estimates", username, role, "AutoRepair OS") {
+templ EstimateListPage(rows []EstimateListRow, user model.User) {
+	@components.Layout("估價草稿", "/estimates", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>估價草稿</h2>
-			if role == "owner" || role == "counter" {
+			if user.Role == "owner" || user.Role == "counter" {
 				<p><a class="btn btn-p" href="/estimates/new">＋ 建立估價</a></p>
 			}
 			if len(rows) == 0 {
@@ -91,8 +92,8 @@ templ EstimateListPage(rows []EstimateListRow, username, role string) {
 	}
 }
 
-templ EstimateNewPage(vehicles []EstimateVehicleOption, username, role string) {
-	@components.Layout("建立估價", "/estimates", username, role, "AutoRepair OS") {
+templ EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) {
+	@components.Layout("建立估價", "/estimates", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>建立估價草稿</h2>
 			if len(vehicles) == 0 {
@@ -146,8 +147,8 @@ templ EstimateNewPage(vehicles []EstimateVehicleOption, username, role string) {
 	}
 }
 
-templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, username, role string, canEdit bool) {
-	@components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", username, role, "AutoRepair OS") {
+templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.User, canEdit bool) {
+	@components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>估價草稿 #{ strconv.FormatInt(e.ID, 10) }</h2>
 			<table>
@@ -228,8 +229,8 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, username, ro
 	}
 }
 
-templ EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID int64, quoteTotal, quoteDiscount float64, username, role string) {
-	@components.Layout("工單估價來源", "/estimates", username, role, "AutoRepair OS") {
+templ EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID int64, quoteTotal, quoteDiscount float64, user model.User) {
+	@components.Layout("工單估價來源", "/estimates", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>工單 #{ strconv.FormatInt(workOrderID, 10) } 的估價來源</h2>
 			<p>來源估價 #{ strconv.FormatInt(e.ID, 10) }，車輛 { e.PlateNumber } / { e.BrandModel }，客戶 { e.CustomerName }。</p>

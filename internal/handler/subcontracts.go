@@ -104,7 +104,8 @@ func ListSubcontracts(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.ListSubcontractsPage(subRows, total, page, size, q, status,
-		supplierOptionsSel(0)).Render(r.Context(), w)
+		supplierOptionsSel(0),
+		user).Render(r.Context(), w)
 }
 
 // SearchSubcontractsAPI 外包即時搜尋 API（HTMX 用）。

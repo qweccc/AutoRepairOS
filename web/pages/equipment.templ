@@ -19,8 +19,8 @@ type EquipmentRow struct {
 }
 
 // ListEquipmentPage 設備管理頁（HTMX 即時搜尋）。
-templ ListEquipmentPage(rows []EquipmentRow, total, page, size int, q, status string) {
-	@components.Layout("設備管理", "/equipment", "owner", "owner", "AutoRepair OS") {
+templ ListEquipmentPage(rows []EquipmentRow, total, page, size int, q, status string, user model.User) {
+	@components.Layout("設備管理", "/equipment", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>新增設備</h2>
 			<form class="frm" method="POST" action="/equipment">

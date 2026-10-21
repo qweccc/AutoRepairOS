@@ -39,7 +39,7 @@ type WorkOrderRow struct {
 // ListWorkOrdersPage 工單列表頁（HTMX 即時搜尋）。
 func ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 	q, part, status, tech, from, to string,
-	tabsHTML, techOptionsHTML string, isTechnician bool) templ.Component {
+	tabsHTML, techOptionsHTML string, isTechnician bool, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -206,7 +206,7 @@ func ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("工單管理", "/work-orders", "owner", "owner", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("工單管理", "/work-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

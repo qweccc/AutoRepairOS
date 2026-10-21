@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"autorepairos/internal/model"
 	"strconv"
 
 	"autorepairos/web/components"
@@ -29,8 +30,8 @@ type StaffRow struct {
 
 // ListStaffPage 員工與健保頁（HTMX 即時搜尋）。
 templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
-	empCount, depCount, insuredCount int, showAddForm bool, roleOpts, branchOpts string) {
-	@components.Layout("員工與健保", "/staff", "owner", "owner", "AutoRepair OS") {
+	empCount, depCount, insuredCount int, showAddForm bool, roleOpts, branchOpts string, user model.User) {
+	@components.Layout("員工與健保", "/staff", user, "AutoRepair OS") {
 		if showAddForm {
 			<div class="card">
 				<h2>新增員工 / 健保眷屬</h2>

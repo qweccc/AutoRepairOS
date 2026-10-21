@@ -239,7 +239,8 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	pages.ListWorkOrdersPage(woRows, total, page, size,
 		q, part, status, tech, from, to,
-		tabs.String(), woTechFilterOptions(tech), user.Role == "technician").Render(r.Context(), w)
+		tabs.String(), woTechFilterOptions(tech), user.Role == "technician",
+		user).Render(r.Context(), w)
 }
 
 // SearchWorkOrdersAPI 工單即時搜尋 API（HTMX 用）。
@@ -608,7 +609,8 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	pages.ShowWorkOrderPage(wo, items, itemTotal,
 		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
 		techNames, canEdit, flash(r),
-		sopRecords, sopTemplateOpts, attachedTemplates).Render(r.Context(), w)
+		sopRecords, sopTemplateOpts, attachedTemplates,
+		user).Render(r.Context(), w)
 }
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {

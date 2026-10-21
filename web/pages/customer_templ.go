@@ -29,7 +29,7 @@ type CustomerRow struct {
 }
 
 // ListCustomersPage 客戶列表頁（HTMX 即時搜尋）。
-func ListCustomersPage(rows []CustomerRow, total, page, size int, q string) templ.Component {
+func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -329,7 +329,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string) temp
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("客戶管理", "/customers", "owner", "owner", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("客戶管理", "/customers", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

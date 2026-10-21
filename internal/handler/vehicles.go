@@ -185,7 +185,7 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 		lookupOptions("vehicle_type", ""),
 		lookupOptions("fuel_type", ""),
 		lookupOptions("body_style", ""),
-	).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 // SearchVehiclesAPI 車輛即時搜尋 API（HTMX 用），回傳純 HTML 列。
@@ -345,7 +345,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 		orderCount, totalSpent, unpaid, curKm,
 		dateCell, kmCell,
 		mileageHistory(v.ID, 50), ordersTable, partsTable,
-	).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 func CreateVehicle(w http.ResponseWriter, r *http.Request) {
@@ -482,7 +482,7 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		lookupOptions("vehicle_type", v.VehicleType),
 		lookupOptions("fuel_type", v.FuelType),
 		lookupOptions("body_style", v.BodyStyle),
-	).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 func UpdateVehicle(w http.ResponseWriter, r *http.Request) {

@@ -30,8 +30,8 @@ type CalendarDay struct {
 // ListAppointmentsPage 預約排程頁（HTMX 即時搜尋）。
 templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
-	customerOpts, vehicleOpts, bayOpts, bayCardHTML string) {
-	@components.Layout("預約排程", "/appointments", "owner", "owner", "AutoRepair OS") {
+	customerOpts, vehicleOpts, bayOpts, bayCardHTML string, user model.User) {
+	@components.Layout("預約排程", "/appointments", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>新增預約</h2>
 			<form class="frm" method="POST" action="/appointments">

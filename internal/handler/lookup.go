@@ -126,7 +126,8 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.ListLookupPage(lookupRows, category, lookupCategoryLabel[category], total,
-		tabs.String()).Render(r.Context(), w)
+		tabs.String(),
+		user).Render(r.Context(), w)
 }
 
 // SearchLookupAPI 代碼對照即時搜尋 API（HTMX 用）。

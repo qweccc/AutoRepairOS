@@ -16,7 +16,7 @@ import (
 )
 
 // EditVehiclePage 車輛編輯頁（對齊台灣行車執照格式）。
-func EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string) templ.Component {
+func EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -489,7 +489,7 @@ func EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelType
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("編輯車輛 "+v.PlateNumber, "/vehicles", v.CustomerName, "counter", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("編輯車輛 "+v.PlateNumber, "/vehicles", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -498,7 +498,7 @@ func EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelType
 }
 
 // NewVehiclePage 車輛新增頁（對齊台灣行車執照格式）。
-func NewVehiclePage(customerName string, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string) templ.Component {
+func NewVehiclePage(customerName string, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -581,7 +581,7 @@ func NewVehiclePage(customerName string, modelOptions, vehicleTypeOptions, fuelT
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("新增車輛", "/vehicles", customerName, "counter", "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("新增車輛", "/vehicles", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

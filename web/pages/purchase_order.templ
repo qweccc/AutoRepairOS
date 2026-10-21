@@ -19,8 +19,8 @@ type PurchaseOrderRow struct {
 }
 
 // ListPurchaseOrdersPage 進貨單列表（HTMX 即時搜尋）。
-templ ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, status string) {
-	@components.Layout("進貨單", "/purchase-orders", "owner", "owner", "AutoRepair OS") {
+templ ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, status string, user model.User) {
+	@components.Layout("進貨單", "/purchase-orders", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>進貨單（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
@@ -93,8 +93,8 @@ templ PurchaseOrderSearchRows(rows []PurchaseOrderRow) {
 }
 
 // NewPurchaseOrderPage 開立進貨單。
-templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) {
-	@components.Layout("開立進貨單", "/purchase-orders", "owner", "owner", "AutoRepair OS") {
+templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string, user model.User) {
+	@components.Layout("開立進貨單", "/purchase-orders", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>開立進貨單</h2>
 			if errMsg != "" {
@@ -127,10 +127,10 @@ templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string) {
 
 // ShowPurchaseOrderPage 進貨單詳情：主檔 + 品項 + 應付總額。
 // flashMsg 是 redirectMsg 留下的訊息（如「已進貨（自動建立 N 個新零件）」）；
-// templ 頁面不像字串拼接頁面有全域 flash()，必須由 handler 取值後傳進來顯示。
+// templ 頁面不像字串拼接頁面有全域 flash(user model.User)，必須由 handler 取值後傳進來顯示。
 templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderItem,
-	total float64, locked bool, supplierOpts string, partCategoryOptions string, flashMsg string) {
-	@components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", "owner", "owner", "AutoRepair OS") {
+	total float64, locked bool, supplierOpts string, partCategoryOptions string, flashMsg string, user model.User) {
+	@components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", user, "AutoRepair OS") {
 		if flashMsg != "" {
 			<div class="msg msg-ok">{ flashMsg }</div>
 		}

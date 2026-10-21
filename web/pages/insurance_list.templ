@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"autorepairos/internal/model"
 	"strconv"
 
 	"autorepairos/web/components"
@@ -75,14 +76,14 @@ templ VehicleInsuranceForm(data VehicleInsuranceFormData) {
 }
 
 // ListVehicleInsurancesPage 車輛投保紀錄頁（HTMX 即時搜尋）。
-templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int, q, company string, expiring bool, compTabsHTML string) {
+templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int, q, company string, expiring bool, compTabsHTML string, user model.User) {
 	{{ searchURL := "/api/insurances/search" }}
 	{{ pagerURL := "/insurances" }}
 	if expiring {
 		{{ searchURL = "/api/insurances/search?expiring=30" }}
 		{{ pagerURL = "/insurances/expiring" }}
 	}
-	@components.Layout("車輛投保紀錄", "/insurances", "owner", "owner", "AutoRepair OS") {
+	@components.Layout("車輛投保紀錄", "/insurances", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>車輛投保紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
@@ -159,8 +160,8 @@ type InspectionRow struct {
 }
 
 // ListVehicleInspectionsPage 車輛定檢排程頁（HTMX 即時搜尋）。
-templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q string, pendingOnly bool, pendingCount int) {
-	@components.Layout("車輛定檢排程", "/inspections", "owner", "owner", "AutoRepair OS") {
+templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q string, pendingOnly bool, pendingCount int, user model.User) {
+	@components.Layout("車輛定檢排程", "/inspections", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>車輛定檢排程（符合條件 { strconv.Itoa(total) } 筆，未完成 { strconv.Itoa(pendingCount) } 筆）</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">

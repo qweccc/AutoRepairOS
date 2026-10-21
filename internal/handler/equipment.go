@@ -88,7 +88,7 @@ func ListEquipment(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	pages.ListEquipmentPage(eqRows, total, page, size, q, status).Render(r.Context(), w)
+	pages.ListEquipmentPage(eqRows, total, page, size, q, status, user).Render(r.Context(), w)
 }
 
 // SearchEquipmentAPI 設備即時搜尋 API（HTMX 用）。

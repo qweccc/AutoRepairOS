@@ -1,12 +1,17 @@
 package components
 
 import (
+	"autorepairos/internal/model"
 	"autorepairos/internal/nav"
 	"autorepairos/internal/session"
 )
 
 // Layout 全站共用版面：header + nav + main。
-templ Layout(title, active, username, role, appName string) {
+//
+// user 是 model.User 而不是 (username, role string)：字串參數可以傳任何字串，
+// 曾經有 25 處呼叫點把登入者寫死成 "owner" 或把客戶姓名當登入者（編譯得過，
+// 所以沒人發現）。用 model.User 讓編譯器強制每個呼叫點拿出真正的使用者物件。
+templ Layout(title, active string, user model.User, appName string) {
 	<!DOCTYPE html>
 	<html lang="zh-Hant">
 		<head>
@@ -21,8 +26,8 @@ templ Layout(title, active, username, role, appName string) {
 			<header>
 				<h1>🔧 { appName }</h1>
 				<div class="user">
-					登入中：<code>{ username }</code>
-					<span class="badge">{ role }</span>
+					登入中：<code>{ user.Username }</code>
+					<span class="badge">{ user.Role }</span>
 					<form method="POST" action="/logout" style="display:inline">
 						@CSRFInput()
 						<button class="logout" type="submit">登出</button>

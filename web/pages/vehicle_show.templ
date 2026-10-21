@@ -12,9 +12,9 @@ import (
 templ ShowVehiclePage(v model.Vehicle,
 	orderCount int, totalSpent, unpaid float64, curKm int,
 	dateCell, kmCell string,
-	mileageTable, ordersTable, partsTable string) {
+	mileageTable, ordersTable, partsTable string, user model.User) {
 
-	@components.Layout("車輛履歷 "+v.PlateNumber, "/vehicles", v.CustomerName, "counter", "AutoRepair OS") {
+	@components.Layout("車輛履歷 "+v.PlateNumber, "/vehicles", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>{ v.PlateNumber } — { v.BrandModel }</h2>
 			<div style="margin-bottom:14px">

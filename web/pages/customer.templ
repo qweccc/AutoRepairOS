@@ -21,8 +21,8 @@ type CustomerRow struct {
 }
 
 // ListCustomersPage 客戶列表頁（HTMX 即時搜尋）。
-templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string) {
-	@components.Layout("客戶管理", "/customers", "owner", "owner", "AutoRepair OS") {
+templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user model.User) {
+	@components.Layout("客戶管理", "/customers", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>新增客戶</h2>
 			<form class="frm" method="POST" action="/customers">

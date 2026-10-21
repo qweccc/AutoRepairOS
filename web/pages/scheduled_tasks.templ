@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
@@ -10,8 +11,8 @@ import (
 // （管理頁面資料量小且需即時操作按鈕，搜尋價值低）。
 templ ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
 	pendingText, recentText, linePill, lineStatus string,
-	hasTasks, hasNotifs, hasBackups bool) {
-	@components.Layout("排程與備份", "/scheduled-tasks", "owner", "owner", "AutoRepair OS") {
+	hasTasks, hasNotifs, hasBackups bool, user model.User) {
+	@components.Layout("排程與備份", "/scheduled-tasks", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>排程任務</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">

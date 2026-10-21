@@ -117,7 +117,8 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 	}
 
 	pages.ListVehicleInsurancesPage(insRows, total, page, size, q, company, expiring,
-		compTabs.String()).Render(r.Context(), w)
+		compTabs.String(),
+		user).Render(r.Context(), w)
 }
 
 // SearchInsurancesAPI 車輛投保即時搜尋 API（HTMX 用）。
@@ -290,7 +291,8 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
 	}
 
 	pages.ListVehicleInspectionsPage(inspRows, total, page, size, q, pendingOnly,
-		pendingCount).Render(r.Context(), w)
+		pendingCount,
+		user).Render(r.Context(), w)
 }
 
 // SearchInspectionsAPI 定檢排程即時搜尋 API（HTMX 用）。

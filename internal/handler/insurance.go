@@ -100,7 +100,7 @@ func ListInsuranceCompanies(w http.ResponseWriter, r *http.Request, user model.U
 		})
 	}
 
-	pages.ListInsurancePage(insRows, total, page, size, q).Render(r.Context(), w)
+	pages.ListInsurancePage(insRows, total, page, size, q, user).Render(r.Context(), w)
 }
 
 // SearchInsuranceAPI 保險公司即時搜尋 API（HTMX 用）。

@@ -38,7 +38,7 @@ func ListEstimates(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "讀取估價草稿失敗")
 		return
 	}
-	pages.EstimateListPage(estimates, user.Username, user.Role).Render(r.Context(), w)
+	pages.EstimateListPage(estimates, user).Render(r.Context(), w)
 }
 
 func NewEstimate(w http.ResponseWriter, r *http.Request, user model.User) {
@@ -63,7 +63,7 @@ func NewEstimate(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "讀取車輛資料失敗")
 		return
 	}
-	pages.EstimateNewPage(vehicles, user.Username, user.Role).Render(r.Context(), w)
+	pages.EstimateNewPage(vehicles, user).Render(r.Context(), w)
 }
 
 func CreateEstimate(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +111,7 @@ func ShowEstimate(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "讀取估價草稿失敗")
 		return
 	}
-	pages.EstimateDetailPage(e, items, user.Username, user.Role,
+	pages.EstimateDetailPage(e, items, user,
 		user.Role == "owner" || user.Role == "counter").Render(r.Context(), w)
 }
 
@@ -187,7 +187,7 @@ func ShowWorkOrderEstimateSource(w http.ResponseWriter, r *http.Request, user mo
 		return
 	}
 	pages.EstimateSourcePage(e, items, workOrderID, quoteTotal, quoteDiscount,
-		user.Username, user.Role).Render(r.Context(), w)
+		user).Render(r.Context(), w)
 }
 
 func loadEstimate(id int64) (pages.EstimateDetail, []pages.EstimateItemRow, error) {
