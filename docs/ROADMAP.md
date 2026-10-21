@@ -305,15 +305,20 @@
 > 這一階段修的是「既有任務的缺陷」，不是新功能：畫面與 `docs/USER_GUIDE_zh-TW.md`
 > 的承諾不一致，或流程存在使用者走不完的斷點。
 
-#### [ ] T4.1 頁首登入者改由 model.User 傳入（身分一致性）
+#### [x] T4.1 頁首登入者改由 model.User 傳入（身分一致性）
 - 目前 28 個 templ 頁面有 **25 處**把登入者／角色寫死：21 處寫 `owner/owner`，4 處把**客戶姓名**當登入者並寫死 `counter`（`workorder.templ`、`vehicle.templ`、`vehicle_show.templ`）。使用者無法從頁首判斷自己用哪個帳號登入。
 - 驗收：`components.Layout` 的 `(username, role string)` 改為 `(user model.User)`，使錯誤身分**無法通過編譯**；新增掃描測試斷言 `web/pages/*.templ` 沒有 Layout 呼叫傳字串字面值當身分。
 - 依賴：無。
+- 實作：`components.Layout` 改吃 `model.User`；`ap.templ`／`estimates.templ` 的 templ 簽名同步收斂（原已正確傳值但仍是字串參數）；`APPayableRowContent` 維持 `role string`（列內容 partial，由呼叫端傳 `user.Role`）；新增 `internal/handler/flow_regression_test.go`——以 depth-0 逗號解析參數（**不用 regex**：`Layout` 首參數常是 `"進貨單 #"+strconv.FormatInt(po.ID, 10)`，內含逗號，`[^,]+` 會斷在那裡，實際讓 3 個呼叫點逃過掃描），並斷言至少掃到 25 個呼叫（marker 失效時測試自己會失敗）。
+- 驗證：`templ generate`、`go build ./...` exit 0、`go test ./... -count=1` 全綠（SETUP_FAILED=0）。**測試有效性已驗證**：把 `workorder.templ` 第三參數暫改為 `model.User{}`（可編譯但非當前登入者）→ FAIL 並指出 `workorder.templ:18`，還原後 PASS。實機 HTTP（8099 種子 DB）以 technician／owner／counter 各登入，檢查 `/`、`/work-orders`、`/customers`、`/vehicles`、`/appointments`、`/staff`、`/work-orders/1` 共 21 頁頁首**全部正確，不符 0 頁**（修正前 `/work-orders/1` 顯示客戶姓名 `王大明` / `counter`）。
 
-#### [ ] T4.2 導覽與操作按鈕依角色過濾
+#### [x] T4.2 導覽與操作按鈕依角色過濾
 - `internal/nav/nav.go` 完全不看角色；技師會看到工單列表的「＋ 開立新工單」，但 `/work-orders/new` 是 `CounterUpPage`，點進去得到權限不足。預約頁同樣對所有人顯示新增表單，但 `POST /appointments` 僅限櫃檯以上。
 - 驗收：`nav.Route` 加 `Roles`（空＝所有角色），`Render(active, role)` 依角色過濾；`Roles` 的來源是 `main.go` 的權限包裝器，逐條核對而非憑常識；工單列表與預約頁的操作按鈕改為條件渲染；nav 測試新增「技師看不到 CounterUpPage 入口」一則。
 - 依賴：T4.1（按鈕需要 `user`）。
+- 實作：`Route.Roles` + `CanSee`（未知／空角色 fail-closed）＋ `Render(active, role)`；新增 `RoleOwner/RoleCounter/RoleTechnician` 常數。**逐條查 main.go 後，實際只有 6 項受限**（`/receivables`、`/expenses`、`/analytics`、`/ap`、`/lookup` 為 `CounterUpPage`；`/reports` 見下）——`/staff`、`/technicians/commissions`、`/purchase-orders`、`/inventory`、`/suppliers` 都是 `AllStaff`，與憑常識的猜測相反。另外處理三處死路：工單列表「開立新工單」（並移除宣告但從未使用的 `isTechnician` 參數）、預約頁「建立預約」表單、報表頁的「經營分析」連結。
+- 驗證：`go build` exit 0、`go test ./... -count=1` 全綠；nav 測試 9 則全過。**新增 `internal/handler/nav_roles_sync_test.go` 交叉比對 nav.go 與 main.go**（把兩份定義放在一起比對，這是唯一能防漂移的方式）；有效性已驗證：把 `/staff` 誤標為 `counterUp` → FAIL 並同時列出 nav 寫的角色與 main.go 允許的角色。實機 HTTP（8099）以 owner／counter／technician 各登入驗證導覽與三個按鈕，**不符 0 項**。
+- **實機驗證抓到的額外缺陷**：`/reports` 在 `main.go` 註冊為 `AllStaff`，但 `ReportsHome` 開頭即 `canSeeMoney(user)` → 技師得到 **403**。只比對包裝器的測試抓不到這件事（handler 內部的檢查），因此 nav 的 `/reports` 改為 `counterUp`，並在 `nav_roles_sync_test.go` 以 `effectiveRoleOverrides` 明確記錄這個例外。
 
 #### [ ] T4.3 離線模組接上共用 templ 版面
 - `offline.js` 只載入於 `internal/handler/layout.go`（字串拼接頁），`web/components/layout.templ` 沒有載入，因此工單照片頁（templ 頁）拿不到手冊承諾的「離線暫存、恢復連線後補傳」。

@@ -39,7 +39,7 @@ templ Layout(title, active string, user model.User, appName string) {
 					{ children... }
 				</main>
 				<nav>
-					@NavItems(active)
+					@NavItems(active, user.Role)
 				</nav>
 			</div>
 		</body>
@@ -54,6 +54,6 @@ templ CSRFInput() {
 //
 // 選單的單一定義來源是 internal/nav（Routes + Render），renderPage（首頁等
 // 字串拼接頁）與這裡都呼叫它，兩邊不會再走音。新增/調整選單只改 internal/nav。
-templ NavItems(active string) {
-	@templ.Raw(nav.Render(active))
+templ NavItems(active, role string) {
+	@templ.Raw(nav.Render(active, role))
 }

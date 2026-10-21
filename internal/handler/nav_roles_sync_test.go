@@ -1,0 +1,158 @@
+package handler
+
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+)
+
+// wrapperRoles 回傳每個權限包裝器允許的角色。
+// 依 internal/handler/authz.go 的實作。
+var wrapperRoles = map[string][]string{
+	"AllStaff":      {"owner", "counter", "technician"},
+	"CounterUpPage": {"owner", "counter"},
+	"CounterUp":     {"owner", "counter"},
+	"OwnerOnly":     {"owner"},
+}
+
+// effectiveRoleOverrides 修正「main.go 包裝器允許的角色」與「handler 實際允許的角色」
+// 不一致的路徑。
+//
+// 包裝器只是第一道；有些 handler 內部再做一次更嚴的檢查。導覽必須反映
+// 「實際能不能進去」，不是包裝器怎麼寫——漏掉這種情況的症狀就是使用者
+// 看到連結、點進去卻被擋。
+var effectiveRoleOverrides = map[string][]string{
+	// ReportsHome 開頭即 `if !canSeeMoney(user) { 403 }`（財務數字屬店內機密），
+	// 但 main.go 註冊為 AllStaff。實際只有 owner/counter 進得去。
+	"/reports": {"owner", "counter"},
+}
+
+// navRoleVars nav.go 裡代表角色組合的變數。
+var navRoleVars = map[string][]string{
+	"nil":       {"owner", "counter", "technician"},
+	"counterUp": {"owner", "counter"},
+	"ownerOnly": {"owner"},
+	"allStaff":  {"owner", "counter", "technician"},
+}
+
+// TestNavRolesMatchMainGoPermissions 斷言選單的可見角色與 main.go 的權限包裝器一致。
+//
+// 為什麼需要這支測試：nav.Route.Roles 是手寫的，而真正的權限在 main.go。
+// 兩邊走音不會有任何症狀——直到技師看到一個點進去被擋的入口（看得到卻
+// 進不去比看不到更糟，使用者會以為系統壞了），或反過來，該看的頁面消失。
+// 這種漂移只能靠把兩份定義放在一起比對來防。
+//
+// 順帶驗證每個選單路徑都有對應的 GET 路由：沒有的話那個選單項會 404。
+func TestNavRolesMatchMainGoPermissions(t *testing.T) {
+	mainSrc := readRepoFile(t, "main.go")
+	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
+
+	// main.go: "GET /path", handler.Wrapper(Handler)
+	// 注意根路徑寫成 "/{$}"（stdlib ServeMux 的精確匹配語法），
+	// 要正規化成 "/" 才能與選單對上。
+	routeRe := regexp.MustCompile(`"GET (/[^"]*)",\s*(?:handler\.)?([A-Za-z]+)\(`)
+	routes := map[string]string{}
+	for _, m := range routeRe.FindAllStringSubmatch(mainSrc, -1) {
+		routes[normalizeRoutePath(m[1])] = m[2]
+	}
+	if len(routes) < 20 {
+		t.Fatalf("只從 main.go 解析到 %d 條 GET 路由，明顯偏少——解析方式可能已失效，測試等於沒在檢查", len(routes))
+	}
+
+	// nav.go: {"/path", "名稱", "群組", rolesExpr}
+	navRe := regexp.MustCompile(`\{"(/[^"]*)",\s*"([^"]*)",\s*"([^"]*)",\s*([A-Za-z]+)\}`)
+	entries := navRe.FindAllStringSubmatch(navSrc, -1)
+	if len(entries) < 20 {
+		t.Fatalf("只從 nav.go 解析到 %d 個選單項目，明顯偏少——格式可能已變，測試等於沒在檢查", len(entries))
+	}
+
+	for _, e := range entries {
+		path, name, rolesExpr := e[1], e[2], e[4]
+
+		wantRoles, ok := navRoleVars[rolesExpr]
+		if !ok {
+			t.Errorf("選單 %q（%s）的 Roles 運算式 %q 不認得，請更新 navRoleVars", path, name, rolesExpr)
+			continue
+		}
+
+		wrapper, ok := routes[path]
+		if !ok {
+			t.Errorf("選單項目 %q（%s）在 main.go 找不到對應的 GET 路由——這個選單項會 404", path, name)
+			continue
+		}
+		gotRoles, ok := wrapperRoles[wrapper]
+		if !ok {
+			t.Errorf("路徑 %q 的包裝器 %q 不認得，請更新 wrapperRoles", path, wrapper)
+			continue
+		}
+		// handler 內部若有更嚴的檢查，以實際允許的角色為準
+		if eff, ok := effectiveRoleOverrides[path]; ok {
+			gotRoles = eff
+		}
+
+		if !sameRoleSet(wantRoles, gotRoles) {
+			t.Errorf("選單 %q（%s）的可見角色與實際權限不一致：\n  nav.Routes 寫 %v\n  實際可進入的角色 %v（包裝器 %s%s）\n"+
+				"（使用者會看到點進去被擋的入口，或該看的頁面消失）",
+				path, name, wantRoles, gotRoles, wrapper,
+				func() string {
+					if _, ok := effectiveRoleOverrides[path]; ok {
+						return "，但 handler 內部另有更嚴的檢查"
+					}
+					return ""
+				}())
+		}
+	}
+}
+
+func sameRoleSet(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, x := range a {
+		seen[x] = true
+	}
+	for _, y := range b {
+		if !seen[y] {
+			return false
+		}
+	}
+	return true
+}
+
+// normalizeRoutePath 把 main.go 的路由樣式正規化成選單用的路徑。
+// 根路徑在 stdlib ServeMux 寫成 "/{$}"（精確匹配語法），選單寫 "/"。
+func normalizeRoutePath(p string) string {
+	return strings.Replace(p, "{$}", "", 1)
+}
+
+func readRepoFile(t *testing.T, rel string) string {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join("..", "..", rel))
+	if err != nil {
+		t.Fatalf("讀取 %s 失敗: %v", rel, err)
+	}
+	return string(raw)
+}
+
+// TestNavPathsHaveGetRoutes 單獨檢查「每個選單路徑都有 GET 路由」，
+// 讓 404 的死連結有一個明確的失敗訊息（而不是混在角色比對裡）。
+func TestNavPathsHaveGetRoutes(t *testing.T) {
+	mainSrc := readRepoFile(t, "main.go")
+	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
+
+	routeRe := regexp.MustCompile(`"GET (/[^"]*)",`)
+	routes := map[string]bool{}
+	for _, m := range routeRe.FindAllStringSubmatch(mainSrc, -1) {
+		routes[normalizeRoutePath(m[1])] = true
+	}
+
+	navRe := regexp.MustCompile(`\{"(/[^"]*)",\s*"([^"]*)",\s*"([^"]*)",`)
+	for _, m := range navRe.FindAllStringSubmatch(navSrc, -1) {
+		if !routes[m[1]] {
+			t.Errorf("選單項目 %q（%s）沒有對應的 GET 路由，點下去會 404", m[1], m[2])
+		}
+	}
+}

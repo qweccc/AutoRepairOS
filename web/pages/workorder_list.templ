@@ -31,12 +31,16 @@ type WorkOrderRow struct {
 // ListWorkOrdersPage 工單列表頁（HTMX 即時搜尋）。
 templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 	q, part, status, tech, from, to string,
-	tabsHTML, techOptionsHTML string, isTechnician bool, user model.User) {
+	tabsHTML, techOptionsHTML string, user model.User) {
 	@components.Layout("工單管理", "/work-orders", user, "AutoRepair OS") {
 		<div class="card">
 			<h2>工單列表（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-				<a class="btn btn-p" href="/work-orders/new">＋ 開立新工單</a>
+				// 開立新工單僅限櫃檯以上（GET /work-orders/new 是 CounterUpPage）。
+				// 技師看得到按鈕卻點進去被擋，只會以為系統壞了。
+				if user.Role == "owner" || user.Role == "counter" {
+					<a class="btn btn-p" href="/work-orders/new">＋ 開立新工單</a>
+				}
 				<span style="color:#64748b;font-size:12.5px">（可搜尋車牌 / 車主 / 電話，並限定日期區間）</span>
 			</div>
 			<div style="margin-bottom:12px">@templ.Raw(tabsHTML)</div>

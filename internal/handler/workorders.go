@@ -239,7 +239,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	pages.ListWorkOrdersPage(woRows, total, page, size,
 		q, part, status, tech, from, to,
-		tabs.String(), woTechFilterOptions(tech), user.Role == "technician",
+		tabs.String(), woTechFilterOptions(tech),
 		user).Render(r.Context(), w)
 }
 

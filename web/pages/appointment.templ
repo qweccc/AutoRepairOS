@@ -32,30 +32,34 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
 	customerOpts, vehicleOpts, bayOpts, bayCardHTML string, user model.User) {
 	@components.Layout("預約排程", "/appointments", user, "AutoRepair OS") {
-		<div class="card">
-			<h2>新增預約</h2>
-			<form class="frm" method="POST" action="/appointments">
-				@components.CSRFInput()
-				<label>客戶
-					<select name="customer_id" required>
-						<option value="">請選擇客戶</option>
-						@templ.Raw(customerOpts)
-					</select>
-				</label>
-				<label>車輛
-					<select name="vehicle_id" required>
-						<option value="">請選擇車輛</option>
-						@templ.Raw(vehicleOpts)
-					</select>
-				</label>
-				<label>預約日期<input type="date" name="appointment_date" required></label>
-				<label>時段<input type="time" step="1800" name="appointment_time" placeholder="例：09:00"></label>
-				<label>工位<select name="bay">@templ.Raw(bayOpts)</select></label>
-				<label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
-				<label class="full">備註<textarea name="notes"></textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">建立預約</button></div>
-			</form>
-		</div>
+		// 建立預約僅限櫃檯以上（POST /appointments 是 CounterUp）。
+		// 技師看到表單卻送不出去（被擋），只會以為系統壞了。
+		if user.Role == "owner" || user.Role == "counter" {
+			<div class="card">
+				<h2>新增預約</h2>
+				<form class="frm" method="POST" action="/appointments">
+					@components.CSRFInput()
+					<label>客戶
+						<select name="customer_id" required>
+							<option value="">請選擇客戶</option>
+							@templ.Raw(customerOpts)
+						</select>
+					</label>
+					<label>車輛
+						<select name="vehicle_id" required>
+							<option value="">請選擇車輛</option>
+							@templ.Raw(vehicleOpts)
+						</select>
+					</label>
+					<label>預約日期<input type="date" name="appointment_date" required></label>
+					<label>時段<input type="time" step="1800" name="appointment_time" placeholder="例：09:00"></label>
+					<label>工位<select name="bay">@templ.Raw(bayOpts)</select></label>
+					<label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
+					<label class="full">備註<textarea name="notes"></textarea></label>
+					<div class="full"><button class="btn btn-p" type="submit">建立預約</button></div>
+				</form>
+			</div>
+		}
 		<div class="card">
 			<h2>預約行事曆</h2>
 			@AppointmentCalendar(calendarDate, calendarView, status, calendarDays)

@@ -160,7 +160,7 @@ func renderPage(w http.ResponseWriter, title, active, username, role, body strin
   </header>
   <div class="shell">
   <main>` + body + `</main>
-  <nav>` + navpkg.Render(active) + `</nav>
+  <nav>` + navpkg.Render(active, role) + `</nav>
   </div>
   <script src="/offline.js"></script>
 </body>

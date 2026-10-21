@@ -138,7 +138,7 @@ func Layout(title, active string, user model.User, appName string) templ.Compone
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = NavItems(active).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = NavItems(active, user.Role).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -196,7 +196,7 @@ func CSRFInput() templ.Component {
 //
 // 選單的單一定義來源是 internal/nav（Routes + Render），renderPage（首頁等
 // 字串拼接頁）與這裡都呼叫它，兩邊不會再走音。新增/調整選單只改 internal/nav。
-func NavItems(active string) templ.Component {
+func NavItems(active, role string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -217,7 +217,7 @@ func NavItems(active string) templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.Raw(nav.Render(active)).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templ.Raw(nav.Render(active, role)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

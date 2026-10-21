@@ -245,6 +245,13 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		agingRows.Close()
 	}
 
+	// 經營分析是 CounterUpPage，但報表頁是 AllStaff——技師看得到報表，
+	// 卻沒有經營分析權限。連結留著就是一條點進去被擋的死路。
+	analyticsLink := ""
+	if user.Role == "owner" || user.Role == "counter" {
+		analyticsLink = `<a class="btn btn-s" href="/analytics">經營分析</a>`
+	}
+
 	body := `
     <div class="card">
       <h2>報表總覽</h2>
@@ -258,7 +265,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
         <button class="btn btn-p" type="submit">查詢</button>
         <a class="btn btn-p" href="/reports/daily">📅 日結報表（PDF 請用瀏覽器列印）</a>
         <a class="btn btn-s" href="/reports/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出工單明細 CSV</a>
-        <a class="btn btn-s" href="/analytics">經營分析</a>
+        ` + analyticsLink + `
       </form>
 
       <div style="margin-bottom:14px">
