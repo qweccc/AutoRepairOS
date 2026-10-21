@@ -314,6 +314,20 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
           .then(function(r){ return r.json(); })
           .then(function(j){
             if (j.ok) {
+              // 車牌已存在時先問清楚再帶入。
+              // 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於
+              // 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。
+              if (j.duplicate) {
+                var who = (j.owner_name || '未知車主') +
+                          (j.owner_phone ? '（' + j.owner_phone + '）' : '');
+                var msg = '車牌 ' + j.label.split(' / ')[0] + ' 已經有建檔紀錄。\n\n' +
+                          '現有車主：' + who + '\n\n' +
+                          '要使用這台既有車輛嗎？\n' +
+                          '按「取消」可留下來修改車牌，或改用上方的搜尋清單選車。';
+                if (!confirm(msg)) {
+                  return;   // 不帶入，modal 保持開啟讓櫃檯修正
+                }
+              }
               closeQuickModal();
               var input = document.getElementById('vehicle_id');
               input.value = j.vehicle_id;
@@ -361,13 +375,24 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 同車牌已存在：直接回傳既有 vehicle，不重複建立
+	// 同車牌已存在：不重複建立，但**必須讓櫃檯知道這台車已經有車主**。
+	//
+	// 原本直接回傳既有 vehicle 並 ok:true，前端只看到「車輛已帶入」——
+	// 櫃檯不會發現自己可能打錯車牌，或正要把工單開到另一台車上。
+	// 車牌是選車的唯一依據，選錯車等於整張工單（含收款）都掛錯人。
 	var existingID int64
 	if err := db.DB.QueryRow(`SELECT id FROM active_vehicles WHERE UPPER(plate_number) = UPPER(?)`, plate).Scan(&existingID); err == nil {
-		var label string
-		db.DB.QueryRow(`SELECT v.plate_number || ' / ' || COALESCE(v.brand_model,'') || ' / ' || COALESCE(c.name,'')
-			FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, existingID).Scan(&label)
-		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "vehicle_id": existingID, "label": label, "mileage": ""})
+		var label, ownerName, ownerPhone string
+		db.DB.QueryRow(`SELECT v.plate_number || ' / ' || COALESCE(v.brand_model,'') || ' / ' || COALESCE(c.name,''),
+			COALESCE(c.name,''), COALESCE(c.phone,'')
+			FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, existingID).
+			Scan(&label, &ownerName, &ownerPhone)
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "vehicle_id": existingID, "label": label, "mileage": "",
+			"duplicate":   true,
+			"owner_name":  ownerName,
+			"owner_phone": ownerPhone,
+		})
 		return
 	}
 
