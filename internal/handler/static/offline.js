@@ -354,8 +354,31 @@
         Drafts.save(key, data).catch(function () {});
       });
 
-      // 提交成功後清除草稿
+      // 清除草稿——只在「確定送出去了」的時候。
+      //
+      // 原本寫成 form.addEventListener('submit', ...) 就 remove：離線或伺服器
+      // 錯誤時 POST 根本沒成功，草稿卻已經被刪掉，使用者重整後什麼都沒了——
+      // 而草稿存在的意義正是「送不出去時別弄丟」。
+      //
+      // 兩條路徑分別處理，因為能拿到的證據不同：
+      //  1) HTMX 表單（本專案多數表單）：以伺服器回應為準，成功才清。
+      //  2) 一般表單：送出後會換頁，拿不到結果；用 navigator.onLine 當判準，
+      //     離線時一律保留。這是啟發式（onLine 為 true 但伺服器不可達時仍會誤清），
+      //     但比「無條件清除」好得多，且涵蓋最常見的「斷網時填到一半」情境。
+      form.addEventListener('htmx:afterRequest', function (evt) {
+        if (evt.detail && evt.detail.successful) {
+          Drafts.remove(key).catch(function () {});
+        }
+      });
+
       form.addEventListener('submit', function () {
+        if (form.hasAttribute('hx-post') || form.hasAttribute('hx-get') ||
+            form.hasAttribute('hx-put') || form.hasAttribute('hx-delete')) {
+          return; // 交給上面的 htmx:afterRequest 判斷
+        }
+        if (navigator.onLine === false) {
+          return; // 離線：送出必定失敗，草稿留著
+        }
         Drafts.remove(key).catch(function () {});
       });
     });

@@ -380,10 +380,14 @@
 - 驗證：新增 13 則測試（gate 六則含「沒有授權時必須放行」、電話同意五則、取消一則、`pendingApprovalRows` 一則）。**紅燈驗證**：把判準換成 `approval_status` → `TestCheckApprovalForStatusAllowsWhenNoApproval` FAIL 並指出「照它擋會讓每張工單都無法完工」。
 - 實機端到端（8097，全新 DB）：初始無提醒 → 建立授權後跳出「⚠ 有 1 筆追加維修還在等客戶同意」→ 未同意就完工與結帳皆 **HTTP 400** 並回報筆數 → 未填備註被擋、填了成功 → DB `status=approved`/`decision_source=phone`/備註保留、項目加入 `('part','變速箱油更換',1,3500)`、總額重算 3500 → 提醒消失、可完工 → 取消路徑同樣驗證（`rejected`/`counter`、項目 0 筆、總額不變、可完工）。
 
-#### [ ] T4.8 離線草稿不被誤刪，並限縮文件承諾
+#### [x] T4.8 離線草稿不被誤刪，並限縮文件承諾
 - `offline.js` 在 `submit` 事件就清除草稿，**不管 POST 成功與否**——離線或伺服器錯誤時草稿被丟掉，而草稿存在的意義正是「送不出去時別弄丟」。手冊對「離線」的承諾範圍也過寬（實際上只有照片有真正的離線佇列）。
 - 驗收：草稿改為只在送出成功後清除；手冊的離線段落限縮為「照片離線暫存」，並明講一般表單離線時**不會**自動補送（草稿會保留）。
 - 依賴：T4.3（同一支 `offline.js`）。
+- 實作：`offline.js` 的草稿清除拆成兩條路徑，因為能拿到的證據不同——**HTMX 表單**用 `htmx:afterRequest` 的 `detail.successful`（以伺服器回應為準）；**一般表單**送出後會換頁、拿不到結果，改用 `navigator.onLine` 當判準，離線時一律保留（啟發式，已在註解說明其限制）。
+- **先查清適用範圍再改**：`autoBindDrafts` 只套用在 `form[method="POST"]`（純表單），而本專案的 HTMX 表單（`hx-post`）沒有 `method` 屬性，因此**不在**草稿綁定範圍內——HTMX 分支是防禦性的（給同時有 `method` 與 `hx-*` 的表單）。
+- **`detail.successful` 有實測確認過，不是照文件寫**：htmx 2.0.4 的 `htmx:afterRequest` detail 含 `successful`/`failed`/`xhr`——成功請求為 `successful:true, failed:false, xhr.status:200`，400 與 404 為 `successful:false, failed:true`。（測試時踩到 `hx-trigger` 的 `changed` 修飾詞：值沒變就不觸發，一度誤判成「htmx 事件不發」。）
+- 驗證：實機（8096）在 `/customers` 的新增表單填字 → 草稿寫入（`Drafts.load` 讀回「草稿測試客戶」）→ **斷網後送出 → 草稿仍在**（修前會被無條件刪掉）→ 恢復連線後送出 → 草稿清除。手冊補上「表單填到一半也不會不見，送出成功後才會清掉」。
 
 #### [ ] T4.9 快速建立遇到重複車牌時要求確認
 - `workorder_new.go` 的 `QuickVehicle` 偵測到同車牌時直接回傳既有車輛並回 `ok:true`，沒有二次確認。回傳的 label 雖含車主姓名，但櫃檯不一定會看。
