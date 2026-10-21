@@ -175,6 +175,23 @@ func flash(r *http.Request) string {
 	return `<div class="msg msg-ok">` + html.EscapeString(msg) + `</div>`
 }
 
+// redirectErrMsg 與 redirectMsg 相同，但走另一個參數（err）並以紅色樣式呈現。
+//
+// 為什麼不共用 msg：flash() 一律輸出綠色 msg-ok。把失敗訊息也塞進 msg 會讓
+// 「已綁定成功」與「綁定失敗」長得一模一樣，使用者只看顏色就誤判成功。
+func redirectErrMsg(w http.ResponseWriter, r *http.Request, path, msg string) {
+	http.Redirect(w, r, path+"?err="+urlQueryEscape(msg), http.StatusFound)
+}
+
+// flashErr 讀取 redirectErrMsg 留下的錯誤訊息。
+func flashErr(r *http.Request) string {
+	msg := r.URL.Query().Get("err")
+	if msg == "" {
+		return ""
+	}
+	return `<div class="msg msg-err">` + html.EscapeString(msg) + `</div>`
+}
+
 func fail(w http.ResponseWriter, msg string) {
 	http.Error(w, msg, http.StatusBadRequest)
 }

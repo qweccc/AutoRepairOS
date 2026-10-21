@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -135,18 +137,34 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// LINE 綁定一律走 /customers/{id}/line-bind（見 customer_binding.go）：
+	// 新增客戶時還不知道他的 LINE 帳號，留著這個欄位只會讓人以為可以隨手填。
+	// Telegram 可由表單填，但要驗格式與唯一性。
+	telegramID := strings.TrimSpace(r.FormValue("telegram_user_id"))
+	if err := validateTelegramUserID(telegramID); err != nil {
+		fail(w, err.Error())
+		return
+	}
+	if telegramID != "" {
+		if otherID, otherName := telegramBindingTakenByOther(telegramID, 0); otherID != 0 {
+			fail(w, fmt.Sprintf("這個 Telegram ID 已綁定客戶 #%d（%s）", otherID, otherName))
+			return
+		}
+	}
+
 	_, err := db.DB.Exec(`INSERT INTO customers
-		(name, phone, line_user_id, telegram_user_id, address, notification_preference, notes, tags, campaign_code, birthday)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		(name, phone, telegram_user_id, address, notification_preference, notes, tags, campaign_code, birthday)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		strings.TrimSpace(name), strings.TrimSpace(phone),
-		nullStr(r.FormValue("line_user_id")), nullStr(r.FormValue("telegram_user_id")), nullStr(r.FormValue("address")),
+		nullStr(telegramID), nullStr(r.FormValue("address")),
 		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")),
 		normTags(r.FormValue("tags")), nullStr(r.FormValue("campaign_code")),
 		nullStr(r.FormValue("birthday")),
 	)
 	if err != nil {
+		log.Printf("建立客戶失敗（phone=%s）: %v", strings.TrimSpace(phone), err)
 		if strings.Contains(err.Error(), "UNIQUE") {
-			fail(w, "電話號碼已存在")
+			fail(w, "電話號碼或 Telegram ID 已存在")
 			return
 		}
 		fail(w, "建立客戶失敗")
@@ -177,7 +195,7 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		smsWarning = `<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">⚠️ 原本偏好 SMS，請重新選擇 LINE 或 Telegram 通知通道</div>`
 	}
 
-	body := `
+	body := flash(r) + flashErr(r) + `
     <div class="card">
       <h2>編輯客戶 #` + strconv.FormatInt(c.ID, 10) + `</h2>
       <form class="frm" method="POST" action="/customers/` + strconv.FormatInt(c.ID, 10) + `">
@@ -192,18 +210,29 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
         </label>` + smsWarning + `
         <label>生日<input name="birthday" type="date" value="` + htmlEsc(c.Birthday) + `" placeholder="例：1990-05-20"></label>
         <label class="full">地址<input name="address" value="` + htmlEsc(c.Address) + `"></label>
-        <label class="full">LINE User ID<input name="line_user_id" value="` + htmlEsc(c.LineUserID) + `" placeholder="例：U1234567890abcdef"></label>
-        <label class="full">Telegram User ID<input name="telegram_user_id" value="` + htmlEsc(c.TelegramUserID) + `" placeholder="例：123456789"></label>
+        <label class="full">Telegram User ID<input name="telegram_user_id" value="` + htmlEsc(c.TelegramUserID) + `" placeholder="例：123456789（客戶可用 @userinfobot 查）"></label>
         <label class="full">標籤<input name="tags" value="` + htmlEsc(c.Tags) + `" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
         <label class="full">行銷活動代碼<input name="campaign_code" value="` + htmlEsc(c.CampaignCode) + `" placeholder="例：2026Q4-煞車促銷"></label>
         <label class="full">備註<textarea name="notes">` + htmlEsc(c.Notes) + `</textarea></label>
         <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/customers">取消</a></div>
       </form>
-    </div>`
+      <p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
+        LINE 綁定不在這張表單裡——綁定有唯一性規則（一個 LINE 帳號只能對應一位客戶），
+        走下面的「LINE 綁定」區塊處理。
+      </p>
+    </div>` + lineBindingBlock(c)
 
 	renderPage(w, "編輯客戶", "/customers", user.Username, user.Role, body)
 }
 
+// UpdateCustomer 更新客戶基本資料。
+//
+// 刻意**不接受** line_user_id：綁定改由 /customers/{id}/line-bind 與
+// /line-unbind 兩個專用端點處理。原本表單直接 UPDATE 會繞過 bindLineUser 的
+// 唯一性檢查，讓同一個 LINE 帳號綁到兩個客戶，而履歷查詢用
+// `SELECT id FROM customers WHERE line_user_id = ?` 任取一筆，
+// 於是對方會看到不屬於他的維修紀錄與金額（詳見 customer_binding.go）。
+// 移除這個欄位後，所有寫入 line_user_id 的路徑都必須經過綁定端點。
 func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	name := strings.TrimSpace(r.FormValue("name"))
@@ -214,15 +243,31 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec(`UPDATE customers SET name=?, phone=?, line_user_id=?, telegram_user_id=?,
+	// Telegram 仍可由表單編輯（客戶查得到自己的 chat id），但要驗格式與唯一性。
+	// 這裡不驗就會讓同一個 chat id 綁兩個客戶 → 通知送錯人。
+	telegramID := strings.TrimSpace(r.FormValue("telegram_user_id"))
+	if err := validateTelegramUserID(telegramID); err != nil {
+		fail(w, err.Error())
+		return
+	}
+	if telegramID != "" {
+		if otherID, otherName := telegramBindingTakenByOther(telegramID, id); otherID != 0 {
+			fail(w, fmt.Sprintf("這個 Telegram ID 已綁定客戶 #%d（%s），同一個帳號不能綁兩個客戶",
+				otherID, otherName))
+			return
+		}
+	}
+
+	res, err := db.DB.Exec(`UPDATE customers SET name=?, phone=?, telegram_user_id=?,
 		address=?, notification_preference=?, notes=?, tags=?, campaign_code=?, birthday=? WHERE id=?`,
-		name, phone, nullStr(r.FormValue("line_user_id")), nullStr(r.FormValue("telegram_user_id")), nullStr(r.FormValue("address")),
+		name, phone, nullStr(telegramID), nullStr(r.FormValue("address")),
 		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")),
 		normTags(r.FormValue("tags")), nullStr(r.FormValue("campaign_code")),
 		nullStr(r.FormValue("birthday")), id)
 	if err != nil {
+		log.Printf("更新客戶失敗（客戶 #%d）: %v", id, err)
 		if strings.Contains(err.Error(), "UNIQUE") {
-			fail(w, "電話號碼已存在")
+			fail(w, "電話號碼或 Telegram ID 已被其他客戶使用")
 			return
 		}
 		fail(w, "更新客戶失敗")

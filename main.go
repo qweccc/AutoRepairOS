@@ -141,6 +141,12 @@ func main() {
 	mux.HandleFunc("GET /customers/{id}/edit", handler.AllStaff(handler.EditCustomerForm))
 	mux.HandleFunc("POST /customers/{id}", handler.CounterUp(handler.UpdateCustomer))
 	mux.HandleFunc("POST /customers/{id}/delete", handler.OwnerOnly(handler.DeleteCustomer))
+	// LINE / Telegram 綁定：獨立端點而不是編輯表單的欄位。
+	// 表單直接 UPDATE 會繞過唯一性檢查，讓同一個 LINE 帳號綁到兩個客戶，
+	// 進而讓對方在 LINE 查到不屬於他的維修紀錄（詳見 customer_binding.go）。
+	mux.HandleFunc("POST /customers/{id}/line-bind", handler.CounterUp(handler.BindCustomerLine))
+	mux.HandleFunc("POST /customers/{id}/line-unbind", handler.CounterUp(handler.UnbindCustomerLine))
+	mux.HandleFunc("POST /customers/{id}/telegram-unbind", handler.CounterUp(handler.UnbindCustomerTelegram))
 
 	// 車輛
 	mux.HandleFunc("GET /vehicles", handler.AllStaff(handler.ListVehicles))
