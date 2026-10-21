@@ -63,9 +63,12 @@ echo "ENV: release/.env.example synced"
 
 # 列出 .env.example 有、release/.env 卻沒有的 key —— 正是會靜默停用的開關。
 # 只提示不改寫 .env（.env 是車廠自己的設定，build.sh 不碰）。
-# 分流：COMPOSE_PROJECT_NAME / HOST_PORT 只服務 docker compose（exe 不讀），列為
-# 「僅 Docker」；其餘是 exe 真的會讀的，列為「單機版請補」。
-docker_only="COMPOSE_PROJECT_NAME HOST_PORT"
+# 分流：下列 key 只服務 docker compose（exe 完全不讀），列為「僅 Docker」；
+# 其餘是 exe 真的會讀的，列為「單機版請補」。
+# 為什麼要完整列出：把 exe 不讀的 key 混進「請補」清單，每次都看到一堆無關警告，
+# 警告就失去意義（真正的缺失會被忽略）。判據是「exe 有沒有讀它」——加新 key 前
+# 先 grep 一次 Go 原始碼，不要憑 key 名稱猜。
+docker_only="COMPOSE_PROJECT_NAME HOST_PORT SQLITE_WEB_ENABLED SQLITE_WEB_PORT"
 if [ -f release/.env ]; then
 	missing=$(comm -13 \
 		<(grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' release/.env | sed 's/=$//' | sort -u) \
