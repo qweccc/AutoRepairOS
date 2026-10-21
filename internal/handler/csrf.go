@@ -68,7 +68,7 @@ func CSRFProtection(next http.Handler) http.Handler {
 			}
 		}
 
-		if isStateChangingMethod(r.Method) && r.URL.Path != "/login" && r.URL.Path != "/webhook/line" {
+		if isStateChangingMethod(r.Method) && !csrfExempt(r.URL.Path) {
 			provided := strings.TrimSpace(r.Header.Get(csrfHeader))
 			if provided == "" {
 				provided = strings.TrimSpace(r.FormValue("_csrf"))
@@ -93,4 +93,29 @@ func isStateChangingMethod(method string) bool {
 	default:
 		return false
 	}
+}
+
+// csrfExempt 回報這個路徑的狀態變更請求是否不需要 CSRF token。
+//
+// 判斷標準：呼叫者「根本沒有 session」的端點。CSRF 要防的是「已登入使用者的
+// 瀏覽器被騙去執行操作」，而沒有 session 就沒有可被冒用的身分——session 綁定的
+// token 檢查在這種端點上永遠不可能通過，硬擋等於讓功能完全無法使用。
+//
+// 這些端點的安全性由其他機制承擔，不是靠 CSRF：
+//   - /login：登入本身就是要建立 session，此時還沒有 token 可比對。
+//   - /webhook/line：由 LINE 平台伺服器呼叫，以簽章驗證來源（VerifyEventSignature）。
+//   - /approval/approve/{token}、/approval/reject/{token}：車主在 LINE 上點連結
+//     開啟，車主沒有登入、沒有 session。防護是「不可猜測的一次性 token」
+//     （32 bytes 隨機，見 generateSecureToken）——capability URL 模式。
+//     授權決定本身冪等（狀態只能 pending→approved/rejected），重放無效。
+func csrfExempt(path string) bool {
+	switch path {
+	case "/login", "/webhook/line":
+		return true
+	}
+	// 車主端的授權決定端點（公開、無 session、以 token 為憑證）
+	if strings.HasPrefix(path, "/approval/approve/") || strings.HasPrefix(path, "/approval/reject/") {
+		return true
+	}
+	return false
 }

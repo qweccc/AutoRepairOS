@@ -94,6 +94,56 @@ func TestCSRFProtection(t *testing.T) {
 	}
 }
 
+// TestCSRFExemptions 驗證免 CSRF 的路徑，並確認免責沒有外溢到其他路徑。
+//
+// 這支測試對應一個真實故障：車主端的 /approval/approve/{token} 是公開端點
+// （核准頁不建立 session、不發 cookie），而 CSRF 檢查是綁 session 的——沒有
+// session 就永遠拿不到可比對的 token，所以車主點「同意」一律 403。整個
+// 客戶端授權流程等於完全不能用。
+func TestCSRFExemptions(t *testing.T) {
+	// 車主端：沒有 cookie、沒有 token，POST 仍必須通過
+	for _, p := range []string{
+		"/approval/approve/abc123",
+		"/approval/reject/abc123",
+		"/login",
+		"/webhook/line",
+	} {
+		called := false
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			called = true
+			w.WriteHeader(http.StatusNoContent)
+		})
+		req := httptest.NewRequest(http.MethodPost, p, nil) // 刻意不帶 cookie 與 token
+		rec := httptest.NewRecorder()
+		CSRFProtection(next).ServeHTTP(rec, req)
+		if rec.Code != http.StatusNoContent || !called {
+			t.Errorf("%s：無 session 的 POST 應直接通過（修復前一律 403），得到 %d", p, rec.Code)
+		}
+	}
+
+	// 免責不可外溢：這些路徑沒有 token 仍必須被擋
+	for _, p := range []string{
+		"/work-orders/1/items",
+		"/customers/1/line-bind",
+		"/approval/123", // 核准頁本身是 GET，但 POST 到它不該被放行
+		"/approval",
+		"/approvalX/approve/abc", // 前綴不可誤判
+		"/approval/approve",      // 沒有 token 的裸前綴不該放行
+		"/loginx",
+	} {
+		called := false
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			called = true
+		})
+		req := httptest.NewRequest(http.MethodPost, p, nil)
+		rec := httptest.NewRecorder()
+		CSRFProtection(next).ServeHTTP(rec, req)
+		if rec.Code != http.StatusForbidden || called {
+			t.Errorf("%s：沒有 token 仍應被擋（403），得到 %d（called=%t）", p, rec.Code, called)
+		}
+	}
+}
+
 func TestCSRFPageHelpers(t *testing.T) {
 	const token = "random-token"
 	form := withCSRFFormFields(`<form method="POST" action="/change"><button>Save</button></form>`, token)
