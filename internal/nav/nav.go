@@ -49,6 +49,7 @@ var Routes = []Route{
 	{"/expenses", "支出", "帳務人事"},
 	{"/reports", "報表", "帳務人事"},
 	{"/analytics", "經營分析", "帳務人事"},
+	{"/ap", "應付帳款", "帳務人事"},
 	{"/lookup", "代碼對照", "後台設定"},
 	{"/scheduled-tasks", "排程", "後台設定"},
 	{"/subcontracts", "外包", "後台設定"},
