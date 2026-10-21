@@ -665,7 +665,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
 		techNames, canEdit, flash(r),
 		sopRecords, sopTemplateOpts, attachedTemplates,
-		canCreateApproval, user).Render(r.Context(), w)
+		canCreateApproval, pendingApprovalRows(id), user).Render(r.Context(), w)
 }
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -694,6 +694,14 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	// 後端強制檢查，不能只靠前端禁用按鈕。
 	if sopErr := CheckSOPCompletionForStatus(id, status); sopErr != nil {
 		fail(w, sopErr.Error())
+		return
+	}
+
+	// 未決的追加維修授權也會擋完工／結帳：客戶還沒同意就把車交出去，
+	// 等於先修了再想辦法收錢。櫃檯可以走「客戶電話同意」或「取消授權」解套，
+	// 所以這道關卡不會讓工單永遠卡住。
+	if apprErr := CheckApprovalForStatus(id, status); apprErr != nil {
+		fail(w, apprErr.Error())
 		return
 	}
 

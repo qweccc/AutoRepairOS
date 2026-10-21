@@ -168,6 +168,11 @@ func main() {
 	mux.HandleFunc("POST /work-orders/{id}/approval", handler.CounterUp(handler.UpdateWorkOrderApproval))
 	// 追加維修授權：櫃檯建立（客戶端的三個 /approval/... 路由在更上方）
 	mux.HandleFunc("POST /work-orders/{id}/approval-request", handler.CounterUp(handler.CreateApprovalFromWorkOrder))
+	// 櫃檯端的解套路徑：客戶電話中同意、或取消這筆授權。
+	// 沒有這兩條的話，未決授權會擋住完工（見 CheckApprovalForStatus）
+	// 而櫃檯只能等 24 小時過期。
+	mux.HandleFunc("POST /work-orders/{id}/approval-requests/{req_id}/approve-phone", handler.CounterUp(handler.ApproveApprovalByPhone))
+	mux.HandleFunc("POST /work-orders/{id}/approval-requests/{req_id}/cancel", handler.CounterUp(handler.CancelApprovalRequest))
 	mux.HandleFunc("POST /work-orders/{id}/claim", handler.CounterUp(handler.UpdateWorkOrderClaim))
 	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
 	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))

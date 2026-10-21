@@ -419,34 +419,17 @@ func ApproveRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. 解析 item_summary 並加入工單項目。
+	// 2. 把授權內容寫進工單項目並重算總額。
 	//
 	//    必須與「把授權標成 approved」在同一個交易內：分開做的話，中途失敗會
 	//    留下「已核准但工單沒有項目」或反向的不一致狀態，而這是錢的問題
 	//    （客戶以為同意了、工單卻沒加，或反之）。
-	items, err := parseApprovalItems(req.ItemSummary)
-	if err != nil {
-		log.Printf("授權 %d 的追加項目無法解析，已中止: %v", req.ID, err)
+	//
+	//    與「客戶電話同意」共用 applyApprovalItems：兩條路徑各寫一份的話，
+	//    遲早有一邊忘了重算總額——項目進得了明細卻不算進 total_amount＝漏收。
+	if err := applyApprovalItems(tx, req); err != nil {
+		log.Printf("授權 %d 套用追加項目失敗，已中止: %v", req.ID, err)
 		renderApprovalResult(w, "error", "追加項目資料異常，已通知車廠處理")
-		return
-	}
-	for _, it := range items {
-		if _, err := tx.Exec(`INSERT INTO work_order_items
-			(work_order_id, item_type, description, quantity, unit_price, subtotal)
-			VALUES (?, ?, ?, ?, ?, ?)`,
-			req.WorkOrderID, it.ItemType, it.Description, it.Quantity, it.UnitPrice,
-			float64(it.Quantity)*it.UnitPrice); err != nil {
-			log.Printf("授權 %d 加入工單項目失敗: %v", req.ID, err)
-			renderApprovalResult(w, "error", "加入追加項目失敗")
-			return
-		}
-	}
-
-	// 重算工單金額。少了這一步，追加項目會進得了工單明細卻不算進總額——
-	// 帳務上等於漏收（AddWorkOrderItem 也有同樣的呼叫，口徑必須一致）。
-	if err := recalcWorkOrderTotal(tx, req.WorkOrderID); err != nil {
-		log.Printf("授權 %d 重算工單金額失敗: %v", req.ID, err)
-		renderApprovalResult(w, "error", "重算工單金額失敗")
 		return
 	}
 

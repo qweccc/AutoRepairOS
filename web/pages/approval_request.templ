@@ -6,6 +6,20 @@ import (
 	"autorepairos/web/components"
 )
 
+// PendingApproval 一筆「還在等客戶回覆」的追加維修授權（已解析成可顯示的欄位）。
+//
+// 為什麼在 pages 再宣告一次而不是直接用 model.ApprovalRequest：model 的
+// ItemSummary 是原始 JSON 字串，頁面不該自己解析 JSON（解析規則必須與
+// handler 的驗證共用，否則兩邊對「合法項目」的認知會分岔）。
+type PendingApproval struct {
+	ID          int64
+	Description string
+	Quantity    int
+	UnitPrice   float64
+	ItemType    string
+	ExpiresAt   string
+}
+
 // ApprovalRequestBlock 工單詳情頁的「追加維修授權」區塊。
 //
 // 為什麼放在工單詳情頁而不是另開一頁：追加維修是維修過程中發現的動作，
@@ -13,17 +27,62 @@ import (
 //
 // canCreate 由 handler 依角色決定（POST 端點是 CounterUp），技師看得到區塊
 // 但沒有表單——顯示一個送不出去的表單只會讓人以為系統壞了。
-templ ApprovalRequestBlock(woID int64, canCreate bool) {
+templ ApprovalRequestBlock(woID int64, canCreate bool, pending []PendingApproval) {
+	// 未決授權一律跳提醒：這是會擋住完工的狀態，放在頁面深處等於沒提醒。
+	// 用紅色 msg-err 而不是低調的卡片說明——櫃檯必須立刻看到。
+	if len(pending) > 0 {
+		<div class="msg msg-err" style="margin-bottom:14px">
+			<strong>⚠ 有 { strconv.Itoa(len(pending)) } 筆追加維修還在等客戶同意</strong>
+			——客戶同意前無法完工與結帳。<br/>
+			若客戶已在電話中同意，請在下方按「客戶電話同意」並填寫備註；若不修了請按「取消」。
+		</div>
+	}
 	<div class="card">
 		<h2>追加維修授權</h2>
+		if len(pending) > 0 {
+			<table>
+				<tr><th>追加項目</th><th>數量</th><th class="num">單價</th><th>連結到期</th><th>處理</th></tr>
+				for _, p := range pending {
+					<tr>
+						<td>{ p.Description }<span style="color:#64748b;font-size:12px">（{ itemTypeLabel(p.ItemType) }）</span></td>
+						<td>{ strconv.Itoa(p.Quantity) }</td>
+						<td class="num">{ money(p.UnitPrice) }</td>
+						<td>{ p.ExpiresAt }</td>
+						<td>
+							if canCreate {
+								<form method="POST" style="display:inline"
+									action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-requests/" + strconv.FormatInt(p.ID, 10) + "/approve-phone" }>
+									@components.CSRFInput()
+									<input name="note" required placeholder="例：與車主電話確認"
+										style="width:170px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:12.5px"/>
+									<button class="btn btn-p" type="submit">客戶電話同意</button>
+								</form>
+								<form method="POST" style="display:inline"
+									action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-requests/" + strconv.FormatInt(p.ID, 10) + "/cancel" }>
+									@components.CSRFInput()
+									<button class="btn btn-d" type="submit">取消</button>
+								</form>
+							}
+							if canCreate == false {
+								<span style="color:#64748b">等待客戶回覆（僅櫃檯可處理）</span>
+							}
+						</td>
+					</tr>
+				}
+			</table>
+		}
+		if len(pending) == 0 {
+			<div class="empty">目前沒有等待客戶回覆的追加項目</div>
+		}
 		if canCreate == false {
 			<div class="empty">僅櫃檯人員與系統管理員可建立追加維修授權</div>
 		}
 		if canCreate {
-			<p style="color:#94a3b8;font-size:12.5px;line-height:1.7;margin:0 0 12px">
+			<p style="color:#94a3b8;font-size:12.5px;line-height:1.7;margin:12px 0">
 				填寫追加項目後按「建立授權並通知客戶」。系統會產生一組 24 小時有效的連結，
 				透過 LINE 推播給已綁定 LINE 的客戶。<br/>
-				客戶同意後，這些項目才會加入工單明細並計入總金額；不同意則不會變更工單。
+				客戶同意後，這些項目才會加入工單明細並計入總金額；不同意則不會變更工單。<br/>
+				<strong>客戶若在電話中直接同意</strong>，不必等連結，建立後在下方按「客戶電話同意」即可。
 			</p>
 			<form class="frm" method="POST"
 				action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-request" }>
