@@ -297,6 +297,67 @@
 - 實作：`cmd/bench/main.go`——`--db` 必填且指向預設 `data/autorepair.db` 時拒絕執行、`--reset` 重建測試資料、`--dry-run` 只印計畫不寫入、`--scale` 調整資料量（預設 10000）；量測工單／庫存／客戶列表查詢（門檻 300ms）與 1,000 筆通知批次處理（門檻 1 分鐘，經 `cron.ProcessNotificationsNow`）；印出 Go 版本、OS、DB 路徑、筆數、每項耗時與 PASS/FAIL，並以 exit code 表示是否全部達標。
 - 驗證：`go build ./...` exit 0、`go test ./... -count=1` 全綠；實跑 scale=10000 結果——資料產生（客戶 10,000／車輛 15,000／庫存 5,000／工單 20,000／通知 1,000）耗時 2m43s；工單列表 3.77ms、庫存列表 515.9µs、客戶列表 1.61ms（皆 < 300ms）；通知 1,000 筆 721.1ms（< 1 分鐘）；**全部 PASS，exit code 0**。
 
+### 階段 4：流程缺口修復（畫面與文件一致性、追加維修授權）
+
+> 詳細逐步實作（含可複製的程式碼、TDD 紅燈/綠燈、驗證指令與預期輸出）見
+> `.hermes/plans/2026-10-21_145227-ux-flow-gaps.md`。本節只記目標、驗收與依賴。
+>
+> 這一階段修的是「既有任務的缺陷」，不是新功能：畫面與 `docs/USER_GUIDE_zh-TW.md`
+> 的承諾不一致，或流程存在使用者走不完的斷點。
+
+#### [ ] T4.1 頁首登入者改由 model.User 傳入（身分一致性）
+- 目前 28 個 templ 頁面有 **25 處**把登入者／角色寫死：21 處寫 `owner/owner`，4 處把**客戶姓名**當登入者並寫死 `counter`（`workorder.templ`、`vehicle.templ`、`vehicle_show.templ`）。使用者無法從頁首判斷自己用哪個帳號登入。
+- 驗收：`components.Layout` 的 `(username, role string)` 改為 `(user model.User)`，使錯誤身分**無法通過編譯**；新增掃描測試斷言 `web/pages/*.templ` 沒有 Layout 呼叫傳字串字面值當身分。
+- 依賴：無。
+
+#### [ ] T4.2 導覽與操作按鈕依角色過濾
+- `internal/nav/nav.go` 完全不看角色；技師會看到工單列表的「＋ 開立新工單」，但 `/work-orders/new` 是 `CounterUpPage`，點進去得到權限不足。預約頁同樣對所有人顯示新增表單，但 `POST /appointments` 僅限櫃檯以上。
+- 驗收：`nav.Route` 加 `Roles`（空＝所有角色），`Render(active, role)` 依角色過濾；`Roles` 的來源是 `main.go` 的權限包裝器，逐條核對而非憑常識；工單列表與預約頁的操作按鈕改為條件渲染；nav 測試新增「技師看不到 CounterUpPage 入口」一則。
+- 依賴：T4.1（按鈕需要 `user`）。
+
+#### [ ] T4.3 離線模組接上共用 templ 版面
+- `offline.js` 只載入於 `internal/handler/layout.go`（字串拼接頁），`web/components/layout.templ` 沒有載入，因此工單照片頁（templ 頁）拿不到手冊承諾的「離線暫存、恢復連線後補傳」。
+- **隱藏陷阱**：`sw.js` 對未知路徑的預設是 cache-first，`/offline.js` 不在 `NETWORK_FIRST`；只補 script 標籤的話既有瀏覽器仍會跑舊版。
+- 驗收：`layout.templ` 的 body 結尾載入 `/offline.js`；`sw.js` 的 `NETWORK_FIRST` 加入 `/offline.js` 與 `/static/offline.css` 並遞增 `CACHE` 版本號；瀏覽器實測 `/work-orders/{id}/photos` 的 `window.AutoRepairOffline.PhotoQueue` 存在（修前為 `undefined`）；模擬離線送出照片後佇列長度為 1。
+- 依賴：無。
+
+#### [ ] T4.4 追加維修授權接成完整流程（FR-WO-06、FR-NOTI-05）
+- `main.go` 有客戶端的開啟／同意／拒絕三個路由，但**沒有任何地方建立授權請求**——`CreateApprovalRequest` 全 repo 只出現在一行註解裡（`line_webhook.go:333`），`approvals.go` 的「加入工單項目」仍是 TODO。手冊描述的「產生連結 → 客戶確認 → 工單加入追加項目」從 UI 走不完。
+- 驗收：`item_summary` 由自由文字改為結構化 JSON（`approvalItem`），並以單一 `parseApprovalItems` 集中驗證；客戶同意時在**同一交易**內寫入 `work_order_items`（失敗整筆回滾，避免「已核准但工單沒項目」的錢務不一致）；新增 `POST /work-orders/{id}/approval-request`（`CounterUp`）與工單詳情頁的「追加維修授權」區塊；已結帳工單不可建立授權。
+- 測試：完整流程、重複同意冪等、拒絕不加項目、四種格式錯誤、已結帳被擋。
+- 依賴：T4.1（工單詳情頁需傳 `user` 判斷權限）。
+
+#### [ ] T4.5 移除新增客戶表單的 LINE User ID 欄位
+- `web/pages/customer.templ` 的新增表單有 `line_user_id` 輸入框，但 `CreateCustomer` 明確不讀它（只讀 `telegram_user_id`），填了會被靜默丟棄——使用者以為綁好了，通知卻永遠送不到。編輯頁已改為專用綁定流程，新增頁是漏掉的那一半。
+- 驗收：欄位移除並加說明文字指向編輯頁的綁定區塊；`Telegram User ID` **保留**（客戶用 `@userinfobot` 查得到）；新增回歸測試斷言新增表單不含 `line_user_id`。
+- 依賴：無。
+
+#### [ ] T4.6 預約與工單的關聯（預約「已進廠」直接開單）
+- `appointment_id` 在任何 migration 與 Go 程式碼裡都不存在，預約列表只有編輯／刪除。櫃檯已知車到了、預約資料也填好了，卻要重打一次車牌。
+- 驗收：新增 migration 045 為 `work_orders` 加 nullable `appointment_id`（既有工單沒有預約來源，不可用 NOT NULL）；`/work-orders/new?appointment_id=N` 預填客戶／車輛；建立工單時在同一交易把預約狀態更新為 `arrived`；預約列表加「→ 開工單」按鈕（僅 `booked`/`confirmed`/`arrived` 顯示）。
+- 依賴：無（但需先確認是否納入範圍）。
+
+#### [ ] T4.7 未決的追加授權阻擋完工與結帳
+- `UpdateWorkOrderStatus` 只呼叫 `CheckSOPCompletionForStatus`，`approval_status` 完全不影響完工與結帳。
+- **判準必須是「有沒有未決的 `approval_requests`」，不是工單上的 `approval_status`**：後者的預設值是 `pending`，一律擋會讓**每一張沒走追加流程的工單都無法完工**。
+- 驗收：新增 `CheckApprovalForStatus(woID, targetStatus)`，只在「已建立授權且客戶尚未回覆（且未過期）」時回錯；測試涵蓋有未決授權→擋、被拒絕→可完工、已過期→可完工、**沒有授權→可完工**。
+- 依賴：T4.4。
+
+#### [ ] T4.8 離線草稿不被誤刪，並限縮文件承諾
+- `offline.js` 在 `submit` 事件就清除草稿，**不管 POST 成功與否**——離線或伺服器錯誤時草稿被丟掉，而草稿存在的意義正是「送不出去時別弄丟」。手冊對「離線」的承諾範圍也過寬（實際上只有照片有真正的離線佇列）。
+- 驗收：草稿改為只在送出成功後清除；手冊的離線段落限縮為「照片離線暫存」，並明講一般表單離線時**不會**自動補送（草稿會保留）。
+- 依賴：T4.3（同一支 `offline.js`）。
+
+#### [ ] T4.9 快速建立遇到重複車牌時要求確認
+- `workorder_new.go` 的 `QuickVehicle` 偵測到同車牌時直接回傳既有車輛並回 `ok:true`，沒有二次確認。回傳的 label 雖含車主姓名，但櫃檯不一定會看。
+- 驗收：回傳值加 `duplicate: true`；前端以確認對話框顯示「車牌 X 已存在，車主是 Y，要使用既有車輛嗎？」，取消則不選取；測試斷言既有車牌回傳含 `duplicate: true` 且 `vehicle_id` 為既有那筆。
+- 依賴：無。
+
+#### [ ] T4.10 文件與角色可見範圍對齊
+- 手冊的追加維修授權段落描述的流程從 UI 走不完；離線承諾過寬；也沒有「不同角色看到的畫面不同」的說明。
+- 驗收：手冊的追加授權改寫成可操作步驟（在哪個頁面、填什麼、按什麼、客戶收到什麼、同意後工單多出什麼）；離線段落限縮；新增角色可見範圍對照表；ROADMAP 的 T2.11 補註櫃檯端入口與交易化實作的補強。
+- 依賴：T4.2、T4.4、T4.8。
+
 ## 4. 依賴與建議執行順序
 
 此順序反映真正的技術依賴，不代表同階段所有任務必須串行：
@@ -307,10 +368,13 @@
 4. T2.6 完成後才可把 SOP 檢查納入完工限制；T2.8 → T2.22（照片儲存／上傳整合）。
 5. T2.12 依賴現有採購單及外包資料；T2.13 → T2.14、T2.17、T2.18，成本口徑需共用。
 6. T3.1 應在影響查詢、索引或背景工作量的功能完成後執行，並記錄基準環境。
+7. 階段 4：T4.1 → T4.2、T4.4；T4.4 → T4.7；T4.3 → T4.8；T4.2／T4.4／T4.8 → T4.10。T4.5、T4.6、T4.9 無依賴，可與任何任務平行。
+   - 平行限制：T4.1 與 T4.4 都動 `web/pages/workorder.templ`，**不可同時進行**。
+   - `templ generate` **不可與其他 agent 並行執行**（會產出損毀的 `*_templ.go`），一律由單一方在合併後統一跑。
 
 ### Migration 編號
 
-Migration 編號依目錄中實際最高序號遞增；目前最高序號為 `031`，下一個新 migration 從 `032` 開始。實作前再次檢查目錄，避免平行任務使用相同序號。Migration 必須可安全套用至既有資料庫；不可假設 `IF NOT EXISTS` 適用於所有 SQLite `ALTER TABLE` 語法，應依實際 migration runner 和既有 schema 撰寫並測試。
+Migration 編號依目錄中實際最高序號遞增；目前最高序號為 `044`（`044_binding_uniqueness`），下一個新 migration 從 `045` 開始。實作前再次檢查目錄，避免平行任務使用相同序號。Migration 必須可安全套用至既有資料庫；不可假設 `IF NOT EXISTS` 適用於所有 SQLite `ALTER TABLE` 語法，應依實際 migration runner 和既有 schema 撰寫並測試。新增唯一性約束時須考慮既有資料是否已違反約束（違反會使 migration 直接失敗，需先人工清理）。
 
 ## 5. 每個任務的完成條件
 
