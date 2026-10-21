@@ -356,16 +356,29 @@
 - 踩到的坑：說明文字原本寫 `@userinfobot`，templ 把 `@` 當成元件呼叫的起點，產生 `undefined: userinfobot` 的編譯錯誤。
 - 驗證：`templ generate`、`go build` exit 0、`go test ./... -count=1` 全綠；實機 HTTP（8099）確認表單內 `name="line_user_id"` 為 False、`name="telegram_user_id"` 為 True、說明文字出現。
 
-#### [ ] T4.6 預約與工單的關聯（預約「已進廠」直接開單）
+#### [x] T4.6 預約與工單的關聯（預約「已進廠」直接開單）
 - `appointment_id` 在任何 migration 與 Go 程式碼裡都不存在，預約列表只有編輯／刪除。櫃檯已知車到了、預約資料也填好了，卻要重打一次車牌。
 - 驗收：新增 migration 045 為 `work_orders` 加 nullable `appointment_id`（既有工單沒有預約來源，不可用 NOT NULL）；`/work-orders/new?appointment_id=N` 預填客戶／車輛；建立工單時在同一交易把預約狀態更新為 `arrived`；預約列表加「→ 開工單」按鈕（僅 `booked`/`confirmed`/`arrived` 顯示）。
 - 依賴：無（但需先確認是否納入範圍）。
+- 實作：migration 045（`ALTER TABLE ... ADD COLUMN appointment_id INTEGER REFERENCES appointments(id)` + 索引）；預約列表的「→ 開工單」按鈕（已開單顯示 `已開單` pill，已取消／已結案不給按鈕）；`NewWorkOrder` 帶入客戶／車輛並顯示來源橫幅（含預約服務內容與時段）+ hidden 帶回預約 id；`CreateWorkOrder` 在**同一交易**內寫入 `appointment_id` 並把預約標記 `arrived`。是否已開單用**一次批次查詢**（`appointmentWorkOrderIDs`）而非逐列查，避免 N+1。
+- 防誤用：預約與工單的車輛／客戶不符、已取消／已結案、預約不存在 → 不建立關聯也不改預約狀態，但**仍允許開單**（車已經在廠裡了，不該因為來源有問題就擋下整張工單）。
+- 驗證：新增 7 則測試。測試有效性已用紅燈驗證（`apptArg` 改 `nil` → FAIL 並指出「appointment_id 應為 1，實際 0」與「預約應被標記為 arrived，實際 booked」）。
+- **migration 045 的兩種路徑都實測過**（單元測試用自己 `CREATE TABLE`、從不執行 `migration/*.up.sql`，SQL 只能靠真的跑服務驗證）：**全新 DB** 啟動 log 出現「已套用 migration: 045_appointment_work_order_link」、`PRAGMA table_info` 確認欄位、`schema_migrations` 最新為 045、索引存在；**既有資料庫升級** 在 `PRAGMA foreign_keys=ON` 且有 3 筆 `work_orders` 的庫上套用 → OK，既有列數不變且 `appointment_id` 為 NULL，可寫入合法值、寫入不存在的預約被 FK 擋下。
+- 實機端到端（8098，全新 DB）：預約列表出現「→ 開工單」並連到正確 id → 開單頁顯示來源橫幅、帶出車主、車輛預選、里程預填、hidden 帶回預約 id → 送出後 `appointment_id=1`、預約狀態變 `arrived` → 回列表顯示「已開單」且按鈕消失。
 
-#### [ ] T4.7 未決的追加授權阻擋完工與結帳
+#### [x] T4.7 未決的追加授權阻擋完工與結帳（含一律提醒、電話同意、取消）
 - `UpdateWorkOrderStatus` 只呼叫 `CheckSOPCompletionForStatus`，`approval_status` 完全不影響完工與結帳。
 - **判準必須是「有沒有未決的 `approval_requests`」，不是工單上的 `approval_status`**：後者的預設值是 `pending`，一律擋會讓**每一張沒走追加流程的工單都無法完工**。
 - 驗收：新增 `CheckApprovalForStatus(woID, targetStatus)`，只在「已建立授權且客戶尚未回覆（且未過期）」時回錯；測試涵蓋有未決授權→擋、被拒絕→可完工、已過期→可完工、**沒有授權→可完工**。
 - 依賴：T4.4。
+- 實作：`approval_gate.go`——`pendingApprovalRequests`（pending 且未過期）、`CheckApprovalForStatus`（查詢失敗不擋，與 SOP 檢查一致）、`pendingApprovalRows`（轉成頁面可顯示的列）。
+- **一律跳提醒**：未決授權在工單頁上方以紅色 `msg-err` 提醒（「客戶同意前無法完工與結帳」），並列出每一筆（品名／數量／單價／到期）與處理按鈕。放在頁面深處等於沒提醒。
+- **電話同意**（使用者要求）：客戶在電話中說「好，你修」但沒點連結時，工單會永遠卡在待客戶同意，而車子已經在頂車機上了。櫃檯按「客戶電話同意」並填**必填備註**記錄。`decision_source` 記為 `phone`（客戶自己點連結是 `web`）——事後追查「這個同意是怎麼來的」時兩者可信度不同。
+- **取消授權**：客戶決定不修、或櫃檯填錯時的解套。標成 `rejected` + `decision_source='counter'` 並保留備註，**不刪除**（事後要能說明為什麼這張工單沒有那個項目）。沒有這條就只能等 24 小時過期。
+- `applyApprovalItems` 抽出共用：客戶線上同意與櫃檯電話同意走同一支，否則遲早有一邊忘了重算總額（項目進得了明細卻不算進 `total_amount`＝漏收）。
+- `item_summary` 解析失敗的未決列**仍會顯示**（標示資料異常）：它同樣擋完工，若因為解析不了就不顯示，櫃檯會看到提醒卻找不到任何列可取消。
+- 驗證：新增 13 則測試（gate 六則含「沒有授權時必須放行」、電話同意五則、取消一則、`pendingApprovalRows` 一則）。**紅燈驗證**：把判準換成 `approval_status` → `TestCheckApprovalForStatusAllowsWhenNoApproval` FAIL 並指出「照它擋會讓每張工單都無法完工」。
+- 實機端到端（8097，全新 DB）：初始無提醒 → 建立授權後跳出「⚠ 有 1 筆追加維修還在等客戶同意」→ 未同意就完工與結帳皆 **HTTP 400** 並回報筆數 → 未填備註被擋、填了成功 → DB `status=approved`/`decision_source=phone`/備註保留、項目加入 `('part','變速箱油更換',1,3500)`、總額重算 3500 → 提醒消失、可完工 → 取消路徑同樣驗證（`rejected`/`counter`、項目 0 筆、總額不變、可完工）。
 
 #### [ ] T4.8 離線草稿不被誤刪，並限縮文件承諾
 - `offline.js` 在 `submit` 事件就清除草稿，**不管 POST 成功與否**——離線或伺服器錯誤時草稿被丟掉，而草稿存在的意義正是「送不出去時別弄丟」。手冊對「離線」的承諾範圍也過寬（實際上只有照片有真正的離線佇列）。
