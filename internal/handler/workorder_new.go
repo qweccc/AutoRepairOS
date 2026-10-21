@@ -189,6 +189,9 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 			請確認車牌是否正確，或先到「車輛」頁新增。</div>`
 	}
 
+	// 表單裡的 appointment_id 由預約開單時帶回，建立工單時一併把預約標記為已進廠。
+	// 之所以留在表單裡而不是只看 URL：櫃檯可能中途改了其他欄位後送出，
+	// 若以重新帶入的參數為準會失去來源。
 	body := flash(r) + notFound + apptBanner + `
     <div class="card">
       <h2>開立工單</h2>
@@ -196,9 +199,6 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
         在下方輸入車牌、車型或車主姓名即可即時篩選，點選後確認車主再填里程。
       </p>
       <form class="frm" method="POST" action="/work-orders" id="woForm">
-        // 由預約開單時帶回預約 id；建立工單一併把預約標記為已進廠。
-        // 留在表單裡而不是只看 URL：櫃檯可能中途改了其他欄位，
-        // 若以重新帶入的參數為準會失去來源。
         <input type="hidden" name="appointment_id" value="` + strconv.FormatInt(preAppointment, 10) + `">
         <label class="full">車輛
           <div class="vsearch" data-vsearch data-options="` + optsJSON + `"` +

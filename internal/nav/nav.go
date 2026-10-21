@@ -29,7 +29,14 @@ type Route struct {
 	//
 	// 權威來源是 main.go 的包裝器，不要憑常識猜：/staff、/reports、
 	// /technicians/commissions、/purchase-orders、/inventory、/suppliers
-	// 都是 AllStaff（技師看得到），實際只有 5 項受限。
+	// 都是 AllStaff（技師看得到）。實際只有 6 項受限（counterUp）：
+	// /receivables、/expenses、/reports、/analytics、/ap、/lookup。
+	// 其中 /reports 是特例：main.go 包的是 AllStaff，但 ReportsHome 內部
+	// 用 canSeeMoney 讓技師 403，所以選單仍必須擋（見 nav_roles_sync_test.go
+	// 的 effectiveRoleOverrides）。
+	//
+	// 手冊 docs/USER_GUIDE_zh-TW.md 有同一份清單，由
+	// TestManualRoleVisibilityMatchesNav 交叉比對，改這裡要一起改。
 	Roles []string
 }
 
