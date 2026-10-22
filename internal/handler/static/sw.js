@@ -29,7 +29,10 @@ const SHELL = [
 const NETWORK_FIRST = [
   '/static/app.css',
   '/offline.js',
-  '/offline.css'
+  '/offline.css',
+  '/static/vehicle-search.js',
+  '/static/scan.js',
+  '/static/photo-markup.js'
 ];
 
 // 純 vendor 靜態檔：版本固定、內容不變，cache-first 沒有 stale 風險，
