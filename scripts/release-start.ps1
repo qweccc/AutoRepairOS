@@ -38,7 +38,7 @@ foreach ($key in $applicationKeys) {
     [Environment]::SetEnvironmentVariable($key, $null, "Process")
 }
 
-foreach ($line in Get-Content -LiteralPath $settingsPath) {
+foreach ($line in Get-Content -LiteralPath $settingsPath -Encoding UTF8) {
     if ($line -match '^\s*(#.*)?$') {
         continue
     }
