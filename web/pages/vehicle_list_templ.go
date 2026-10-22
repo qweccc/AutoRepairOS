@@ -349,7 +349,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("車輛管理", "/vehicles", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("車輛管理", "/vehicles", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

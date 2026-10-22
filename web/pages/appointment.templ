@@ -33,7 +33,7 @@ type CalendarDay struct {
 templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
 	customerOpts, vehicleOpts, bayOpts, bayCardHTML string, user model.User) {
-	@components.Layout("預約排程", "/appointments", user, "AutoRepair OS") {
+	@components.Layout("預約排程", "/appointments", user, AppName) {
 		// 建立預約僅限櫃檯以上（POST /appointments 是 CounterUp）。
 		// 技師看到表單卻送不出去（被擋），只會以為系統壞了。
 		if user.Role == "owner" || user.Role == "counter" {

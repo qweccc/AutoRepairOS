@@ -28,7 +28,7 @@ const vehiclePlateFieldMap = `{"plate_number":"plate_number","vin":"vin","engine
 templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 	q string, filterCustomer int64,
 	newModelOptions, newVehicleTypeOptions, newFuelTypeOptions, newBodyStyleOptions string, user model.User) {
-	@components.Layout("車輛管理", "/vehicles", user, "AutoRepair OS") {
+	@components.Layout("車輛管理", "/vehicles", user, AppName) {
 		<div class="card">
 			<h2>新增車輛</h2>
 			<form class="frm" method="POST" action="/vehicles">

@@ -26,7 +26,7 @@ type InventoryRow struct {
 templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, size int,
 	q string, lowOnly bool, showMoney bool, catTabsHTML string, negBannerHTML string,
 	categoryOptionsHTML string, user model.User) {
-	@components.Layout("庫存管理", "/inventory", user, "AutoRepair OS") {
+	@components.Layout("庫存管理", "/inventory", user, AppName) {
 		if negBannerHTML != "" {
 			@templ.Raw(negBannerHTML)
 		}

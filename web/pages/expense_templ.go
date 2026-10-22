@@ -153,7 +153,7 @@ func ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn,
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("零用金支出", "/expenses", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("零用金支出", "/expenses", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -18,7 +18,7 @@ type ExpenseRow struct {
 
 // ListExpensesPage 零用金支出頁（HTMX 即時搜尋）。
 templ ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn, sumOut float64, user model.User) {
-	@components.Layout("零用金支出", "/expenses", user, "AutoRepair OS") {
+	@components.Layout("零用金支出", "/expenses", user, AppName) {
 		<div class="card">
 			<h2>零用金／雜支支出（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<div class="msg msg-err" style="margin-bottom:14px">

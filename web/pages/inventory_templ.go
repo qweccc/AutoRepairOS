@@ -201,7 +201,7 @@ func ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, siz
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("庫存管理", "/inventory", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("庫存管理", "/inventory", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

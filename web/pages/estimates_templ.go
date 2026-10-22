@@ -259,7 +259,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("估價草稿", "/estimates", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("估價草稿", "/estimates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -373,7 +373,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) templ.Co
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("建立估價", "/estimates", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("建立估價", "/estimates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -852,7 +852,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1107,7 +1107,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("工單估價來源", "/estimates", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("工單估價來源", "/estimates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

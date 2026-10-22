@@ -16,7 +16,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 	sopRecords []model.SOPRecord, sopTemplateOpts string, attachedTemplates []int64,
 	canCreateApproval bool, pendingApprovals []PendingApproval, user model.User) {
 
-	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, "AutoRepair OS") {
+	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, AppName) {
 		if flashMsg != "" {
 			<div class="msg msg-ok">{ flashMsg }</div>
 		}

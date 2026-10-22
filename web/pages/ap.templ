@@ -43,7 +43,7 @@ type APSupplierOption struct {
 
 templ APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSupplierOption,
 	supplierID int64, status, today string, user model.User) {
-	@components.Layout("應付帳款", "/ap", user, "AutoRepair OS") {
+	@components.Layout("應付帳款", "/ap", user, AppName) {
 		<div class="card">
 			<h2>供應商應付帳款</h2>
 			<p style="color:#94a3b8">採購於確認進貨、外包於成立時建立應付快照；付款以分次流水累計，沖銷保留原帳款紀錄。</p>
@@ -143,7 +143,7 @@ templ APPayableRowContent(row APPayableRow, today, role string) {
 
 templ APStatementPage(rows []APPayableRow, supplierName, from, to string, amount, paid, balance float64,
 	suppliers []APSupplierOption, supplierID int64, csvURL string, user model.User) {
-	@components.Layout("供應商月結對帳單", "/ap", user, "AutoRepair OS") {
+	@components.Layout("供應商月結對帳單", "/ap", user, AppName) {
 		<style>
 			@templ.Raw(`@media print {
 				nav, header, .no-print { display: none !important; }

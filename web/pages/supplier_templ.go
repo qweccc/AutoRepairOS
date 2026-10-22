@@ -238,7 +238,7 @@ func ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype strin
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("廠商管理", "/suppliers", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("廠商管理", "/suppliers", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

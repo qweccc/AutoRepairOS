@@ -32,7 +32,7 @@ type ReceivableRow struct {
 templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 	q, method, from, to string, showVoided, unpaidOnly bool,
 	sumPay, sumCash, sumCard, sumCheck, sumTransfer float64, user model.User) {
-	@components.Layout("收款紀錄", "/receivables", user, "AutoRepair OS") {
+	@components.Layout("收款紀錄", "/receivables", user, AppName) {
 		<div class="card">
 			<h2>收款紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<div style="margin-bottom:14px">

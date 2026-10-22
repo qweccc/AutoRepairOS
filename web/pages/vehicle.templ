@@ -9,7 +9,7 @@ import (
 
 // EditVehiclePage 車輛編輯頁（對齊台灣行車執照格式）。
 templ EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string, user model.User) {
-	@components.Layout("編輯車輛 "+v.PlateNumber, "/vehicles", user, "AutoRepair OS") {
+	@components.Layout("編輯車輛 "+v.PlateNumber, "/vehicles", user, AppName) {
 		<div class="card">
 			<h2>編輯車輛 { v.PlateNumber }</h2>
 			<form class="frm" method="POST" action={ "/vehicles/" + strconv.FormatInt(v.ID, 10) }>
@@ -80,7 +80,7 @@ templ EditVehiclePage(v model.Vehicle, modelOptions, vehicleTypeOptions, fuelTyp
 
 // NewVehiclePage 車輛新增頁（對齊台灣行車執照格式）。
 templ NewVehiclePage(customerName string, modelOptions, vehicleTypeOptions, fuelTypeOptions, bodyStyleOptions string, user model.User) {
-	@components.Layout("新增車輛", "/vehicles", user, "AutoRepair OS") {
+	@components.Layout("新增車輛", "/vehicles", user, AppName) {
 		<div class="card">
 			<h2>新增車輛</h2>
 			<form class="frm" method="POST" action="/vehicles">

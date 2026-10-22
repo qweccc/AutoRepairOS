@@ -303,7 +303,7 @@ func ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("收款紀錄", "/receivables", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("收款紀錄", "/receivables", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

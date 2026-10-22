@@ -32,7 +32,7 @@ type WorkOrderRow struct {
 templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 	q, part, status, tech, from, to string,
 	tabsHTML, techOptionsHTML string, user model.User) {
-	@components.Layout("工單管理", "/work-orders", user, "AutoRepair OS") {
+	@components.Layout("工單管理", "/work-orders", user, AppName) {
 		<div class="card">
 			<h2>工單列表（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">

@@ -14,6 +14,7 @@ import (
 	"autorepairos/internal/handler"
 	"autorepairos/internal/integration/vision"
 	"autorepairos/internal/seed"
+	"autorepairos/web/pages"
 )
 
 // 建置資訊，由 build-release.ps1 以 -ldflags -X 注入。
@@ -44,6 +45,9 @@ func versionText() string {
 
 func main() {
 	cfg := config.Load()
+	if cfg.AppName != "" {
+		pages.AppName = cfg.AppName
+	}
 	log.Printf("AutoRepairOS 啟動：%s", versionText())
 
 	if err := db.Init(cfg); err != nil {

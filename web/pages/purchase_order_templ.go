@@ -116,7 +116,7 @@ func ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, s
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("進貨單", "/purchase-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("進貨單", "/purchase-orders", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -434,7 +434,7 @@ func NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string, user model.Use
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("開立進貨單", "/purchase-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("開立進貨單", "/purchase-orders", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -774,7 +774,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

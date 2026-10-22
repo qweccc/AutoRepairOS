@@ -490,7 +490,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

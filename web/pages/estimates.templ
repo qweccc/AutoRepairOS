@@ -51,7 +51,7 @@ type EstimateItemRow struct {
 }
 
 templ EstimateListPage(rows []EstimateListRow, user model.User) {
-	@components.Layout("估價草稿", "/estimates", user, "AutoRepair OS") {
+	@components.Layout("估價草稿", "/estimates", user, AppName) {
 		<div class="card">
 			<h2>估價草稿</h2>
 			if user.Role == "owner" || user.Role == "counter" {
@@ -93,7 +93,7 @@ templ EstimateListPage(rows []EstimateListRow, user model.User) {
 }
 
 templ EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) {
-	@components.Layout("建立估價", "/estimates", user, "AutoRepair OS") {
+	@components.Layout("建立估價", "/estimates", user, AppName) {
 		<div class="card">
 			<h2>建立估價草稿</h2>
 			if len(vehicles) == 0 {
@@ -148,7 +148,7 @@ templ EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) {
 }
 
 templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.User, canEdit bool) {
-	@components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", user, "AutoRepair OS") {
+	@components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", user, AppName) {
 		<div class="card">
 			<h2>估價草稿 #{ strconv.FormatInt(e.ID, 10) }</h2>
 			<table>
@@ -230,7 +230,7 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 }
 
 templ EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID int64, quoteTotal, quoteDiscount float64, user model.User) {
-	@components.Layout("工單估價來源", "/estimates", user, "AutoRepair OS") {
+	@components.Layout("工單估價來源", "/estimates", user, AppName) {
 		<div class="card">
 			<h2>工單 #{ strconv.FormatInt(workOrderID, 10) } 的估價來源</h2>
 			<p>來源估價 #{ strconv.FormatInt(e.ID, 10) }，車輛 { e.PlateNumber } / { e.BrandModel }，客戶 { e.CustomerName }。</p>

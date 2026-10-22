@@ -283,7 +283,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("應付帳款", "/ap", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("應付帳款", "/ap", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1014,7 +1014,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("供應商月結對帳單", "/ap", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("供應商月結對帳單", "/ap", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

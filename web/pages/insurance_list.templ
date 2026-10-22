@@ -83,7 +83,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 		{{ searchURL = "/api/insurances/search?expiring=30" }}
 		{{ pagerURL = "/insurances/expiring" }}
 	}
-	@components.Layout("車輛投保紀錄", "/insurances", user, "AutoRepair OS") {
+	@components.Layout("車輛投保紀錄", "/insurances", user, AppName) {
 		<div class="card">
 			<h2>車輛投保紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
@@ -161,7 +161,7 @@ type InspectionRow struct {
 
 // ListVehicleInspectionsPage 車輛定檢排程頁（HTMX 即時搜尋）。
 templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q string, pendingOnly bool, pendingCount int, user model.User) {
-	@components.Layout("車輛定檢排程", "/inspections", user, "AutoRepair OS") {
+	@components.Layout("車輛定檢排程", "/inspections", user, AppName) {
 		<div class="card">
 			<h2>車輛定檢排程（符合條件 { strconv.Itoa(total) } 筆，未完成 { strconv.Itoa(pendingCount) } 筆）</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">

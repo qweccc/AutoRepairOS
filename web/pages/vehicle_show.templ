@@ -14,7 +14,7 @@ templ ShowVehiclePage(v model.Vehicle,
 	dateCell, kmCell string,
 	mileageTable, ordersTable, partsTable string, user model.User) {
 
-	@components.Layout("車輛履歷 "+v.PlateNumber, "/vehicles", user, "AutoRepair OS") {
+	@components.Layout("車輛履歷 "+v.PlateNumber, "/vehicles", user, AppName) {
 		<div class="card">
 			<h2>{ v.PlateNumber } — { v.BrandModel }</h2>
 			<div style="margin-bottom:14px">

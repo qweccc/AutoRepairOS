@@ -18,7 +18,7 @@ type LookupRow struct {
 // ListLookupPage 代碼對照表頁（HTMX 即時搜尋）。
 templ ListLookupPage(rows []LookupRow, category, categoryLabel string, total int,
 	catTabsHTML string, user model.User) {
-	@components.Layout("代碼對照表", "/lookup", user, "AutoRepair OS") {
+	@components.Layout("代碼對照表", "/lookup", user, AppName) {
 		<div class="card">
 			<h2>代碼對照表（{ categoryLabel }，共 { strconv.Itoa(total) } 筆）</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">

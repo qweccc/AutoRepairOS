@@ -12,7 +12,7 @@ import (
 templ ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
 	pendingText, recentText, linePill, lineStatus string,
 	hasTasks, hasNotifs, hasBackups bool, user model.User) {
-	@components.Layout("排程與備份", "/scheduled-tasks", user, "AutoRepair OS") {
+	@components.Layout("排程與備份", "/scheduled-tasks", user, AppName) {
 		<div class="card">
 			<h2>排程任務</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">

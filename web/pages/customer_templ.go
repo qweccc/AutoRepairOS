@@ -70,7 +70,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<label>姓名<input name=\"name\" required></label> <label>電話<input name=\"phone\" required></label> <label>通知偏好 <select name=\"notification_preference\"><option value=\"none\" selected>不通知</option> <option value=\"line\">LINE</option> <option value=\"telegram\">Telegram</option> <option value=\"sms\">SMS</option></select></label> <label class=\"full\">地址<input name=\"address\"></label> <label class=\"full\">Telegram User ID<input name=\"telegram_user_id\" placeholder=\"例：123456789\"></label> <label class=\"full\">標籤<input name=\"tags\" placeholder=\"以逗號分隔，例：VIP,奧客警示\"></label> <label class=\"full\">行銷活動代碼<input name=\"campaign_code\" placeholder=\"例：2026Q4-煞車促銷\"></label> <label class=\"full\">備註<textarea name=\"notes\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立客戶</button></div></form><p style=\"color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6\">建立後要綁定 LINE，請到該客戶的編輯頁使用「LINE 綁定」區塊產生綁定碼。 這裡刻意不放 LINE User ID 欄位：客戶看不到自己的 LINE User ID， 手打容易錯，而填錯不會有任何錯誤訊息——通知會靜默送不到。 Telegram 因為客戶可用 Telegram 的 userinfobot 查到自己的 ID，可直接在上方填寫。</p></div><div class=\"card\"><h2>客戶列表（符合條件 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<label>姓名<input name=\"name\" required placeholder=\"例：王小明\"></label> <label>電話<input name=\"phone\" type=\"tel\" required placeholder=\"例：0912-345-678\"></label> <label>通知偏好 <select name=\"notification_preference\"><option value=\"none\" selected>不通知</option> <option value=\"line\">LINE</option> <option value=\"telegram\">Telegram</option> <option value=\"sms\">SMS</option></select></label> <label class=\"full\">地址<input name=\"address\"></label> <label class=\"full\">Telegram User ID<input name=\"telegram_user_id\" placeholder=\"例：123456789\"></label> <label class=\"full\">標籤<input name=\"tags\" placeholder=\"以逗號分隔，例：VIP,奧客警示\"></label> <label class=\"full\">行銷活動代碼<input name=\"campaign_code\" placeholder=\"例：2026Q4-煞車促銷\"></label> <label class=\"full\">備註<textarea name=\"notes\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立客戶</button></div></form><p style=\"color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6\">建立後要綁定 LINE，請到該客戶的編輯頁使用「LINE 綁定」區塊產生綁定碼。 這裡刻意不放 LINE User ID 欄位：客戶看不到自己的 LINE User ID， 手打容易錯，而填錯不會有任何錯誤訊息——通知會靜默送不到。 Telegram 因為客戶可用 Telegram 的 userinfobot 查到自己的 ID，可直接在上方填寫。</p></div><div class=\"card\"><h2>客戶列表（符合條件 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -329,7 +329,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("客戶管理", "/customers", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("客戶管理", "/customers", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

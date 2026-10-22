@@ -22,13 +22,13 @@ type CustomerRow struct {
 
 // ListCustomersPage 客戶列表頁（HTMX 即時搜尋）。
 templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user model.User) {
-	@components.Layout("客戶管理", "/customers", user, "AutoRepair OS") {
+	@components.Layout("客戶管理", "/customers", user, AppName) {
 		<div class="card">
 			<h2>新增客戶</h2>
 			<form class="frm" method="POST" action="/customers">
 				@components.CSRFInput()
-				<label>姓名<input name="name" required></label>
-				<label>電話<input name="phone" required></label>
+				<label>姓名<input name="name" required placeholder="例：王小明"></label>
+				<label>電話<input name="phone" type="tel" required placeholder="例：0912-345-678"></label>
 				<label>通知偏好
 					<select name="notification_preference">
 						<option value="none" selected>不通知</option>

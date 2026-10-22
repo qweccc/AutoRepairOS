@@ -379,7 +379,7 @@ func ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size int
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("車輛投保紀錄", "/insurances", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("車輛投保紀錄", "/insurances", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -720,7 +720,7 @@ func ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q s
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("車輛定檢排程", "/inspections", user, "AutoRepair OS").Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("車輛定檢排程", "/inspections", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var34), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
