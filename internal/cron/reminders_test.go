@@ -116,6 +116,46 @@ func TestMaintenanceReminderByDateAndMileage(t *testing.T) {
 	}
 }
 
+// TestMaintenanceReminderNotSuppressedAcrossVehicles guards the dedup key in
+// queueVehicleReminder. The stable identity of a reminder is (customer, kind,
+// body); because the body embeds the plate, each vehicle a customer owns gets
+// its own reminder. Deduping on (customer, kind) only would silently drop
+// every vehicle beyond the first within the 7-day window — a multi-vehicle
+// customer (the norm for a car shop) would stop hearing about their other cars.
+func TestMaintenanceReminderNotSuppressedAcrossVehicles(t *testing.T) {
+	d := reminderTestDB(t)
+	addReminderVehicle(t, d, "line", "LINE-1", "")
+	if _, err := d.Exec(`INSERT INTO vehicles(id,customer_id,plate_number) VALUES (2,1,'XYZ-9876')`); err != nil {
+		t.Fatal(err)
+	}
+	due := time.Now().AddDate(0, 0, 3).Format("2006-01-02")
+	for _, vid := range []int{1, 2} {
+		if _, err := d.Exec(`UPDATE vehicles SET next_maintenance_date=?, next_maintenance_mileage=50000 WHERE id=?`, due, vid); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := d.Exec(`INSERT INTO work_orders(vehicle_id,current_mileage) VALUES (?,50000)`, vid); err != nil {
+			t.Fatal(err)
+		}
+	}
+	count, err := scanMaintenanceDueInternal()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Fatalf("queued %d maintenance reminders; want 2 (one per vehicle)", count)
+	}
+	var one, two string
+	if err := d.QueryRow(`SELECT body FROM notifications WHERE body LIKE '%ABC-1234%'`).Scan(&one); err != nil {
+		t.Fatalf("no reminder mentions ABC-1234: %v", err)
+	}
+	if err := d.QueryRow(`SELECT body FROM notifications WHERE body LIKE '%XYZ-9876%'`).Scan(&two); err != nil {
+		t.Fatalf("second vehicle XYZ-9876 reminder was suppressed: %v", err)
+	}
+	if !containsAll(one, due, "50000 公里") || !containsAll(two, due, "50000 公里") {
+		t.Fatalf("bodies missing due date / mileage: %q / %q", one, two)
+	}
+}
+
 func TestInspectionReminderByVehicleDate(t *testing.T) {
 	d := reminderTestDB(t)
 	addReminderVehicle(t, d, "line", "LINE-1", "")
