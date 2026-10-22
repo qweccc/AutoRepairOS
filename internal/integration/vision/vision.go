@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"os/exec"
 	"sort"
 	"strconv"
@@ -521,9 +522,21 @@ func (c *Client) ensureServerUp(ctx context.Context) error {
 		var args []string
 		if c.ModelPath != "" {
 			// 離線優先：直接吃本地 GGUF，不碰 HuggingFace（防火牆會擋 -hf 的驗證請求）。
+			if filepath.Ext(c.ModelPath) != ".gguf" {
+				return fmt.Errorf("VISION_MODEL_PATH 必須指向 .gguf 檔案")
+			}
+			if _, err := os.Stat(c.ModelPath); err != nil {
+				return fmt.Errorf("VISION_MODEL_PATH 不存在：%w", err)
+			}
 			args = []string{"-m", c.ModelPath, "--port", port, "--host", "127.0.0.1"}
 			if c.MmprojPath != "" {
 				// 視覺模型必須帶投影檔，否則只會當文字模型用（回傳空/錯誤）。
+				if filepath.Ext(c.MmprojPath) != ".gguf" {
+					return fmt.Errorf("VISION_MMPROJ_PATH 必須指向 .gguf 檔案")
+				}
+				if _, err := os.Stat(c.MmprojPath); err != nil {
+					return fmt.Errorf("VISION_MMPROJ_PATH 不存在：%w", err)
+				}
 				args = append(args, "--mmproj", c.MmprojPath)
 			}
 		} else {
