@@ -193,7 +193,12 @@ func ListExpenses(w http.ResponseWriter, r *http.Request, user model.User) {
 }
 
 // SearchExpensesAPI 支出即時搜尋 API（HTMX 用）。
-func SearchExpensesAPI(w http.ResponseWriter, r *http.Request) {
+func SearchExpensesAPI(w http.ResponseWriter, r *http.Request, user model.User) {
+	// 財務數字屬店內機密：搜尋 API 與列表頁一致，技師不可看。
+	if !canSeeMoney(user) {
+		http.Error(w, "", http.StatusForbidden)
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	where := ` WHERE 1=1`
 	var args []interface{}

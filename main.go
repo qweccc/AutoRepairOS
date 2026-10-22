@@ -103,11 +103,11 @@ func main() {
 	mux.HandleFunc("GET /api/subcontracts/search", handler.RequireLogin(handler.SearchSubcontractsAPI))
 	mux.HandleFunc("GET /api/equipment/search", handler.RequireLogin(handler.SearchEquipmentAPI))
 	mux.HandleFunc("GET /api/staff/search", handler.RequireLogin(handler.SearchStaffAPI))
-	mux.HandleFunc("GET /api/receivables/search", handler.RequireLogin(handler.SearchReceivablesAPI))
+	mux.HandleFunc("GET /api/receivables/search", handler.AllStaff(handler.SearchReceivablesAPI))
 	mux.HandleFunc("GET /api/insurances/search", handler.RequireLogin(handler.SearchInsurancesAPI))
 	mux.HandleFunc("GET /api/insurances/expiring", handler.RequireLogin(handler.ExpiringInsurancesAPI))
 	mux.HandleFunc("GET /api/inspections/search", handler.RequireLogin(handler.SearchInspectionsAPI))
-	mux.HandleFunc("GET /api/expenses/search", handler.RequireLogin(handler.SearchExpensesAPI))
+	mux.HandleFunc("GET /api/expenses/search", handler.AllStaff(handler.SearchExpensesAPI))
 
 	// LINE webhook：不用登入，靠 X-Line-Signature 驗簽。
 	// 網址需經 Cloudflare Tunnel 對外公開，例如 https://<hostname>/webhook/line

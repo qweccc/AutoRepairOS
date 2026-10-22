@@ -92,13 +92,21 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 		totalCommission += lg.CommissionAmount
 	}
 
+	showMoney := canSeeMoney(user)
+	moneyFor := func(v float64) string {
+		if showMoney {
+			return money(v)
+		}
+		return "—"
+	}
+
 	var b strings.Builder
 	b.WriteString(`<table><tr><th>日期</th><th>技師</th><th class="num">工時</th><th class="num">時薪</th><th class="num">工資</th><th class="num">佣金率</th><th class="num">佣金</th><th>備註</th><th>操作</th></tr>`)
 	for _, lg := range list {
 		b.WriteString(`<tr><td>` + htmlEsc(lg.WorkDate) + `</td><td>` + htmlEsc(lg.TechnicianName) +
-			`</td><td class="num">` + trimNum(lg.Hours) + `</td><td class="num">` + money(lg.HourlyRate) +
-			`</td><td class="num">` + money(lg.LaborAmount) + `</td><td class="num">` + trimNum(lg.CommissionRate) +
-			`%</td><td class="num">` + money(lg.CommissionAmount) + `</td><td>` + htmlEsc(orDash(lg.Notes)) +
+			`</td><td class="num">` + trimNum(lg.Hours) + `</td><td class="num">` + moneyFor(lg.HourlyRate) +
+			`</td><td class="num">` + moneyFor(lg.LaborAmount) + `</td><td class="num">` + trimNum(lg.CommissionRate) +
+			`%</td><td class="num">` + moneyFor(lg.CommissionAmount) + `</td><td>` + htmlEsc(orDash(lg.Notes)) +
 			`</td><td><a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) +
 			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/edit">編輯</a> ` +
 			`<form method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) +
@@ -115,7 +123,7 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 	st.WriteString(`<table><tr><th>技師</th><th class="num">總工時</th><th class="num">總佣金</th></tr>`)
 	for name, t := range techTotals {
 		st.WriteString(`<tr><td>` + htmlEsc(name) + `</td><td class="num">` + trimNum(t[0]) +
-			`</td><td class="num">` + money(t[1]) + `</td></tr>`)
+			`</td><td class="num">` + moneyFor(t[1]) + `</td></tr>`)
 	}
 	st.WriteString(`</table>`)
 	techSummary := st.String()
@@ -139,10 +147,10 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
       <table>
         <tr><th style="width:130px">工單狀態</th><td><span class="pill ` + statusPill[woStatus] + `">` + statusLabel + `</span></td>
             <th style="width:130px">保險件別</th><td>` + insuranceLabel + `</td></tr>
-        <tr><th style="width:130px">工單總額</th><td class="num">` + money(woTotal) + `</td>
+        <tr><th style="width:130px">工單總額</th><td class="num">` + moneyFor(woTotal) + `</td>
             <th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td></tr>
-        <tr><th>總工資</th><td class="num">` + money(totalLabor) + `</td>
-            <th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(totalCommission) + `</td></tr>
+        <tr><th>總工資</th><td class="num">` + moneyFor(totalLabor) + `</td>
+            <th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + moneyFor(totalCommission) + `</td></tr>
         <tr><th>紀錄筆數</th><td class="num">` + strconv.Itoa(len(list)) + `</td>
             <th></th><td></td></tr>
       </table>

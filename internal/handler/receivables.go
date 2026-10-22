@@ -262,7 +262,12 @@ func ListReceivables(w http.ResponseWriter, r *http.Request, user model.User) {
 }
 
 // SearchReceivablesAPI 收款即時搜尋 API（HTMX 用）。
-func SearchReceivablesAPI(w http.ResponseWriter, r *http.Request) {
+func SearchReceivablesAPI(w http.ResponseWriter, r *http.Request, user model.User) {
+	// 財務數字屬店內機密：搜尋 API 與列表頁一致，技師不可看。
+	if !canSeeMoney(user) {
+		http.Error(w, "", http.StatusForbidden)
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	where := ` WHERE r.voided = 0`
 	var args []interface{}
