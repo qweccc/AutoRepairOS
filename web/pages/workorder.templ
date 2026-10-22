@@ -99,7 +99,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 			@WalkaroundCanvas(wo.ID, nil)
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
 				@WalkaroundMarkTypeSelect("scratch")
-				<label>備註<input id="walkaround-note" type="text" placeholder="選填"></label>
+				<label>備註<input id="walkaround-note" type="text" placeholder="例：左前葉子板凹痕"></label>
 			</div>
 			<div id="walkaround-status" role="status" style="margin-top:6px;color:#94a3b8"></div>
 		</div>
@@ -200,7 +200,7 @@ templ AddItemForm(woID int64) {
 			<input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
 		</label>
 		<label class="full">描述
-			<input name="description" id="itemDesc" required>
+			<input name="description" id="itemDesc" placeholder="例：更換煞車油、補胎" required>
 			<div style="margin-top:4px">
 				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">📝 常用片語</button>
 				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a">
@@ -284,7 +284,7 @@ templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 			}
 			if !canEdit {
 				<b>理賠日期</b> { wo.ClaimDate }
-				<b>理賂金額</b> { money(wo.ClaimAmount) }
+				<b>理賠金額</b> { money(wo.ClaimAmount) }
 			}
 			if !canEdit && wo.ClaimNote != "" {
 				<p>{ wo.ClaimNote }</p>
@@ -299,7 +299,7 @@ templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
 		for _, r := range records {
 			<tr>
 				<td>{ r.Description }</td>
-				<td>{ strconv.FormatBool(r.Required) }</td>
+				<td>{ yesNo(r.Required) }</td>
 				<td>
 					if r.Completed {
 						<span class="pill p-completed">已完成</span>

@@ -458,7 +458,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<label>備註<input id=\"walkaround-note\" type=\"text\" placeholder=\"選填\"></label></div><div id=\"walkaround-status\" role=\"status\" style=\"margin-top:6px;color:#94a3b8\"></div></div><div class=\"card\"><h2>合計</h2><table><tr><th>項目小計</th><td class=\"num\" id=\"item-total\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<label>備註<input id=\"walkaround-note\" type=\"text\" placeholder=\"例：左前葉子板凹痕\"></label></div><div id=\"walkaround-status\" role=\"status\" style=\"margin-top:6px;color:#94a3b8\"></div></div><div class=\"card\"><h2>合計</h2><table><tr><th>項目小計</th><td class=\"num\" id=\"item-total\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -816,7 +816,7 @@ func AddItemForm(woID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</div><div id=\"partResults\" class=\"part-results\"></div><input type=\"hidden\" name=\"inventory_item_id\" id=\"inventoryItemId\" value=\"0\"></label> <label class=\"full\">描述 <input name=\"description\" id=\"itemDesc\" required><div style=\"margin-top:4px\"><button type=\"button\" class=\"btn btn-s\" id=\"phraseBtn\" onclick=\"togglePhrasePicker()\">📝 常用片語</button><div id=\"phrasePicker\" style=\"display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a\"><input type=\"text\" id=\"phraseSearch\" class=\"search-input\" placeholder=\"搜尋片語...\" style=\"width:100%;margin-bottom:8px\"><div id=\"phraseResults\" style=\"max-height:150px;overflow-y:auto\"></div></div></div></label> <label>數量<input name=\"quantity\" type=\"number\" min=\"1\" value=\"1\" required></label> <label>單價<input name=\"unit_price\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" required id=\"unitPrice\"></label> <label>主技師<input name=\"primary_technician_id\" type=\"number\" min=\"0\" value=\"0\"></label> <label>助手<input name=\"assistant_technician_id\" type=\"number\" min=\"0\" value=\"0\"></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</div><div id=\"partResults\" class=\"part-results\"></div><input type=\"hidden\" name=\"inventory_item_id\" id=\"inventoryItemId\" value=\"0\"></label> <label class=\"full\">描述 <input name=\"description\" id=\"itemDesc\" placeholder=\"例：更換煞車油、補胎\" required><div style=\"margin-top:4px\"><button type=\"button\" class=\"btn btn-s\" id=\"phraseBtn\" onclick=\"togglePhrasePicker()\">📝 常用片語</button><div id=\"phrasePicker\" style=\"display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a\"><input type=\"text\" id=\"phraseSearch\" class=\"search-input\" placeholder=\"搜尋片語...\" style=\"width:100%;margin-bottom:8px\"><div id=\"phraseResults\" style=\"max-height:150px;overflow-y:auto\"></div></div></div></label> <label>數量<input name=\"quantity\" type=\"number\" min=\"1\" value=\"1\" required></label> <label>單價<input name=\"unit_price\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" required id=\"unitPrice\"></label> <label>主技師<input name=\"primary_technician_id\" type=\"number\" min=\"0\" value=\"0\"></label> <label>助手<input name=\"assistant_technician_id\" type=\"number\" min=\"0\" value=\"0\"></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1190,7 +1190,7 @@ func InsuranceRow(wo model.WorkOrder, canEdit bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, " <b>理賂金額</b> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, " <b>理賠金額</b> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1279,9 +1279,9 @@ func SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) temp
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var61 string
-			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatBool(r.Required))
+			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(yesNo(r.Required))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 302, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 302, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 			if templ_7745c5c3_Err != nil {

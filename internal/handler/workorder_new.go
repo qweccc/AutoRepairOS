@@ -206,7 +206,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
             <input type="hidden" name="vehicle_id" id="vehicle_id" value="` +
 		strconv.FormatInt(preVehicle, 10) + `" required>
             <input class="vs-input" id="vsInput" autocomplete="off"
-                   placeholder="輸入車牌 / 車型 / 車主 / 電話"
+                   placeholder="輸入車牌 / 車型 / 車主 / 電話（例：ABC-1234）"
                    value="` + presetLabel + `">
             <div class="vs-list hidden"></div>
           </div>
