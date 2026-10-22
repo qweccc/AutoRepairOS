@@ -205,6 +205,15 @@ func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 		return
 	}
 
+	// 技師只能對自己被派工的工單登錄工時，避免對未參與的工單灌水佣金；
+	// 櫃檯/管理員（CanPickTechnician）仍可代任何技師登錄。
+	if !actor.CanPickTechnician() {
+		if countRows("SELECT COUNT(1) FROM active_work_orders WHERE id = ? AND technician_id = ?", woID, actor.ID) == 0 {
+			fail(w, "您未被派工這張工單，無法登錄工時")
+			return
+		}
+	}
+
 	// 工時是工單的內容之一，已結帳後不可再補登。
 	if err := requireOrderMutable(woID); err != nil {
 		fail(w, err.Error())

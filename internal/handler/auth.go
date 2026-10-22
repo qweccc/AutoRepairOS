@@ -232,8 +232,8 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 				continue
 			}
 			found = true
-			tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(id, 10) + `">` + strconv.FormatInt(id, 10) + `</a></td><td>` + plate +
-				`</td><td>` + model_ + `</td><td>` + cname + `</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel[status] + `</span></td></tr>`)
+			tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(id, 10) + `">` + strconv.FormatInt(id, 10) + `</a></td><td>` + htmlEsc(plate) +
+				`</td><td>` + htmlEsc(model_) + `</td><td>` + htmlEsc(cname) + `</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel[status] + `</span></td></tr>`)
 		}
 		tb.WriteString(`</table>`)
 		if found {
