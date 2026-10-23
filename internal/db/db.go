@@ -17,6 +17,13 @@ import (
 
 var DB *sql.DB
 
+// dbFilePath 記錄解析後的 DB 檔案絕對／相對路徑（不含 DSN 參數），
+// 供需要「與 DB 同目錄」的附屬檔案（如 Telegram 綁定 offset）定位用。
+var dbFilePath string
+
+// Path 回傳解析後的 DB 檔案路徑。Init 尚未呼叫時回傳空字串。
+func Path() string { return dbFilePath }
+
 // TxExecutor is the subset of transaction operations used by inventory writes.
 type TxExecutor interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
@@ -108,6 +115,12 @@ func Init(cfg *config.Config) error {
 	default:
 		// 相對路徑或未設定：沿用預設資料庫位置 ./data/autorepair.db。
 		dbPath = "file:" + filepath.Join(dataDir, "autorepair.db") + "?_journal_mode=WAL&_busy_timeout=5000"
+	}
+
+	// 存下純檔案路徑（去掉 file: 前綴與 ? 後的 DSN 參數），供附屬檔案定位。
+	dbFilePath = strings.TrimPrefix(dbPath, "file:")
+	if i := strings.IndexByte(dbFilePath, '?'); i >= 0 {
+		dbFilePath = dbFilePath[:i]
 	}
 
 	DB, err = sql.Open("sqlite", dbPath)

@@ -129,7 +129,9 @@ type Client struct {
 func NewClient(cfg *Config) *Client {
 	return &Client{
 		cfg: cfg,
-		hc:  &http.Client{Timeout: 15 * time.Second},
+		// getUpdates 使用 30 秒長輪詢；HTTP timeout 必須比它更長，
+		// 否則每次都會在 Telegram 回傳前被 client 截斷。
+		hc: &http.Client{Timeout: 45 * time.Second},
 	}
 }
 

@@ -238,6 +238,7 @@ func TestUpdateCustomerRejectsBadTelegramID(t *testing.T) {
 			"telegram_user_id":        {bad},
 			"notification_preference": {"telegram"},
 		}
+
 		req := httptest.NewRequest(http.MethodPost, "/customers/1", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		req.SetPathValue("id", "1")
@@ -313,5 +314,70 @@ func TestBindingUniqueIndexAllowsManyUnbound(t *testing.T) {
 		if _, err := db.DB.Exec(`UPDATE customers SET line_user_id='' WHERE id=?`, id); err != nil {
 			t.Errorf("空字串 line_user_id 不該衝突: %v", err)
 		}
+	}
+}
+
+func TestBindCustomerTelegramSucceeds(t *testing.T) {
+	setupBindingTestDB(t)
+	id := bindingFixture(t, "王先生", "0911000001")
+	req := httptest.NewRequest(http.MethodPost, "/customers/1/telegram-bind",
+		strings.NewReader(url.Values{"telegram_user_id": {"123456789"}}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetPathValue("id", "1")
+	rec := httptest.NewRecorder()
+
+	BindCustomerTelegram(rec, req)
+
+	var got string
+	if err := db.DB.QueryRow(`SELECT COALESCE(telegram_user_id,'') FROM customers WHERE id=?`, id).Scan(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got != "123456789" {
+		t.Fatalf("telegram_user_id = %q, want 123456789", got)
+	}
+}
+
+func TestBindCustomerTelegramRejectsDuplicateAndBadFormat(t *testing.T) {
+	setupBindingTestDB(t)
+	first := bindingFixture(t, "甲客戶", "0911000001")
+	bindingFixture(t, "乙客戶", "0911000002")
+	if _, err := db.DB.Exec(`UPDATE customers SET telegram_user_id='123456789' WHERE id=?`, first); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range []struct {
+		id, value string
+	}{
+		{"2", "123456789"},
+		{"2", "abc"},
+		{"2", "1234"},
+	} {
+		req := httptest.NewRequest(http.MethodPost, "/customers/"+tc.id+"/telegram-bind",
+			strings.NewReader(url.Values{"telegram_user_id": {tc.value}}.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.SetPathValue("id", tc.id)
+		rec := httptest.NewRecorder()
+		BindCustomerTelegram(rec, req)
+		if !strings.Contains(rec.Header().Get("Location"), "err=") {
+			t.Errorf("Telegram ID %q should be rejected, Location=%q", tc.value, rec.Header().Get("Location"))
+		}
+	}
+}
+
+func TestBindTelegramUserMatchesNormalizedPhone(t *testing.T) {
+	setupBindingTestDB(t)
+	id := bindingFixture(t, "王先生", "0912-345-678")
+	if got := customerCountByPhone(normalizePhone("+886 912 345 678")); got != 1 {
+		t.Fatalf("normalized phone count = %d, want 1", got)
+	}
+	if err := bindTelegramUser("987654321", id); err != nil {
+		t.Fatal(err)
+	}
+	var got string
+	if err := db.DB.QueryRow(`SELECT telegram_user_id FROM customers WHERE id=?`, id).Scan(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got != "987654321" {
+		t.Fatalf("telegram_user_id = %q, want 987654321", got)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"autorepairos/internal/config"
@@ -150,6 +151,7 @@ func main() {
 	// 進而讓對方在 LINE 查到不屬於他的維修紀錄（詳見 customer_binding.go）。
 	mux.HandleFunc("POST /customers/{id}/line-bind", handler.CounterUp(handler.BindCustomerLine))
 	mux.HandleFunc("POST /customers/{id}/line-unbind", handler.CounterUp(handler.UnbindCustomerLine))
+	mux.HandleFunc("POST /customers/{id}/telegram-bind", handler.CounterUp(handler.BindCustomerTelegram))
 	mux.HandleFunc("POST /customers/{id}/telegram-unbind", handler.CounterUp(handler.UnbindCustomerTelegram))
 
 	// 車輛
@@ -396,6 +398,9 @@ func main() {
 		defer scheduler.Stop()
 	}
 
+	telegramStop := make(chan struct{})
+	go handler.StartTelegramBinding(telegramStop)
+
 	// shutdown 是所有退出路徑共用的清理流程。
 	// 為什麼不能用 defer：本程式所有現實退出路徑都經過 os.Exit——
 	//   (1) signal handler 的 os.Exit(0)（Ctrl+C / SIGTERM / docker stop）
@@ -404,13 +409,17 @@ func main() {
 	// os.Exit 一律跳過 defer，所以 defer db.Close() 在實務上不會被執行到；
 	// 清理必須顯式呼叫 shutdown()。db.Close() 內部會先 wal_checkpoint(TRUNCATE)
 	// 把 WAL 寫回主庫，再關連線池（SQLite crash-safe，即使沒跑到資料也不會丟）。
+	var shutdownOnce sync.Once
 	shutdown := func() {
-		log.Printf("正在關閉服務，清理資源…")
-		handler.StopVisionClient()
-		if scheduler != nil {
-			scheduler.Stop()
-		}
-		db.Close()
+		shutdownOnce.Do(func() {
+			log.Printf("正在關閉服務，清理資源…")
+			close(telegramStop)
+			handler.StopVisionClient()
+			if scheduler != nil {
+				scheduler.Stop()
+			}
+			db.Close()
+		})
 	}
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)

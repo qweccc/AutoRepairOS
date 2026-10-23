@@ -210,7 +210,6 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
         </label>` + smsWarning + `
         <label>生日<input name="birthday" type="date" value="` + htmlEsc(c.Birthday) + `" placeholder="例：1990-05-20"></label>
         <label class="full">地址<input name="address" value="` + htmlEsc(c.Address) + `"></label>
-        <label class="full">Telegram User ID<input name="telegram_user_id" value="` + htmlEsc(c.TelegramUserID) + `" placeholder="例：123456789（客戶可用 @userinfobot 查）"></label>
         <label class="full">標籤<input name="tags" value="` + htmlEsc(c.Tags) + `" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
         <label class="full">行銷活動代碼<input name="campaign_code" value="` + htmlEsc(c.CampaignCode) + `" placeholder="例：2026Q4-煞車促銷"></label>
         <label class="full">備註<textarea name="notes">` + htmlEsc(c.Notes) + `</textarea></label>
@@ -218,9 +217,9 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
       </form>
       <p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
         LINE 綁定不在這張表單裡——綁定有唯一性規則（一個 LINE 帳號只能對應一位客戶），
-        走下面的「LINE 綁定」區塊處理。
+        走下面的綁定區塊處理。
       </p>
-    </div>` + lineBindingBlock(c)
+    </div>` + lineBindingBlock(c) + telegramBindingBlock(c)
 
 	renderPage(w, "編輯客戶", "/customers", user.Username, user.Role, body)
 }
