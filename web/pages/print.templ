@@ -1,0 +1,23 @@
+package pages
+
+type PrintPageData struct {
+	Title string
+	Style string
+	Body  string
+}
+
+templ PrintPage(data PrintPageData) {
+	<!DOCTYPE html>
+	<html lang="zh-Hant">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>{ data.Title } - AutoRepair OS</title>
+		<style>@templ.Raw(data.Style)</style>
+	</head>
+	<body>
+		@templ.Raw(data.Body)
+		<script>window.addEventListener('load', function(){ if (location.hash === '#print') window.print(); });</script>
+	</body>
+	</html>
+}

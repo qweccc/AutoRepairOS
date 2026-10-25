@@ -9,6 +9,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ReportsHome 報表總覽：營收、工單、庫存、技師績效。
@@ -50,15 +51,6 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		WHERE status='paid' AND is_insurance=0 AND date(created_at) BETWEEN ? AND ?`, from, to).
 		Scan(&selfRevenue, &selfCount)
 
-	// 兩組並列的營收卡(左右各一)。
-	revenueCard := strings.Builder{}
-	revenueCard.WriteString(`<div style="display:flex;gap:28px;flex-wrap:wrap">`)
-	revenueCard.WriteString(`<div class="stat"><b>` + money(insRevenue) + `</b><span>` + insLabel + `營收</span></div>`)
-	revenueCard.WriteString(`<div class="stat"><b>` + money(selfRevenue) + `</b><span>` + selfLabel + `營收</span></div>`)
-	revenueCard.WriteString(`</div>`)
-	revenueCard.WriteString(`<div style="margin-top:8px;color:#64748b;font-size:12px">已結帳工單：` +
-		`<b>` + strconv.Itoa(insCount) + `</b> ` + insLabel + ` / <b>` + strconv.Itoa(selfCount) + `</b> ` + selfLabel + `</div>`)
-
 	// ============ 狀態分布（保險 / 自費分欄）============
 	// GROUP BY is_insurance, status 產生兩個並排表。
 	statusRows, _ := db.DB.Query(`SELECT is_insurance, status, COUNT(1) FROM active_work_orders
@@ -79,25 +71,17 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		statusRows.Close()
 	}
-	buildStatusBlock := func(ins bool) string {
-		sb := strings.Builder{}
-		lbl := selfLabel
+	statusRowsFor := func(ins bool) []pages.Phase5ReportStatusRow {
+		idx := 0
 		if ins {
-			lbl = insLabel
+			idx = 1
 		}
-		sb.WriteString(`<table><tr><th>` + lbl + `工單狀態</th><th class="num">數量</th></tr>`)
+		out := make([]pages.Phase5ReportStatusRow, 0, 5)
 		for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
-			n := statusCounts[0][s]
-			if ins {
-				n = statusCounts[1][s]
-			}
-			sb.WriteString(`<tr><td><span class="pill ` + statusPill[s] + `">` + workOrderStatusLabel[s] +
-				`</span></td><td class="num">` + strconv.Itoa(n) + `</td></tr>`)
+			out = append(out, pages.Phase5ReportStatusRow{Label: workOrderStatusLabel[s], Pill: statusPill[s], Count: strconv.Itoa(statusCounts[idx][s])})
 		}
-		sb.WriteString(`</table>`)
-		return sb.String()
+		return out
 	}
-	statusBlocks := []string{buildStatusBlock(false), buildStatusBlock(true)}
 
 	// ============ 熱門項目（保險 / 自費分欄）============
 	// work_order_items 沒有 created_at，日期要用所屬工單的建立日，
@@ -110,8 +94,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		WHERE date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY wo.is_insurance, woi.description
 		ORDER BY wo.is_insurance, SUM(woi.subtotal) DESC`, from, to)
-	itemRowsByIns := map[int][]string{}
-	itemCount := 0
+	itemRowsByIns := map[int][]pages.Phase5ReportItemRow{}
 	if itemRows != nil {
 		for itemRows.Next() {
 			var ins int
@@ -121,31 +104,21 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 			if itemRows.Scan(&ins, &desc, &qty, &sub) != nil {
 				continue
 			}
-			itemRowsByIns[ins] = append(itemRowsByIns[ins], `<tr><td>`+htmlEsc(desc)+
-				`</td><td class="num">`+strconv.Itoa(qty)+`</td><td class="num">`+money(sub)+`</td></tr>`)
-			itemCount++
+			itemRowsByIns[ins] = append(itemRowsByIns[ins], pages.Phase5ReportItemRow{Description: desc, Quantity: strconv.Itoa(qty), Revenue: money(sub)})
 		}
 		itemRows.Close()
 	}
-	buildItemBlock := func(ins bool) string {
-		lbl := selfLabel
+	itemRowsFor := func(ins bool) []pages.Phase5ReportItemRow {
 		idx := 0
 		if ins {
-			lbl = insLabel
 			idx = 1
 		}
 		rows := itemRowsByIns[idx]
-		// 只取前 10 名（SQL 不截斷，讓兩個分欄各自都有完整的 Top 10）
 		if len(rows) > 10 {
 			rows = rows[:10]
 		}
-		if len(rows) == 0 {
-			return `<div class="empty">尚無` + lbl + `工單項目</div>`
-		}
-		return `<table><tr><th>` + lbl + `熱門項目</th><th class="num">數量</th><th class="num">營收</th></tr>` +
-			strings.Join(rows, "") + `</table>`
+		return rows
 	}
-	itemBlocks := []string{buildItemBlock(false), buildItemBlock(true)}
 
 	// ============ 技師績效（不動）============
 	techRows, _ := db.DB.Query(`SELECT COALESCE(u.name,'-'), COUNT(wl.id),
@@ -153,34 +126,23 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		FROM active_technician_worklogs wl JOIN users u ON u.id = wl.technician_id
 		WHERE date(wl.work_date) BETWEEN ? AND ?
 		GROUP BY u.id, u.name ORDER BY SUM(wl.commission_amount) DESC`, from, to)
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>技師</th><th class="num">工單數</th><th class="num">總工時</th><th class="num">總佣金</th></tr>`)
-	techCount := 0
+	var techTable []pages.Phase5ReportTechRow
 	if techRows != nil {
 		for techRows.Next() {
 			var name string
 			var orders int
 			var hours, comm float64
 			if techRows.Scan(&name, &orders, &hours, &comm) == nil {
-				tb.WriteString(`<tr><td>` + htmlEsc(name) + `</td><td class="num">` + strconv.Itoa(orders) +
-					`</td><td class="num">` + trimNum(hours) + `</td><td class="num">` + money(comm) + `</td></tr>`)
-				techCount++
+				techTable = append(techTable, pages.Phase5ReportTechRow{Name: name, Orders: strconv.Itoa(orders), Hours: trimNum(hours), Commission: money(comm)})
 			}
 		}
 		techRows.Close()
-	}
-	tb.WriteString(`</table>`)
-	techTable := tb.String()
-	if techCount == 0 {
-		techTable = `<div class="empty">尚無技師工時紀錄</div>`
 	}
 
 	// ============ 庫存低水位（不動）============
 	lowRows, _ := db.DB.Query(`SELECT part_number, name, stock_quantity, min_safety_stock
 		FROM active_inventory_items WHERE stock_quantity <= min_safety_stock ORDER BY stock_quantity ASC LIMIT 10`)
-	var lb strings.Builder
-	lb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th class="num">現有</th><th class="num">安全存量</th></tr>`)
-	lowCount := 0
+	var lowTable []pages.Phase5ReportLowRow
 	if lowRows != nil {
 		for lowRows.Next() {
 			var part, name string
@@ -190,18 +152,10 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 				if stock == 0 {
 					cls = "p-apprno"
 				}
-				lb.WriteString(`<tr><td><code>` + htmlEsc(part) + `</code></td><td>` + htmlEsc(name) +
-					`</td><td class="num"><span class="pill ` + cls + `">` + strconv.Itoa(stock) +
-					`</span></td><td class="num">` + strconv.Itoa(minStock) + `</td></tr>`)
-				lowCount++
+				lowTable = append(lowTable, pages.Phase5ReportLowRow{Part: part, Name: name, Stock: strconv.Itoa(stock), MinStock: strconv.Itoa(minStock), Pill: cls})
 			}
 		}
 		lowRows.Close()
-	}
-	lb.WriteString(`</table>`)
-	lowTable := lb.String()
-	if lowCount == 0 {
-		lowTable = `<div class="empty">庫存水位充足</div>`
 	}
 
 	// ============ 應收帳齡分析 (AR Aging) ============
@@ -245,72 +199,18 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		agingRows.Close()
 	}
 
-	// 經營分析是 CounterUpPage，但報表頁是 AllStaff——技師看得到報表，
-	// 卻沒有經營分析權限。連結留著就是一條點進去被擋的死路。
-	analyticsLink := ""
-	if user.Role == "owner" || user.Role == "counter" {
-		analyticsLink = `<a class="btn btn-s" href="/analytics">經營分析</a>`
+	aging := []pages.Phase5ReportAgingRow{
+		{Label: "0–30 天", Count: strconv.Itoa(agingCounts["0-30"]), Amount: money(agingAmounts["0-30"])},
+		{Label: "31–60 天", Count: strconv.Itoa(agingCounts["31-60"]), Amount: money(agingAmounts["31-60"])},
+		{Label: "61–90 天", Count: strconv.Itoa(agingCounts["61-90"]), Amount: money(agingAmounts["61-90"])},
+		{Label: "90+ 天", Count: strconv.Itoa(agingCounts["90+"]), Amount: money(agingAmounts["90+"]), Class: "color-red"},
 	}
-
-	body := `
-    <div class="card">
-      <h2>報表總覽</h2>
-      <form method="GET" action="/reports" style="margin-bottom:16px">
-        <label style="font-size:12px;color:#94a3b8">起</label>
-        <input name="from" value="` + htmlEsc(from) + `" placeholder="YYYY-MM-DD"
-               style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
-        <label style="font-size:12px;color:#94a3b8;margin-left:10px">迄</label>
-        <input name="to" value="` + htmlEsc(to) + `" placeholder="YYYY-MM-DD"
-               style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
-        <button class="btn btn-p" type="submit">查詢</button>
-        <a class="btn btn-p" href="/reports/daily">📅 日結報表（PDF 請用瀏覽器列印）</a>
-        <a class="btn btn-s" href="/reports/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出工單明細 CSV</a>
-        ` + analyticsLink + `
-      </form>
-
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + money(insRevenue+selfRevenue) + `</b><span>營收總額</span></div>
-        <div class="stat"><b>` + money(insRevenue) + `</b><span>` + insLabel + `營收</span></div>
-        <div class="stat"><b>` + money(selfRevenue) + `</b><span>` + selfLabel + `營收</span></div>
-        <div class="stat"><b>` + strconv.Itoa(insCount+selfCount) + `</b><span>已結帳工單</span></div>
-        <div class="stat"><b>` + strconv.Itoa(insCount) + `</b><span>` + insLabel + `件</span></div>
-        <div class="stat"><b>` + strconv.Itoa(selfCount) + `</b><span>` + selfLabel + `件</span></div>
-      </div>
-      <p style="color:#64748b;font-size:12.5px">營收 = 已結帳工單金額合計；區間以工單建立日為準。
-        保險件佔比 ` + pctText(insRevenue, insRevenue+selfRevenue) + `。</p>
-      <p style="color:#64748b;font-size:12.5px">統計區間：` + htmlEsc(from) + ` ~ ` + htmlEsc(to) + `</p>
-    </div>
-
-    <div class="card">
-      <h2>工單狀態分布（` + insLabel + ` / ` + selfLabel + `）</h2>` + strings.Join(statusBlocks, "<br>") + `
-    </div>
-
-    <div class="card">
-      <h2>熱門項目 Top 10（` + insLabel + ` / ` + selfLabel + `）</h2>` + strings.Join(itemBlocks, "<br>") + `
-    </div>
-
-    <div class="card">
-      <h2>技師績效</h2>` + techTable + `
-    </div>
-
-    <div class="card">
-      <h2>應收帳齡分析 (AR Aging)</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-        已結帳但尚未收款的工單，依結帳日（或建立日）計算帳齡分級。
-      </p>
-      <table>
-        <tr><th>帳齡區間</th><th class="num">工單數</th><th class="num">應收金額</th></tr>
-        <tr><td>0–30 天</td><td class="num">` + strconv.Itoa(agingCounts["0-30"]) + `</td><td class="num">` + money(agingAmounts["0-30"]) + `</td></tr>
-        <tr><td>31–60 天</td><td class="num">` + strconv.Itoa(agingCounts["31-60"]) + `</td><td class="num">` + money(agingAmounts["31-60"]) + `</td></tr>
-        <tr><td>61–90 天</td><td class="num">` + strconv.Itoa(agingCounts["61-90"]) + `</td><td class="num">` + money(agingAmounts["61-90"]) + `</td></tr>
-        <tr><td>90+ 天</td><td class="num" style="color:#f87171">` + strconv.Itoa(agingCounts["90+"]) + `</td><td class="num" style="color:#f87171">` + money(agingAmounts["90+"]) + `</td></tr>
-        <tr><td><b>合計</b></td><td class="num"><b>` + strconv.Itoa(agingTotalCount) + `</b></td><td class="num"><b>` + money(agingTotalAmount) + `</b></td></tr>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>庫存低水位警示</h2>` + lowTable + `
-    </div>`
-
-	renderPage(w, "報表", "/reports", user.Username, user.Role, body)
+	_ = pages.ReportsPage(pages.Phase5ReportData{
+		From: from, To: to, InsLabel: insLabel, SelfLabel: selfLabel,
+		InsRevenue: money(insRevenue), SelfRevenue: money(selfRevenue), TotalRevenue: money(insRevenue + selfRevenue),
+		InsCount: strconv.Itoa(insCount), SelfCount: strconv.Itoa(selfCount), TotalCount: strconv.Itoa(insCount + selfCount),
+		InsurancePct: pctText(insRevenue, insRevenue+selfRevenue), AnalyticsLink: user.Role == "owner" || user.Role == "counter",
+		StatusSelf: statusRowsFor(false), StatusIns: statusRowsFor(true), ItemsSelf: itemRowsFor(false), ItemsIns: itemRowsFor(true),
+		Tech: techTable, Low: lowTable, Aging: aging, AgingTotalCount: strconv.Itoa(agingTotalCount), AgingTotalAmount: money(agingTotalAmount),
+	}, user).Render(r.Context(), w)
 }

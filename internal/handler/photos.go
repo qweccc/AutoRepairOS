@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -35,6 +36,20 @@ var allowedPhotoTypes = map[string]string{
 // ListWorkOrderPhotos 顯示工單照片並提供上傳表單。
 func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User) {
 	woID := mustInt(r.PathValue("id"))
+	allowed, err := canViewWorkOrder(user, woID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			log.Printf("檢查工單照片頁權限失敗（工單 #%d）: %v", woID, err)
+			fail(w, "無法確認工單權限")
+		}
+		return
+	}
+	if !allowed {
+		http.Error(w, "沒有查看此工單照片的權限", http.StatusForbidden)
+		return
+	}
 
 	rows, err := db.DB.Query(`SELECT p.id, p.work_order_id, COALESCE(p.item_id,0),
 		p.filename, COALESCE(p.original_name,''), COALESCE(p.mime_type,''),
@@ -49,9 +64,7 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 	}
 	defer rows.Close()
 
-	var b strings.Builder
-	b.WriteString(`<div class="pgrid">`)
-	n := 0
+	var photoCards []pages.PhotoCard
 	for rows.Next() {
 		var id, woIDv, itemID int64
 		var filename, origName, mime, photoType, note, createdAt, uploader string
@@ -62,64 +75,20 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 			fail(w, "讀取照片失敗")
 			return
 		}
-		var marker strings.Builder
-		if err := pages.PhotoMarkerOverlay("/photos/"+filename, id).Render(r.Context(), &marker); err != nil {
-			log.Printf("產生照片標記介面失敗: %v", err)
-			fail(w, "產生照片標記介面失敗")
-			return
-		}
 		typeLabel := map[string]string{"damage": "車損", "repair": "維修", "part": "零件", "other": "其他"}[photoType]
-		b.WriteString(`<figure class="pcard" data-work-order-id="` + strconv.FormatInt(woIDv, 10) + `">
-          ` + marker.String() + `
-          <figcaption>
-            <span class="pill p-progress">` + typeLabel + `</span>
-            <div class="pname">` + htmlEsc(orDash(origName)) + `</div>
-            <div class="pmeta">` + htmlEsc(uploader) + ` · ` + htmlEsc(createdAt) + ` · ` + sizeKB(size) + `</div>
-            ` + noteLine(note) + `
-            <form method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) +
-			`/photos/` + strconv.FormatInt(id, 10) + `/delete" style="display:inline" onsubmit="return confirm('刪除這張照片？')"><button class="btn btn-d" type="submit">刪除</button></form>
-          </figcaption>
-        </figure>`)
-		n++
+		photoCards = append(photoCards, pages.PhotoCard{
+			WorkOrderID: woIDv, ID: id, TypeLabel: typeLabel,
+			OriginalName: orDash(origName), Uploader: uploader, CreatedAt: createdAt,
+			Size: sizeKB(size), Note: note,
+			Marker: pages.PhotoMarkerOverlay("/work-orders/"+strconv.FormatInt(woIDv, 10)+"/photos/"+strconv.FormatInt(id, 10), id),
+		})
 	}
 	if err := rows.Err(); err != nil {
 		log.Printf("列舉工單照片失敗: %v", err)
 		fail(w, "讀取照片失敗")
 		return
 	}
-	b.WriteString(`</div>`)
-
-	grid := b.String()
-	if n == 0 {
-		grid = `<div class="empty">尚未上傳任何照片</div>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>工單照片（` + strconv.Itoa(n) + ` 張）</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-        離線優先：照片存在本機 <code>` + htmlEsc(photoDir) + `</code>，不依賴外部網路。單檔上限 8MB。
-      </p>` + grid + `
-    </div>
-
-    <div class="card">
-      <h2>上傳照片</h2>
-      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) + `/photos" enctype="multipart/form-data">
-        <label class="full">選擇照片<input name="photo" type="file" accept="image/*" required></label>
-        <label>照片類型<select name="photo_type">
-          <option value="damage">車損</option>
-          <option value="repair">維修</option>
-          <option value="part">零件</option>
-          <option value="other">其他</option>
-        </select></label>
-        <label>備註<input name="note"></label>
-        <div class="full"><button class="btn btn-p" type="submit">上傳</button>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) + `">返回工單</a></div>
-      </form>
-    </div>
-    <script src="/static/photo-markup.js"></script>`
-
-	renderPage(w, "工單照片", "/work-orders", user.Username, user.Role, body)
+	pages.WorkOrderPhotosPage(woID, photoCards, photoDir, user, r.URL.Query().Get("msg")).Render(r.Context(), w)
 }
 
 // UploadWorkOrderPhoto 接收 multipart 上傳並先持久化至照片佇列。
@@ -497,10 +466,43 @@ func DeleteWorkOrderPhoto(w http.ResponseWriter, r *http.Request) {
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10)+"/photos", "照片已刪除")
 }
 
-// ServePhoto 提供照片檔案給瀏覽器預覽。
+func canViewWorkOrder(user model.User, workOrderID int64) (bool, error) {
+	if user.Role != "owner" && user.Role != "counter" && user.Role != "technician" {
+		return false, nil
+	}
+	var technicianID int64
+	err := db.DB.QueryRow(`SELECT COALESCE(technician_id,0) FROM active_work_orders WHERE id = ?`, workOrderID).Scan(&technicianID)
+	if err != nil {
+		return false, err
+	}
+	return user.Role != "technician" || technicianID == user.ID, nil
+}
+
+// ServePhoto 依工單與 DB 照片紀錄提供照片檔案，避免以可預測檔名跨工單讀取。
 func ServePhoto(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Base(r.PathValue("filename"))
-	if name == "." || name == string(filepath.Separator) || name == "" {
+	woID := mustInt(r.PathValue("id"))
+	photoID := mustInt(r.PathValue("n"))
+	user, err := currentUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	allowed, err := canViewWorkOrder(user, woID)
+	if err != nil {
+		log.Printf("檢查照片工單權限失敗（工單 #%d）: %v", woID, err)
+		http.Error(w, "無法確認工單權限", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "沒有查看此工單照片的權限", http.StatusForbidden)
+		return
+	}
+
+	var name string
+	err = db.DB.QueryRow(`SELECT filename
+		FROM active_work_order_photos WHERE id = ? AND work_order_id = ?`,
+		photoID, woID).Scan(&name)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}

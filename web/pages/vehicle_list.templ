@@ -20,6 +20,35 @@ type VehicleRow struct {
 	CanEdit          bool
 }
 
+templ VehicleSearchRows(rows []VehicleRow) {
+	if len(rows) == 0 {
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無車輛</td></tr>
+	}
+	for _, row := range rows {
+		<tr>
+			<td>{ strconv.FormatInt(row.ID, 10) }</td>
+			<td><b>{ row.PlateNumber }</b></td>
+			<td>{ row.BrandModel }</td>
+			<td>
+				if row.VehicleTypeLabel != "" {
+					<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ row.VehicleTypeLabel }</span>
+				} else {
+					<span style="color:#64748b">-</span>
+				}
+			</td>
+			<td>{ intOrBlank(row.ManufactureYear) }</td>
+			<td>{ row.CustomerName }</td>
+			<td>@templ.Raw(row.DateCell)</td>
+			<td>@templ.Raw(row.KmCell)</td>
+			<td>
+				<a class="btn btn-p" href={ "/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10) }>開工單</a>
+				<a class="btn btn-o" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) }>履歷</a>
+				<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit" }>編輯</a>
+			</td>
+		</tr>
+	}
+}
+
 // vehiclePlateFieldMap 行照 OCR 欄位 → 車輛表單 input name 的對照。
 // 三個車輛表單（列表頁內嵌新增、編輯頁、獨立新增頁）共用同一份 JSON，
 // 避免三處各寫一遍然後漏欄位對不起來。

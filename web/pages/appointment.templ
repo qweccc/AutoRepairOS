@@ -28,11 +28,15 @@ type CalendarDay struct {
 	Label        string
 	Appointments []AppointmentRow
 }
+type BaySummary struct {
+	Label string
+	Slots []string
+}
 
 // ListAppointmentsPage 預約排程頁（HTMX 即時搜尋）。
 templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
-	customerOpts, vehicleOpts, bayOpts, bayCardHTML string, user model.User) {
+	customerOpts, vehicleOpts string, bayOpts templ.Component, baySummary []BaySummary, bayDate string, user model.User) {
 	@components.Layout("預約排程", "/appointments", user, AppName) {
 		// 建立預約僅限櫃檯以上（POST /appointments 是 CounterUp）。
 		// 技師看到表單卻送不出去（被擋），只會以為系統壞了。
@@ -55,7 +59,7 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 					</label>
 					<label>預約日期<input type="date" name="appointment_date" required></label>
 					<label>時段<input type="time" step="1800" name="appointment_time" placeholder="例：09:00"></label>
-					<label>工位<select name="bay">@templ.Raw(bayOpts)</select></label>
+					<label>工位<select name="bay">@bayOpts</select></label>
 					<label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
 					<label class="full">備註<textarea name="notes"></textarea></label>
 					<div class="full"><button class="btn btn-p" type="submit">建立預約</button></div>
@@ -88,8 +92,23 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 				hx-target="#appointment-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
-			if bayCardHTML != "" {
-				@templ.Raw(bayCardHTML)
+			if len(baySummary) > 0 {
+				<div class="card"><h2>工位占用（{ bayDate }）</h2><table><tr><th>工位</th><th>當日占用</th></tr>
+					for _, bay := range baySummary {
+						<tr><td>{ bay.Label }</td><td style="font-size:12.5px">
+							if len(bay.Slots) == 0 {
+								<span style="color:#86efac">空缺</span>
+							} else {
+								for i, slot := range bay.Slots {
+									if i > 0 {
+										<br>
+									}
+									{ slot }
+								}
+							}
+						</td></tr>
+					}
+				</table></div>
 			}
 			<table>
 				<tr>

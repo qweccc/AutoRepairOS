@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ============================================================
@@ -108,18 +110,7 @@ func payMethodRows(cash, card, check, transfer float64) []struct {
 // renderPrintPage 統一的列印頁面外框（含 no-print 工具列與自動列印）。
 func renderPrintPage(w http.ResponseWriter, title string, body string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(`<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>` + htmlEsc(title) + ` - AutoRepair OS</title>
-<style>` + printStyle + `</style>
-</head>
-<body>` + body + `
-<script>window.addEventListener('load', function(){ if (location.hash === '#print') window.print(); });</script>
-</body>
-</html>`))
+	_ = pages.PrintPage(pages.PrintPageData{Title: title, Style: printStyle, Body: body}).Render(context.Background(), w)
 }
 
 // printToolbar 文件下方的操作列（不列印）。

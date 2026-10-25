@@ -52,6 +52,8 @@ templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 					hx-target="#wo-rows"
 					hx-swap="innerHTML"
 					hx-include="[name='part'],[name='status'],[name='tech']"
+					hx-indicator="#wo-search-indicator"
+					hx-on::response-error="htmx.ajax('GET', '/api/work-orders/search?error=1', {target:'#wo-rows', swap:'innerHTML'})"
 					style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:240px">
 				<label style="font-size:12.5px;color:#94a3b8">技師
 					<select name="tech" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
@@ -72,9 +74,11 @@ templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 					<input type="date" name="to" value={ to } style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 				</label>
 				<button class="btn btn-p" type="submit">搜尋</button>
+				<span id="wo-search-indicator" class="htmx-indicator search-indicator" role="status">搜尋中…</span>
 				<a class="btn btn-s" href="/work-orders">清除</a>
 			</form>
-			<table>
+			<div class="table-scroll">
+			<table class="workorder-table">
 				<tr>
 					<th>#</th><th>車牌</th><th>客戶</th><th>技師</th><th>狀態</th><th>核准</th>
 					<th>零件</th><th class="num">里程</th><th class="num">金額</th><th>日期</th>
@@ -85,6 +89,7 @@ templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 					}
 				</tbody>
 			</table>
+			</div>
 			if len(rows) == 0 {
 				<div class="empty">沒有符合條件的工單</div>
 			}
@@ -110,6 +115,7 @@ templ WorkOrderRowContent(wo WorkOrderRow) {
 			if wo.IsInsurance {
 				<span class="pill p-waitparts">保險</span>
 			}
+
 		</td>
 		<td><span class={ "pill " + wo.ApprovalPill }>{ wo.ApprovalLabel }</span></td>
 		<td style="font-size:12.5px;max-width:190px">
@@ -126,6 +132,16 @@ templ WorkOrderRowContent(wo WorkOrderRow) {
 		<td class="num">{ moneyFmt(wo.TotalAmount) }</td>
 		<td style="font-size:12.5px;color:#94a3b8">{ wo.CreatedAt }</td>
 	</tr>
+}
+
+templ WorkOrderSearchError() {
+	<tr><td colspan="10">
+		<div class="msg msg-err">
+			工單搜尋暫時失敗，資料未被清空。
+			<button class="btn btn-s" type="button"
+				onclick="htmx.trigger(document.querySelector('[name=q]'), 'search')">重試</button>
+		</div>
+	</td></tr>
 }
 
 // WorkOrderSearchRows HTMX 即時搜尋回傳的純列。

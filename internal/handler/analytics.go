@@ -2,7 +2,6 @@
 package handler
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -439,11 +438,6 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		http.Error(w, "經營分析圖表載入失敗", http.StatusInternalServerError)
 		return
 	}
-	var chartHTML bytes.Buffer
-	if err := pages.AnalyticsCharts(chartData.Points, chartData.Groups, chartData.SVGWidth, showCost).Render(r.Context(), &chartHTML); err != nil {
-		http.Error(w, "經營分析圖表載入失敗", http.StatusInternalServerError)
-		return
-	}
 
 	// ============ KPI（FR-ANA-04）============
 	// ARO = 已結帳工單平均金額；進場數 = 期間開立的工單張數（含未結帳）。
@@ -531,26 +525,19 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		WHERE date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY COALESCE(v.brand_model,'(未填車型)')
 		ORDER BY COUNT(1) DESC LIMIT 10`, from, to)
-	var carBody strings.Builder
-	carBody.WriteString(`<table><tr><th>車型</th><th class="num">進廠次數</th></tr>`)
-	carCount := 0
+	var carTable []pages.Phase5Table
+	var carData [][]pages.Phase5Cell
 	if carRows != nil {
 		for carRows.Next() {
 			var mdl string
 			var n int
 			if carRows.Scan(&mdl, &n) == nil {
-				carBody.WriteString(`<tr><td>` + htmlEsc(mdl) +
-					`</td><td class="num">` + strconv.Itoa(n) + `</td></tr>`)
-				carCount++
+				carData = append(carData, []pages.Phase5Cell{{Value: mdl}, {Value: strconv.Itoa(n), Class: "num"}})
 			}
 		}
 		carRows.Close()
 	}
-	carBody.WriteString(`</table>`)
-	carTable := carBody.String()
-	if carCount == 0 {
-		carTable = `<div class="empty">期間無維修紀錄</div>`
-	}
+	carTable = append(carTable, pages.Phase5Table{Headers: []string{"車型", "進廠次數"}, Rows: carData, Empty: "期間無維修紀錄"})
 
 	// ============ 熱銷零件（FR-ANA-03）============
 	partRows, _ := db.DB.Query(`SELECT COALESCE(i.name, woi.description), COALESCE(SUM(woi.quantity),0),
@@ -562,27 +549,19 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 			AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY COALESCE(i.name, woi.description)
 		ORDER BY SUM(woi.quantity) DESC LIMIT 10`, from, to)
-	var pb strings.Builder
-	pb.WriteString(`<table><tr><th>零件</th><th class="num">數量</th><th class="num">營收</th></tr>`)
-	partCount := 0
+	var partData [][]pages.Phase5Cell
 	if partRows != nil {
 		for partRows.Next() {
 			var name string
 			var qty int
 			var amt float64
 			if partRows.Scan(&name, &qty, &amt) == nil {
-				pb.WriteString(`<tr><td>` + htmlEsc(name) + `</td><td class="num">` + strconv.Itoa(qty) +
-					`</td><td class="num">` + money(amt) + `</td></tr>`)
-				partCount++
+				partData = append(partData, []pages.Phase5Cell{{Value: name}, {Value: strconv.Itoa(qty), Class: "num"}, {Value: money(amt), Class: "num"}})
 			}
 		}
 		partRows.Close()
 	}
-	pb.WriteString(`</table>`)
-	partTable := pb.String()
-	if partCount == 0 {
-		partTable = `<div class="empty">期間無零件銷售</div>`
-	}
+	partTable := []pages.Phase5Table{{Headers: []string{"零件", "數量", "營收"}, Rows: partData, Empty: "期間無零件銷售"}}
 
 	// ============ 顧客留存（FR-ANA-05）============
 	// 新客 = 首次消費落在區間內；舊客 = 區間前就有消費紀錄。
@@ -619,11 +598,11 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// ============ 行銷方案成效（FR-ANA-06 / T2.18）============
 	// 由 analytics_campaign.go 的 campaignAnalysisBlock 產生——工單數、營收之外，
 	// 依 T2.13 的成本口徑補上成本與毛利（同一個方案的成本用批次查詢取回，不做 N+1）。
-	campTable := campaignAnalysisBlock(from, to, showCost)
+	campTable := campaignAnalysisComponent(from, to, showCost)
 
 	// ============ 技師效率（FR-ANA-02 / T2.17）============
 	// 由 analytics_tech.go 的 technicianEfficiencyBlock 產生。
-	techEfficiencyTable := technicianEfficiencyBlock(from, to, showCost)
+	techEfficiencyTable := technicianEfficiencyComponent(from, to, showCost)
 
 	// ============ 折扣與保固（FR-FIN-07 / T2.14 保固成本統計）============
 	var discountTotal float64
@@ -648,8 +627,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		WHERE i.stock_quantity > 0
 			AND (last_move = '' OR date(last_move) < date('now','localtime','-180 day'))
 		ORDER BY dead_cost DESC LIMIT 20`)
-	var db2 strings.Builder
-	db2.WriteString(`<table><tr><th>料號</th><th>名稱</th><th class="num">庫存</th><th class="num">滯銷成本</th><th>最後異動</th></tr>`)
+	var deadData [][]pages.Phase5Cell
 	deadCount := 0
 	deadCostTotal := 0.0
 	if deadRows != nil {
@@ -662,174 +640,63 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 				if t := parseFlexTime(lastMove); !t.IsZero() {
 					lm = t.Format("2006-01-02")
 				}
-				db2.WriteString(`<tr><td><code>` + htmlEsc(part) + `</code></td><td>` + htmlEsc(name) +
-					`</td><td class="num">` + strconv.Itoa(stock) + `</td><td class="num" style="color:#f87171">` +
-					money(cost) + `</td><td style="font-size:12.5px;color:#94a3b8">` + lm + `</td></tr>`)
+				deadData = append(deadData, []pages.Phase5Cell{{Value: part}, {Value: name}, {Value: strconv.Itoa(stock), Class: "num"}, {Value: money(cost), Class: "num"}, {Value: lm}})
 				deadCount++
 				deadCostTotal += cost
 			}
 		}
 		deadRows.Close()
 	}
-	db2.WriteString(`</table>`)
-	deadTable := db2.String()
-	if deadCount == 0 {
-		deadTable = `<div class="empty">沒有長期未動用的零件</div>`
-	}
+	deadTable := []pages.Phase5Table{{Headers: []string{"料號", "名稱", "庫存", "滯銷成本", "最後異動"}, Rows: deadData, Empty: "沒有長期未動用的零件"}}
 
-	// ============ 渲染 ============
-	granTab := func(label, key string) string {
-		cls := "btn-s"
-		if gran == key {
-			cls = "btn-p"
-		}
-		return `<a class="btn ` + cls + `" href="/analytics?gran=` + key + `&amp;group=` + groupBy + `">` + label + `</a>`
-	}
-
-	var plBody strings.Builder
-	plBody.WriteString(`<table><tr><th>類別</th><th class="num">營收</th>`)
+	plHeaders := []string{"類別", "營收"}
 	if showCost {
-		plBody.WriteString(`<th class="num">成本</th><th class="num">毛利</th><th class="num">毛利率</th>`)
+		plHeaders = append(plHeaders, "成本", "毛利", "毛利率")
 	}
-	plBody.WriteString(`</tr>`)
+	var plData [][]pages.Phase5Cell
 	for _, p := range plRows {
-		plBody.WriteString(`<tr><td>` + p.Label + `</td><td class="num">` + money(p.Revenue) + `</td>`)
+		row := []pages.Phase5Cell{{Value: p.Label}, {Value: money(p.Revenue), Class: "num"}}
 		if showCost {
 			if !p.CostRecorded {
-				// T2.13：未知成本不可用 0 冒充。成本、毛利、毛利率全部標記未記錄，
-				// 否則「毛利」會被看成一個已計算的數字。
-				plBody.WriteString(`<td class="num"><span style="color:#64748b">未記錄</span></td>` +
-					`<td class="num"><span style="color:#64748b">未記錄</span></td>` +
-					`<td class="num"><span style="color:#64748b">—</span></td>`)
+				row = append(row, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "—", Class: "num"})
 			} else {
 				g := p.Revenue - p.Cost
 				gp := 0.0
 				if p.Revenue > 0 {
 					gp = g / p.Revenue * 100
 				}
-				plBody.WriteString(`<td class="num">` + money(p.Cost) + `</td><td class="num">` + money(g) +
-					`</td><td class="num">` + fmt.Sprintf("%.1f%%", gp) + `</td>`)
+				row = append(row, pages.Phase5Cell{Value: money(p.Cost), Class: "num"}, pages.Phase5Cell{Value: money(g), Class: "num"}, pages.Phase5Cell{Value: fmt.Sprintf("%.1f%%", gp), Class: "num"})
 			}
 		}
-		plBody.WriteString(`</tr>`)
+		plData = append(plData, row)
 	}
-	plBody.WriteString(`<tr><td><b>合計</b></td><td class="num"><b>` + money(revenue) + `</b></td>`)
+	totalRow := []pages.Phase5Cell{{Value: "合計"}, {Value: money(revenue), Class: "num"}}
 	if showCost {
 		if costs.LaborRecorded {
-			plBody.WriteString(`<td class="num"><b>` + money(costs.Total()) + `</b></td><td class="num"><b>` +
-				money(gross) + `</b></td><td class="num"><b>` + fmt.Sprintf("%.1f%%", grossPct) + `</b></td>`)
+			totalRow = append(totalRow, pages.Phase5Cell{Value: money(costs.Total()), Class: "num"}, pages.Phase5Cell{Value: money(gross), Class: "num"}, pages.Phase5Cell{Value: fmt.Sprintf("%.1f%%", grossPct), Class: "num"})
 		} else {
-			plBody.WriteString(`<td class="num"><b><span style="color:#64748b">未記錄</span></b></td>` +
-				`<td class="num"><b><span style="color:#64748b">未記錄</span></b></td>` +
-				`<td class="num"><b><span style="color:#64748b">—</span></b></td>`)
+			totalRow = append(totalRow, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "—", Class: "num"})
 		}
 	}
-	plBody.WriteString(`</tr></table>`)
+	plData = append(plData, totalRow)
+	plTable := []pages.Phase5Table{{Headers: plHeaders, Rows: plData}}
 
-	exportLink := `<a class="btn btn-s" href="/reports/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出工單 CSV</a>`
-	if canExportReportCosts(user) {
-		exportLink += ` <a class="btn btn-s" href="/analytics/export?from=` + htmlEsc(from) + `&amp;to=` + htmlEsc(to) + `">匯出分析摘要 CSV</a>`
-	}
 	grossNote := `成本與毛利僅限系統管理員檢視。`
 	if showCost {
 		grossNote = `毛利＝營收－零件成本－外包成本－工資成本（工資為技師佣金）。` +
 			`工資若該期間沒有任何技師工時紀錄，會顯示「未記錄」而不是 0，` +
 			`此時毛利與毛利率同樣標記未記錄，不以 0 冒充已計算。`
 	}
-	body := flash(r) + `
-    <div class="card">
-      <h2>經營分析</h2>
-      <div style="margin-bottom:12px">` +
-		granTab("今日", "day") + ` ` + granTab("本週", "week") + ` ` + granTab("本月", "month") +
-		` ` + granTab("近 12 個月", "year") +
-		`</div>
-      <form method="GET" action="/analytics" style="margin-bottom:14px">
-        <input type="hidden" name="gran" value="custom">
-        <input type="hidden" name="group" value="` + htmlEsc(groupBy) + `">
-        <label style="font-size:12px;color:#94a3b8">起</label>
-        <input name="from" value="` + htmlEsc(from) + `" placeholder="YYYY-MM-DD"
-               style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
-        <label style="font-size:12px;color:#94a3b8;margin-left:10px">迄</label>
-        <input name="to" value="` + htmlEsc(to) + `" placeholder="YYYY-MM-DD"
-               style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:140px">
-        <label style="font-size:12px;color:#94a3b8;margin-left:10px">分組</label>
-        <select name="group" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-          <option value="kind"` + selectedAttr(groupBy == "kind") + `>工單項目類型</option>
-          <option value="customer"` + selectedAttr(groupBy == "customer") + `>客群標籤</option>
-          <option value="vehicle"` + selectedAttr(groupBy == "vehicle") + `>車種</option>
-        </select>
-        <button class="btn btn-p" type="submit">查詢</button>
-        ` + exportLink + `
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">統計區間：` + htmlEsc(from) + ` ~ ` + htmlEsc(to) + `</p>
-
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + money(aro) + `</b><span>ARO 平均工單金額</span></div>
-        <div class="stat"><b>` + strconv.Itoa(orderCount) + `</b><span>車輛進場數</span></div>
-        ` + ownerOnlyStat(user, grossStatValue(showCost, costs, grossPct), "毛利率") + `
-        <div class="stat"><b>` + fmt.Sprintf("%.1f%%", repeatRate) + `</b><span>顧客回訪率</span></div>
-      </div>
-      <p style="color:#64748b;font-size:12.5px">
-        ` + grossNote + `
-        ARO 以已結帳工單計算，進場數含未結帳工單。
-      </p>
-    </div>` + chartHTML.String() + `
-
-    <div class="card">
-      <h2>損益分拆（工資 / 零件 / 外包）</h2>` + plBody.String() + `
-    </div>
-
-    <div class="card">
-      <h2>技師效率</h2>` + techEfficiencyTable + `
-    </div>
-
-    <div class="card">
-      <h2>顧客留存分析</h2>
-      <div style="margin-bottom:12px">
-        <div class="stat"><b>` + strconv.Itoa(activeCust) + `</b><span>期間消費客戶</span></div>
-        <div class="stat"><b>` + strconv.Itoa(newCust) + `</b><span>新客</span></div>
-        <div class="stat"><b>` + strconv.Itoa(oldCust) + `</b><span>舊客</span></div>
-        <div class="stat"><b>` + strconv.Itoa(repeatCust) + `</b><span>回訪客戶</span></div>
-        <div class="stat"><b>` + money(avgPerCust) + `</b><span>平均每客貢獻</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>行銷方案成效</h2>` + campTable + `
-    </div>
-
-    <div class="card">
-      <h2>高頻維修車款 Top 10</h2>` + carTable + `
-    </div>
-
-    <div class="card">
-      <h2>熱銷零件 Top 10</h2>` + partTable + `
-    </div>
-
-    <div class="card">
-      <h2>折扣與保固</h2>
-      <div style="margin-bottom:12px">
-        <div class="stat"><b>` + money(discountTotal) + `</b><span>折扣總額（全部工單）</span></div>
-        <div class="stat"><b>` + strconv.Itoa(warrantyCount) + `</b><span>保固工單數</span></div>
-        <div class="stat"><b>` + money(warrantyRev) + `</b><span>保固工單金額（折扣後）</span></div>
-        <div class="stat"><b>` + money(warrantyDiscount) + `</b><span>保固折讓</span></div>
-      </div>` +
-		warrantyCostBlock(showCost, warrantyCostTotal, warrantyGross, warrantyLaborRecorded) + `
-    </div>
-
-    </div>`
-	if showCost {
-		body += `
-    <div class="card">
-      <h2>死頭料分析（180 天未動用，前 20 名）</h2>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-        滯銷成本合計 <b style="color:#f87171">` + money(deadCostTotal) + `</b>，共 ` +
-			strconv.Itoa(deadCount) + ` 項。這些是長期沒人領用的零件，可考慮退貨或降價出清。
-      </p>` + deadTable + `
-    </div>`
-	}
-
-	renderPage(w, "經營分析", "/analytics", user.Username, user.Role, body)
+	_ = pages.AnalyticsPage(pages.Phase5AnalyticsData{
+		From: from, To: to, GroupBy: groupBy, Gran: gran, ShowCost: showCost,
+		Chart:      pages.AnalyticsCharts(chartData.Points, chartData.Groups, chartData.SVGWidth, showCost),
+		ProfitLoss: plTable, Cars: carTable, Parts: partTable, Dead: deadTable,
+		ActiveCust: strconv.Itoa(activeCust), NewCust: strconv.Itoa(newCust), OldCust: strconv.Itoa(oldCust), RepeatCust: strconv.Itoa(repeatCust), AvgPerCust: money(avgPerCust),
+		DiscountTotal: money(discountTotal), WarrantyCount: strconv.Itoa(warrantyCount), WarrantyRevenue: money(warrantyRev), WarrantyDiscount: money(warrantyDiscount),
+		WarrantyCostTotal: money(warrantyCostTotal), WarrantyGross: money(warrantyGross), WarrantyLaborRecorded: warrantyLaborRecorded,
+		DeadCostTotal: money(deadCostTotal), DeadCount: strconv.Itoa(deadCount), Campaign: campTable, Technician: techEfficiencyTable,
+		Flash: flash(r), ARO: money(aro), OrderCount: strconv.Itoa(orderCount), GrossStat: grossStatValue(showCost, costs, grossPct), RepeatRate: fmt.Sprintf("%.1f%%", repeatRate), GrossNote: grossNote, CanExportCosts: showCost,
+	}, user).Render(r.Context(), w)
 }
 
 // AnalyticsExport 匯出經營分析摘要為 CSV（FR-ANA-07 / FR-FIN-08 / FR-PRINT-07）。

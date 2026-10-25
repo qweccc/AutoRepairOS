@@ -12,6 +12,7 @@ package handler
 // 出站通知（internal/integration/telegram）與此處入站輪詢使用。
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -127,7 +128,10 @@ func bindTelegramUser(chatID string, customerID int64) error {
 
 // StartTelegramBinding 啟動 getUpdates 長輪詢背景迴圈（main.go 啟動）。
 // 停止訊號關閉後迴圈退出。
-func StartTelegramBinding(stop <-chan struct{}) {
+func StartTelegramBinding(ctx context.Context, wg *sync.WaitGroup) {
+	if wg != nil {
+		defer wg.Done()
+	}
 	cfg, client := telegram.Shared()
 	if cfg == nil || !cfg.Valid() {
 		log.Printf("[telegram-bind] 未設定 TELEGRAM_BOT_TOKEN，客戶自助綁定輪詢不啟動")
@@ -140,20 +144,20 @@ func StartTelegramBinding(stop <-chan struct{}) {
 	pollTimeout := 30
 	for {
 		select {
-		case <-stop:
+		case <-ctx.Done():
 			log.Printf("[telegram-bind] 停止訊號收到，輪詢退出")
 			return
 		default:
 		}
 
-		updates, err := client.GetUpdates(offset, pollTimeout)
+		updates, err := client.GetUpdates(ctx, offset, pollTimeout)
 		if err != nil {
 			// 長輪詢超時（無新訊息）是正常情況，不當錯誤打。
 			if !strings.Contains(err.Error(), "context deadline") && !strings.Contains(err.Error(), "timeout") {
 				log.Printf("[telegram-bind] getUpdates 錯誤: %v", err)
 			}
 			select {
-			case <-stop:
+			case <-ctx.Done():
 				return
 			case <-time.After(3 * time.Second):
 			}

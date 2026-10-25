@@ -23,11 +23,14 @@ package handler
 //      非主管人員（!canSeeMoney）則無法存取經營分析。
 
 import (
+	"bytes"
+	"context"
 	"strconv"
-	"strings"
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/web/pages"
+	"github.com/a-h/templ"
 )
 
 // technicianEfficiencyRow 記錄單一技師在指定期間的效率數據。
@@ -47,9 +50,9 @@ type technicianEfficiencyRow struct {
 //
 //	from/to: YYYY-MM-DD 格式的日期區間
 //	showCost: true 顯示佣金與每工時計毛利（僅 Owner）；false 僅顯示工單數、工時與每工時計價
-func technicianEfficiencyBlock(from, to string, showCost bool) string {
+func technicianEfficiencyComponent(from, to string, showCost bool) templ.Component {
 	if db.DB == nil {
-		return `<div class="empty">資料庫未連線</div>`
+		return pages.TechnicianEfficiencyTable(nil, "0", showCost)
 	}
 
 	if from == "" {
@@ -74,7 +77,7 @@ func technicianEfficiencyBlock(from, to string, showCost bool) string {
 		GROUP BY wl.technician_id, u.name
 		ORDER BY COUNT(DISTINCT wl.work_order_id) DESC, SUM(wl.hours) DESC, wl.technician_id ASC`, from, to)
 	if err != nil {
-		return `<div class="empty">查詢失敗: ` + htmlEsc(err.Error()) + `</div>`
+		return pages.TechnicianEfficiencyTable(nil, "0", showCost)
 	}
 	defer rows.Close()
 
@@ -99,51 +102,27 @@ func technicianEfficiencyBlock(from, to string, showCost bool) string {
 		      SELECT 1 FROM active_technician_worklogs wl WHERE wl.work_order_id = wo.id
 		  )`, from, to).Scan(&unloggedCount)
 
-	// 3. 組合 HTML
-	var sb strings.Builder
-	if len(techList) == 0 {
-		sb.WriteString(`<div class="empty">尚無技師工時紀錄</div>`)
-	} else {
-		sb.WriteString(`<table><tr><th>技師</th><th class="num">完成工單數</th><th class="num">工時總計</th><th class="num">每工時計價</th>`)
-		if showCost {
-			sb.WriteString(`<th class="num">佣金</th><th class="num">每工時計毛利</th>`)
-		}
-		sb.WriteString(`</tr>`)
-
-		for _, t := range techList {
-			sb.WriteString(`<tr><td>` + htmlEsc(t.Name) + `</td>`)
-			sb.WriteString(`<td class="num">` + strconv.Itoa(t.OrderCount) + `</td>`)
-			sb.WriteString(`<td class="num">` + trimNum(t.TotalHours) + `</td>`)
-
-			// 每工時計價 = labor_amount / hours（工時為 0 顯示「—」）
-			if t.TotalHours > 0 {
-				hourlyPrice := t.TotalLabor / t.TotalHours
-				sb.WriteString(`<td class="num">` + money(hourlyPrice) + `</td>`)
-			} else {
-				sb.WriteString(`<td class="num">—</td>`)
+	rowsOut := make([]pages.Phase5TechRow, 0, len(techList))
+	for _, t := range techList {
+		price := "—"
+		margin := "—"
+		if t.TotalHours > 0 {
+			price = money(t.TotalLabor / t.TotalHours)
+			if t.LaborRecorded {
+				margin = money((t.TotalLabor - t.TotalCommission) / t.TotalHours)
 			}
-
-			// 成本資訊（僅 Owner 可視）
-			if showCost {
-				// 佣金欄：已有工時紀錄但佣金為 0 者顯示 0，無工時紀錄顯示「未記錄」
-				commDisplay := costLabel(t.LaborRecorded, t.TotalCommission)
-				sb.WriteString(`<td class="num">` + commDisplay + `</td>`)
-
-				// 每工時計毛利 = (labor_amount - commission_amount) / hours
-				if !t.LaborRecorded {
-					sb.WriteString(`<td class="num">` + costLabel(false, 0) + `</td>`)
-				} else if t.TotalHours > 0 {
-					hourlyMargin := (t.TotalLabor - t.TotalCommission) / t.TotalHours
-					sb.WriteString(`<td class="num">` + money(hourlyMargin) + `</td>`)
-				} else {
-					sb.WriteString(`<td class="num">—</td>`)
-				}
-			}
-			sb.WriteString(`</tr>`)
 		}
-		sb.WriteString(`</table>`)
+		rowsOut = append(rowsOut, pages.Phase5TechRow{
+			Name: t.Name, OrderCount: strconv.Itoa(t.OrderCount), Hours: trimNum(t.TotalHours),
+			HourlyPrice: price, Commission: costLabel(t.LaborRecorded, t.TotalCommission),
+			Margin: margin, LaborRecorded: t.LaborRecorded,
+		})
 	}
+	return pages.TechnicianEfficiencyTable(rowsOut, strconv.Itoa(unloggedCount), showCost)
+}
 
-	sb.WriteString(`<p style="color:#94a3b8;font-size:12.5px;margin:8px 0 0">期間內已完成但無工時紀錄的工單 ` + strconv.Itoa(unloggedCount) + ` 張</p>`)
-	return sb.String()
+func technicianEfficiencyBlock(from, to string, showCost bool) string {
+	var out bytes.Buffer
+	_ = technicianEfficiencyComponent(from, to, showCost).Render(context.Background(), &out)
+	return out.String()
 }

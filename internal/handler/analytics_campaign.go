@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"bytes"
+	"context"
 	"sort"
 	"strconv"
-	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/web/pages"
+	"github.com/a-h/templ"
 )
 
 // campaignAnalysisBlock 產生行銷方案毛利分析表格的 HTML 字串（FR-ANA-06）。
@@ -29,9 +32,9 @@ import (
 //
 //	from/to: YYYY-MM-DD 格式的日期區間
 //	showCost: true 顯示成本與毛利欄位（僅 Owner）；false 完全隱藏
-func campaignAnalysisBlock(from, to string, showCost bool) string {
+func campaignAnalysisComponent(from, to string, showCost bool) templ.Component {
 	if db.DB == nil {
-		return `<div class="empty">資料庫未連線</div>`
+		return pages.CampaignAnalysisTable(nil, showCost)
 	}
 
 	// 依方案代碼分組，收集工單 ID（批次查成本用）
@@ -58,7 +61,7 @@ func campaignAnalysisBlock(from, to string, showCost bool) string {
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		ORDER BY code`, from, to)
 	if err != nil {
-		return `<div class="empty">查詢失敗: ` + htmlEsc(err.Error()) + `</div>`
+		return pages.CampaignAnalysisTable(nil, showCost)
 	}
 	defer rows.Close()
 
@@ -80,11 +83,11 @@ func campaignAnalysisBlock(from, to string, showCost bool) string {
 		g.Revenue += revenue
 	}
 	if err := rows.Err(); err != nil {
-		return `<div class="empty">讀取失敗: ` + htmlEsc(err.Error()) + `</div>`
+		return pages.CampaignAnalysisTable(nil, showCost)
 	}
 
 	if len(groups) == 0 {
-		return `<div class="empty">期間無已結帳工單</div>`
+		return pages.CampaignAnalysisTable(nil, showCost)
 	}
 
 	// 批次查成本：收集所有工單 ID
@@ -116,14 +119,6 @@ func campaignAnalysisBlock(from, to string, showCost bool) string {
 		g.LaborRecorded = laborRecorded
 	}
 
-	// 產生 HTML
-	var sb strings.Builder
-	sb.WriteString(`<table><tr><th>方案代碼</th><th class="num">工單數</th><th class="num">營收</th>`)
-	if showCost {
-		sb.WriteString(`<th class="num">成本</th><th class="num">毛利</th>`)
-	}
-	sb.WriteString(`</tr>`)
-
 	// 按營收排序（由高到低）
 	sortedGroups := make([]*campaignGroup, 0, len(groups))
 	for _, g := range groups {
@@ -136,27 +131,20 @@ func campaignAnalysisBlock(from, to string, showCost bool) string {
 		return sortedGroups[i].Revenue > sortedGroups[j].Revenue
 	})
 
+	rowsOut := make([]pages.Phase5CampaignRow, 0, len(sortedGroups))
 	for _, g := range sortedGroups {
 		totalCost := g.PartsCost + g.SubcontractCost + g.LaborCost
 		gross := g.Revenue - totalCost
-
-		sb.WriteString(`<tr><td><code>` + htmlEsc(g.Code) + `</code></td>`)
-		sb.WriteString(`<td class="num">` + strconv.Itoa(g.OrderCount) + `</td>`)
-		sb.WriteString(`<td class="num">` + money(g.Revenue) + `</td>`)
-
-		if showCost {
-			// 工資沒有工時紀錄時，成本與毛利都標記未記錄（不可用 0 冒充已計算）。
-			if g.LaborRecorded {
-				sb.WriteString(`<td class="num">` + money(totalCost) + `</td>`)
-				sb.WriteString(`<td class="num">` + money(gross) + `</td>`)
-			} else {
-				sb.WriteString(`<td class="num">` + costLabel(false, 0) + `</td>`)
-				sb.WriteString(`<td class="num">` + costLabel(false, 0) + `</td>`)
-			}
-		}
-		sb.WriteString(`</tr>`)
+		rowsOut = append(rowsOut, pages.Phase5CampaignRow{
+			Code: g.Code, OrderCount: strconv.Itoa(g.OrderCount), Revenue: money(g.Revenue),
+			Cost: money(totalCost), Gross: money(gross), LaborRecorded: g.LaborRecorded,
+		})
 	}
+	return pages.CampaignAnalysisTable(rowsOut, showCost)
+}
 
-	sb.WriteString(`</table>`)
-	return sb.String()
+func campaignAnalysisBlock(from, to string, showCost bool) string {
+	var out bytes.Buffer
+	_ = campaignAnalysisComponent(from, to, showCost).Render(context.Background(), &out)
+	return out.String()
 }

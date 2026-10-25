@@ -1,0 +1,311 @@
+package pages
+
+import (
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+	"strconv"
+)
+
+type Phase5Cell struct { Value, Class string }
+type Phase5Table struct { Headers []string; Rows [][]Phase5Cell; Empty string }
+type Phase5Page struct { User model.User; Title, Active string; Body templ.Component }
+type Phase5CampaignRow struct { Code, OrderCount, Revenue, Cost, Gross string; LaborRecorded bool }
+type Phase5TechRow struct { Name, OrderCount, Hours, HourlyPrice, Commission, Margin string; LaborRecorded bool }
+type Phase5ReportStatusRow struct { Label, Pill, Count string }
+type Phase5ReportItemRow struct { Description, Quantity, Revenue string }
+type Phase5ReportTechRow struct { Name, Orders, Hours, Commission string }
+type Phase5ReportLowRow struct { Part, Name, Stock, MinStock, Pill string }
+type Phase5ReportAgingRow struct { Label, Count, Amount, Class string }
+type Phase5Option struct { Value, Label string }
+type Phase5WorklogRow struct { Date, Technician, Hours, Rate, Labor, CommissionRate, Commission, Notes, ID string }
+type Phase5WorklogSummaryRow struct { Name, Hours, Commission string }
+type Phase5EditWorklogData struct { WOID, LogID, Technician, Date, Hours, Rate, CommissionRate, Notes string }
+type Phase5CommissionRow struct { Name, Username, Branch, Orders, Hours, Labor, Commission string }
+
+type Phase5ReportData struct {
+	From, To, InsLabel, SelfLabel, InsRevenue, SelfRevenue, TotalRevenue string
+	InsCount, SelfCount, TotalCount, InsurancePct string
+	AnalyticsLink bool
+	StatusSelf, StatusIns []Phase5ReportStatusRow
+	ItemsSelf, ItemsIns []Phase5ReportItemRow
+	Tech []Phase5ReportTechRow
+	Low []Phase5ReportLowRow
+	Aging []Phase5ReportAgingRow
+	AgingTotalCount, AgingTotalAmount string
+}
+type Phase5AnalyticsData struct {
+	From, To, GroupBy, Gran string
+	ShowCost, CanExportCosts bool
+	Chart, Campaign, Technician templ.Component
+	ProfitLoss, Cars, Parts, Dead []Phase5Table
+	ActiveCust, NewCust, OldCust, RepeatCust, AvgPerCust string
+	DiscountTotal, WarrantyCount, WarrantyRevenue, WarrantyDiscount string
+	WarrantyCostTotal, WarrantyGross string
+	WarrantyLaborRecorded bool
+	DeadCostTotal, DeadCount, Flash, ARO, OrderCount, GrossStat, RepeatRate, GrossNote string
+}
+type Phase5WorklogData struct {
+	Flash, WOID, StatusLabel, StatusPill, InsuranceLabel, WODateDefault string
+	WOAmount, TotalHours, TotalLabor, TotalCommission, Count string
+	Rows []Phase5WorklogRow
+	Summaries []Phase5WorklogSummaryRow
+	Technicians []Phase5Option
+}
+type Phase5CommissionsData struct {
+	Flash, Month, TotalOrders, TotalHours, TotalLabor, TotalCommission string
+	Rows []Phase5CommissionRow
+}
+
+func phase5ButtonClass(active, key string) string {
+	if active == key { return "btn btn-p" }
+	return "btn btn-s"
+}
+
+templ Phase5PageView(user model.User, data Phase5Page) {
+	@components.Layout(data.Title, data.Active, user, AppName) { @data.Body }
+}
+
+templ Phase5Tables(sections []Phase5Table) {
+	for _, section := range sections {
+		if len(section.Headers) > 0 {
+			<table>
+				<tr>
+					for _, h := range section.Headers {
+						<th>{ h }</th>
+					}
+				</tr>
+				if len(section.Rows) == 0 {
+					<tr><td colspan={ strconv.Itoa(len(section.Headers)) }>{ section.Empty }</td></tr>
+				}
+				for _, row := range section.Rows {
+					<tr>
+						for _, cell := range row {
+							<td class={ cell.Class }>{ cell.Value }</td>
+						}
+					</tr>
+				}
+			</table>
+		}
+	}
+}
+
+templ CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) {
+	if len(rows) == 0 {
+		<div class="empty">期間無已結帳工單</div>
+	}
+	if len(rows) > 0 {
+		<table><tr><th>方案代碼</th><th class="num">工單數</th><th class="num">營收</th>
+			if showCost {
+				<th class="num">成本</th><th class="num">毛利</th>
+			}
+		</tr>
+			for _, row := range rows {
+				<tr><td><code>{ row.Code }</code></td><td class="num">{ row.OrderCount }</td><td class="num">{ row.Revenue }</td>
+					if showCost {
+						if row.LaborRecorded {
+							<td class="num">{ row.Cost }</td><td class="num">{ row.Gross }</td>
+						}
+						if !row.LaborRecorded {
+							<td class="num">未記錄</td><td class="num">未記錄</td>
+						}
+					}
+				</tr>
+			}
+		</table>
+	}
+}
+
+templ TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost bool) {
+	if len(rows) == 0 {
+		<div class="empty">尚無技師工時紀錄</div>
+	}
+	if len(rows) > 0 {
+		<table><tr><th>技師</th><th class="num">完成工單數</th><th class="num">工時總計</th><th class="num">每工時計價</th>
+			if showCost {
+				<th class="num">佣金</th><th class="num">每工時計毛利</th>
+			}
+		</tr>
+			for _, row := range rows {
+				<tr><td>{ row.Name }</td><td class="num">{ row.OrderCount }</td><td class="num">{ row.Hours }</td><td class="num">{ row.HourlyPrice }</td>
+					if showCost {
+						if row.LaborRecorded {
+							<td class="num">{ row.Commission }</td><td class="num">{ row.Margin }</td>
+						}
+						if !row.LaborRecorded {
+							<td class="num">未記錄</td><td class="num">未記錄</td>
+						}
+					}
+				</tr>
+			}
+		</table>
+	}
+	<p style="color:#94a3b8;font-size:12.5px;margin:8px 0 0">期間內已完成但無工時紀錄的工單 { unlogged } 張</p>
+}
+
+templ ReportStatusTable(label string, rows []Phase5ReportStatusRow) {
+	<table><tr><th>{ label }工單狀態</th><th class="num">數量</th></tr>
+		for _, row := range rows {
+			<tr><td><span class={ "pill " + row.Pill }>{ row.Label }</span></td><td class="num">{ row.Count }</td></tr>
+		}
+	</table>
+}
+templ ReportItemsTable(label string, rows []Phase5ReportItemRow) {
+	if len(rows) == 0 {
+		<div class="empty">尚無{ label }工單項目</div>
+	}
+	if len(rows) > 0 {
+		<table><tr><th>{ label }熱門項目</th><th class="num">數量</th><th class="num">營收</th></tr>
+			for _, row := range rows {
+				<tr><td>{ row.Description }</td><td class="num">{ row.Quantity }</td><td class="num">{ row.Revenue }</td></tr>
+			}
+		</table>
+	}
+}
+templ ReportTechTable(rows []Phase5ReportTechRow) {
+	if len(rows) == 0 {
+		<div class="empty">尚無技師工時紀錄</div>
+	}
+	if len(rows) > 0 {
+		<table><tr><th>技師</th><th class="num">工單數</th><th class="num">總工時</th><th class="num">總佣金</th></tr>
+			for _, row := range rows {
+				<tr><td>{ row.Name }</td><td class="num">{ row.Orders }</td><td class="num">{ row.Hours }</td><td class="num">{ row.Commission }</td></tr>
+			}
+		</table>
+	}
+}
+templ ReportLowTable(rows []Phase5ReportLowRow) {
+	if len(rows) == 0 {
+		<div class="empty">庫存水位充足</div>
+	}
+	if len(rows) > 0 {
+		<table><tr><th>料號</th><th>名稱</th><th class="num">現有</th><th class="num">安全存量</th></tr>
+			for _, row := range rows {
+				<tr><td><code>{ row.Part }</code></td><td>{ row.Name }</td><td class="num"><span class={ "pill " + row.Pill }>{ row.Stock }</span></td><td class="num">{ row.MinStock }</td></tr>
+			}
+		</table>
+	}
+}
+
+templ ReportsPage(data Phase5ReportData, user model.User) {
+	@components.Layout("報表", "/reports", user, AppName) {
+		<div class="card"><h2>報表總覽</h2><form method="GET" action="/reports"><label>起</label><input name="from" value={ data.From }/><label>迄</label><input name="to" value={ data.To }/><button class="btn btn-p" type="submit">查詢</button><a class="btn btn-p" href="/reports/daily">📅 日結報表</a><a class="btn btn-s" href={ "/reports/export?from=" + data.From + "&amp;to=" + data.To }>匯出工單明細 CSV</a>
+			if data.AnalyticsLink {
+				<a class="btn btn-s" href="/analytics">經營分析</a>
+			}
+		</form>
+			<div><div class="stat"><b>{ data.TotalRevenue }</b><span>營收總額</span></div><div class="stat"><b>{ data.InsRevenue }</b><span>{ data.InsLabel }營收</span></div><div class="stat"><b>{ data.SelfRevenue }</b><span>{ data.SelfLabel }營收</span></div><div class="stat"><b>{ data.TotalCount }</b><span>已結帳工單</span></div><div class="stat"><b>{ data.InsCount }</b><span>{ data.InsLabel }件</span></div><div class="stat"><b>{ data.SelfCount }</b><span>{ data.SelfLabel }件</span></div></div><p>營收 = 已結帳工單金額合計；保險件佔比 { data.InsurancePct }。</p><p>統計區間：{ data.From } ~ { data.To }</p>
+		</div>
+		<div class="card"><h2>工單狀態分布（{ data.InsLabel } / { data.SelfLabel }）</h2>@ReportStatusTable(data.SelfLabel, data.StatusSelf)<br/>@ReportStatusTable(data.InsLabel, data.StatusIns)</div>
+		<div class="card"><h2>熱門項目 Top 10</h2>@ReportItemsTable(data.SelfLabel, data.ItemsSelf)<br/>@ReportItemsTable(data.InsLabel, data.ItemsIns)</div>
+		<div class="card"><h2>技師績效</h2>@ReportTechTable(data.Tech)</div>
+		<div class="card"><h2>應收帳齡分析 (AR Aging)</h2><table><tr><th>帳齡區間</th><th class="num">工單數</th><th class="num">應收金額</th></tr>
+			for _, row := range data.Aging {
+				<tr><td>{ row.Label }</td><td class="num">{ row.Count }</td><td class="num">{ row.Amount }</td></tr>
+			}
+			<tr><td>合計</td><td class="num">{ data.AgingTotalCount }</td><td class="num">{ data.AgingTotalAmount }</td></tr></table></div>
+		<div class="card"><h2>庫存低水位警示</h2>@ReportLowTable(data.Low)</div>
+	}
+	}
+
+	templ WorklogSummaries(rows []Phase5WorklogSummaryRow) {
+		if len(rows) == 0 {
+			<div class="empty">尚無技師資料</div>
+		}
+		if len(rows) > 0 {
+			<table><tr><th>技師</th><th>總工時</th><th>總佣金</th></tr>
+				for _, row := range rows {
+					<tr><td>{ row.Name }</td><td>{ row.Hours }</td><td>{ row.Commission }</td></tr>
+				}
+			</table>
+		}
+	}
+	templ CommissionRows(rows []Phase5CommissionRow) {
+		if len(rows) == 0 {
+			<div class="empty">沒有技師資料</div>
+		}
+		if len(rows) > 0 {
+			<table><tr><th>技師</th><th>帳號</th><th>部門</th><th>工單數</th><th>總工時</th><th>總工資</th><th>總佣金</th></tr>
+				for _, row := range rows {
+					<tr><td>{ row.Name }</td><td>{ row.Username }</td><td>{ row.Branch }</td><td>{ row.Orders }</td><td>{ row.Hours }</td><td>{ row.Labor }</td><td>{ row.Commission }</td></tr>
+				}
+			</table>
+		}
+	}
+
+templ WorklogsPage(data Phase5WorklogData, user model.User) {
+	@components.Layout("技師工時", "/work-orders", user, AppName) {
+		@components.FlashMsg(data.Flash)
+		<div class="card"><h2>技師工時與佣金</h2><table><tr><th>工單狀態</th><td><span class={ "pill " + data.StatusPill }>{ data.StatusLabel }</span></td><th>保險件別</th><td>{ data.InsuranceLabel }</td></tr><tr><th>工單總額</th><td>{ data.WOAmount }</td><th>總工時</th><td>{ data.TotalHours } 小時</td></tr><tr><th>總工資</th><td>{ data.TotalLabor }</td><th>總佣金</th><td>{ data.TotalCommission }</td></tr><tr><th>紀錄筆數</th><td>{ data.Count }</td></tr></table></div>
+		<div class="card"><h2>工時明細</h2>
+			if len(data.Rows) == 0 {
+				<div class="empty">尚未記錄任何技師工時</div>
+			}
+			if len(data.Rows) > 0 {
+				<table><tr><th>日期</th><th>技師</th><th class="num">工時</th><th class="num">時薪</th><th class="num">工資</th><th class="num">佣金率</th><th class="num">佣金</th><th>備註</th><th>操作</th></tr>
+					for _, row := range data.Rows {
+						<tr><td>{ row.Date }</td><td>{ row.Technician }</td><td class="num">{ row.Hours }</td><td class="num">{ row.Rate }</td><td class="num">{ row.Labor }</td><td class="num">{ row.CommissionRate }%</td><td class="num">{ row.Commission }</td><td>{ row.Notes }</td><td><a class="btn btn-s" href={ "/work-orders/" + data.WOID + "/worklogs/" + row.ID + "/edit" }>編輯</a> <form method="POST" action={ "/work-orders/" + data.WOID + "/worklogs/" + row.ID + "/delete" } style="display:inline"><button class="btn btn-d" type="submit">刪除</button></form></td></tr>
+					}
+				</table>
+			}
+			<form method="POST" action={ "/work-orders/" + data.WOID + "/worklogs" }><label>技師<select name="technician_id"><option value="0">-</option>
+				for _, o := range data.Technicians {
+					<option value={ o.Value }>{ o.Label }</option>
+				}
+			</select></label><label>工作日期<input name="work_date" type="date" value={ data.WODateDefault }/></label><label>工時<input name="hours" value="1"/></label><label>時薪<input name="hourly_rate" value="0"/></label><label>佣金率<input name="commission_rate" value="0"/></label><label>備註<input name="notes"/></label><button class="btn btn-p" type="submit">新增工時紀錄</button></form>
+		</div>
+		<div class="card"><h2>各技師統計</h2>@WorklogSummaries(data.Summaries)</div>
+	}
+}
+
+templ EditWorklogPage(data Phase5EditWorklogData, user model.User) {
+	@components.Layout("編輯工時", "/work-orders", user, AppName) { <div class="card"><h2>編輯工時紀錄</h2><form method="POST" action={ "/work-orders/" + data.WOID + "/worklogs/" + data.LogID }><label>技師<input value={ data.Technician } disabled/></label><label>工作日期<input name="work_date" type="date" value={ data.Date }/></label><label>工時<input name="hours" value={ data.Hours }/></label><label>時薪<input name="hourly_rate" value={ data.Rate }/></label><label>佣金率<input name="commission_rate" value={ data.CommissionRate }/></label><label>備註<input name="notes" value={ data.Notes }/></label><button class="btn btn-p" type="submit">儲存</button><a class="btn btn-s" href={ "/work-orders/" + data.WOID + "/worklogs" }>取消</a></form></div> }
+}
+templ CommissionsPage(data Phase5CommissionsData, user model.User) {
+	@components.Layout("技師佣金統計", "/technicians/commissions", user, AppName) {
+		@components.FlashMsg(data.Flash)
+		<div class="card"><h2>技師佣金統計 — { data.Month }</h2><form method="GET" action="/technicians/commissions"><input name="month" value={ data.Month }/><button class="btn btn-p" type="submit">查詢</button></form><table><tr><th>總工單數</th><td>{ data.TotalOrders }</td><th>總工時</th><td>{ data.TotalHours }</td></tr><tr><th>總工資</th><td>{ data.TotalLabor }</td><th>總佣金</th><td>{ data.TotalCommission }</td></tr></table></div>
+		<div class="card"><h2>各技師明細</h2>@CommissionRows(data.Rows)</div>
+	}
+}
+
+templ AnalyticsPage(data Phase5AnalyticsData, user model.User) {
+	@components.Layout("經營分析", "/analytics", user, AppName) {
+		@components.FlashMsg(data.Flash)
+		<div class="card"><h2>經營分析</h2>
+			<a class={ phase5ButtonClass(data.Gran, "day") } href={ "/analytics?gran=day&amp;group=" + data.GroupBy }>今日</a>
+			<a class={ phase5ButtonClass(data.Gran, "week") } href={ "/analytics?gran=week&amp;group=" + data.GroupBy }>本週</a>
+			<a class={ phase5ButtonClass(data.Gran, "month") } href={ "/analytics?gran=month&amp;group=" + data.GroupBy }>本月</a>
+			<a class={ phase5ButtonClass(data.Gran, "year") } href={ "/analytics?gran=year&amp;group=" + data.GroupBy }>近 12 個月</a>
+			<form method="GET" action="/analytics"><input type="hidden" name="gran" value="custom"/><input type="hidden" name="group" value={ data.GroupBy }/><input name="from" value={ data.From }/><input name="to" value={ data.To }/><select name="group"><option value="kind">工單項目類型</option><option value="customer">客群標籤</option><option value="vehicle">車種</option></select><button class="btn btn-p" type="submit">查詢</button><a class="btn btn-s" href={ "/reports/export?from=" + data.From + "&amp;to=" + data.To }>匯出工單 CSV</a>
+				if data.CanExportCosts {
+					<a class="btn btn-s" href={ "/analytics/export?from=" + data.From + "&amp;to=" + data.To }>匯出分析摘要 CSV</a>
+				}
+			</form>
+			<p>統計區間：{ data.From } ~ { data.To }</p>
+			<div><div class="stat"><b>{ data.ARO }</b><span>ARO 平均工單金額</span></div><div class="stat"><b>{ data.OrderCount }</b><span>車輛進場數</span></div>
+				if data.CanExportCosts {
+					<div class="stat"><b>{ data.GrossStat }</b><span>毛利率</span></div>
+				}
+				<div class="stat"><b>{ data.RepeatRate }</b><span>顧客回訪率</span></div>
+			</div><p>{ data.GrossNote }</p>
+		</div>
+		@data.Chart
+		<div class="card"><h2>損益分拆</h2>@Phase5Tables(data.ProfitLoss)</div>
+		<div class="card"><h2>技師效率</h2>@data.Technician</div>
+		<div class="card"><h2>顧客留存分析</h2><div class="stat"><b>{ data.ActiveCust }</b><span>期間消費客戶</span></div><div class="stat"><b>{ data.NewCust }</b><span>新客</span></div><div class="stat"><b>{ data.OldCust }</b><span>舊客</span></div><div class="stat"><b>{ data.RepeatCust }</b><span>回訪客戶</span></div><div class="stat"><b>{ data.AvgPerCust }</b><span>平均每客貢獻</span></div></div>
+		<div class="card"><h2>行銷方案成效</h2>@data.Campaign</div><div class="card"><h2>高頻維修車款</h2>@Phase5Tables(data.Cars)</div><div class="card"><h2>熱銷零件</h2>@Phase5Tables(data.Parts)</div>
+		<div class="card"><h2>折扣與保固</h2><div class="stat"><b>{ data.DiscountTotal }</b><span>折扣總額</span></div><div class="stat"><b>{ data.WarrantyCount }</b><span>保固工單數</span></div><div class="stat"><b>{ data.WarrantyRevenue }</b><span>保固工單金額</span></div><div class="stat"><b>{ data.WarrantyDiscount }</b><span>保固折讓</span></div>
+			if data.ShowCost {
+				if data.WarrantyLaborRecorded {
+					<p>保固成本：{ data.WarrantyCostTotal }；保固毛利：{ data.WarrantyGross }</p>
+				}
+				if !data.WarrantyLaborRecorded {
+					<p>保固成本與毛利：未記錄</p>
+				}
+			}
+		</div>
+		if data.ShowCost {
+			<div class="card"><h2>死頭料分析</h2><p>{ data.DeadCostTotal }，共 { data.DeadCount } 項</p>@Phase5Tables(data.Dead)</div>
+		}
+	}
+}

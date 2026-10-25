@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // PrintWorkOrderReceipt 產生可列印的結帳單頁面。
@@ -35,7 +35,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 	total := wo.TotalAmount
 
 	// LINE 綁定：讀出客戶的 line_user_id，並用 Flex 估價單模板（明細兩欄 + 金額 + 線上核准）。
-	var lineBlock string
+	var lineJSON string
 	var lineUserID string
 	if err := db.DB.QueryRow("SELECT COALESCE(line_user_id,'') FROM active_customers WHERE id=?", wo.CustomerID).Scan(&lineUserID); err == nil && lineUserID != "" {
 		quoteItems := []line.ItemLine{}
@@ -50,94 +50,39 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 			ApproveURL: "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt",
 		}
 		flexJSON, _ := json.MarshalIndent(em.ToFlex(), "", "  ")
-		lineBlock = `<div class="rpt-line"><span>LINE 估價單（明細兩欄 + 金額 + 線上核准）</span></div>` +
-			`<pre class="rpt-flex">` + string(flexJSON) + `</pre>`
+		lineJSON = string(flexJSON)
 		w.Header().Add("X-Line-User-ID", lineUserID)
-	} else {
-		lineBlock = "<div class=\"rpt-line\"><span>LINE 估價單：客戶未綁定 line_user_id</span></div>"
 	}
 
-	var b strings.Builder
-	b.WriteString(`<table class="rpt"><tr><th>項目</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>`)
+	pageItems := make([]pages.ReceiptItem, 0, len(items))
 	for _, it := range items {
-		b.WriteString(`<tr><td>` + htmlEsc(it.Description) + `</td><td class="num">` +
-			strconv.Itoa(it.Quantity) + `</td><td class="num">` + money(it.UnitPrice) +
-			`</td><td class="num">` + money(it.Subtotal) + `</td></tr>`)
+		pageItems = append(pageItems, pages.ReceiptItem{
+			Description: it.Description,
+			Quantity:    strconv.Itoa(it.Quantity),
+			UnitPrice:   money(it.UnitPrice),
+			Subtotal:    money(it.Subtotal),
+		})
 	}
-	b.WriteString(`</table>`)
-
-	receipt := `
-  <div class="sheet">
-    <div class="rpt-head">
-      <h1>🔧 ` + appName() + `</h1>
-      <p>車行維修估價單 / 收據</p>
-    </div>
-
-    <div class="rpt-meta">
-      <div><span>工單編號</span><b>#` + strconv.FormatInt(wo.ID, 10) + `</b></div>
-      <div><span>日期</span><b>` + today() + `</b></div>
-      <div><span>狀態</span><b>` + workOrderStatusLabel[wo.Status] + `</b></div>
-      <div><span>核准</span><b>` + approvalLabel[wo.ApprovalStatus] + `</b></div>
-    </div>
-
-    <div class="rpt-sec">
-      <h2>客戶</h2>
-      <p><b>` + htmlEsc(wo.CustomerName) + `</b> / ` + htmlEsc(wo.CustomerPhone) + `</p>
-    </div>
-
-    <div class="rpt-sec">
-      <h2>LINE 估價單</h2>
-      ` + lineBlock + `
-    </div>
-
-    <div class="rpt-sec">
-      <h2>車輛</h2>
-      <p><b>` + htmlEsc(wo.PlateNumber) + `</b> — ` + htmlEsc(wo.BrandModel) + `</p>
-      <p>進廠里程：` + strconv.Itoa(wo.CurrentMileage) + ` km` +
-		optLine("技師", wo.TechnicianName) + optLine("客戶反映", orDash(wo.CustomerComplaint)) + `</p>
-    </div>
-
-    <div class="rpt-sec">
-      <h2>明細</h2>` + b.String() + `
-    </div>
-
-    <div class="rpt-total">
-      <div><span>項目小計</span><b>` + money(itemTotal) + `</b></div>
-      <div class="grand"><span>應付總額（含稅）</span><b>` + money(total) + `</b></div>
-    </div>
-
-    <div class="rpt-foot">
-      <p>謝謝惠顧！</p>
-      <p class="tiny">列印時間：` + today() + ` / 櫃檯：` + htmlEsc(user.Username) + `</p>
-    </div>
-  </div>
-
-  <div class="no-print">
-    <button class="btn btn-p" onclick="window.print()">🖨 列印</button>
-    <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">返回工單</a>
-    <a class="btn btn-p" href="/receivables/new?work_order=` + strconv.FormatInt(wo.ID, 10) + `">收款結帳</a>
-  </div>`
-
+	data := pages.ReceiptPageData{
+		AppName: appName(), WorkOrderID: strconv.FormatInt(wo.ID, 10), Date: today(),
+		Status: workOrderStatusLabel[wo.Status], Approval: approvalLabel[wo.ApprovalStatus],
+		CustomerName: wo.CustomerName, CustomerPhone: wo.CustomerPhone,
+		PlateNumber: wo.PlateNumber, BrandModel: wo.BrandModel,
+		Mileage: strconv.Itoa(wo.CurrentMileage), Technician: optionalPrintValue(wo.TechnicianName),
+		Complaint: optionalPrintValue(wo.CustomerComplaint),
+		Items:     pageItems, ItemTotal: money(itemTotal), Total: money(total),
+		Username: user.Username, LineBound: lineJSON != "", LineJSON: lineJSON, Style: receiptStyle,
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(`<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>收據 #` + strconv.FormatInt(wo.ID, 10) + ` - AutoRepair OS</title>
-<style>` + receiptStyle + `</style>
-</head>
-<body>` + receipt + `
-<script>window.addEventListener('load', function(){ if (location.hash === '#print') window.print(); });</script>
-</body>
-</html>`))
+	_ = pages.ReceiptPage(data).Render(r.Context(), w)
 }
 
-func optLine(label, val string) string {
-	if strings.TrimSpace(val) == "" || val == "-" {
+func optionalPrintValue(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" || value == "-" {
 		return ""
 	}
-	return `<br><span class="lbl">` + label + `：</span>` + htmlEsc(val)
+	return value
 }
 
 const receiptStyle = `
@@ -189,5 +134,3 @@ const receiptStyle = `
     @page { margin: 12mm; }
   }
 `
-
-var _ = fmt.Sprintf

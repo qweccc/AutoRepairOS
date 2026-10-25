@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // --- 技師工時/佣金 ---
@@ -35,6 +36,30 @@ type techWorklog struct {
 	Notes            string
 	TechnicianName   string
 	PlateNumber      string
+}
+
+func phase5Technicians() []pages.Phase5Option {
+	rows, err := db.DB.Query(`SELECT u.id, u.name, u.username, COALESCE(u.staff_branch,'')
+		FROM users u WHERE u.role='technician' AND COALESCE(u.staff_kind,'employee')='employee'
+		AND UPPER(COALESCE(u.staff_branch,'')) NOT IN ('E','G','H') AND COALESCE(u.active,1)=1
+		ORDER BY u.staff_branch, u.name`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var out []pages.Phase5Option
+	for rows.Next() {
+		var id int64
+		var name, username, branch string
+		if rows.Scan(&id, &name, &username, &branch) == nil {
+			label := name + " (" + username + ")"
+			if dept := branchLabel(branch); dept != "" {
+				label += "　" + dept
+			}
+			out = append(out, pages.Phase5Option{Value: strconv.FormatInt(id, 10), Label: label})
+		}
+	}
+	return out
 }
 
 func scanTechWorklog(row interface{ Scan(...interface{}) error }) (techWorklog, error) {
@@ -100,35 +125,13 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 		return "—"
 	}
 
-	var b strings.Builder
-	b.WriteString(`<table><tr><th>日期</th><th>技師</th><th class="num">工時</th><th class="num">時薪</th><th class="num">工資</th><th class="num">佣金率</th><th class="num">佣金</th><th>備註</th><th>操作</th></tr>`)
+	rowsOut := make([]pages.Phase5WorklogRow, 0, len(list))
 	for _, lg := range list {
-		b.WriteString(`<tr><td>` + htmlEsc(lg.WorkDate) + `</td><td>` + htmlEsc(lg.TechnicianName) +
-			`</td><td class="num">` + trimNum(lg.Hours) + `</td><td class="num">` + moneyFor(lg.HourlyRate) +
-			`</td><td class="num">` + moneyFor(lg.LaborAmount) + `</td><td class="num">` + trimNum(lg.CommissionRate) +
-			`%</td><td class="num">` + moneyFor(lg.CommissionAmount) + `</td><td>` + htmlEsc(orDash(lg.Notes)) +
-			`</td><td><a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) +
-			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/edit">編輯</a> ` +
-			`<form method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) +
-			`/worklogs/` + strconv.FormatInt(lg.ID, 10) + `/delete" style="display:inline" onsubmit="return confirm('刪除這筆工時紀錄？')"><button class="btn btn-d" type="submit">刪除</button></form></td></tr>`)
+		rowsOut = append(rowsOut, pages.Phase5WorklogRow{Date: lg.WorkDate, Technician: lg.TechnicianName, Hours: trimNum(lg.Hours), Rate: moneyFor(lg.HourlyRate), Labor: moneyFor(lg.LaborAmount), CommissionRate: trimNum(lg.CommissionRate), Commission: moneyFor(lg.CommissionAmount), Notes: orDash(lg.Notes), ID: strconv.FormatInt(lg.ID, 10)})
 	}
-	b.WriteString(`</table>`)
-
-	tbl := b.String()
-	if len(list) == 0 {
-		tbl = `<div class="empty">尚未記錄任何技師工時</div>`
-	}
-
-	var st strings.Builder
-	st.WriteString(`<table><tr><th>技師</th><th class="num">總工時</th><th class="num">總佣金</th></tr>`)
+	summaries := make([]pages.Phase5WorklogSummaryRow, 0, len(techTotals))
 	for name, t := range techTotals {
-		st.WriteString(`<tr><td>` + htmlEsc(name) + `</td><td class="num">` + trimNum(t[0]) +
-			`</td><td class="num">` + moneyFor(t[1]) + `</td></tr>`)
-	}
-	st.WriteString(`</table>`)
-	techSummary := st.String()
-	if len(techTotals) == 0 {
-		techSummary = `<div class="empty">尚無技師資料</div>`
+		summaries = append(summaries, pages.Phase5WorklogSummaryRow{Name: name, Hours: trimNum(t[0]), Commission: moneyFor(t[1])})
 	}
 
 	// 工單狀態標籤
@@ -141,40 +144,7 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 		insuranceLabel = "保險件"
 	}
 
-	body := flash(r) + `
-    <div class="card">
-      <h2>技師工時與佣金</h2>
-      <table>
-        <tr><th style="width:130px">工單狀態</th><td><span class="pill ` + statusPill[woStatus] + `">` + statusLabel + `</span></td>
-            <th style="width:130px">保險件別</th><td>` + insuranceLabel + `</td></tr>
-        <tr><th style="width:130px">工單總額</th><td class="num">` + moneyFor(woTotal) + `</td>
-            <th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td></tr>
-        <tr><th>總工資</th><td class="num">` + moneyFor(totalLabor) + `</td>
-            <th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + moneyFor(totalCommission) + `</td></tr>
-        <tr><th>紀錄筆數</th><td class="num">` + strconv.Itoa(len(list)) + `</td>
-            <th></th><td></td></tr>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>工時明細</h2>` + tbl + `
-      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) + `/worklogs" style="margin-top:18px">
-        <label>技師<select name="technician_id" required><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <label>工作日期<input name="work_date" type="date" value="` + woDateDefault + `" required></label>
-        <label>工時（小時）<input name="hours" type="number" step="0.5" min="0" value="1" required></label>
-        <label>時薪<input name="hourly_rate" type="number" step="1" min="0" value="0" required></label>
-        <label>佣金率（%）<input name="commission_rate" type="number" step="0.1" min="0" value="0" required></label>
-        <label>備註<input name="notes"></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增工時紀錄</button>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) + `">返回工單</a></div>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>各技師統計</h2>` + techSummary + `
-    </div>`
-
-	renderPage(w, "技師工時", "/work-orders", user.Username, user.Role, body)
+	_ = pages.WorklogsPage(pages.Phase5WorklogData{Flash: flash(r), WOID: strconv.FormatInt(woID, 10), StatusLabel: statusLabel, StatusPill: statusPill[woStatus], InsuranceLabel: insuranceLabel, WODateDefault: woDateDefault, WOAmount: moneyFor(woTotal), TotalHours: trimNum(totalHours), TotalLabor: moneyFor(totalLabor), TotalCommission: moneyFor(totalCommission), Count: strconv.Itoa(len(list)), Rows: rowsOut, Summaries: summaries, Technicians: phase5Technicians()}, user).Render(r.Context(), w)
 }
 
 // AddTechnicianWorklog 新增工時紀錄，自動算工資與佣金金額。
@@ -273,24 +243,7 @@ func EditTechnicianWorklogForm(w http.ResponseWriter, r *http.Request, user mode
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>編輯工時紀錄</h2>
-      <form class="frm" method="POST" action="/work-orders/` + strconv.FormatInt(woID, 10) + `/worklogs/` + strconv.FormatInt(logID, 10) + `">
-        <label>技師<input value="` + htmlEsc(techName) + `" disabled></label>
-        <label>工作日期<input name="work_date" type="date" value="` + htmlEsc(lg.WorkDate) + `" required></label>
-        <label>工時（小時）<input name="hours" type="number" step="0.5" min="0" value="` + trimNum(lg.Hours) + `" required></label>
-        <label>時薪<input name="hourly_rate" type="number" step="1" min="0" value="` + trimNum(lg.HourlyRate) + `" required></label>
-        <label>佣金率（%）<input name="commission_rate" type="number" step="0.1" min="0" value="` + trimNum(lg.CommissionRate) + `" required></label>
-        <label>備註<input name="notes" value="` + htmlEsc(lg.Notes) + `"></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(woID, 10) + `/worklogs">取消</a>
-        </div>
-      </form>
-    </div>`
-
-	renderPage(w, "編輯工時", "/work-orders", user.Username, user.Role, body)
+	_ = pages.EditWorklogPage(pages.Phase5EditWorklogData{WOID: strconv.FormatInt(woID, 10), LogID: strconv.FormatInt(logID, 10), Technician: techName, Date: lg.WorkDate, Hours: trimNum(lg.Hours), Rate: trimNum(lg.HourlyRate), CommissionRate: trimNum(lg.CommissionRate), Notes: lg.Notes}, user).Render(r.Context(), w)
 }
 
 // UpdateTechnicianWorklog 更新工時紀錄，重算工資與佣金。
@@ -396,11 +349,9 @@ func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user mode
 	}
 	defer rows.Close()
 
-	var b strings.Builder
-	b.WriteString(`<table><tr><th>技師</th><th>帳號</th><th>部門</th><th class="num">工單數</th><th class="num">總工時</th><th class="num">總工資</th><th class="num">總佣金</th></tr>`)
+	var outRows []pages.Phase5CommissionRow
 
 	var totalOrders, totalHours, totalLabor, totalCommission float64
-	n := 0
 	for rows.Next() {
 		var id int64
 		var name, username, branch string
@@ -408,45 +359,13 @@ func ListTechnicianCommissions(w http.ResponseWriter, r *http.Request, user mode
 		if err := rows.Scan(&id, &name, &username, &branch, &hours, &labor, &commission, &orders); err != nil {
 			continue
 		}
-		b.WriteString(`<tr><td>` + htmlEsc(name) + `</td><td><code>` + htmlEsc(username) +
-			`</code></td><td style="font-size:12.5px;color:#94a3b8">` + orDash(branchLabel(branch)) +
-			`</td><td class="num">` + money(orders) + `</td><td class="num">` + trimNum(hours) +
-			`</td><td class="num">` + money(labor) + `</td><td class="num" style="color:#38bdf8;font-weight:700">` +
-			money(commission) + `</td></tr>`)
+		outRows = append(outRows, pages.Phase5CommissionRow{Name: name, Username: username, Branch: orDash(branchLabel(branch)), Orders: money(orders), Hours: trimNum(hours), Labor: money(labor), Commission: money(commission)})
 		totalOrders += orders
 		totalHours += hours
 		totalLabor += labor
 		totalCommission += commission
-		n++
 	}
-	b.WriteString(`</table>`)
-
-	tbl := b.String()
-	if n == 0 {
-		tbl = `<div class="empty">沒有技師資料</div>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>技師佣金統計 — ` + htmlEsc(month) + `</h2>
-      <form method="GET" action="/technicians/commissions" style="margin-bottom:14px">
-        <label style="font-size:12px;color:#94a3b8">月份</label>
-        <input name="month" value="` + htmlEsc(month) + `" placeholder="YYYY-MM"
-               style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:130px">
-        <button class="btn btn-p" type="submit">查詢</button>
-      </form>
-      <table>
-        <tr><th style="width:130px">總工單數</th><td class="num">` + money(totalOrders) +
-		`</td><th style="width:130px">總工時</th><td class="num">` + trimNum(totalHours) + ` 小時</td></tr>
-        <tr><th>總工資</th><td class="num">` + money(totalLabor) +
-		`</td><th>總佣金</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">` + money(totalCommission) + `</td></tr>
-      </table>
-    </div>
-    <div class="card">
-      <h2>各技師明細</h2>` + tbl + `
-    </div>`
-
-	renderPage(w, "技師佣金統計", "/technicians/commissions", user.Username, user.Role, body)
+	_ = pages.CommissionsPage(pages.Phase5CommissionsData{Flash: flash(r), Month: month, TotalOrders: money(totalOrders), TotalHours: trimNum(totalHours), TotalLabor: money(totalLabor), TotalCommission: money(totalCommission), Rows: outRows}, user).Render(r.Context(), w)
 }
 
 // trimNum 格式化小數，最多兩位，去掉多餘的 0。

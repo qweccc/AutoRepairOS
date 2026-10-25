@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
@@ -320,7 +321,7 @@ func main() {
 	mux.HandleFunc("GET /work-orders/{id}/photos", handler.AllStaff(handler.ListWorkOrderPhotos))
 	mux.HandleFunc("POST /work-orders/{id}/photos", handler.CounterUp(handler.UploadWorkOrderPhoto))
 	mux.HandleFunc("POST /work-orders/{id}/photos/{photo_id}/delete", handler.CounterUp(handler.DeleteWorkOrderPhoto))
-	mux.HandleFunc("GET /photos/{filename}", handler.RequireLogin(handler.ServePhoto))
+	mux.HandleFunc("GET /work-orders/{id}/photos/{n}", handler.RequireLogin(handler.ServePhoto))
 
 	// Phase 3: 排程 + 報表
 	mux.HandleFunc("GET /lookup", handler.CounterUpPage(handler.ListLookupItems))
@@ -398,8 +399,10 @@ func main() {
 		defer scheduler.Stop()
 	}
 
-	telegramStop := make(chan struct{})
-	go handler.StartTelegramBinding(telegramStop)
+	telegramCtx, telegramCancel := context.WithCancel(context.Background())
+	var telegramWG sync.WaitGroup
+	telegramWG.Add(1)
+	go handler.StartTelegramBinding(telegramCtx, &telegramWG)
 
 	// shutdown 是所有退出路徑共用的清理流程。
 	// 為什麼不能用 defer：本程式所有現實退出路徑都經過 os.Exit——
@@ -413,7 +416,8 @@ func main() {
 	shutdown := func() {
 		shutdownOnce.Do(func() {
 			log.Printf("正在關閉服務，清理資源…")
-			close(telegramStop)
+			telegramCancel()
+			telegramWG.Wait()
 			handler.StopVisionClient()
 			if scheduler != nil {
 				scheduler.Stop()

@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ListPhrases 列出所有啟用的技師片語。
@@ -33,8 +34,7 @@ func ListPhrases(w http.ResponseWriter, r *http.Request, user model.User) {
 	// shell 與 nav，等于「整頁沒有右側導覽」——使用者在其他頁面都有右側選單，
 	// 只有這裡會突然失去導覽。全站版面只有 renderPage（字串頁）與
 	// components.Layout（templ 頁）兩種來源，頁面就必須走其中之一。
-	body := flash(r) + generatePhrasesHTML(list)
-	renderPage(w, "技師片語庫", "/phrases", user.Username, user.Role, body)
+	pages.PhrasesPage(list, user, r.URL.Query().Get("msg")).Render(r.Context(), w)
 }
 
 // CreatePhrase 新增技師片語。
@@ -69,8 +69,7 @@ func EditPhraseForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	body := flash(r) + generatePhraseEditForm(p)
-	renderPage(w, "編輯片語", "/phrases", user.Username, user.Role, body)
+	pages.PhraseEditPage(p, user, r.URL.Query().Get("msg")).Render(r.Context(), w)
 }
 
 // UpdatePhrase 更新片語。
@@ -152,6 +151,7 @@ func SearchPhrasesAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, results)
 }
 
+/*
 // generatePhrasesHTML 產生片語列表的「頁面內容」HTML。
 //
 // 只回傳 body 內容（不自造 DOCTYPE/html/head）：版面外壳（含右側導覽）由
@@ -202,3 +202,4 @@ func generatePhraseEditForm(p model.TechnicianPhrase) string {
 	b.WriteString(`</form></div>`)
 	return b.String()
 }
+*/

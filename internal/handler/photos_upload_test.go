@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/session"
 )
 
 func setupPhotoUploadTestDB(t *testing.T) {
@@ -25,8 +26,10 @@ func setupPhotoUploadTestDB(t *testing.T) {
 	t.Cleanup(func() { photoDir = originalPhotoDir })
 
 	statements := []string{
-		`CREATE TABLE work_orders (id INTEGER PRIMARY KEY, deleted_at TEXT)`,
+		`CREATE TABLE work_orders (id INTEGER PRIMARY KEY, technician_id INTEGER, deleted_at TEXT)`,
 		`CREATE VIEW active_work_orders AS SELECT * FROM work_orders WHERE deleted_at IS NULL`,
+		`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, role TEXT, name TEXT, active INTEGER)`,
+		`CREATE TABLE sessions (id TEXT PRIMARY KEY, user_id INTEGER, csrf_token TEXT, created_at TEXT)`,
 		`CREATE TABLE work_order_items (id INTEGER PRIMARY KEY, work_order_id INTEGER NOT NULL)`,
 		`CREATE TABLE work_order_photos (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, work_order_id INTEGER NOT NULL, item_id INTEGER,
@@ -183,6 +186,7 @@ func TestUploadWorkOrderPhotoRejectsUnknownWorkOrderOrItem(t *testing.T) {
 		{name: "unknown work order", id: "999", item: "501", want: http.StatusNotFound},
 		{name: "item belongs to another order", id: "10", item: "999", want: http.StatusBadRequest},
 	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			r := photoUploadRequest(t, "invalid.png", tc.item)
@@ -194,4 +198,58 @@ func TestUploadWorkOrderPhotoRejectsUnknownWorkOrderOrItem(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestServePhotoRequiresWorkOrderAndPhotoAuthorization(t *testing.T) {
+	setupPhotoUploadTestDB(t)
+	if _, err := db.DB.Exec(`INSERT INTO users (id, username, role, name, active) VALUES (7, 'tech', 'technician', '技師', 1)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.DB.Exec(`INSERT INTO work_orders (id, technician_id) VALUES (20, 8)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.DB.Exec(`UPDATE work_orders SET technician_id=7 WHERE id=10`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.DB.Exec(`INSERT INTO work_order_photos (id, work_order_id, filename, mime_type) VALUES
+		(1, 10, 'wo10.jpg', 'image/jpeg'), (2, 20, 'wo20.jpg', 'image/jpeg')`); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(photoDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(photoDir, "wo10.jpg"), []byte("photo-10"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(photoDir, "wo20.jpg"), []byte("photo-20"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	token, err := session.Start(7)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("cross work order photo is not exposed", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/work-orders/10/photos/2", nil)
+		r.SetPathValue("id", "10")
+		r.SetPathValue("n", "2")
+		r.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+		w := httptest.NewRecorder()
+		ServePhoto(w, r)
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("status=%d want=%d", w.Code, http.StatusNotFound)
+		}
+	})
+
+	t.Run("unassigned technician is forbidden", func(t *testing.T) {
+		r := httptest.NewRequest(http.MethodGet, "/work-orders/20/photos/2", nil)
+		r.SetPathValue("id", "20")
+		r.SetPathValue("n", "2")
+		r.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+		w := httptest.NewRecorder()
+		ServePhoto(w, r)
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("status=%d want=%d", w.Code, http.StatusForbidden)
+		}
+	})
 }

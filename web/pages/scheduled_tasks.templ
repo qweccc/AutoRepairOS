@@ -1,27 +1,56 @@
 package pages
 
 import (
+	"strconv"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
+
+type ScheduledTaskRow struct {
+	Name, Key, Interval, LastRun, NextRun, LastError string
+	RunCount int
+	Enabled bool
+}
+type NotificationRow struct {
+	ID int64
+	Kind, Channel, Subject, Body, ScheduledAt, Status, StatusLabel, StatusPill, ErrorDetail string
+	Cancelable bool
+}
+type BackupRow struct {
+	Date, Path, Status, Error string
+	DBSize, PhotoCount, PhotoSize string
+	Success bool
+}
 
 // ListScheduledTasksPage 排程與備份頁。
 // 這頁是多卡片管理面板（排程任務 / 通知紀錄 / 備份紀錄），
 // 子表格由 handler 產生後以 raw HTML 傳入，不套用 HTMX 即時搜尋
 // （管理頁面資料量小且需即時操作按鈕，搜尋價值低）。
-templ ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
+templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []NotificationRow, backups []BackupRow,
 	pendingText, recentText, linePill, lineStatus string,
-	hasTasks, hasNotifs, hasBackups bool, user model.User) {
+	user model.User) {
 	@components.Layout("排程與備份", "/scheduled-tasks", user, AppName) {
 		<div class="card">
 			<h2>排程任務</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
 				排程器每分鐘檢查一次到期任務。單一任務失敗不會中斷其他任務。
 			</p>
-			if hasTasks {
-				@templ.Raw(tasksTable)
-			}
-			if !hasTasks {
+			if len(tasks) > 0 {
+				<table><tr><th>任務</th><th>識別碼</th><th>頻率</th><th>狀態</th><th>上次執行</th><th>下次執行</th><th>次數</th><th>操作</th></tr>
+					for _, task := range tasks {
+						<tr><td><b>{ task.Name }</b>
+							if task.LastError != "" {
+								<br><span style="color:#fca5a5;font-size:11.5px">錯誤：{ task.LastError }</span>
+							}
+						</td><td><code>{ task.Key }</code></td><td>{ task.Interval }</td>
+						<td>@components.Pill(taskStatusLabel(task.Enabled), taskStatusPill(task.Enabled))</td>
+						<td>{ task.LastRun }</td><td>{ task.NextRun }</td><td class="num">{ strconv.Itoa(task.RunCount) }</td>
+						<td><form method="POST" action={ "/scheduled-tasks/" + task.Key + "/toggle" } style="display:inline">
+							@components.CSRFInput()<button class="btn btn-o" type="submit">{ taskToggleLabel(task.Enabled) }</button>
+						</form></td></tr>
+					}
+				</table>
+			} else {
 				<div class="empty">尚未註冊任何排程任務</div>
 			}
 			<div style="margin-top:14px">
@@ -39,21 +68,51 @@ templ ListScheduledTasksPage(tasksTable, notifTable, backupTable string,
 				<span class={ "pill " + linePill }>LINE</span>
 				<span style="color:#94a3b8">{ lineStatus }</span>
 			</p>
-			if hasNotifs {
-				@templ.Raw(notifTable)
-			}
-			if !hasNotifs {
+			if len(notifications) > 0 {
+				<table><tr><th>#</th><th>類型</th><th>通道</th><th>主旨</th><th>內容</th><th>排定時間</th><th>狀態</th><th>操作</th></tr>
+					for _, n := range notifications {
+						<tr><td>{ strconv.FormatInt(n.ID, 10) }</td><td>{ n.Kind }</td><td>{ n.Channel }</td><td>{ n.Subject }</td>
+							<td style="max-width:340px">{ n.Body }</td><td>{ n.ScheduledAt }</td>
+							<td>@components.Pill(n.StatusLabel, n.StatusPill)
+								if n.ErrorDetail != "" {
+									<br><small style="color:#fca5a5">{ n.ErrorDetail }</small>
+								}
+							</td>
+							<td>
+								if n.Cancelable {
+									<form method="POST" action={ "/notifications/" + strconv.FormatInt(n.ID, 10) + "/cancel" } style="display:inline" onsubmit="return confirm('取消這筆通知？')">
+										@components.CSRFInput()<button class="btn btn-d" type="submit">取消</button>
+									</form>
+								} else {
+									<span style="color:#64748b">—</span>
+								}
+							</td>
+						</tr>
+					}
+				</table>
+			} else {
 				<div class="empty">尚無通知紀錄</div>
 			}
 		</div>
 		<div class="card">
 			<h2>備份紀錄</h2>
-			if hasBackups {
-				@templ.Raw(backupTable)
-			}
-			if !hasBackups {
+			if len(backups) > 0 {
+				<table><tr><th>日期</th><th>備份檔</th><th class="num">DB 大小</th><th class="num">照片數</th><th class="num">照片大小</th><th>狀態</th></tr>
+					for _, b := range backups {
+						<tr><td>{ b.Date }</td><td style="font-size:11.5px">{ b.Path }</td><td class="num">{ b.DBSize }</td>
+							<td class="num">{ b.PhotoCount }</td><td class="num">{ b.PhotoSize }</td>
+							<td>@components.Pill(backupStatusLabel(b.Success), backupStatusPill(b.Success)){ b.Error }</td></tr>
+					}
+				</table>
+			} else {
 				<div class="empty">尚無備份紀錄</div>
 			}
 		</div>
 	}
 }
+
+func taskStatusLabel(enabled bool) string { if enabled { return "啟用" }; return "停用" }
+func taskStatusPill(enabled bool) string { if enabled { return "p-completed" }; return "p-pending" }
+func taskToggleLabel(enabled bool) string { if enabled { return "停用" }; return "啟用" }
+func backupStatusLabel(success bool) string { if success { return "成功" }; return "失敗" }
+func backupStatusPill(success bool) string { if success { return "p-completed" }; return "p-apprno" }

@@ -16,10 +16,10 @@ import (
 )
 
 var (
-	dbPath    = flag.String("db", "", "SQLite database path (required)")
-	resetDB   = flag.Bool("reset", false, "Clear and rebuild test data")
-	dryRun    = flag.Bool("dry-run", false, "Print plan without writing")
-	scale     = flag.Int("scale", 10000, "Number of test records to generate")
+	dbPath  = flag.String("db", "", "SQLite database path (required)")
+	resetDB = flag.Bool("reset", false, "Clear and rebuild test data")
+	dryRun  = flag.Bool("dry-run", false, "Print plan without writing")
+	scale   = flag.Int("scale", 10000, "Number of test records to generate")
 )
 
 func main() {
@@ -57,7 +57,7 @@ func main() {
 	if *dryRun {
 		fmt.Println("=== 執行計畫（Dry Run，不寫入）===")
 		fmt.Printf("  - 產生 %d 筆測試資料\n", *scale)
-		fmt.Printf("  - 量測列表查詢效能（工單、庫存、客戶）\n")
+		fmt.Printf("  - 量測列表查詢效能（車輛、工單、庫存、客戶）\n")
 		fmt.Printf("  - 量測 1,000 筆通知批次處理\n")
 		fmt.Println()
 		fmt.Println("Dry Run 完成，未寫入任何資料")
@@ -119,7 +119,7 @@ func main() {
 
 type benchmarkResult struct {
 	Name      string
-	Duration time.Duration
+	Duration  time.Duration
 	Threshold time.Duration
 	Passed    bool
 }
@@ -249,12 +249,53 @@ func generateTestData(scale int) error {
 func runBenchmarks() []benchmarkResult {
 	var results []benchmarkResult
 
+	// 測試 0: 車輛列表查詢（預設 scale=10,000）
+	fmt.Println("測試車輛列表查詢...")
+	start := time.Now()
+	rows, err := db.DB.Query(`SELECT v.id, COALESCE(vt.label,''), COALESCE(ft.label,''),
+			COALESCE(bs.label,''), COALESCE(lm.current_mileage,0)
+		FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id
+		LEFT JOIN lookup_items vt ON vt.category='vehicle_type' AND vt.code=v.vehicle_type AND vt.active=1
+		LEFT JOIN lookup_items ft ON ft.category='fuel_type' AND ft.code=v.fuel_type AND ft.active=1
+		LEFT JOIN lookup_items bs ON bs.category='body_style' AND bs.code=v.body_style AND bs.active=1
+		LEFT JOIN (
+			SELECT vehicle_id, MAX(current_mileage) AS current_mileage
+			FROM active_work_orders GROUP BY vehicle_id
+		) lm ON lm.vehicle_id=v.id
+		ORDER BY v.id DESC LIMIT ?`, *scale)
+	count := 0
+	if err == nil {
+		for rows.Next() {
+			var id, km int64
+			var vehicleType, fuelType, bodyStyle string
+			if scanErr := rows.Scan(&id, &vehicleType, &fuelType, &bodyStyle, &km); scanErr != nil {
+				err = scanErr
+				break
+			}
+			count++
+		}
+		if scanErr := rows.Err(); scanErr != nil {
+			err = scanErr
+		}
+		rows.Close()
+	}
+	duration := time.Since(start)
+	results = append(results, benchmarkResult{
+		Name: "車輛列表查詢", Duration: duration, Threshold: 300 * time.Millisecond,
+		Passed: err == nil && duration < 300*time.Millisecond,
+	})
+	if err != nil {
+		log.Printf("車輛列表查詢失敗: %v", err)
+	} else {
+		fmt.Printf("  車輛數: %d, 耗時: %v\n", count, duration)
+	}
+
 	// 測試 1: 工單列表查詢
 	fmt.Println("測試工單列表查詢...")
-	start := time.Now()
-	var count int
-	err := db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders`).Scan(&count)
-	duration := time.Since(start)
+	start = time.Now()
+	err = db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders`).Scan(&count)
+	duration = time.Since(start)
 	if err != nil {
 		log.Printf("工單列表查詢失敗: %v", err)
 		results = append(results, benchmarkResult{Name: "工單列表查詢", Duration: duration, Threshold: 300 * time.Millisecond, Passed: false})

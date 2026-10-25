@@ -28,6 +28,191 @@ type VehicleRow struct {
 	CanEdit          bool
 }
 
+func VehicleSearchRows(rows []VehicleRow) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var1 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var1 == nil {
+			templ_7745c5c3_Var1 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		if len(rows) == 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<tr><td colspan=\"9\" style=\"color:#64748b;text-align:center;padding:20px\">查無車輛</td></tr>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		for _, row := range rows {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<tr><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var2 string
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(row.ID, 10))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 29, Col: 38}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</td><td><b>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(row.PlateNumber)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 30, Col: 27}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</b></td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 string
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(row.BrandModel)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 31, Col: 23}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if row.VehicleTypeLabel != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span class=\"pill\" style=\"background:#1e3a5f;color:#bae6fd\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(row.VehicleTypeLabel)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 34, Col: 87}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<span style=\"color:#64748b\">-</span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 string
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(intOrBlank(row.ManufactureYear))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 39, Col: 40}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var7 string
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(row.CustomerName)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 40, Col: 25}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.Raw(row.DateCell).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templ.Raw(row.KmCell).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</td><td><a class=\"btn btn-p\" href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var8 templ.SafeURL
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 44, Col: 91}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">開工單</a> <a class=\"btn btn-o\" href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 templ.SafeURL
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 45, Col: 76}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\">履歷</a> <a class=\"btn btn-s\" href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var10 templ.SafeURL
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit")
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 46, Col: 86}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\">編輯</a></td></tr>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		return nil
+	})
+}
+
 // vehiclePlateFieldMap 行照 OCR 欄位 → 車輛表單 input name 的對照。
 // 三個車輛表單（列表頁內嵌新增、編輯頁、獨立新增頁）共用同一份 JSON，
 // 避免三處各寫一遍然後漏欄位對不起來。
@@ -51,12 +236,12 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var1 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var1 == nil {
-			templ_7745c5c3_Var1 = templ.NopComponent
+		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var11 == nil {
+			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var12 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -68,7 +253,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"card\"><h2>新增車輛</h2><form class=\"frm\" method=\"POST\" action=\"/vehicles\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"card\"><h2>新增車輛</h2><form class=\"frm\" method=\"POST\" action=\"/vehicles\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -80,7 +265,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<label>所屬客戶（編號 / 姓名 / 電話）<input name=\"customer_query\" required placeholder=\"例：王小明 或 0912345678 或 1234\"></label> <label>車牌號碼<input name=\"plate_number\" required></label> <label>品牌車型 <select name=\"brand_model\" id=\"brandModelSel\" required onchange=\"toggleModelOther()\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<label>所屬客戶（編號 / 姓名 / 電話）<input name=\"customer_query\" required placeholder=\"例：王小明 或 0912345678 或 1234\"></label> <label>車牌號碼<input name=\"plate_number\" required></label> <label>品牌車型 <select name=\"brand_model\" id=\"brandModelSel\" required onchange=\"toggleModelOther()\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -88,7 +273,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</select></label> <label id=\"brandModelOtherWrap\" style=\"display:none\">其他車型 <input name=\"brand_model_other\" id=\"brandModelOther\" placeholder=\"請輸入廠牌與車型，例：Porsche 911\"></label> <label>車種類別<select name=\"vehicle_type\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</select></label> <label id=\"brandModelOtherWrap\" style=\"display:none\">其他車型 <input name=\"brand_model_other\" id=\"brandModelOther\" placeholder=\"請輸入廠牌與車型，例：Porsche 911\"></label> <label>車種類別<select name=\"vehicle_type\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -96,7 +281,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</select></label> <label>燃料種類<select name=\"fuel_type\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</select></label> <label>燃料種類<select name=\"fuel_type\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -104,7 +289,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</select></label> <label>車身式樣<select name=\"body_style\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</select></label> <label>車身式樣<select name=\"body_style\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -112,143 +297,143 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</select></label> <label>駕駛人<input name=\"driver_name\" placeholder=\"例：陳小姐\"></label> <label>駕駛人電話<input name=\"driver_phone\" placeholder=\"例：0963-176677\"></label> <label>車輛聯絡人<input name=\"contact_name\" placeholder=\"例：王先生\"></label> <label>聯絡人電話<input name=\"contact_phone\" placeholder=\"例：0912-345678\"></label> <label>行照車主<input name=\"owner_name\" placeholder=\"行照上的車主姓名\"></label> <label>車主地址<input name=\"owner_address\" placeholder=\"行照上的車主地址\"></label> <label>車主身分證字號<input name=\"owner_id_number\" placeholder=\"A123456789\"></label> <label>行照有效期限<input name=\"license_expiry_date\" type=\"date\"></label> <label>顏色<input name=\"color\" placeholder=\"例：白色\"></label> <label>車門數<input name=\"door_count\" type=\"number\" min=\"0\" max=\"10\" placeholder=\"例：4\"></label> <label>出廠年月<input name=\"manufacture_date\" placeholder=\"例：110.04 或 2021-04\"></label> <label>發照日期<input name=\"license_issue_date\" placeholder=\"例：110.06.29\"></label> <label>出廠年份<input name=\"manufacture_year\" type=\"number\" min=\"0\" max=\"9999\" placeholder=\"例：2021\"></label> <label>排氣量<input name=\"displacement\" type=\"number\" min=\"0\" placeholder=\"c.c.\"></label> <label>座位數<input name=\"seating_capacity\" type=\"number\" min=\"0\" max=\"99\" placeholder=\"例：5\"></label> <label>空車重量<input name=\"curb_weight\" type=\"number\" min=\"0\" placeholder=\"kg\"></label> <label>總重量<input name=\"gross_weight\" type=\"number\" min=\"0\" placeholder=\"kg\"></label> <label>輪胎規格<input name=\"tire_size\" placeholder=\"例：205/55R16\"></label> <label>軸距<input name=\"wheelbase\" type=\"number\" min=\"0\" placeholder=\"mm\"></label> <label>VIN<input name=\"vin\" placeholder=\"車輛識別號碼\"></label> <label>引擎號碼<input name=\"engine_number\"></label> <label>檢驗到期日<input name=\"inspection_due_date\" type=\"date\"></label> <label>保養間隔（月）<input name=\"maint_interval_months\" type=\"number\" min=\"1\" max=\"60\" value=\"6\"></label> <label>保養間隔（公里）<input name=\"maint_interval_km\" type=\"number\" min=\"500\" value=\"5000\"></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立車輛</button></div></form><p style=\"color:#64748b;font-size:12.5px;margin-top:10px\">車型清單可在「代碼對照 → 車輛品牌車型」維護；選單沒有的車款選「其他」手動輸入。</p><script>\n\t\t\t\tfunction toggleModelOther(){\n\t\t\t\t\tvar sel = document.getElementById('brandModelSel');\n\t\t\t\t\tvar wrap = document.getElementById('brandModelOtherWrap');\n\t\t\t\t\tvar other = document.getElementById('brandModelOther');\n\t\t\t\t\tif (!sel || !wrap) return;\n\t\t\t\t\tvar isOther = sel.value === '__OTHER__';\n\t\t\t\t\twrap.style.display = isOther ? '' : 'none';\n\t\t\t\t\tif (other) other.disabled = !isOther;\n\t\t\t\t\tif (isOther) {\n\t\t\t\t\t\tsel.removeAttribute('name');\n\t\t\t\t\t\tif (other) { other.setAttribute('name','brand_model'); other.required = true; }\n\t\t\t\t\t} else {\n\t\t\t\t\t\tsel.setAttribute('name','brand_model');\n\t\t\t\t\t\tif (other) { other.removeAttribute('name'); other.required = false; }\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t</script></div><div class=\"card\"><h2>車輛列表（符合條件 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</select></label> <label>駕駛人<input name=\"driver_name\" placeholder=\"例：陳小姐\"></label> <label>駕駛人電話<input name=\"driver_phone\" placeholder=\"例：0963-176677\"></label> <label>車輛聯絡人<input name=\"contact_name\" placeholder=\"例：王先生\"></label> <label>聯絡人電話<input name=\"contact_phone\" placeholder=\"例：0912-345678\"></label> <label>行照車主<input name=\"owner_name\" placeholder=\"行照上的車主姓名\"></label> <label>車主地址<input name=\"owner_address\" placeholder=\"行照上的車主地址\"></label> <label>車主身分證字號<input name=\"owner_id_number\" placeholder=\"A123456789\"></label> <label>行照有效期限<input name=\"license_expiry_date\" type=\"date\"></label> <label>顏色<input name=\"color\" placeholder=\"例：白色\"></label> <label>車門數<input name=\"door_count\" type=\"number\" min=\"0\" max=\"10\" placeholder=\"例：4\"></label> <label>出廠年月<input name=\"manufacture_date\" placeholder=\"例：110.04 或 2021-04\"></label> <label>發照日期<input name=\"license_issue_date\" placeholder=\"例：110.06.29\"></label> <label>出廠年份<input name=\"manufacture_year\" type=\"number\" min=\"0\" max=\"9999\" placeholder=\"例：2021\"></label> <label>排氣量<input name=\"displacement\" type=\"number\" min=\"0\" placeholder=\"c.c.\"></label> <label>座位數<input name=\"seating_capacity\" type=\"number\" min=\"0\" max=\"99\" placeholder=\"例：5\"></label> <label>空車重量<input name=\"curb_weight\" type=\"number\" min=\"0\" placeholder=\"kg\"></label> <label>總重量<input name=\"gross_weight\" type=\"number\" min=\"0\" placeholder=\"kg\"></label> <label>輪胎規格<input name=\"tire_size\" placeholder=\"例：205/55R16\"></label> <label>軸距<input name=\"wheelbase\" type=\"number\" min=\"0\" placeholder=\"mm\"></label> <label>VIN<input name=\"vin\" placeholder=\"車輛識別號碼\"></label> <label>引擎號碼<input name=\"engine_number\"></label> <label>檢驗到期日<input name=\"inspection_due_date\" type=\"date\"></label> <label>保養間隔（月）<input name=\"maint_interval_months\" type=\"number\" min=\"1\" max=\"60\" value=\"6\"></label> <label>保養間隔（公里）<input name=\"maint_interval_km\" type=\"number\" min=\"500\" value=\"5000\"></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">建立車輛</button></div></form><p style=\"color:#64748b;font-size:12.5px;margin-top:10px\">車型清單可在「代碼對照 → 車輛品牌車型」維護；選單沒有的車款選「其他」手動輸入。</p><script>\n\t\t\t\tfunction toggleModelOther(){\n\t\t\t\t\tvar sel = document.getElementById('brandModelSel');\n\t\t\t\t\tvar wrap = document.getElementById('brandModelOtherWrap');\n\t\t\t\t\tvar other = document.getElementById('brandModelOther');\n\t\t\t\t\tif (!sel || !wrap) return;\n\t\t\t\t\tvar isOther = sel.value === '__OTHER__';\n\t\t\t\t\twrap.style.display = isOther ? '' : 'none';\n\t\t\t\t\tif (other) other.disabled = !isOther;\n\t\t\t\t\tif (isOther) {\n\t\t\t\t\t\tsel.removeAttribute('name');\n\t\t\t\t\t\tif (other) { other.setAttribute('name','brand_model'); other.required = true; }\n\t\t\t\t\t} else {\n\t\t\t\t\t\tsel.setAttribute('name','brand_model');\n\t\t\t\t\t\tif (other) { other.removeAttribute('name'); other.required = false; }\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t</script></div><div class=\"card\"><h2>車輛列表（符合條件 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(total))
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 99, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 128, Col: 56}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, " 筆）</h2><form method=\"GET\" action=\"/vehicles\" style=\"margin-bottom:12px\"><input type=\"search\" name=\"q\" value=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(q)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 101, Col: 43}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, " 筆）</h2><form method=\"GET\" action=\"/vehicles\" style=\"margin-bottom:12px\"><input type=\"search\" name=\"q\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" placeholder=\"搜尋車牌 / 車型 / VIN / 業主\" hx-get=\"/api/vehicles/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#vehicle-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:320px\"> <button class=\"btn btn-p\" type=\"submit\">搜尋</button> <a class=\"btn btn-s\" href=\"/vehicles\">清除</a></form>")
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(q)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 130, Col: 43}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" placeholder=\"搜尋車牌 / 車型 / VIN / 業主\" hx-get=\"/api/vehicles/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#vehicle-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:320px\"> <button class=\"btn btn-p\" type=\"submit\">搜尋</button> <a class=\"btn btn-s\" href=\"/vehicles\">清除</a></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(rows) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"empty\">沒有符合條件的車輛</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"empty\">沒有符合條件的車輛</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if len(rows) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>車種</th><th>年份</th><th>業主</th><th>下次保養日</th><th>下次保養里程</th><th>操作</th></tr><tbody id=\"vehicle-rows\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<table><tr><th>ID</th><th>車牌</th><th>車型</th><th>車種</th><th>年份</th><th>業主</th><th>下次保養日</th><th>下次保養里程</th><th>操作</th></tr><tbody id=\"vehicle-rows\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, row := range rows {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<tr><td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<tr><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var5 string
-					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(row.ID, 10))
+					var templ_7745c5c3_Var15 string
+					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(row.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 123, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 152, Col: 43}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</td><td><b>")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var6 string
-					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(row.PlateNumber)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 124, Col: 32}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</td><td><b>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</b></td><td>")
+					var templ_7745c5c3_Var16 string
+					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(row.PlateNumber)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 153, Col: 32}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var7 string
-					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(row.BrandModel)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 125, Col: 28}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</b></td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</td><td>")
+					var templ_7745c5c3_Var17 string
+					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(row.BrandModel)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 154, Col: 28}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if row.VehicleTypeLabel != "" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<span class=\"pill\" style=\"background:#1e3a5f;color:#bae6fd\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<span class=\"pill\" style=\"background:#1e3a5f;color:#bae6fd\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						var templ_7745c5c3_Var8 string
-						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(row.VehicleTypeLabel)
+						var templ_7745c5c3_Var18 string
+						templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(row.VehicleTypeLabel)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 128, Col: 92}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 157, Col: 92}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</span> ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</span> ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
 					if row.VehicleTypeLabel == "" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<span style=\"color:#64748b\">-</span>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<span style=\"color:#64748b\">-</span>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</td><td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var9 string
-					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(intOrBlank(row.ManufactureYear))
+					var templ_7745c5c3_Var19 string
+					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(intOrBlank(row.ManufactureYear))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 134, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 163, Col: 45}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</td><td>")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var10 string
-					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(row.CustomerName)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 135, Col: 30}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</td><td>")
+					var templ_7745c5c3_Var20 string
+					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(row.CustomerName)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 164, Col: 30}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -256,7 +441,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</td><td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -264,77 +449,77 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</td><td><a class=\"btn btn-p\" href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</td><td><a class=\"btn btn-p\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var11 templ.SafeURL
-					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10))
+					var templ_7745c5c3_Var21 templ.SafeURL
+					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 139, Col: 96}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 168, Col: 96}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\">開工單</a> <a class=\"btn btn-o\" href=\"")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var12 templ.SafeURL
-					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 140, Col: 81}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\">開工單</a> <a class=\"btn btn-o\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\">履歷</a> <a class=\"btn btn-s\" href=\"")
+					var templ_7745c5c3_Var22 templ.SafeURL
+					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 169, Col: 81}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var13 templ.SafeURL
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit")
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 141, Col: 91}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\">履歷</a> <a class=\"btn btn-s\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\">編輯</a> <a class=\"btn btn-d\" href=\"")
+					var templ_7745c5c3_Var23 templ.SafeURL
+					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit")
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 170, Col: 91}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var14 templ.SafeURL
-					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete")
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 142, Col: 93}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "\">編輯</a> <a class=\"btn btn-d\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" hx-post=\"")
+					var templ_7745c5c3_Var24 templ.SafeURL
+					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinURLErrs("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete")
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 171, Col: 93}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var15 string
-					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete")
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 143, Col: 76}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\" hx-post=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" data-confirm=\"確定刪除這台車？\">刪除</a></td></tr>")
+					var templ_7745c5c3_Var25 string
+					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete")
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 172, Col: 76}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\" data-confirm=\"確定刪除這台車？\">刪除</a></td></tr>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</tbody></table>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</tbody></table>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -343,13 +528,13 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("車輛管理", "/vehicles", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("車輛管理", "/vehicles", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

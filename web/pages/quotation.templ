@@ -1,0 +1,126 @@
+package pages
+
+type QuotationItem struct {
+	Description string
+	Quantity    string
+	UnitPrice   string
+	Subtotal    string
+	Category    string
+}
+
+type QuotationGroup struct {
+	Label    string
+	Subtotal string
+	Items    []QuotationItem
+}
+
+type QuotationPageData struct {
+	AppName      string
+	WorkOrderID  string
+	Paper        string
+	QuoteDate    string
+	Expiry       string
+	CustomerName string
+	CustomerPhone string
+	PlateNumber  string
+	BrandModel   string
+	Mileage      string
+	Complaint    string
+	Groups       []QuotationGroup
+	ThermalItems []QuotationItem
+	ItemTotal    string
+	Discount     string
+	Total        string
+	Warranty     bool
+	Terms        string
+	Username     string
+	PrintTime    string
+	Style        string
+}
+
+templ QuotationPage(data QuotationPageData) {
+	<!DOCTYPE html>
+	<html lang="zh-Hant">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>估價單 #{ data.WorkOrderID } - AutoRepair OS</title>
+		<style>@templ.Raw(data.Style)</style>
+	</head>
+	<body>
+		<div class={ "sheet" + ifThen(data.Paper == "thermal", " sheet-thermal", "") }>
+			<div class="q-head">
+				<div>
+					<h1>🔧 { data.AppName }</h1>
+					<p class="q-subtitle">維修估價單
+						if data.Warranty {
+							<span class="pill p-completed">保固案件</span>
+						}
+					</p>
+				</div>
+				<div class="q-head-meta">
+					<div><span>估價單號</span><b>#{ data.WorkOrderID }</b></div>
+					<div><span>開立日期</span><b>{ data.QuoteDate }</b></div>
+					<div><span>有效期限</span><b>{ data.Expiry }</b></div>
+				</div>
+			</div>
+			<div class="q-parties">
+				<div class="q-party"><span class="q-lbl">客戶</span><b>{ data.CustomerName }</b><span class="q-val">{ data.CustomerPhone }</span></div>
+				<div class="q-party"><span class="q-lbl">車輛</span><b>{ data.PlateNumber }</b><span class="q-val">{ data.BrandModel } / { data.Mileage } km</span></div>
+			</div>
+			<div class="q-complaint"><span class="q-lbl">客戶反映</span>{ data.Complaint }</div>
+			<div class="q-detail">
+				<h2>維修項目與費用</h2>
+				if data.Paper == "thermal" {
+					<table class="q-thermal">
+						for _, item := range data.ThermalItems {
+							<tr><td>{ item.Description }<span class="q-sub">{ item.Category } × { item.Quantity }</span></td><td class="num">{ item.Subtotal }</td></tr>
+						}
+					</table>
+				} else {
+					for _, group := range data.Groups {
+						if len(group.Items) > 0 {
+							<div class="q-group">
+								<div class="q-group-head"><span>{ group.Label }</span><b>{ group.Subtotal }</b></div>
+								<table class="q-items">
+									<tr><th>項目</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>
+									for _, item := range group.Items {
+										<tr><td>{ item.Description }</td><td class="num">{ item.Quantity }</td><td class="num">{ item.UnitPrice }</td><td class="num">{ item.Subtotal }</td></tr>
+									}
+								</table>
+							</div>
+						}
+					}
+				}
+			</div>
+			<div class="q-total">
+				<div class="q-line"><span>項目小計</span><b>{ data.ItemTotal }</b></div>
+				if data.Discount != "" {
+					<div class="q-line"><span>折扣</span><b style="color:#b91c1c">-{ data.Discount }</b></div>
+				}
+				<div class="q-grand"><span>應付總額</span><b>{ data.Total }</b></div>
+			</div>
+			<div class="q-terms"><b>估價說明與保固條款</b><p>{ data.Terms }</p></div>
+			<div class="q-sign">
+				<div class="q-sign-box"><span>客戶簽名（同意上述報價）</span><div class="q-sign-line"></div></div>
+				<div class="q-sign-box"><span>承辦人</span><div class="q-sign-line"></div><span class="q-sign-name">{ data.Username }</span></div>
+			</div>
+			<div class="q-foot"><p class="tiny">列印時間：{ data.PrintTime } / 櫃檯：{ data.Username }</p></div>
+		</div>
+		<div class="no-print">
+			<button class="btn btn-p" onclick="window.print()">🖨 列印</button>
+			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID + "/quotation?paper=a4" }>A4 版</a>
+			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID + "/quotation?paper=thermal" }>熱感紙版</a>
+			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID }>返回工單</a>
+		</div>
+		<script>window.addEventListener('load', function(){ if (location.hash === '#print') window.print(); });</script>
+	</body>
+	</html>
+}
+
+func ifThen(condition bool, yes, no string) string {
+	if condition {
+		return yes
+	}
+	return no
+}

@@ -26,6 +26,19 @@ const vehicleCols = `v.id, v.customer_id, COALESCE(c.name,''), v.plate_number, v
 	COALESCE(v.last_maintenance_date,''), COALESCE(v.last_maintenance_mileage,0),
 	COALESCE(v.next_maintenance_interval_months,6), COALESCE(v.next_maintenance_interval_km,5000)`
 
+const vehicleListCols = vehicleCols + `,
+	COALESCE(vt.label,''), COALESCE(ft.label,''), COALESCE(bs.label,''),
+	COALESCE(lm.current_mileage,0)`
+
+const vehicleListJoins = `
+	LEFT JOIN lookup_items vt ON vt.category = 'vehicle_type' AND vt.code = v.vehicle_type AND vt.active = 1
+	LEFT JOIN lookup_items ft ON ft.category = 'fuel_type' AND ft.code = v.fuel_type AND ft.active = 1
+	LEFT JOIN lookup_items bs ON bs.category = 'body_style' AND bs.code = v.body_style AND bs.active = 1
+	LEFT JOIN (
+		SELECT vehicle_id, MAX(current_mileage) AS current_mileage
+		FROM active_work_orders GROUP BY vehicle_id
+	) lm ON lm.vehicle_id = v.id`
+
 func scanVehicle(rows interface{ Scan(...interface{}) error }) (model.Vehicle, error) {
 	var v model.Vehicle
 	err := rows.Scan(&v.ID, &v.CustomerID, &v.CustomerName, &v.PlateNumber, &v.BrandModel,
@@ -47,6 +60,26 @@ func scanVehicle(rows interface{ Scan(...interface{}) error }) (model.Vehicle, e
 		v.BodyStyleLabel = lookupLabel("body_style", v.BodyStyle)
 	}
 	return v, err
+}
+
+func scanVehicleListRow(rows interface{ Scan(...interface{}) error }) (model.Vehicle, int, error) {
+	var v model.Vehicle
+	var currentMileage int
+	var vehicleTypeLabel, fuelTypeLabel, bodyStyleLabel string
+	err := rows.Scan(&v.ID, &v.CustomerID, &v.CustomerName, &v.PlateNumber, &v.BrandModel,
+		&v.VehicleType, &v.DriverName, &v.DriverPhone, &v.ContactName, &v.ContactPhone, &v.OwnerName,
+		&v.OwnerAddress, &v.OwnerIDNumber, &v.LicenseExpiryDate,
+		&v.Color, &v.DoorCount, &v.ManufactureYear, &v.ManufactureDate, &v.LicenseIssueDate,
+		&v.FuelType, &v.Displacement, &v.BodyStyle, &v.SeatingCapacity, &v.CurbWeight, &v.GrossWeight,
+		&v.TireSize, &v.Wheelbase, &v.VIN, &v.EngineNumber, &v.InspectionDueDate,
+		&v.NextMaintenanceDate, &v.NextMaintenanceMileage,
+		&v.LastMaintenanceDate, &v.LastMaintenanceMileage,
+		&v.MaintIntervalMonths, &v.MaintIntervalKm,
+		&vehicleTypeLabel, &fuelTypeLabel, &bodyStyleLabel, &currentMileage)
+	v.VehicleTypeLabel = vehicleTypeLabel
+	v.FuelTypeLabel = fuelTypeLabel
+	v.BodyStyleLabel = bodyStyleLabel
+	return v, currentMileage, err
 }
 
 // normDate 把舊資料的 '2016/02/22' 轉成 HTML date input 要的 '2016-02-22'。
@@ -147,6 +180,9 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 		` ORDER BY v.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
+	query = `SELECT ` + vehicleListCols + ` FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id` + vehicleListJoins + where +
+		` ORDER BY v.id DESC LIMIT ? OFFSET ?`
 	rows, err := db.DB.Query(query, pageArgs...)
 	if err != nil {
 		fail(w, "查詢車輛失敗")
@@ -155,17 +191,26 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 	defer rows.Close()
 
 	var list []model.Vehicle
+	mileage := make(map[int64]int)
 	for rows.Next() {
-		v, err := scanVehicle(rows)
+		v, km, err := scanVehicleListRow(rows)
 		if err != nil {
-			continue
+			log.Printf("讀取車輛列表失敗: %v", err)
+			fail(w, "讀取車輛列表失敗")
+			return
 		}
 		list = append(list, v)
+		mileage[v.ID] = km
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("列舉車輛列表失敗: %v", err)
+		fail(w, "讀取車輛列表失敗")
+		return
 	}
 
 	var vehicleRows []pages.VehicleRow
 	for _, v := range list {
-		curKm := lastMileageOf(v.ID)
+		curKm := mileage[v.ID]
 		dateCell, kmCell := maintDueText(v, curKm)
 		vehicleRows = append(vehicleRows, pages.VehicleRow{
 			ID:               v.ID,
@@ -192,39 +237,48 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 func SearchVehiclesAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
-		w.Write([]byte(`<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無車輛</td></tr>`))
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := pages.VehicleSearchRows(nil).Render(r.Context(), w); err != nil {
+			log.Printf("產生空車輛搜尋結果失敗: %v", err)
+		}
 		return
 	}
 	like := "%" + q + "%"
-	rows, err := db.DB.Query(`SELECT `+vehicleCols+` FROM active_vehicles v
-		JOIN active_customers c ON c.id = v.customer_id
-		WHERE v.plate_number LIKE ? OR v.brand_model LIKE ? OR c.name LIKE ? OR COALESCE(v.vin,'') LIKE ?
-		ORDER BY v.id DESC LIMIT 50`, like, like, like, like)
+	rows, err := db.DB.Query(`SELECT `+vehicleListCols+` FROM active_vehicles v
+	JOIN active_customers c ON c.id = v.customer_id
+	`+vehicleListJoins+`
+	WHERE v.plate_number LIKE ? OR v.brand_model LIKE ? OR c.name LIKE ? OR COALESCE(v.vin,'') LIKE ?
+	ORDER BY v.id DESC LIMIT 50`, like, like, like, like)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var b strings.Builder
+	var result []pages.VehicleRow
 	for rows.Next() {
-		v, err := scanVehicle(rows)
+		v, km, err := scanVehicleListRow(rows)
 		if err != nil {
-			continue
+			log.Printf("讀取車輛搜尋結果失敗: %v", err)
+			http.Error(w, "讀取車輛搜尋結果失敗", http.StatusInternalServerError)
+			return
 		}
-		typeCell := `<span style="color:#64748b">-</span>`
-		if v.VehicleTypeLabel != "" {
-			typeCell = `<span class="pill" style="background:#1e3a5f;color:#bae6fd">` + v.VehicleTypeLabel + `</span>`
-		}
-		b.WriteString(`<tr><td>` + strconv.FormatInt(v.ID, 10) + `</td><td><b>` + v.PlateNumber + `</b></td><td>` +
-			v.BrandModel + `</td><td>` + typeCell + `</td><td>` + intOrBlank(v.ManufactureYear) + `</td><td>` +
-			v.CustomerName + `</td><td></td><td></td><td>` +
-			`<a class="btn btn-p" href="/work-orders/new?vehicle=` + strconv.FormatInt(v.ID, 10) + `">開工單</a> ` +
-			`<a class="btn btn-o" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `">履歷</a> ` +
-			`<a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(v.ID, 10) + `/edit">編輯</a></td></tr>`)
+		dateCell, kmCell := maintDueText(v, km)
+		result = append(result, pages.VehicleRow{
+			ID: v.ID, PlateNumber: v.PlateNumber, BrandModel: v.BrandModel,
+			VehicleTypeLabel: v.VehicleTypeLabel, ManufactureYear: v.ManufactureYear,
+			CustomerName: v.CustomerName, DateCell: dateCell, KmCell: kmCell, CanEdit: true,
+		})
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("列舉車輛搜尋結果失敗: %v", err)
+		http.Error(w, "讀取車輛搜尋結果失敗", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(b.String()))
+	if err := pages.VehicleSearchRows(result).Render(r.Context(), w); err != nil {
+		log.Printf("產生車輛搜尋結果失敗: %v", err)
+	}
 }
 
 // ShowVehicle 車輛履歷：基本資料 + 歷年工單 + 消費統計。

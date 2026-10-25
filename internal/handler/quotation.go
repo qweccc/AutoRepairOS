@@ -9,6 +9,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ============================================================
@@ -88,146 +89,51 @@ func PrintWorkOrderQuotation(w http.ResponseWriter, r *http.Request, user model.
 	}
 
 	// 明細表格：A4 給完整四欄，熱感紙只給描述 + 小計（80mm 放不下單價欄）。
-	var b strings.Builder
+	pageGroups := make([]pages.QuotationGroup, 0, len(groups))
+	var thermalItems []pages.QuotationItem
 	for _, g := range groups {
 		if len(g.items) == 0 {
 			continue
 		}
-		if paper == "a4" {
-			b.WriteString(`<div class="q-group"><div class="q-group-head"><span>` + g.label +
-				`</span><b>` + money(g.subtotal) + `</b></div>`)
-			b.WriteString(`<table class="q-items"><tr><th>項目</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>`)
-			for _, it := range g.items {
-				b.WriteString(`<tr><td>` + htmlEsc(it.Description) + `</td><td class="num">` +
-					strconv.Itoa(it.Quantity) + `</td><td class="num">` + money(it.UnitPrice) +
-					`</td><td class="num">` + money(it.Subtotal) + `</td></tr>`)
+		groupItems := make([]pages.QuotationItem, 0, len(g.items))
+		for _, it := range g.items {
+			item := pages.QuotationItem{
+				Description: it.Description,
+				Quantity:    strconv.Itoa(it.Quantity),
+				UnitPrice:   money(it.UnitPrice),
+				Subtotal:    money(it.Subtotal),
+				Category:    g.label,
 			}
-			b.WriteString(`</table></div>`)
-		} else {
-			for _, it := range g.items {
-				b.WriteString(`<tr><td>` + htmlEsc(it.Description) + `<span class="q-sub">` + g.label +
-					` × ` + strconv.Itoa(it.Quantity) + `</span></td><td class="num">` +
-					money(it.Subtotal) + `</td></tr>`)
-			}
+			groupItems = append(groupItems, item)
+			thermalItems = append(thermalItems, item)
 		}
+		pageGroups = append(pageGroups, pages.QuotationGroup{
+			Label: g.label, Subtotal: money(g.subtotal), Items: groupItems,
+		})
 	}
 
-	// 熱感紙：單一扁平表格（沒有分組區塊）。
-	thermalTable := ""
-	if paper == "thermal" {
-		thermalTable = `<table class="q-thermal">` + b.String() + `</table>`
-	}
-
-	// 金額摘要：項目小計 → 折扣 → 應付總額。
-	// 折扣列只在真的有折扣時顯示，避免每張單都掛一個 0。
-	discountRow := ""
+	discountText := ""
 	if discount > 0 {
-		discountRow = `<div class="q-line"><span>折扣</span><b style="color:#b91c1c">-` +
-			money(discount) + `</b></div>`
-	}
-	warrantyTag := ""
-	if isWarranty == 1 {
-		warrantyTag = `<span class="pill p-completed">保固案件</span>`
+		discountText = money(discount)
 	}
 
-	// 保固與條款：估價單一定要寫，否則客戶會爭執零件保固期。
 	terms := `本估價單有效期 ` + strconv.Itoa(quoteValidityDays) + ` 天，逾期報價失效。
 		零件保固依廠商規定，人為損壞與消耗品不在保固範圍。
 		施工中如發現其他問題，將另行報價並經客戶同意後才動工。`
 
-	body := `
-  <div class="sheet">
-    <div class="q-head">
-      <div>
-        <h1>🔧 ` + appName() + `</h1>
-        <p class="q-subtitle">維修估價單 ` + warrantyTag + `</p>
-      </div>
-      <div class="q-head-meta">
-        <div><span>估價單號</span><b>#` + strconv.FormatInt(wo.ID, 10) + `</b></div>
-        <div><span>開立日期</span><b>` + quoteDate.Format("2006-01-02") + `</b></div>
-        <div><span>有效期限</span><b>` + expiry.Format("2006-01-02") + `</b></div>
-      </div>
-    </div>
-
-    <div class="q-parties">
-      <div class="q-party">
-        <span class="q-lbl">客戶</span>
-        <b>` + htmlEsc(wo.CustomerName) + `</b>
-        <span class="q-val">` + htmlEsc(wo.CustomerPhone) + `</span>
-      </div>
-      <div class="q-party">
-        <span class="q-lbl">車輛</span>
-        <b>` + htmlEsc(wo.PlateNumber) + `</b>
-        <span class="q-val">` + htmlEsc(orDash(wo.BrandModel)) + ` / ` +
-		strconv.Itoa(wo.CurrentMileage) + ` km</span>
-      </div>
-    </div>
-
-    <div class="q-complaint">
-      <span class="q-lbl">客戶反映</span>
-      ` + htmlEsc(orDash(wo.CustomerComplaint)) + `
-    </div>
-
-    <div class="q-detail">
-      <h2>維修項目與費用</h2>
-      ` + thermalTable + b.String() + `
-    </div>
-
-    <div class="q-total">
-      <div class="q-line"><span>項目小計</span><b>` + money(itemTotal) + `</b></div>
-      ` + discountRow + `
-      <div class="q-grand"><span>應付總額</span><b>` + money(total) + `</b></div>
-    </div>
-
-    <div class="q-terms">
-      <b>估價說明與保固條款</b>
-      <p>` + terms + `</p>
-    </div>
-
-    <div class="q-sign">
-      <div class="q-sign-box">
-        <span>客戶簽名（同意上述報價）</span>
-        <div class="q-sign-line"></div>
-      </div>
-      <div class="q-sign-box">
-        <span>承辦人</span>
-        <div class="q-sign-line"></div>
-        <span class="q-sign-name">` + htmlEsc(user.Username) + `</span>
-      </div>
-    </div>
-
-    <div class="q-foot">
-      <p class="tiny">列印時間：` + time.Now().Format("2006-01-02 15:04") +
-		` / 櫃檯：` + htmlEsc(user.Username) + `</p>
-    </div>
-  </div>
-
-  <div class="no-print">
-    <button class="btn btn-p" onclick="window.print()">🖨 列印</button>
-    <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/quotation?paper=a4">A4 版</a>
-    <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/quotation?paper=thermal">熱感紙版</a>
-    <a class="btn btn-s" href="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `">返回工單</a>
-  </div>`
-
-	sheetClass := "sheet"
-	if paper == "thermal" {
-		sheetClass = "sheet sheet-thermal"
+	data := pages.QuotationPageData{
+		AppName: appName(), WorkOrderID: strconv.FormatInt(wo.ID, 10), Paper: paper,
+		QuoteDate: quoteDate.Format("2006-01-02"), Expiry: expiry.Format("2006-01-02"),
+		CustomerName: wo.CustomerName, CustomerPhone: wo.CustomerPhone,
+		PlateNumber: wo.PlateNumber, BrandModel: orDash(wo.BrandModel),
+		Mileage: strconv.Itoa(wo.CurrentMileage), Complaint: orDash(wo.CustomerComplaint),
+		Groups: pageGroups, ThermalItems: thermalItems, ItemTotal: money(itemTotal),
+		Discount: discountText, Total: money(total), Warranty: isWarranty == 1,
+		Terms: terms, Username: user.Username, PrintTime: time.Now().Format("2006-01-02 15:04"),
+		Style: quotationStyle,
 	}
-	body = strings.Replace(body, `class="sheet"`, `class="`+sheetClass+`"`, 1)
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(`<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>估價單 #` + strconv.FormatInt(wo.ID, 10) + ` - AutoRepair OS</title>
-<style>` + quotationStyle + `</style>
-</head>
-<body>` + body + `
-<script>window.addEventListener('load', function(){ if (location.hash === '#print') window.print(); });</script>
-</body>
-</html>`))
+	_ = pages.QuotationPage(data).Render(r.Context(), w)
 }
 
 // quotationStyle 估價單的 CSS。A4 與熱感紙共用，只在 @media print 與
@@ -305,8 +211,7 @@ const quotationStyle = `
     body { background: #fff; padding: 0; }
     .no-print { display: none !important; }
     .sheet { max-width: none; box-shadow: none; border-radius: 0; padding: 0; }
-    /* 熱感紙：固定 80mm 紙寬，避免瀏覽器自動縮放成 A4 版面。 */
-    .sheet-thermal { max-width: 72mm; padding: 0; }
+        .sheet-thermal { max-width: 72mm; padding: 0; }
     @page { margin: 10mm; }
   }
 `

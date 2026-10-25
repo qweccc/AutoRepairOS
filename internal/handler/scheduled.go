@@ -16,35 +16,17 @@ import (
 // ListScheduledTasks 顯示排程任務狀態、通知佇列與備份紀錄。
 func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User) {
 	statuses := cron.Status()
-
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>任務</th><th>識別碼</th><th>頻率</th><th>狀態</th><th>上次執行</th><th>下次執行</th><th>次數</th><th>操作</th></tr>`)
+	var taskRows []pages.ScheduledTaskRow
 	for _, s := range statuses {
-		pill := `<span class="pill p-completed">啟用</span>`
-		toggleBtn := `<form method="POST" action="/scheduled-tasks/` + htmlEsc(s.Key) + `/toggle" style="display:inline"><button class="btn btn-o" type="submit">停用</button></form>`
-		if !s.Enabled {
-			pill = `<span class="pill p-pending">停用</span>`
-			toggleBtn = `<form method="POST" action="/scheduled-tasks/` + htmlEsc(s.Key) + `/toggle" style="display:inline"><button class="btn btn-p" type="submit">啟用</button></form>`
-		}
-		lastErr := ""
-		if s.LastError != "" {
-			lastErr = `<br><span style="color:#fca5a5;font-size:11.5px">錯誤：` + htmlEsc(s.LastError) + `</span>`
-		}
-		tb.WriteString(`<tr><td><b>` + htmlEsc(s.Name) + `</b>` + lastErr + `</td><td><code>` + htmlEsc(s.Key) +
-			`</code></td><td>` + htmlEsc(s.IntervalLabel) + `</td><td>` + pill +
-			`</td><td>` + htmlEsc(orDash(s.LastRunAt)) + `</td><td>` + htmlEsc(orDash(s.NextRunAt)) +
-			`</td><td class="num">` + strconv.Itoa(s.RunCount) + `</td><td>` + toggleBtn + `</td></tr>`)
-	}
-	tb.WriteString(`</table>`)
-
-	tasksTable := tb.String()
-	if len(statuses) == 0 {
-		tasksTable = `<div class="empty">尚未註冊任何排程任務</div>`
+		taskRows = append(taskRows, pages.ScheduledTaskRow{Name: s.Name, Key: s.Key, Interval: s.IntervalLabel,
+			LastRun: orDash(s.LastRunAt), NextRun: orDash(s.NextRunAt), RunCount: s.RunCount,
+			LastError: s.LastError, Enabled: s.Enabled})
 	}
 
 	// 通知紀錄：同時顯示待處理（可取消）與近期歷史（含失敗狀態）
 	pending := cron.PendingNotifications(50)
 	recent := cron.RecentNotifications(50)
+	var notificationRows []pages.NotificationRow
 
 	// LINE 連線狀態：讓管理者一眼看出通知是否真的會外送。
 	lineCfg, _ := line.Shared()
@@ -72,8 +54,6 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		"permanent_failure": {"永久失敗", "p-apprno"},
 	}
 
-	var nb strings.Builder
-	nb.WriteString(`<table><tr><th>#</th><th>類型</th><th>通道</th><th>主旨</th><th>內容</th><th>排定時間</th><th>狀態</th><th>操作</th></tr>`)
 	for _, n := range recent {
 		kindLabel := kindLabels[n.Kind]
 		if kindLabel == "" {
@@ -89,24 +69,20 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 			label, pill = st.Label, st.Pill
 		}
 
-		action := `<span style="color:#64748b">—</span>`
-		if n.Status == "pending" {
-			action = `<form method="POST" action="/notifications/` + strconv.FormatInt(n.ID, 10) +
-				`/cancel" style="display:inline" onsubmit="return confirm('取消這筆通知？')"><button class="btn btn-d" type="submit">取消</button></form>`
+		detail := ""
+		if n.RetryCount > 0 {
+			detail = "失敗次數 " + strconv.Itoa(n.RetryCount)
 		}
+		if n.ErrorMessage != "" {
+			if detail != "" {
+				detail += "；"
+			}
+			detail += n.ErrorMessage
+		}
+		notificationRows = append(notificationRows, pages.NotificationRow{ID: n.ID, Kind: kindLabel, Channel: chLabel,
+			Subject: orDash(n.Subject), Body: truncateStr(n.Body, 70), ScheduledAt: n.ScheduledAt,
+			Status: n.Status, StatusLabel: label, StatusPill: pill, ErrorDetail: detail, Cancelable: n.Status == "pending"})
 
-		nb.WriteString(`<tr><td>` + strconv.FormatInt(n.ID, 10) + `</td><td>` + htmlEsc(kindLabel) +
-			`</td><td>` + htmlEsc(chLabel) + `</td><td>` + htmlEsc(orDash(n.Subject)) +
-			`</td><td style="max-width:340px">` + htmlEsc(truncateStr(n.Body, 70)) +
-			`</td><td>` + htmlEsc(n.ScheduledAt) + `</td><td><span class="pill ` + pill + `">` + label + `</span>` +
-			retryStatusDetail(n) +
-			`</td><td>` + action + `</td></tr>`)
-	}
-	nb.WriteString(`</table>`)
-
-	notifTable := nb.String()
-	if len(recent) == 0 {
-		notifTable = `<div class="empty">尚無通知紀錄</div>`
 	}
 
 	// 備份紀錄
@@ -114,9 +90,7 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		COALESCE(db_size,0), COALESCE(photo_count,0), COALESCE(photo_size,0),
 		status, COALESCE(error_message,'')
 		FROM backup_records ORDER BY id DESC LIMIT 30`)
-	var bk strings.Builder
-	bk.WriteString(`<table><tr><th>日期</th><th>備份檔</th><th class="num">DB 大小</th><th class="num">照片數</th><th class="num">照片大小</th><th>狀態</th></tr>`)
-	backupRows := 0
+	var backupRowsData []pages.BackupRow
 	if err == nil {
 		for rows.Next() {
 			var date, path, status, errMsg string
@@ -124,30 +98,15 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 			if err := rows.Scan(&date, &path, &dbSize, &photoCount, &photoSize, &status, &errMsg); err != nil {
 				continue
 			}
-			backupRows++
-			pill := `<span class="pill p-completed">成功</span>`
-			if status != "success" {
-				pill = `<span class="pill p-apprno">失敗</span>`
-			}
-			bk.WriteString(`<tr><td>` + htmlEsc(date) + `</td><td style="font-size:11.5px">` +
-				htmlEsc(orDash(path)) + `</td><td class="num">` + sizeKB(dbSize) +
-				`</td><td class="num">` + strconv.FormatInt(photoCount, 10) +
-				`</td><td class="num">` + sizeKB(photoSize) + `</td><td>` + pill +
-				errLine(errMsg) + `</td></tr>`)
+			backupRowsData = append(backupRowsData, pages.BackupRow{Date: date, Path: orDash(path), DBSize: sizeKB(dbSize),
+				PhotoCount: strconv.FormatInt(photoCount, 10), PhotoSize: sizeKB(photoSize), Success: status == "success", Error: errMsg})
 		}
 		rows.Close()
 	}
-	bk.WriteString(`</table>`)
 
-	backupTable := bk.String()
-	if backupRows == 0 {
-		backupTable = `<div class="empty">尚無備份紀錄</div>`
-	}
-
-	pages.ListScheduledTasksPage(tasksTable, notifTable, backupTable,
+	pages.ListScheduledTasksPage(taskRows, notificationRows, backupRowsData,
 		strconv.Itoa(len(pending)), strconv.Itoa(len(recent)),
 		linePill, lineCfg.StatusLine(),
-		len(statuses) > 0, len(recent) > 0, backupRows > 0,
 		user).Render(r.Context(), w)
 }
 

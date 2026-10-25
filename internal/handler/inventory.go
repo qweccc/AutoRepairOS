@@ -242,30 +242,7 @@ func EditInventoryForm(w http.ResponseWriter, r *http.Request, user model.User) 
 		return
 	}
 
-	costField := ""
-	if canSeeMoney(user) {
-		costField = `<label>成本價<input name="cost_price" type="number" step="1" value="` + money(it.CostPrice) + `"></label>`
-	}
-
-	body := `
-    <div class="card">
-      <h2>編輯零件 ` + htmlEsc(it.Name) + `</h2>
-      <form class="frm" method="POST" action="/inventory/` + strconv.FormatInt(it.ID, 10) + `">
-        <label>料號<input name="part_number" value="` + htmlEsc(it.PartNumber) + `" required></label>
-        <label>名稱<input name="name" value="` + htmlEsc(it.Name) + `" required></label>
-        <label>類別<select name="category"><option value="">未分類</option>` + lookupOptions("category", it.Category) + `</select></label>
-        <label>庫位<input name="bin_location" value="` + htmlEsc(it.BinLocation) + `" required></label>
-        <label>條碼<input name="barcode" value="` + htmlEsc(it.Barcode) + `"></label>
-        <label>供應商<select name="supplier_id"><option value="0">無</option>` + supplierOptionsSel(it.SupplierID) + `</select></label>
-        ` + costField + `
-        <label>售價<input name="selling_price" type="number" step="1" value="` + money(it.SellingPrice) + `"></label>
-        <label>安全庫存<input name="min_safety_stock" type="number" min="0" value="` + strconv.Itoa(it.MinSafetyStock) + `"></label>
-        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/inventory">取消</a></div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin-top:10px">庫存數量請用「調庫」功能變更，以保留進出紀錄。</p>
-    </div>`
-
-	renderPage(w, "編輯零件", "/inventory", user.Username, user.Role, body)
+	pages.EditInventoryPage(it, canSeeMoney(user), lookupOptions("category", it.Category), supplierOptionsSel(it.SupplierID), user).Render(r.Context(), w)
 }
 
 func UpdateInventoryItem(w http.ResponseWriter, r *http.Request) {
@@ -316,19 +293,7 @@ func StockAdjustForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>調庫 — ` + htmlEsc(it.Name) + `（` + htmlEsc(it.PartNumber) + `）</h2>
-      <p style="color:#94a3b8;font-size:13.5px">目前庫存：<b style="color:#f8fafc;font-size:20px">` +
-		strconv.Itoa(it.StockQuantity) + `</b>　安全庫存：` + strconv.Itoa(it.MinSafetyStock) + `</p>
-      <form class="frm" method="POST" action="/inventory/` + strconv.FormatInt(it.ID, 10) + `/stock">
-        <label>異動數量（正數進貨、負數領用）<input name="delta" type="number" required placeholder="例 10 或 -2"></label>
-        <label>備註<input name="note" placeholder="例：採購進貨 / 工單領用"></label>
-        <div class="full"><button class="btn btn-p" type="submit">確認調庫</button> <a class="btn btn-s" href="/inventory">取消</a></div>
-      </form>
-    </div>`
-
-	renderPage(w, "調庫", "/inventory", user.Username, user.Role, body)
+	pages.StockAdjustPage(it, user).Render(r.Context(), w)
 }
 
 func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,19 @@
+package components
+
+import "strings"
+
+type BayOption struct {
+	Code  string
+	Label string
+}
+
+templ BayOptions(selected string, options []BayOption, legacy bool) {
+	<option value="">未指定工位</option>
+	{{ normalized := strings.ToUpper(selected) }}
+	for _, option := range options {
+		<option value={ option.Code } selected?={ normalized == option.Code }>{ option.Label }（{ option.Code }）</option>
+	}
+	if legacy {
+		<option value={ selected } selected>{ selected }（非標準）</option>
+	}
+}

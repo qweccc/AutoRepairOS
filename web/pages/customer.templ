@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"html"
 	"strconv"
 
 	"autorepairos/internal/model"
@@ -144,7 +145,7 @@ func tagPillsHTML(tags string) string {
 			_ = i
 			continue
 		}
-		b = append(b, []byte(string(ch))...)
+		b = append(b, []byte(html.EscapeString(string(ch)))...)
 	}
 	b = append(b, []byte(`</span>`)...)
 	return string(b)

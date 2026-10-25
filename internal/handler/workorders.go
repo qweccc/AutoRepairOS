@@ -135,9 +135,13 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	// 總筆數（分頁用）
 	total := 0
-	db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders wo
+	if err := db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_orders wo
 		JOIN active_vehicles v ON v.id = wo.vehicle_id
-		JOIN active_customers c ON c.id = wo.customer_id`+where, args...).Scan(&total)
+		JOIN active_customers c ON c.id = wo.customer_id`+where, args...).Scan(&total); err != nil {
+		log.Printf("查詢工單總數失敗: %v", err)
+		fail(w, "查詢工單總數失敗")
+		return
+	}
 
 	query := `SELECT ` + workOrderCols + workOrderFrom + where +
 		` ORDER BY wo.created_at DESC, wo.id DESC LIMIT ? OFFSET ?`
@@ -154,9 +158,16 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	for rows.Next() {
 		wo, err := scanWorkOrder(rows)
 		if err != nil {
-			continue
+			log.Printf("讀取工單列表失敗: %v", err)
+			fail(w, "讀取工單列表失敗")
+			return
 		}
 		list = append(list, wo)
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("列舉工單列表失敗: %v", err)
+		fail(w, "讀取工單列表失敗")
+		return
 	}
 	rows.Close()
 
@@ -182,7 +193,10 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 				var part, name string
 				var qty float64
 				if err := pr.Scan(&wid, &part, &name, &qty); err != nil {
-					continue
+					log.Printf("讀取工單零件摘要失敗: %v", err)
+					pr.Close()
+					fail(w, "讀取工單零件摘要失敗")
+					return
 				}
 				i, ok := idx[wid]
 				if !ok {
@@ -194,7 +208,17 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 				list[i].PartSummary += part + "×" + trimQty(qty)
 				list[i].PartCount++
 			}
+			if err := pr.Err(); err != nil {
+				log.Printf("列舉工單零件摘要失敗: %v", err)
+				pr.Close()
+				fail(w, "讀取工單零件摘要失敗")
+				return
+			}
 			pr.Close()
+		} else {
+			log.Printf("查詢工單零件摘要失敗: %v", perr)
+			fail(w, "查詢工單零件摘要失敗")
+			return
 		}
 	}
 
@@ -245,6 +269,11 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 
 // SearchWorkOrdersAPI 工單即時搜尋 API（HTMX 用）。
 func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("error") == "1" {
+		w.WriteHeader(http.StatusInternalServerError)
+		pages.WorkOrderSearchError().Render(r.Context(), w)
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	part := strings.TrimSpace(r.URL.Query().Get("part"))
 	status := strings.TrimSpace(r.URL.Query().Get("status"))
@@ -281,7 +310,8 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.DB.Query(`SELECT `+workOrderCols+workOrderFrom+where+
 		` ORDER BY wo.created_at DESC, wo.id DESC LIMIT 50`, args...)
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		pages.WorkOrderSearchError().Render(r.Context(), w)
 		return
 	}
 	defer rows.Close()
@@ -290,7 +320,9 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		wo, err := scanWorkOrder(rows)
 		if err != nil {
-			continue
+			w.WriteHeader(http.StatusInternalServerError)
+			pages.WorkOrderSearchError().Render(r.Context(), w)
+			return
 		}
 		result = append(result, pages.WorkOrderRow{
 			ID:             wo.ID,
@@ -310,6 +342,11 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 			TotalAmount:    wo.TotalAmount,
 			CreatedAt:      woCreatedText(wo.CreatedAt),
 		})
+	}
+	if err := rows.Err(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		pages.WorkOrderSearchError().Render(r.Context(), w)
+		return
 	}
 	pages.WorkOrderSearchRows(result).Render(r.Context(), w)
 }
@@ -623,6 +660,20 @@ func UpdateWorkOrderClaim(w http.ResponseWriter, r *http.Request) {
 
 func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
+	allowed, err := canViewWorkOrder(user, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			log.Printf("檢查工單權限失敗（工單 #%d）: %v", id, err)
+			fail(w, "無法確認工單權限")
+		}
+		return
+	}
+	if !allowed {
+		http.Error(w, "沒有查看此工單的權限", http.StatusForbidden)
+		return
+	}
 
 	row := db.DB.QueryRow(`SELECT `+workOrderCols+workOrderFrom+` WHERE wo.id = ?`, id)
 	wo, err := scanWorkOrder(row)

@@ -105,28 +105,18 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	// 工位總覽卡（有篩選日期時才顯示）
-	bayCard := ""
+	var baySummary []pages.BaySummary
 	if date != "" && len(bayUsage) > 0 {
-		var bb strings.Builder
-		bb.WriteString(`<div class="card"><h2>工位占用（` + htmlEsc(date) + `）</h2><table><tr><th>工位</th><th>當日占用</th></tr>`)
 		for _, b := range bayList {
 			slots := bayUsage[b.code]
-			if len(slots) == 0 {
-				bb.WriteString(`<tr><td>` + b.label + `</td><td style="color:#86efac">空缺</td></tr>`)
-				continue
-			}
-			bb.WriteString(`<tr><td>` + b.label + `</td><td style="font-size:12.5px">` +
-				strings.Join(slots, "<br>") + `</td></tr>`)
+			baySummary = append(baySummary, pages.BaySummary{Label: b.label, Slots: slots})
 		}
 		for code, slots := range bayUsage {
 			if bayKnown(code) {
 				continue
 			}
-			bb.WriteString(`<tr><td>` + htmlEsc(code) + `（非標準）</td><td style="font-size:12.5px">` +
-				strings.Join(slots, "<br>") + `</td></tr>`)
+			baySummary = append(baySummary, pages.BaySummary{Label: code + "（非標準）", Slots: slots})
 		}
-		bb.WriteString(`</table></div>`)
-		bayCard = bb.String()
 	}
 
 	calendarDays, err := appointmentCalendar(calendarDate, calendarView, status)
@@ -136,7 +126,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	pages.ListAppointmentsPage(apptRows, total, page, size, date, status,
 		calendarDate, calendarView, calendarDays,
-		customerOptions(), vehicleOptions(), bayOptions(""), bayCard,
+		customerOptions(), vehicleOptions(), bayOptions(""), baySummary, date,
 		user).Render(r.Context(), w)
 }
 
@@ -369,6 +359,11 @@ func EditAppointmentForm(w http.ResponseWriter, r *http.Request, user model.User
 		http.NotFound(w, r)
 		return
 	}
+	bayOpts, err := bayOptionsHTML(a.Bay)
+	if err != nil {
+		fail(w, "載入工位選項失敗")
+		return
+	}
 
 	body := `
     <div class="card">
@@ -382,7 +377,7 @@ func EditAppointmentForm(w http.ResponseWriter, r *http.Request, user model.User
         </label>
         <label>預約日期<input type="date" name="appointment_date" value="` + htmlEsc(a.AppointmentDate) + `" required></label>
         <label>時段<input type="time" step="1800" name="appointment_time" value="` + htmlEsc(a.AppointmentTime) + `"></label>
-        <label>工位<select name="bay">` + bayOptions(a.Bay) + `</select></label>
+        <label>工位<select name="bay">` + bayOpts + `</select></label>
         <label>服務內容<input name="service_type" value="` + htmlEsc(a.ServiceType) + `"></label>
         <label>狀態
           <select name="status">

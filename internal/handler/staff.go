@@ -2,7 +2,7 @@ package handler
 
 import (
 	"net/http"
-	
+
 	"strconv"
 	"strings"
 
@@ -154,6 +154,10 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	kind := strings.TrimSpace(r.URL.Query().Get("kind"))
+	if r.URL.Query().Get("format") == "picker" {
+		searchStaffPicker(w, r, q)
+		return
+	}
 	where := ` WHERE COALESCE(u.staff_kind,'employee') <> 'vendor'`
 	var args []interface{}
 	if q != "" {
@@ -221,6 +225,39 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	pages.StaffSearchRows(result).Render(r.Context(), w)
+}
+
+func searchStaffPicker(w http.ResponseWriter, r *http.Request, q string) {
+	where := ` WHERE u.role = 'technician' AND COALESCE(u.staff_kind,'employee') = 'employee' AND COALESCE(u.active,1) <> 0`
+	var args []interface{}
+	if q != "" {
+		where += ` AND (u.name LIKE ? OR u.username LIKE ? OR COALESCE(u.staff_branch,'') LIKE ?)`
+		like := "%" + q + "%"
+		args = append(args, like, like, like)
+	}
+	rows, err := db.DB.Query(`SELECT u.id, COALESCE(u.name,''), COALESCE(u.staff_branch,'')
+		FROM users u`+where+` ORDER BY u.name LIMIT 20`, args...)
+	if err != nil {
+		http.Error(w, "技師搜尋失敗，請稍後重試", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	var result []pages.StaffPickerRow
+	for rows.Next() {
+		var row pages.StaffPickerRow
+		var branch string
+		if err := rows.Scan(&row.ID, &row.Name, &branch); err != nil {
+			http.Error(w, "技師搜尋失敗，請稍後重試", http.StatusInternalServerError)
+			return
+		}
+		row.Branch = branchLabel(branch)
+		result = append(result, row)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "技師搜尋失敗，請稍後重試", http.StatusInternalServerError)
+		return
+	}
+	pages.StaffPickerResults(result).Render(r.Context(), w)
 }
 
 // CreateStaff 新增員工（或健保眷屬）。

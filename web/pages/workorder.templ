@@ -211,8 +211,24 @@ templ AddItemForm(woID int64) {
 		</label>
 		<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
 		<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
-		<label>主技師<input name="primary_technician_id" type="number" min="0" value="0"></label>
-		<label>助手<input name="assistant_technician_id" type="number" min="0" value="0"></label>
+		<label>主技師
+			<div class="staff-picker">
+				<input class="staff-picker-input" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
+					hx-get="/api/staff/search?format=picker&kind=employee" hx-trigger="keyup changed delay:250ms, search"
+					hx-target="next .staff-picker-results" hx-swap="innerHTML">
+				<input type="hidden" name="primary_technician_id" value="0">
+				<div class="staff-picker-results"></div>
+			</div>
+		</label>
+		<label>助手
+			<div class="staff-picker">
+				<input class="staff-picker-input" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
+					hx-get="/api/staff/search?format=picker&kind=employee" hx-trigger="keyup changed delay:250ms, search"
+					hx-target="next .staff-picker-results" hx-swap="innerHTML">
+				<input type="hidden" name="assistant_technician_id" value="0">
+				<div class="staff-picker-results"></div>
+			</div>
+		</label>
 		<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
 	</form>
 	@PartSearchScript()

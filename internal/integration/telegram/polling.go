@@ -12,6 +12,7 @@ package telegram
 // 重啟後從檔讀回，避免重新處理停機期間積累的訊息。
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -40,14 +41,14 @@ type Update struct {
 
 // GetUpdates 以長輪詢抓入站更新。offset=0 表示從「最近的 100 筆」開始（僅用於首次無紀錄時）。
 // timeout 秒為長輪詢等待上限；回傳該次取得的所有更新（可能為空）。
-func (c *Client) GetUpdates(offset int64, timeout int) ([]Update, error) {
+func (c *Client) GetUpdates(ctx context.Context, offset int64, timeout int) ([]Update, error) {
 	if c.cfg == nil || c.cfg.Mock {
 		return nil, nil // Mock 模式不連網路
 	}
 
 	url := fmt.Sprintf("%s/bot%s/getUpdates?offset=%d&timeout=%d",
 		strings.TrimRight(c.cfg.BaseURL, "/"), c.cfg.BotToken, offset, timeout)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

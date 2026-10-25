@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -204,9 +205,17 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 	for _, s := range stats {
 		n := 0
 		if strings.Contains(s.query, "?") {
-			db.DB.QueryRow(s.query, user.ID).Scan(&n)
+			if err := db.DB.QueryRow(s.query, user.ID).Scan(&n); err != nil {
+				log.Printf("讀取首頁統計「%s」失敗: %v", s.label, err)
+				fail(w, "讀取首頁統計失敗，請稍後再試")
+				return
+			}
 		} else {
-			n = countRows(s.query)
+			if err := db.DB.QueryRow(s.query).Scan(&n); err != nil {
+				log.Printf("讀取首頁統計「%s」失敗: %v", s.label, err)
+				fail(w, "讀取首頁統計失敗，請稍後再試")
+				return
+			}
 		}
 		sh.WriteString(`<a class="stat" href="` + s.href + `"><b>` +
 			strconv.Itoa(n) + `</b><span>` + s.label + `</span></a>`)
@@ -229,18 +238,28 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			var id int64
 			var plate, model_, cname, status string
 			if err := rows.Scan(&id, &plate, &model_, &cname, &status); err != nil {
-				continue
+				log.Printf("讀取首頁最近工單失敗: %v", err)
+				fail(w, "讀取最近工單失敗，請稍後再試")
+				return
 			}
 			found = true
 			tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(id, 10) + `">` + strconv.FormatInt(id, 10) + `</a></td><td>` + htmlEsc(plate) +
 				`</td><td>` + htmlEsc(model_) + `</td><td>` + htmlEsc(cname) + `</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel[status] + `</span></td></tr>`)
 		}
 		tb.WriteString(`</table>`)
+		if err := rows.Err(); err != nil {
+			log.Printf("列舉首頁最近工單失敗: %v", err)
+			fail(w, "讀取最近工單失敗，請稍後再試")
+			return
+		}
 		if found {
 			recent = `<div class="card"><h2>最近工單</h2>` + tb.String() + `</div>`
 		} else {
 			recent = `<div class="card"><h2>最近工單</h2><div class="empty">尚無工單</div></div>`
 		}
+	} else {
+		log.Printf("查詢首頁最近工單失敗: %v", err)
+		fail(w, "讀取最近工單失敗，請稍後再試")
 	}
 
 	body := `

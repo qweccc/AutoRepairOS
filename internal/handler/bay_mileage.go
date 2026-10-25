@@ -2,12 +2,16 @@
 package handler
 
 import (
+	"bytes"
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/components"
+	"github.com/a-h/templ"
 )
 
 // ============================================================
@@ -47,22 +51,21 @@ func bayLabel(code string) string {
 	return code
 }
 
-func bayOptions(selected string) string {
-	var b strings.Builder
-	b.WriteString(`<option value="">未指定工位</option>`)
-	for _, x := range bayList {
-		sel := ""
-		if strings.ToUpper(selected) == x.code {
-			sel = " selected"
-		}
-		b.WriteString(`<option value="` + x.code + `"` + sel + `>` + x.label + `（` + x.code + `）</option>`)
+func bayOptions(selected string) templ.Component {
+	options := make([]components.BayOption, 0, len(bayList))
+	for _, bay := range bayList {
+		options = append(options, components.BayOption{Code: bay.code, Label: bay.label})
 	}
-	// 已存在的非清單值也要能顯示（舊資料或手動輸入），否則編輯時會被靜默改掉。
-	if selected != "" && bayLabel(selected) == strings.ToUpper(selected) && !bayKnown(selected) {
-		b.WriteString(`<option value="` + htmlEsc(selected) + `" selected>` + htmlEsc(selected) +
-			`（非標準）</option>`)
+	legacy := selected != "" && bayLabel(selected) == strings.ToUpper(selected) && !bayKnown(selected)
+	return components.BayOptions(selected, options, legacy)
+}
+
+func bayOptionsHTML(selected string) (string, error) {
+	var out bytes.Buffer
+	if err := bayOptions(selected).Render(context.Background(), &out); err != nil {
+		return "", err
 	}
-	return b.String()
+	return out.String(), nil
 }
 
 func bayKnown(code string) bool {

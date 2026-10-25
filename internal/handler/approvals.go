@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -17,6 +18,7 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // approvalItem 是追加維修項目在 approval_requests.item_summary 裡的元素。
@@ -120,8 +122,8 @@ func CreateApprovalFromWorkOrder(w http.ResponseWriter, r *http.Request) {
 	// 授權仍然建立（不可猜測的 token 與待決狀態才是紀錄的重點），
 	// 並把連結直接給櫃檯，讓他想辦法送到客戶手上。
 	if !customerHasLINE(customerID) {
-		log.Printf("追加維修授權已建立（客戶未綁 LINE，未推播）: id=%d work_order=%d token=%s",
-			req.ID, woID, req.Token)
+		log.Printf("追加維修授權已建立（客戶未綁 LINE，未推播）: id=%d work_order=%d",
+			req.ID, woID)
 		redirectMsg(w, r, woPath, fmt.Sprintf(
 			"已建立追加維修授權。客戶未綁定 LINE，通知沒有送出——"+
 				"請以電話取得同意後按「客戶電話同意」，或把這個連結給客戶：%s", approveURL))
@@ -144,7 +146,7 @@ func CreateApprovalFromWorkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("追加維修授權已建立: id=%d work_order=%d token=%s", req.ID, woID, req.Token)
+	log.Printf("追加維修授權已建立: id=%d work_order=%d", req.ID, woID)
 	redirectMsg(w, r, woPath, "已建立追加維修授權，並已通知客戶（連結 24 小時內有效）")
 }
 
@@ -292,18 +294,6 @@ func GetApprovalRequestByToken(token string) (*model.ApprovalRequest, error) {
 	return &req, nil
 }
 
-// ApprovalPageData 授權頁面所需的資料
-type ApprovalPageData struct {
-	Request     *model.ApprovalRequest
-	WorkOrder   *model.WorkOrder
-	Customer    *model.Customer
-	Items       []model.WorkOrderItem
-	IsExpired   bool
-	IsDecided   bool
-	ErrorMsg    string
-	DecidedText string
-}
-
 // ApprovalPageHandler 授權頁面（公開，不需登入）
 func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 	token := strings.TrimPrefix(r.URL.Path, "/approval/")
@@ -314,7 +304,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	req, err := GetApprovalRequestByToken(token)
 	if err != nil {
-		data := ApprovalPageData{ErrorMsg: err.Error()}
+		data := pages.ApprovalPageData{ErrorMsg: err.Error()}
 		renderApprovalPage(w, data)
 		return
 	}
@@ -322,7 +312,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 	// 檢查是否已決定
 	if req.Status == "approved" || req.Status == "rejected" {
 		statusText := map[string]string{"approved": "已同意", "rejected": "已拒絕"}[req.Status]
-		data := ApprovalPageData{
+		data := pages.ApprovalPageData{
 			Request:     req,
 			IsDecided:   true,
 			DecidedText: statusText,
@@ -333,7 +323,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 檢查是否過期
 	if req.Status == "expired" {
-		data := ApprovalPageData{
+		data := pages.ApprovalPageData{
 			Request:   req,
 			IsExpired: true,
 		}
@@ -343,7 +333,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 檢查是否 pending
 	if req.Status != "pending" {
-		data := ApprovalPageData{
+		data := pages.ApprovalPageData{
 			Request:  req,
 			ErrorMsg: "授權狀態異常",
 		}
@@ -354,7 +344,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 	// 取得工單資訊
 	wo, err := getWorkOrder(req.WorkOrderID)
 	if err != nil {
-		data := ApprovalPageData{
+		data := pages.ApprovalPageData{
 			Request:  req,
 			ErrorMsg: "工單資訊載入失敗",
 		}
@@ -365,7 +355,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 	// 取得客戶資訊
 	customer, err := getCustomer(req.CustomerID)
 	if err != nil {
-		data := ApprovalPageData{
+		data := pages.ApprovalPageData{
 			Request:  req,
 			ErrorMsg: "客戶資訊載入失敗",
 		}
@@ -379,7 +369,7 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 		items = []model.WorkOrderItem{} // 空列表不擋頁面
 	}
 
-	data := ApprovalPageData{
+	data := pages.ApprovalPageData{
 		Request:   req,
 		WorkOrder: wo,
 		Customer:  customer,
@@ -482,7 +472,7 @@ func ApproveRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("授權已核准: token=%s, work_order_id=%d", token, req.WorkOrderID)
+	log.Printf("授權已核准: work_order_id=%d", req.WorkOrderID)
 	renderApprovalResult(w, "success", "您的同意已送出，車廠會盡快安排維修")
 }
 
@@ -542,129 +532,137 @@ func RejectRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("授權已拒絕: token=%s, work_order_id=%d", token, req.WorkOrderID)
+	log.Printf("授權已拒絕: work_order_id=%d", req.WorkOrderID)
 	renderApprovalResult(w, "success", "您的拒絕已送出，車廠會與您聯繫")
 }
 
 // renderApprovalPage 渲染授權頁面（簡單 HTML）
-func renderApprovalPage(w http.ResponseWriter, data ApprovalPageData) {
+func renderApprovalPage(w http.ResponseWriter, data pages.ApprovalPageData) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_ = pages.ApprovalPage(data).Render(context.Background(), w)
+	return
+	/*
 
-	html := `<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>追加維修授權</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
-        h1 { color: #4a9eff; margin-top: 0; }
-        .error { color: #ff6b6b; background: #3d1f1f; padding: 15px; border-radius: 4px; }
-        .success { color: #51cf66; background: #1f3d2f; padding: 15px; border-radius: 4px; }
-        .info { background: #1f2d3d; padding: 15px; border-radius: 4px; margin: 15px 0; }
-        .btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }
-        .btn-approve { background: #51cf66; color: white; }
-        .btn-reject { background: #ff6b6b; color: white; }
-        .btn:hover { opacity: 0.9; }
-        .item { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
-        .item:last-child { border-bottom: none; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔧 追加維修授權</h1>`
+		html := `<!DOCTYPE html>
+	<html lang="zh-TW">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>追加維修授權</title>
+	    <style>
+	        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
+	        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
+	        h1 { color: #4a9eff; margin-top: 0; }
+	        .error { color: #ff6b6b; background: #3d1f1f; padding: 15px; border-radius: 4px; }
+	        .success { color: #51cf66; background: #1f3d2f; padding: 15px; border-radius: 4px; }
+	        .info { background: #1f2d3d; padding: 15px; border-radius: 4px; margin: 15px 0; }
+	        .btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }
+	        .btn-approve { background: #51cf66; color: white; }
+	        .btn-reject { background: #ff6b6b; color: white; }
+	        .btn:hover { opacity: 0.9; }
+	        .item { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
+	        .item:last-child { border-bottom: none; }
+	    </style>
+	</head>
+	<body>
+	    <div class="container">
+	        <h1>🔧 追加維修授權</h1>`
 
-	if data.ErrorMsg != "" {
-		html += fmt.Sprintf(`<div class="error">%s</div>`, data.ErrorMsg)
-	} else if data.IsExpired {
-		html += `<div class="error">授權已過期，請連絡車廠</div>`
-	} else if data.IsDecided {
-		html += fmt.Sprintf(`<div class="success">此授權%s（%s）</div>`, data.DecidedText, data.Request.DecidedAt)
-	} else if data.Request != nil && data.WorkOrder != nil {
-		html += fmt.Sprintf(`
-        <div class="info">
-            <strong>工單編號：</strong>#%d<br>
-            <strong>客戶：</strong>%s<br>
-            <strong>車牌：</strong>%s<br>
-            <strong>過期時間：</strong>%s
-        </div>`,
-			data.WorkOrder.ID, data.Customer.Name, data.WorkOrder.PlateNumber, data.Request.ExpiresAt)
-
-		if data.Request.ItemSummary != "" {
+		if data.ErrorMsg != "" {
+			html += fmt.Sprintf(`<div class="error">%s</div>`, data.ErrorMsg)
+		} else if data.IsExpired {
+			html += `<div class="error">授權已過期，請連絡車廠</div>`
+		} else if data.IsDecided {
+			html += fmt.Sprintf(`<div class="success">此授權%s（%s）</div>`, data.DecidedText, data.Request.DecidedAt)
+		} else if data.Request != nil && data.WorkOrder != nil {
 			html += fmt.Sprintf(`
-        <div class="info">
-            <strong>追加項目：</strong><br>
-            %s
-        </div>`, data.Request.ItemSummary)
-		}
+	        <div class="info">
+	            <strong>工單編號：</strong>#%d<br>
+	            <strong>客戶：</strong>%s<br>
+	            <strong>車牌：</strong>%s<br>
+	            <strong>過期時間：</strong>%s
+	        </div>`,
+				data.WorkOrder.ID, data.Customer.Name, data.WorkOrder.PlateNumber, data.Request.ExpiresAt)
 
-		if len(data.Items) > 0 {
-			html += `<div class="info"><strong>工單項目：</strong><br>`
-			for _, item := range data.Items {
-				html += fmt.Sprintf(`<div class="item">%s x%d - $%.0f</div>`,
-					item.Description, item.Quantity, item.Subtotal)
+			if data.Request.ItemSummary != "" {
+				html += fmt.Sprintf(`
+	        <div class="info">
+	            <strong>追加項目：</strong><br>
+	            %s
+	        </div>`, data.Request.ItemSummary)
 			}
-			html += `</div>`
+
+			if len(data.Items) > 0 {
+				html += `<div class="info"><strong>工單項目：</strong><br>`
+				for _, item := range data.Items {
+					html += fmt.Sprintf(`<div class="item">%s x%d - $%.0f</div>`,
+						item.Description, item.Quantity, item.Subtotal)
+				}
+				html += `</div>`
+			}
+
+			html += `
+	        <form method="POST" action="/approval/approve/` + data.Request.Token + `">
+	            <button type="submit" class="btn btn-approve">✅ 同意</button>
+	        </form>
+	        <form method="POST" action="/approval/reject/` + data.Request.Token + `">
+	            <button type="submit" class="btn btn-reject">❌ 拒絕</button>
+	        </form>`
 		}
 
 		html += `
-        <form method="POST" action="/approval/approve/` + data.Request.Token + `">
-            <button type="submit" class="btn btn-approve">✅ 同意</button>
-        </form>
-        <form method="POST" action="/approval/reject/` + data.Request.Token + `">
-            <button type="submit" class="btn btn-reject">❌ 拒絕</button>
-        </form>`
-	}
+	    </div>
+	</body>
+	</html>`
 
-	html += `
-    </div>
-</body>
-</html>`
-
-	w.Write([]byte(html))
+		w.Write([]byte(html))
+	*/
 }
 
 // renderApprovalResult 渲染授權結果頁面
 func renderApprovalResult(w http.ResponseWriter, status, message string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_ = pages.ApprovalResult(status, message).Render(context.Background(), w)
+	return
+	/*
 
-	var cssClass string
-	switch status {
-	case "success":
-		cssClass = "success"
-	case "error", "expired", "decided":
-		cssClass = "error"
-	default:
-		cssClass = "info"
-	}
+		var cssClass string
+		switch status {
+		case "success":
+			cssClass = "success"
+		case "error", "expired", "decided":
+			cssClass = "error"
+		default:
+			cssClass = "info"
+		}
 
-	html := fmt.Sprintf(`<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>授權結果</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
-        h1 { color: #4a9eff; margin-top: 0; }
-        .%s { padding: 15px; border-radius: 4px; margin: 20px 0; }
-        .success { color: #51cf66; background: #1f3d2f; }
-        .error { color: #ff6b6b; background: #3d1f1f; }
-        .info { color: #4a9eff; background: #1f2d3d; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔧 授權結果</h1>
-        <div class="%s">%s</div>
-        <p>您可以關閉此頁面。</p>
-    </div>
-</body>
-</html>`, cssClass, cssClass, message)
+		html := fmt.Sprintf(`<!DOCTYPE html>
+	<html lang="zh-TW">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>授權結果</title>
+	    <style>
+	        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
+	        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
+	        h1 { color: #4a9eff; margin-top: 0; }
+	        .%s { padding: 15px; border-radius: 4px; margin: 20px 0; }
+	        .success { color: #51cf66; background: #1f3d2f; }
+	        .error { color: #ff6b6b; background: #3d1f1f; }
+	        .info { color: #4a9eff; background: #1f2d3d; }
+	    </style>
+	</head>
+	<body>
+	    <div class="container">
+	        <h1>🔧 授權結果</h1>
+	        <div class="%s">%s</div>
+	        <p>您可以關閉此頁面。</p>
+	    </div>
+	</body>
+	</html>`, cssClass, cssClass, message)
 
-	w.Write([]byte(html))
+		w.Write([]byte(html))
+	*/
 }
 
 // getWorkOrder 取得工單資訊（簡化版，只用於授權頁面）

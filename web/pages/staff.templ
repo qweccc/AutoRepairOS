@@ -28,6 +28,26 @@ type StaffRow struct {
 	CanEdit      bool
 }
 
+type StaffPickerRow struct {
+	ID     int64
+	Name   string
+	Branch string
+}
+
+templ StaffPickerResults(rows []StaffPickerRow) {
+	if len(rows) == 0 {
+		<div class="picker-empty">找不到符合的技師</div>
+	}
+	for _, s := range rows {
+		<button type="button" class="picker-option"
+			data-id={ strconv.FormatInt(s.ID, 10) }
+			data-name={ s.Name }
+			hx-on:click="this.closest('.staff-picker').querySelector('input[type=hidden]').value=this.dataset.id; this.closest('.staff-picker').querySelector('.staff-picker-input').value=this.dataset.name; this.closest('.staff-picker-results').innerHTML=''">
+			<strong>{ s.Name }</strong><span>{ s.Branch }</span>
+		</button>
+	}
+}
+
 // ListStaffPage 員工與健保頁（HTMX 即時搜尋）。
 templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
 	empCount, depCount, insuredCount int, showAddForm bool, roleOpts, branchOpts string, user model.User) {
