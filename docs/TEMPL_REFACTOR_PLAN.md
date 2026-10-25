@@ -82,7 +82,12 @@
 - [x] XSS regression test（`web/pages/xss_regression_test.go`：注入 `<script>` 驗 escape）+ customer_tag_xss_test.go
 - [ ] workorder_new.go 的 1 個 renderPage（唯一殘留，複雜頁留人工）
 
-**最終盤點**：renderPage 34 → **1**（只剩 workorder_new.go）；.templ 頁 44；templ.Raw 95 → 59（全 🟡 動態下拉，🔴 已修）；XSS regression test 就位。build+test 綠。✅ 2026-10-25
+**最終盤點**：renderPage 34 → **0**（全清零）；.templ 頁 45；templ.Raw 95 → 59（全 🟡 動態下拉，🔴 已修）；XSS regression test 就位。build+test 綠。✅ 2026-10-25
+
+### workorder_new.go（最後硬骨頭）— ✅ 2026-10-25
+- NewWorkOrder 抽成 `web/pages/workorder_new.templ` NewWorkOrderPage(data)，177 行 HTML/JS 移出、handler 只留 17 行 data 組裝 + Render。
+- 核對：車輛清單 `for range data.Vehicles`（selected? 預選）、empty state、JS（mirror/sync/fetch /api/quick-vehicle）、CSRF、金額欄位全保留；此頁本用 inline JS Fetch 非 HTMX（hx 屬性原本即 0）。
+- **renderPage 全系統清零（0）**。
 
 > 2026-10-25（本批）：`appointments.go`、`bay_mileage.go`、`equipment.go`、
 > `inventory_negative.go`、`lookup.go` 已改用 Templ Layout；`workorder_new.go`

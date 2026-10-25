@@ -1,0 +1,195 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type NewWorkOrderPageData struct {
+	FlashHTML          string
+	NotFoundHTML       string
+	ApptBannerHTML     string
+	PreAppointment     int64
+	PreVehicle         int64
+	VehicleOptionsJSON string
+	Vehicles           []model.Vehicle
+	PresetLabel        string
+	Mileage            string
+	TechnicianOptions  string
+	InsuranceOptions   string
+	CustomerHintHTML   string
+}
+
+templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
+	@components.Layout("開立工單", "/work-orders", user, AppName) {
+		@templ.Raw(data.FlashHTML)
+		@templ.Raw(data.NotFoundHTML)
+		@templ.Raw(data.ApptBannerHTML)
+		<div class="card">
+			<h2>開立工單</h2>
+			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+				在下方輸入車牌、車型或車主姓名即可即時篩選，點選後確認車主再填里程。
+			</p>
+			<form class="frm" method="POST" action="/work-orders" id="woForm">
+				@components.CSRFInput()
+				<input type="hidden" name="appointment_id" value={ strconv.FormatInt(data.PreAppointment, 10) }/>
+				<label class="full">車輛
+					<div class="vsearch" data-vsearch data-options={ data.VehicleOptionsJSON } if data.PreVehicle > 0 {
+						data-picked="1"
+					}>
+						<input type="hidden" name="vehicle_id" id="vehicle_id" value={ strconv.FormatInt(data.PreVehicle, 10) } required/>
+						<input class="vs-input" id="vsInput" autocomplete="off"
+							placeholder="輸入車牌 / 車型 / 車主 / 電話（例：ABC-1234）"
+							value={ data.PresetLabel }/>
+						<div class="vs-list hidden"></div>
+					</div>
+					<noscript>
+						<select name="vehicle_id_fallback" required style="margin-top:8px">
+							<option value="">— 請選擇車輛 —</option>
+							for _, v := range data.Vehicles {
+								<option value={ strconv.FormatInt(v.ID, 10) } selected?={ v.ID == data.PreVehicle }>
+									{ v.PlateNumber } / { v.BrandModel } / { v.CustomerName }
+								</option>
+							}
+							if len(data.Vehicles) == 0 {
+								<option value="0">— 查無車輛，請先至車輛頁新增 —</option>
+							}
+						</select>
+					</noscript>
+					<button type="button" class="btn btn-s" style="margin-top:8px" onclick="openQuickModal()">⚡ 查無車牌？快速建立客戶與車輛</button>
+				</label>
+				<label>進廠里程<input name="current_mileage" type="number" min="0" value={ data.Mileage } required/></label>
+				<label>技師<select name="technician_id"><option value="0">未指派</option>@templ.Raw(data.TechnicianOptions)</select></label>
+				<label>需要核准<select name="approval_status">
+					<option value="not_required">不需要</option>
+					<option value="pending">需客戶核准</option>
+				</select></label>
+				<label>車主 @templ.Raw(data.CustomerHintHTML)</label>
+				<label class="full">客戶反映問題<textarea name="customer_complaint" placeholder="例：引擎異音、煞車踏板偏軟"></textarea></label>
+				<div class="full" style="border-top:1px solid #263449;padding-top:16px;margin-top:4px">
+					<p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
+						保險理賠（選填）：勾選後需指定保險公司，報表才能區分保險件與自費件。
+					</p>
+				</div>
+				<label>件別<select name="is_insurance" id="isInsurance">
+					<option value="0">自費</option>
+					<option value="1">保險理賠</option>
+				</select></label>
+				<label>保險公司<select name="insurance_company_id" id="insuranceCompany">@templ.Raw(data.InsuranceOptions)</select>
+					<input type="hidden" name="insurance_company_id_mirror" id="insuranceCompanyMirror" value=""/>
+				</label>
+				<label>理賠案件編號<input name="claim_no" placeholder="保險公司給的報案號"/></label>
+				<label>事故日期<input name="accident_date" type="date"/></label>
+				<label>自負額<input name="deductible_amount" type="number" min="0" step="1" placeholder="0"/></label>
+				<label>理賠日期<input name="claim_date" type="date"/></label>
+				<label>理賠金額<input name="claim_amount" type="number" min="0" step="0.01" value="0"/></label>
+				<label class="full">理賠備註<textarea name="claim_note"></textarea></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">建立工單</button>
+					<a class="btn btn-s" href="/work-orders">取消</a>
+				</div>
+			</form>
+		</div>
+
+		<script>
+			// 未勾選保險件時把保險欄位停用，避免誤填。
+			// 注意：disabled 的 input 不會隨表單送出，所以保險公司另以 hidden 鏡像保存 id，
+			// 否則「選了保險件但沒改公司」時後端會收不到 insurance_company_id。
+			(function () {
+				var sel = document.getElementById('isInsurance');
+				var mirror = document.getElementById('insuranceCompanyMirror');
+				var company = document.querySelector('[name="insurance_company_id"]');
+				var others = ['claim_no', 'accident_date', 'deductible_amount', 'claim_date', 'claim_amount', 'claim_note'];
+				function sync() {
+					var on = sel && sel.value === '1';
+					others.forEach(function (n) {
+						var el = document.querySelector('[name="' + n + '"]');
+						if (el) el.disabled = !on;
+					});
+					if (company) company.disabled = !on;
+					if (mirror) mirror.value = (on && company) ? company.value : '';
+				}
+				if (sel) {
+					sel.addEventListener('change', sync);
+					if (company) company.addEventListener('change', sync);
+					sync();
+				}
+			})();
+		</script>
+
+		<link rel="stylesheet" href="/static/vehicle-search.css"/>
+		<script src="/static/vehicle-search.js" defer></script>
+		<div id="quickModal" class="modal-backdrop hidden">
+			<div class="modal-card">
+				<div class="modal-header">
+					<h3>⚡ 快速建立客戶與車輛</h3>
+					<button type="button" class="close-btn" onclick="closeQuickModal()">✕</button>
+				</div>
+				<form id="quickForm" onsubmit="submitQuickVehicle(event)">
+					@components.CSRFInput()
+					<div class="frm">
+						<label>車牌號碼<input name="plate_number" id="quickPlate" required/></label>
+						<label>廠牌車型<input name="brand_model" placeholder="例：Toyota RAV4" required/></label>
+						<label>車主姓名<input name="customer_name" required/></label>
+						<label>聯絡電話<input name="customer_phone" required/></label>
+						<label>目前里程<input name="current_mileage" type="number" min="0" required/></label>
+					</div>
+					<div class="modal-actions">
+						<button type="submit" class="btn btn-p">建立並帶入工單</button>
+						<button type="button" class="btn btn-s" onclick="closeQuickModal()">取消</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<script>
+			function openQuickModal() {
+				document.getElementById('quickModal').classList.remove('hidden');
+				document.getElementById('quickPlate').focus();
+			}
+			function closeQuickModal() {
+				document.getElementById('quickModal').classList.add('hidden');
+				document.getElementById('quickForm').reset();
+			}
+			function submitQuickVehicle(e) {
+				e.preventDefault();
+				var f = document.getElementById('quickForm');
+				var data = new FormData(f);
+				fetch('/api/quick-vehicle', {method:'POST', body:data})
+					.then(function(r){ return r.json(); })
+					.then(function(j){
+						if (j.ok) {
+							// 車牌已存在時先問清楚再帶入。
+							// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於
+							// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。
+							if (j.duplicate) {
+								var who = (j.owner_name || '未知車主') +
+									(j.owner_phone ? '（' + j.owner_phone + '）' : '');
+								var msg = '車牌 ' + j.label.split(' / ')[0] + ' 已經有建檔紀錄。\n\n' +
+									'現有車主：' + who + '\n\n' +
+									'要使用這台既有車輛嗎？\n' +
+									'按「取消」可留下來修改車牌，或改用上方的搜尋清單選車。';
+								if (!confirm(msg)) {
+									return;   // 不帶入，modal 保持開啟讓櫃檯修正
+								}
+							}
+							closeQuickModal();
+							var input = document.getElementById('vehicle_id');
+							input.value = j.vehicle_id;
+							var vs = document.querySelector('.vs-input');
+							if (vs) vs.value = j.label;
+							var hint = document.querySelector('[name="current_mileage"]');
+							if (hint) hint.value = j.mileage || '';
+							var btn = document.querySelector('.btn-p');
+							if (btn) btn.focus();
+						} else {
+							alert(j.error || '建立失敗');
+						}
+					})
+					.catch(function(){ alert('網路錯誤'); });
+			}
+			document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });
+		</script>
+	}
+}
