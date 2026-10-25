@@ -1,0 +1,531 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type SupplierEditData struct {
+	ID           int64
+	Name         string
+	Phone        string
+	Contact      string
+	Address      string
+	VendorType   string
+	PaymentTerms string
+	Notes        string
+	PaymentOpts  []components.SelectOption
+	User         model.User
+}
+
+templ EditSupplierPage(data SupplierEditData) {
+	{{ user := data.User }}
+	@components.Layout("編輯供應商", "/suppliers", user, AppName) {
+		<div class="card">
+			<h2>編輯供應商 { data.Name }</h2>
+			<form class="frm" method="POST" action={ "/suppliers/" + strconv.FormatInt(data.ID, 10) }>
+				@components.CSRFInput()
+				<label>名稱<input name="name" value={ data.Name } required></label>
+				<label>電話<input name="phone" value={ data.Phone }></label>
+				<label>聯絡人<input name="contact_person" value={ data.Contact }></label>
+				<label>地址<input name="address" value={ data.Address }></label>
+				<label>類型<select name="vendor_type">
+					<option value="material" selected?={ data.VendorType == "material" }>材料商</option>
+					<option value="vendor" selected?={ data.VendorType == "vendor" }>協力廠商</option>
+				</select></label>
+				<label>付款條件<select name="payment_terms">
+					for _, opt := range data.PaymentOpts {
+						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+					}
+				</select></label>
+				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">儲存</button>
+					<a class="btn btn-s" href="/suppliers">取消</a>
+				</div>
+			</form>
+		</div>
+	}
+}
+
+type SubcontractEditData struct {
+	ID             int64
+	WorkOrderID    int64
+	Description   string
+	SupplierID     int64
+	CostAmount     string
+	ChargeAmount   string
+	ExpectedDate   string
+	Status         string
+	Notes          string
+	SupplierOpts   []components.SelectOption
+	User           model.User
+}
+
+templ EditSubcontractPage(data SubcontractEditData) {
+	{{ user := data.User }}
+	@components.Layout("編輯外包", "/subcontracts", user, AppName) {
+		<div class="card">
+			<h2>編輯外包 #{ strconv.FormatInt(data.ID, 10) }</h2>
+			<form class="frm" method="POST" action={ "/subcontracts/" + strconv.FormatInt(data.ID, 10) }>
+				@components.CSRFInput()
+				<label>工單 ID<input type="number" name="work_order_id" value={ strconv.FormatInt(data.WorkOrderID, 10) } required></label>
+				<label>協力廠商<select name="supplier_id">
+					<option value="0" selected?={ data.SupplierID == 0 }>（未指定）</option>
+					for _, opt := range data.SupplierOpts {
+						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+					}
+				</select></label>
+				<label class="full">加工內容<input name="description" value={ data.Description } required></label>
+				<label>成本金額<input type="number" step="0.01" name="cost_amount" value={ data.CostAmount }></label>
+				<label>收費金額<input type="number" step="0.01" name="charge_amount" value={ data.ChargeAmount }></label>
+				<label>預計完成日<input type="date" name="expected_date" value={ data.ExpectedDate }></label>
+				<label>狀態<select name="status">
+					<option value="pending" selected?={ data.Status == "pending" }>待處理</option>
+					<option value="in_progress" selected?={ data.Status == "in_progress" }>進行中</option>
+					<option value="completed" selected?={ data.Status == "completed" }>已完成</option>
+					<option value="cancelled" selected?={ data.Status == "cancelled" }>已取消</option>
+				</select></label>
+				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">儲存</button>
+					<a class="btn btn-s" href="/subcontracts">取消</a>
+				</div>
+			</form>
+		</div>
+	}
+}
+
+type StaffEditData struct {
+	ID             int64
+	Name           string
+	Username       string
+	NationalID     string
+	Birthday       string
+	InsuranceStart string
+	InsuranceEnd   string
+	Kind           string
+	Branch         string
+	Active         int
+	BranchOpts     []components.SelectOption
+	User           model.User
+}
+
+templ EditStaffPage(data StaffEditData) {
+	{{ user := data.User }}
+	@components.Layout("編輯員工", "/staff", user, AppName) {
+		<div class="card">
+			<h2>編輯員工 { data.Name }</h2>
+			<form class="frm" method="POST" action={ "/staff/" + strconv.FormatInt(data.ID, 10) }>
+				@components.CSRFInput()
+				<label>姓名<input value={ data.Name } disabled style="opacity:0.6"></label>
+				<label>帳號<input value={ data.Username } disabled style="opacity:0.6"></label>
+				<label>狀態<select name="active">
+					<option value="1" selected?={ data.Active == 1 }>在職</option>
+					<option value="0" selected?={ data.Active == 0 }>離職</option>
+				</select></label>
+				<label>身分<select name="staff_kind">
+					<option value="employee" selected?={ data.Kind == "employee" }>員工</option>
+					<option value="dependent" selected?={ data.Kind == "dependent" || data.Kind == "family" }>健保眷屬</option>
+				</select></label>
+				<label>部門<select name="staff_branch">
+					for _, opt := range data.BranchOpts {
+						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+					}
+				</select></label>
+				<label>身分證號<input name="national_id" value={ data.NationalID }></label>
+				<label>生日<input name="birthday" type="date" value={ data.Birthday }></label>
+				<label>加保日<input name="insurance_start" type="date" value={ data.InsuranceStart }></label>
+				<label>退保日<input name="insurance_end" type="date" value={ data.InsuranceEnd }></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">儲存</button>
+					<a class="btn btn-s" href="/staff">取消</a>
+				</div>
+			</form>
+		</div>
+	}
+}
+
+type CustomerEditData struct {
+	Customer model.Customer
+	SMSWarning bool
+	Flash string
+	FlashErr string
+	User model.User
+}
+
+templ EditCustomerPage(data CustomerEditData) {
+	{{ user := data.User }}
+	@components.Layout("編輯客戶", "/customers", user, AppName) {
+		@components.FlashMsg(data.Flash)
+		@components.FlashErr(data.FlashErr)
+		<div class="card">
+			<h2>編輯客戶 #{ strconv.FormatInt(data.Customer.ID, 10) }</h2>
+			<form class="frm" method="POST" action={ "/customers/" + strconv.FormatInt(data.Customer.ID, 10) }>
+				@components.CSRFInput()
+				<label>姓名<input name="name" value={ data.Customer.Name } required></label>
+				<label>電話<input name="phone" value={ data.Customer.Phone } required></label>
+				<label>通知偏好<select name="notification_preference">
+					<option value="none" selected?={ data.Customer.NotificationPref == "none" }>不通知</option>
+					<option value="line" selected?={ data.Customer.NotificationPref == "line" }>LINE</option>
+					<option value="telegram" selected?={ data.Customer.NotificationPref == "telegram" }>Telegram</option>
+				</select></label>
+				if data.SMSWarning {
+					<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">⚠️ 原本偏好 SMS，請重新選擇 LINE 或 Telegram 通知通道</div>
+				}
+				<label>生日<input name="birthday" type="date" value={ data.Customer.Birthday } placeholder="例：1990-05-20"></label>
+				<label class="full">地址<input name="address" value={ data.Customer.Address }></label>
+				<label class="full">標籤<input name="tags" value={ data.Customer.Tags } placeholder="以逗號分隔，例：VIP,奧客警示"></label>
+				<label class="full">行銷活動代碼<input name="campaign_code" value={ data.Customer.CampaignCode } placeholder="例：2026Q4-煞車促銷"></label>
+				<label class="full">備註<textarea name="notes">{ data.Customer.Notes }</textarea></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">儲存</button>
+					<a class="btn btn-s" href="/customers">取消</a>
+				</div>
+			</form>
+			<p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
+				LINE 綁定不在這張表單裡——綁定有唯一性規則（一個 LINE 帳號只能對應一位客戶），走下面的綁定區塊處理。
+			</p>
+		</div>
+		@CustomerLineBinding(data.Customer)
+		@CustomerTelegramBinding(data.Customer)
+	}
+}
+
+templ CustomerLineBinding(c model.Customer) {
+	<div class="card">
+		<h2>LINE 綁定</h2>
+		if c.LineUserID != "" {
+			<p style="margin:0 0 10px"><span class="pill p-done">已綁定</span><code style="margin-left:8px">{ c.LineUserID }</code></p>
+			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">此客戶已可在 LINE 傳「進度」查維修狀態、傳「履歷」查維修紀錄。</p>
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-unbind" } onsubmit="return confirm('確定取消綁定？取消後這位客戶將無法在 LINE 查到自己的維修紀錄。')">
+				@components.CSRFInput()
+				<button class="btn btn-d" type="submit">取消綁定</button>
+			</form>
+		} else {
+			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
+			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">建議讓客戶自己綁：請客戶加官方帳號好友並傳送手機號碼，系統會自動連結（比對的是客戶資料上的電話，所以請先確認電話已建檔且正確）。<br/>客戶加好友時，系統會在「排程」頁留下一則「新的 LINE 好友（待綁定）」通知，內含他的 LINE User ID。</p>
+		}
+		<details style="margin-top:6px">
+			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">手動綁定（從排程頁的通知複製 LINE User ID）</summary>
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+				@components.CSRFInput()
+				<input name="line_user_id" placeholder="U1234567890abcdef" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<button class="btn btn-p" type="submit">{ lineBindLabel(c) }</button>
+			</form>
+			<p style="color:#64748b;font-size:12px;margin:8px 0 0">同一個 LINE 帳號不能綁兩個客戶——那會讓對方看到不屬於他的維修紀錄，系統會直接擋下。</p>
+		</details>
+	</div>
+}
+
+templ CustomerTelegramBinding(c model.Customer) {
+	<div class="card">
+		<h2>Telegram 綁定</h2>
+		if c.TelegramUserID != "" {
+			<p style="margin:0 0 10px"><span class="pill p-done">已綁定</span><code style="margin-left:8px">{ c.TelegramUserID }</code></p>
+			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">此客戶已可在 Telegram 傳訊息查詢維修服務。</p>
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-unbind" } onsubmit="return confirm('確定取消 Telegram 綁定？')">
+				@components.CSRFInput()
+				<button class="btn btn-d" type="submit">取消綁定</button>
+			</form>
+		} else {
+			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
+		}
+		<p style="color:#94a3b8;font-size:12.5px;margin:12px 0">建議讓客戶自己綁：請客戶在 Telegram 傳送手機號碼，系統會比對客戶資料上的電話並自動連結。若電話對不到或同號多筆，再由櫃檯手動綁定。</p>
+		<details style="margin-top:6px">
+			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">手動綁定</summary>
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+				@components.CSRFInput()
+				<input name="telegram_user_id" placeholder="123456789" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<button class="btn btn-p" type="submit">{ telegramBindLabel(c) }</button>
+			</form>
+			<p style="color:#64748b;font-size:12px;margin:8px 0 0">請客戶在 Telegram 搜尋 &#64;userinfobot 查詢 chat ID。同一個 Telegram 帳號不能綁兩個客戶。</p>
+		</details>
+	</div>
+}
+
+func lineBindLabel(c model.Customer) string {
+	if c.LineUserID != "" { return "重新綁定" }
+	return "綁定"
+}
+
+func telegramBindLabel(c model.Customer) string {
+	if c.TelegramUserID != "" { return "重新綁定" }
+	return "綁定"
+}
+
+type InsuranceCompanyEditData struct {
+	ID int64
+	Code, Name, TaxID, ClaimPhone, Phone, ContactPerson, Address, PostalCode, Notes string
+	User model.User
+}
+
+templ EditInsuranceCompanyPage(data InsuranceCompanyEditData) {
+	{{ user := data.User }}
+	@components.Layout("編輯保險公司", "/insurance-companies", user, AppName) {
+		<div class="card">
+			<h2>編輯保險公司 { data.Code }</h2>
+			<form class="frm" method="POST" action={ "/insurance-companies/" + strconv.FormatInt(data.ID, 10) }>
+				@components.CSRFInput()
+				<label>簡稱<input name="code" value={ data.Code } required></label>
+				<label>公司名稱<input name="name" value={ data.Name } required></label>
+				<label>統一編號<input name="tax_id" value={ data.TaxID }></label>
+				<label>客服電話<input name="claim_phone" value={ data.ClaimPhone }></label>
+				<label>一般電話<input name="phone" value={ data.Phone }></label>
+				<label>聯絡人<input name="contact_person" value={ data.ContactPerson }></label>
+				<label>郵遞區號<input name="postal_code" value={ data.PostalCode }></label>
+				<label>地址<input name="address" value={ data.Address }></label>
+				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">儲存</button><a class="btn btn-s" href="/insurance-companies">取消</a></div>
+			</form>
+		</div>
+	}
+}
+
+type InspectionFormData struct {
+	ID int64
+	VehicleID int64
+	Title, Action, OrderDate, CheckDate, FirmNo, Notes string
+	VehicleOpts []components.SelectOption
+	New bool
+	User model.User
+}
+
+templ VehicleInspectionFormPage(data InspectionFormData) {
+	{{ user := data.User }}
+	@components.Layout(data.Title, "/inspections", user, AppName) {
+		<div class="card">
+			<h2>{ data.Title }</h2>
+			<form class="frm" method="POST" action={ data.Action }>
+				@components.CSRFInput()
+				if data.New {
+					<label>車輛<select name="vehicle_id" required>
+						for _, opt := range data.VehicleOpts {
+							<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+						}
+					</select></label>
+				}
+				<label>排定檢驗日<input type="date" name="order_date" value={ data.OrderDate } required></label>
+				<label>實際完成日<input type="date" name="check_date" value={ data.CheckDate }></label>
+				<label>代檢廠編號<input name="firm_no" value={ data.FirmNo }></label>
+				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full">
+					if data.New {
+						<button class="btn btn-p" type="submit">建立</button>
+					} else {
+						<button class="btn btn-p" type="submit">儲存</button>
+					}
+					<a class="btn btn-s" href="/inspections">取消</a>
+				</div>
+			</form>
+			if data.New {
+				<p style="color:#64748b;font-size:12.5px;margin-top:10px">完成日留空代表「已排定但未驗」；填上完成日即視為已結案。</p>
+			}
+		</div>
+	}
+}
+
+type ReceivableFormData struct {
+	Title, Action, VoucherNo, PayDate, CustomerName, CustomerID, WorkOrderID string
+	Cash, Card, CardNo, CheckAmount, CheckNo, CheckDate, Bank, TransferAmount, TransferReference string
+	DetailTotal, Discount, Tax, PayTotal, Notes string
+	Error string
+	User model.User
+}
+
+templ ReceivableFormPage(data ReceivableFormData) {
+	{{ user := data.User }}
+	@components.Layout(data.Title, "/receivables", user, AppName) {
+		@components.FlashErr(data.Error)
+		<div class="card">
+			<h2>收款紀錄</h2>
+			<form class="frm" method="POST" action={ data.Action }>
+				@components.CSRFInput()
+				<label>收款單號<input name="voucher_no" value={ data.VoucherNo } placeholder="系統預先產生，可修改" required></label>
+				<label>收款日期<input name="pay_date" type="date" value={ data.PayDate } required></label>
+				<label>客戶<input name="customer_q" value={ data.CustomerName } placeholder="姓名 / 電話 / 車牌" required><input type="hidden" name="customer_id" value={ data.CustomerID }></label>
+				<label>關聯工單<input name="work_order_id" value={ data.WorkOrderID } placeholder="工單編號，可留空"></label>
+				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">付款方式可並存（例如現金 3,000 + 刷卡 2,000）。金額請填實收金額。</p></div>
+				<label>現金<input name="cash" type="number" min="0" step="1" value={ data.Cash }></label>
+				<label>信用卡<input name="card" type="number" min="0" step="1" value={ data.Card }></label>
+				<label>卡號<input name="card_no" value={ data.CardNo }></label>
+				<label>票據金額<input name="check_amount" type="number" min="0" step="1" value={ data.CheckAmount }></label>
+				<label>票號<input name="check_no" value={ data.CheckNo }></label>
+				<label>票據到期日<input name="check_date" type="date" value={ data.CheckDate }></label>
+				<label>行庫<input name="bank" value={ data.Bank }></label>
+				<label>轉帳金額<input name="transfer_amount" type="number" min="0" step="1" value={ data.TransferAmount }></label>
+				<label>轉帳末五碼／交易序號<input name="transfer_reference" value={ data.TransferReference }></label>
+				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">金額拆分（選填）。收款合計 = 現金 + 信用卡 + 票據 + 轉帳；若留空會自動加總。</p></div>
+				<label>明細合計<input name="detail_total" type="number" min="0" step="1" value={ data.DetailTotal }></label>
+				<label>折扣<input name="discount" type="number" min="0" step="1" value={ data.Discount }></label>
+				<label>稅額<input name="tax" type="number" min="0" step="1" value={ data.Tax }></label>
+				<label>本次應收<input name="pay_total" type="number" min="0" step="1" value={ data.PayTotal }></label>
+				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">儲存</button><a class="btn btn-s" href="/receivables">取消</a></div>
+			</form>
+		</div>
+	}
+}
+
+type MaintenanceTemplateEditItem struct {
+		PartNumber string
+		Description string
+		Quantity string
+		Price string
+	}
+
+type MaintenanceTemplateEditData struct {
+		ID int64
+		Code string
+		Name string
+		Notes string
+		Items []MaintenanceTemplateEditItem
+		User model.User
+	}
+
+type MaintenanceTemplateListRow struct {
+		ID int64
+		Code string
+		Name string
+		ItemCount int
+	}
+
+type MaintenanceTemplateDetail struct {
+		Code string
+		Name string
+		Items []MaintenanceTemplateEditItem
+	}
+
+type MaintenanceTemplateListData struct {
+		Rows []MaintenanceTemplateListRow
+		Query string
+		Detail *MaintenanceTemplateDetail
+		User model.User
+		Flash string
+	}
+
+templ ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) {
+		{{ user := data.User }}
+		@components.Layout("保養套餐", "/maintenance-templates", user, AppName) {
+			@components.FlashMsg(data.Flash)
+			<div class="card">
+				<h2>保養套餐範本（{ strconv.Itoa(len(data.Rows)) } 個）</h2>
+				<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">舊系統「保養紀錄」表遷移而來。開工單時可依里程級距套用標準項目，不必每次手動加。項目內容為舊系統定義，單價多為 0（當時未填）。</p>
+				<form method="GET" action="/maintenance-templates" style="margin-bottom:12px">
+					<input name="q" value={ data.Query } placeholder="搜尋代碼 / 名稱" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+					<button class="btn btn-p" type="submit">搜尋</button>
+					<a class="btn btn-s" href="/maintenance-templates">清除</a>
+					<a class="btn btn-p" href="/maintenance-templates/new">＋ 新增套餐</a>
+				</form>
+				if len(data.Rows) == 0 {
+					<div class="empty">沒有保養套餐</div>
+				} else {
+					<table><tr><th>代碼</th><th>套餐名稱</th><th class="num">項目數</th><th>操作</th></tr>
+						for _, row := range data.Rows {
+							<tr>
+								<td><code>{ row.Code }</code></td><td><b>{ row.Name }</b></td><td class="num">{ strconv.Itoa(row.ItemCount) }</td>
+								<td>
+									<a class="btn btn-s" href={ "/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10) }>查看項目</a>
+									<a class="btn btn-p" href={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit" }>編輯</a>
+									<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
+										@components.CSRFInput()
+										<button class="btn btn-d" type="submit">刪除</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</table>
+				}
+			</div>
+			if data.Detail != nil {
+				<div class="card">
+					<h2>{ data.Detail.Code } { data.Detail.Name }（{ strconv.Itoa(len(data.Detail.Items)) } 項）</h2>
+					if len(data.Detail.Items) == 0 {
+						<div class="empty">此套餐沒有項目</div>
+					} else {
+						<table><tr><th class="num">項次</th><th>料號</th><th>名稱</th><th class="num">數量</th><th class="num">單價</th></tr>
+							for i, item := range data.Detail.Items {
+								<tr><td class="num">{ strconv.Itoa(i + 1) }</td><td><code>{ item.PartNumber }</code></td><td>{ item.Description }</td><td class="num">{ item.Quantity }</td><td class="num">{ item.Price }</td></tr>
+							}
+						</table>
+					}
+				</div>
+			}
+		}
+	}
+
+templ NewMaintenanceTemplatePage(user model.User) {
+		@components.Layout("新增保養套餐", "/maintenance-templates", user, AppName) {
+			<div class="card">
+				<h2>新增保養套餐</h2>
+				<form class="frm" method="POST" action="/maintenance-templates">
+					@components.CSRFInput()
+					<label>代碼<input name="code" required placeholder="例：LOCAL-5K（建立後不可修改）"></label>
+					<label>套餐名稱<input name="name" required placeholder="例：5千公里定期保養"></label>
+					<label class="full">備註<textarea name="notes" placeholder="適用車款、注意事項"></textarea></label>
+					<div class="full"><button class="btn btn-p" type="submit">建立</button><a class="btn btn-s" href="/maintenance-templates">取消</a></div>
+				</form>
+				<p style="color:#64748b;font-size:12.5px;margin-top:10px">建立後可在編輯頁加入標準項目（料號、名稱、數量、單價）。代碼建立後不可修改，因為舊工單可能參照同一組編號。</p>
+			</div>
+		}
+	}
+
+templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
+		{{ user := data.User }}
+		@components.Layout("編輯保養套餐", "/maintenance-templates", user, AppName) {
+			<div class="card">
+				<h2>編輯保養套餐 { data.Code }</h2>
+				<form class="frm" method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) }>
+					@components.CSRFInput()
+					<label>代碼<input value={ data.Code } disabled style="opacity:0.6"></label>
+					<label>套餐名稱<input name="name" value={ data.Name } required></label>
+					<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				</form>
+				<h3 style="margin:20px 0 8px;font-size:14px">標準項目</h3>
+				<p style="color:#64748b;font-size:12.5px;margin:0 0 10px">儲存時會以這裡的內容整批取代原有項目。空白列會被忽略；全刪光即代表此套餐無標準項目。</p>
+				<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/items" }>
+					@components.CSRFInput()
+					<table style="width:100%">
+						<tr><th>料號</th><th>名稱</th><th>數量</th><th>單價</th><th></th></tr>
+						<tbody id="tplItems">
+							for _, item := range data.Items {
+								<tr class="tpl-item">
+									<td><input name="part_number" value={ item.PartNumber } placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
+									<td><input name="item_desc" value={ item.Description } required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
+									<td><input name="item_qty" type="number" min="0" step="0.1" value={ item.Quantity } style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
+									<td><input name="item_price" type="number" min="0" step="1" value={ item.Price } style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
+									<td><button type="button" class="btn btn-d" onclick="this.closest('tr').remove()">移除</button></td>
+								</tr>
+							}
+						</tbody>
+					</table>
+					<div style="margin-top:10px;display:flex;gap:9px">
+						<button type="button" class="btn btn-s" onclick="addTplRow()">＋ 加入一列</button>
+						<button type="submit" class="btn btn-p">儲存項目</button>
+					</div>
+				</form>
+				<div style="margin-top:18px;padding-top:14px;border-top:1px solid #334155">
+					<a class="btn btn-p" href="/maintenance-templates">返回列表</a>
+					<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
+						@components.CSRFInput()
+						<button class="btn btn-d" type="submit">刪除套餐</button>
+					</form>
+				</div>
+			</div>
+			<script>
+			function addTplRow(){
+				var tb = document.getElementById('tplItems');
+				var tr = document.createElement('tr');
+				tr.className = 'tpl-item';
+				tr.innerHTML = '<td><input name="part_number" placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
+					'<td><input name="item_desc" required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
+					'<td><input name="item_qty" type="number" min="0" step="0.1" value="1" style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
+					'<td><input name="item_price" type="number" min="0" step="1" value="0" style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
+					'<td><button type="button" class="btn btn-d" onclick="this.closest(\'tr\').remove()">移除</button></td>';
+				tb.appendChild(tr);
+			}
+			</script>
+		}
+	}

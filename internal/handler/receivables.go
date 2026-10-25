@@ -348,62 +348,28 @@ func NewReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) 
 			return
 		}
 	}
-	renderPage(w, "新增收款", "/receivables", user.Username, user.Role, receivableFormBody(rec, "", ""))
+	renderReceivableForm(w, r, user, rec, "", "")
 }
 
 // receivableFormBody 收款表單（新增與編輯共用）。
-func receivableFormBody(rec receivable, action, errMsg string) string {
+func renderReceivableForm(w http.ResponseWriter, r *http.Request, user model.User, rec receivable, action, errMsg string) {
 	sel := func(v float64) string {
 		if v == 0 {
 			return ""
 		}
 		return money(v)
 	}
-	return flash0(errMsg) + `
-    <div class="card">
-      <h2>收款紀錄</h2>
-      <form class="frm" method="POST" action="` + action + `">
-        <label>收款單號<input name="voucher_no" value="` + htmlEsc(rec.VoucherNo) + `" placeholder="系統預先產生，可修改" required></label>
-        <label>收款日期<input name="pay_date" type="date" value="` + htmlEsc(normDate(rec.PayDate)) + `" required></label>
-        <label>客戶
-          <input name="customer_q" value="` + htmlEsc(rec.CustomerName) + `" placeholder="姓名 / 電話 / 車牌" required>
-          <input type="hidden" name="customer_id" value="` + strconv.FormatInt(rec.CustomerID, 10) + `">
-        </label>
-        <label>關聯工單
-          <input name="work_order_id" value="` + intOrEmpty(rec.WorkOrderID) + `" placeholder="工單編號，可留空">
-        </label>
-
-        <div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px">
-          <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">
-            付款方式可並存（例如現金 3,000 + 刷卡 2,000）。金額請填實收金額。
-          </p>
-        </div>
-        <label>現金<input name="cash" type="number" min="0" step="1" value="` + sel(rec.Cash) + `"></label>
-        <label>信用卡<input name="card" type="number" min="0" step="1" value="` + sel(rec.Card) + `"></label>
-        <label>卡號<input name="card_no" value="` + htmlEsc(rec.CardNo) + `"></label>
-        <label>票據金額<input name="check_amount" type="number" min="0" step="1" value="` + sel(rec.CheckAmount) + `"></label>
-        <label>票號<input name="check_no" value="` + htmlEsc(rec.CheckNo) + `"></label>
-        <label>票據到期日<input name="check_date" type="date" value="` + htmlEsc(normDate(rec.CheckDate)) + `"></label>
-        <label>行庫<input name="bank" value="` + htmlEsc(rec.Bank) + `"></label>
-        <label>轉帳金額<input name="transfer_amount" type="number" min="0" step="1" value="` + sel(rec.TransferAmount) + `"></label>
-        <label>轉帳末五碼／交易序號<input name="transfer_reference" value="` + htmlEsc(rec.TransferReference) + `"></label>
-
-        <div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px">
-          <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">
-            金額拆分（選填）。收款合計 = 現金 + 信用卡 + 票據 + 轉帳；若留空會自動加總。
-          </p>
-        </div>
-        <label>明細合計<input name="detail_total" type="number" min="0" step="1" value="` + sel(rec.DetailTotal) + `"></label>
-        <label>折扣<input name="discount" type="number" min="0" step="1" value="` + sel(rec.Discount) + `"></label>
-        <label>稅額<input name="tax" type="number" min="0" step="1" value="` + sel(rec.Tax) + `"></label>
-        <label>本次應收<input name="pay_total" type="number" min="0" step="1" value="` + sel(rec.PayTotal) + `"></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(rec.Notes) + `</textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/receivables">取消</a>
-        </div>
-      </form>
-    </div>`
+	pages.ReceivableFormPage(pages.ReceivableFormData{
+		Title: "收款紀錄", Action: action,
+		VoucherNo: rec.VoucherNo, PayDate: normDate(rec.PayDate),
+		CustomerName: rec.CustomerName, CustomerID: strconv.FormatInt(rec.CustomerID, 10),
+		WorkOrderID: intOrEmpty(rec.WorkOrderID), Cash: sel(rec.Cash), Card: sel(rec.Card),
+		CardNo: rec.CardNo, CheckAmount: sel(rec.CheckAmount), CheckNo: rec.CheckNo,
+		CheckDate: normDate(rec.CheckDate), Bank: rec.Bank, TransferAmount: sel(rec.TransferAmount),
+		TransferReference: rec.TransferReference, DetailTotal: sel(rec.DetailTotal),
+		Discount: sel(rec.Discount), Tax: sel(rec.Tax), PayTotal: sel(rec.PayTotal),
+		Notes: rec.Notes, Error: errMsg, User: user,
+	}).Render(r.Context(), w)
 }
 
 // CreateReceivable 建立收款紀錄。
@@ -511,7 +477,7 @@ func EditReceivableForm(w http.ResponseWriter, r *http.Request, user model.User)
 	}
 
 	action := "/receivables/" + strconv.FormatInt(id, 10)
-	renderPage(w, "編輯收款", "/receivables", user.Username, user.Role, receivableFormBody(rec, action, ""))
+	renderReceivableForm(w, r, user, rec, action, "")
 }
 
 // UpdateReceivable 更新收款紀錄。
@@ -653,12 +619,4 @@ func normDateSQL(col string) string {
 		THEN replace(` + col + `, '/', '-')
 		ELSE ` + col + `
 	END)`
-}
-
-// flash0 把錯誤訊息直接渲染在頁面上（表單驗證失敗時用，不經 redirect）。
-func flash0(msg string) string {
-	if msg == "" {
-		return ""
-	}
-	return `<div class="msg msg-err">` + htmlEsc(msg) + `</div>`
 }

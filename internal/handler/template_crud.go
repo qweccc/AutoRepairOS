@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // ============================================================
@@ -28,25 +29,7 @@ import (
 
 // NewMaintenanceTemplateForm 新增保養套餐。
 func NewMaintenanceTemplateForm(w http.ResponseWriter, r *http.Request, user model.User) {
-	body := `
-    <div class="card">
-      <h2>新增保養套餐</h2>
-      <form class="frm" method="POST" action="/maintenance-templates">
-        <label>代碼<input name="code" required placeholder="例：LOCAL-5K（建立後不可修改）"></label>
-        <label>套餐名稱<input name="name" required placeholder="例：5千公里定期保養"></label>
-        <label class="full">備註<textarea name="notes" placeholder="適用車款、注意事項"></textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">建立</button>
-          <a class="btn btn-s" href="/maintenance-templates">取消</a>
-        </div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin-top:10px">
-        建立後可在編輯頁加入標準項目（料號、名稱、數量、單價）。代碼建立後不可修改，
-        因為舊工單可能參照同一組編號。
-      </p>
-    </div>`
-
-	renderPage(w, "新增保養套餐", "/maintenance-templates", user.Username, user.Role, body)
+	pages.NewMaintenanceTemplatePage(user).Render(r.Context(), w)
 }
 
 // CreateMaintenanceTemplate 建立保養套餐（只建本體，項目稍後在編輯頁補）。
@@ -96,7 +79,7 @@ func EditMaintenanceTemplateForm(w http.ResponseWriter, r *http.Request, user mo
 	}
 	defer rows.Close()
 
-	var itemRows strings.Builder
+	var itemRows []pages.MaintenanceTemplateEditItem
 	n := 0
 	for rows.Next() {
 		var seq int
@@ -106,65 +89,13 @@ func EditMaintenanceTemplateForm(w http.ResponseWriter, r *http.Request, user mo
 			continue
 		}
 		n++
-		itemRows.WriteString(`<tr class="tpl-item">
-            <td><input name="part_number" value="` + htmlEsc(part) + `" placeholder="料號（可空）"
-                       style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-            <td><input name="item_desc" value="` + htmlEsc(desc) + `" required
-                       style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-            <td><input name="item_qty" type="number" min="0" step="0.1" value="` + trimQty(qty) + `"
-                       style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-            <td><input name="item_price" type="number" min="0" step="1" value="` + money(price) + `"
-                       style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-            <td><button type="button" class="btn btn-d" onclick="this.closest('tr').remove()">移除</button></td>
-          </tr>`)
+		itemRows = append(itemRows, pages.MaintenanceTemplateEditItem{
+			PartNumber: part, Description: desc, Quantity: trimQty(qty), Price: money(price),
+		})
 	}
-
-	body := `
-    <div class="card">
-      <h2>編輯保養套餐 ` + htmlEsc(code) + `</h2>
-      <form class="frm" method="POST" action="/maintenance-templates/` + strconv.FormatInt(id, 10) + `">
-        <label>代碼<input value="` + htmlEsc(code) + `" disabled style="opacity:0.6"></label>
-        <label>套餐名稱<input name="name" value="` + htmlEsc(name) + `" required></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(notes) + `</textarea></label>
-      </form>
-
-      <h3 style="margin:20px 0 8px;font-size:14px">標準項目</h3>
-      <p style="color:#64748b;font-size:12.5px;margin:0 0 10px">
-        儲存時會以這裡的內容整批取代原有項目。空白列會被忽略；全刪光即代表此套餐無標準項目。
-      </p>
-      <form method="POST" action="/maintenance-templates/` + strconv.FormatInt(id, 10) + `/items">
-        <table style="width:100%">
-          <tr><th>料號</th><th>名稱</th><th>數量</th><th>單價</th><th></th></tr>
-          <tbody id="tplItems">` + itemRows.String() + `</tbody>
-        </table>
-        <div style="margin-top:10px;display:flex;gap:9px">
-          <button type="button" class="btn btn-s" onclick="addTplRow()">＋ 加入一列</button>
-          <button type="submit" class="btn btn-p">儲存項目</button>
-        </div>
-      </form>
-
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #334155">
-        <a class="btn btn-p" href="/maintenance-templates">返回列表</a>
-        <form method="POST" action="/maintenance-templates/` + strconv.FormatInt(id, 10) +
-		`/delete" style="display:inline" onsubmit="return confirm('確定刪除套餐「` + htmlEsc(code) + `」？已開出的工單不受影響。')"><button class="btn btn-d" type="submit">刪除套餐</button></form>
-      </div>
-    </div>
-
-    <script>
-    function addTplRow(){
-      var tb = document.getElementById('tplItems');
-      var tr = document.createElement('tr');
-      tr.className = 'tpl-item';
-      tr.innerHTML = '<td><input name="part_number" placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-        '<td><input name="item_desc" required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-        '<td><input name="item_qty" type="number" min="0" step="0.1" value="1" style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-        '<td><input name="item_price" type="number" min="0" step="1" value="0" style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-        '<td><button type="button" class="btn btn-d" onclick="this.closest(\'tr\').remove()">移除</button></td>';
-      tb.appendChild(tr);
-    }
-    </script>`
-
-	renderPage(w, "編輯保養套餐", "/maintenance-templates", user.Username, user.Role, body)
+	pages.EditMaintenanceTemplatePage(pages.MaintenanceTemplateEditData{
+		ID: id, Code: code, Name: name, Notes: notes, Items: itemRows, User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateMaintenanceTemplate 更新套餐名稱與備註（code 不可改）。

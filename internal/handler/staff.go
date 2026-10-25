@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -354,50 +353,12 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	// 部門下拉（查 lookup_items 表，可在「代碼對照」頁維護）
-	branchSel := `<select name="staff_branch">` + lookupOptions("branch", s.Branch) + `</select>`
-
-	// 身分別下拉
-	kindOpts := []struct{ code, label string }{
-		{"employee", "員工"}, {"dependent", "健保眷屬"},
-	}
-	kindSel := `<select name="staff_kind">`
-	for _, k := range kindOpts {
-		sel := ""
-		if s.Kind == k.code {
-			sel = " selected"
-		}
-		kindSel += `<option value="` + k.code + `"` + sel + `>` + k.label + `</option>`
-	}
-	kindSel += `</select>`
-
-	// 狀態下拉
-	statusSel := `<select name="active">
-		<option value="1"` + selIf(s.Active == 1) + `>在職</option>
-		<option value="0"` + selIf(s.Active == 0) + `>離職</option>
-	</select>`
-
-	body := `
-    <div class="card">
-      <h2>編輯員工 ` + htmlEsc(s.Name) + `</h2>
-      <form class="frm" method="POST" action="/staff/` + strconv.FormatInt(s.ID, 10) + `">
-        <label>姓名<input value="` + htmlEsc(s.Name) + `" disabled style="opacity:0.6"></label>
-        <label>帳號<input value="` + htmlEsc(s.Username) + `" disabled style="opacity:0.6"></label>
-        <label>狀態` + statusSel + `</label>
-        <label>身分` + kindSel + `</label>
-        <label>部門` + branchSel + `</label>
-        <label>身分證號<input name="national_id" value="` + htmlEsc(s.NationalID) + `"></label>
-        <label>生日<input name="birthday" type="date" value="` + htmlEsc(s.Birthday) + `"></label>
-        <label>加保日<input name="insurance_start" type="date" value="` + htmlEsc(s.InsuranceStart) + `"></label>
-        <label>退保日<input name="insurance_end" type="date" value="` + htmlEsc(s.InsuranceEnd) + `"></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/staff">取消</a>
-        </div>
-      </form>
-    </div>`
-
-	renderPage(w, "編輯員工", "/staff", user.Username, user.Role, body)
+	pages.EditStaffPage(pages.StaffEditData{
+		ID: s.ID, Name: s.Name, Username: s.Username, NationalID: s.NationalID,
+		Birthday: s.Birthday, InsuranceStart: s.InsuranceStart, InsuranceEnd: s.InsuranceEnd,
+		Kind: s.Kind, Branch: s.Branch, Active: s.Active,
+		BranchOpts: lookupSelectOptions("branch", s.Branch), User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateStaff 更新員工資料。

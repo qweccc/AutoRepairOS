@@ -1,0 +1,59 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type DashboardStat struct {
+	Label string
+	Href  string
+	Count int
+}
+
+type DashboardRecentWorkOrder struct {
+	ID           int64
+	PlateNumber  string
+	BrandModel   string
+	CustomerName string
+	StatusLabel  string
+	StatusPill   string
+}
+
+templ DashboardPage(stats []DashboardStat, recent []DashboardRecentWorkOrder, user model.User) {
+	@components.Layout("總覽", "/", user, AppName) {
+		@components.Card("總覽") {
+			<div>
+				for _, stat := range stats {
+					<a class="stat" href={ templ.SafeURL(stat.Href) }>
+						<b>{ strconv.Itoa(stat.Count) }</b>
+						<span>{ stat.Label }</span>
+					</a>
+				}
+			</div>
+		}
+		@components.Card("最近工單") {
+			if len(recent) == 0 {
+				@components.Empty("尚無工單")
+			} else {
+				<table>
+					<tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>
+					for _, wo := range recent {
+						<tr>
+							<td><a href={ templ.SafeURL("/work-orders/" + strconv.FormatInt(wo.ID, 10)) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
+							<td>{ wo.PlateNumber }</td>
+							<td>{ wo.BrandModel }</td>
+							<td>{ wo.CustomerName }</td>
+							<td><span class={ "pill " + wo.StatusPill }>{ wo.StatusLabel }</span></td>
+						</tr>
+					}
+				</table>
+			}
+		}
+		@components.Card("功能模組") {
+			<p style="color:#94a3b8;font-size:13.5px">客戶、車輛、工單、庫存皆可正常使用。</p>
+		}
+	}
+}

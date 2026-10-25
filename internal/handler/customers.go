@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -190,38 +189,10 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	var smsWarning string
-	if c.NotificationPref == "sms" {
-		smsWarning = `<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">⚠️ 原本偏好 SMS，請重新選擇 LINE 或 Telegram 通知通道</div>`
-	}
-
-	body := flash(r) + flashErr(r) + `
-    <div class="card">
-      <h2>編輯客戶 #` + strconv.FormatInt(c.ID, 10) + `</h2>
-      <form class="frm" method="POST" action="/customers/` + strconv.FormatInt(c.ID, 10) + `">
-        <label>姓名<input name="name" value="` + htmlEsc(c.Name) + `" required></label>
-        <label>電話<input name="phone" value="` + htmlEsc(c.Phone) + `" required></label>
-        <label>通知偏好
-          <select name="notification_preference">
-            <option value="none"` + selIf(c.NotificationPref == "none") + `>不通知</option>
-            <option value="line"` + selIf(c.NotificationPref == "line") + `>LINE</option>
-            <option value="telegram"` + selIf(c.NotificationPref == "telegram") + `>Telegram</option>
-          </select>
-        </label>` + smsWarning + `
-        <label>生日<input name="birthday" type="date" value="` + htmlEsc(c.Birthday) + `" placeholder="例：1990-05-20"></label>
-        <label class="full">地址<input name="address" value="` + htmlEsc(c.Address) + `"></label>
-        <label class="full">標籤<input name="tags" value="` + htmlEsc(c.Tags) + `" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
-        <label class="full">行銷活動代碼<input name="campaign_code" value="` + htmlEsc(c.CampaignCode) + `" placeholder="例：2026Q4-煞車促銷"></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(c.Notes) + `</textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/customers">取消</a></div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
-        LINE 綁定不在這張表單裡——綁定有唯一性規則（一個 LINE 帳號只能對應一位客戶），
-        走下面的綁定區塊處理。
-      </p>
-    </div>` + lineBindingBlock(c) + telegramBindingBlock(c)
-
-	renderPage(w, "編輯客戶", "/customers", user.Username, user.Role, body)
+	pages.EditCustomerPage(pages.CustomerEditData{
+		Customer: c, SMSWarning: c.NotificationPref == "sms",
+		Flash: r.URL.Query().Get("msg"), FlashErr: r.URL.Query().Get("err"), User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateCustomer 更新客戶基本資料。

@@ -164,28 +164,7 @@ func EditEquipmentForm(w http.ResponseWriter, r *http.Request, user model.User) 
 		http.NotFound(w, r)
 		return
 	}
-	body := `
-    <div class="card">
-      <h2>編輯設備 ` + htmlEsc(e.Name) + `</h2>
-      <form class="frm" method="POST" action="/equipment/` + strconv.FormatInt(e.ID, 10) + `">
-        <label>設備名稱<input name="name" value="` + htmlEsc(e.Name) + `" required></label>
-        <label>型號<input name="model" value="` + htmlEsc(e.Model) + `"></label>
-        <label>序號<input name="serial_number" value="` + htmlEsc(e.SerialNumber) + `"></label>
-        <label>位置<input name="location" value="` + htmlEsc(e.Location) + `"></label>
-        <label>購買日期<input type="date" name="purchase_date" value="` + htmlEsc(e.PurchaseDate) + `"></label>
-        <label>保固到期<input type="date" name="warranty_expiry" value="` + htmlEsc(e.WarrantyExpiry) + `"></label>
-        <label>狀態
-          <select name="status">
-            <option value="active"` + selIf(e.Status == "active") + `>啟用</option>
-            <option value="maintenance"` + selIf(e.Status == "maintenance") + `>維修中</option>
-            <option value="retired"` + selIf(e.Status == "retired") + `>報廢</option>
-          </select>
-        </label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(e.Notes) + `</textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/equipment">取消</a></div>
-      </form>
-    </div>`
-	renderPage(w, "編輯設備", "/equipment", user.Username, user.Role, body)
+	pages.EditEquipmentPage(e, user).Render(r.Context(), w)
 }
 
 // UpdateEquipment 更新設備。
@@ -267,45 +246,13 @@ func ListEquipmentMaintenance(w http.ResponseWriter, r *http.Request, user model
 		list = append(list, m)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>ID</th><th>保養日期</th><th>類型</th><th>內容</th><th class="num">費用</th><th>下次保養</th><th>執行人員</th><th>操作</th></tr>`)
+	var pageRows []pages.EquipmentMaintenanceRow
 	for _, m := range list {
-		tb.WriteString(`<tr><td>` + strconv.FormatInt(m.ID, 10) + `</td><td>` + htmlEsc(m.MaintenanceDate) +
-			`</td><td>` + htmlEsc(m.MaintenanceType) + `</td><td>` + htmlEsc(m.Description) +
-			`</td><td class="num">` + money(m.Cost) + `</td><td>` + htmlEsc(m.NextMaintenanceDate) +
-			`</td><td>` + htmlEsc(m.TechnicianName) +
-			`</td><td><a class="btn btn-d" href="/equipment/` + strconv.FormatInt(equipID, 10) + `/maintenance/` + strconv.FormatInt(m.ID, 10) + `/delete" onclick="return confirm('確定刪除這筆保養紀錄？')">刪除</a></td></tr>`)
+		pageRows = append(pageRows, pages.EquipmentMaintenanceRow{ID: m.ID, Date: m.MaintenanceDate,
+			Type: m.MaintenanceType, Description: m.Description, Cost: money(m.Cost),
+			NextDate: m.NextMaintenanceDate, Technician: m.TechnicianName})
 	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">尚無保養紀錄</div>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>新增保養紀錄 - ` + htmlEsc(equipName) + `</h2>
-      <form class="frm" method="POST" action="/equipment/` + strconv.FormatInt(equipID, 10) + `/maintenance">
-        <label>保養日期<input type="date" name="maintenance_date" required></label>
-        <label>保養類型<input name="maintenance_type" placeholder="例：日常保養"></label>
-        <label class="full">保養內容<textarea name="description"></textarea></label>
-        <label>費用<input type="number" step="0.01" name="cost" value="0"></label>
-        <label>下次保養日期<input type="date" name="next_maintenance_date"></label>
-        <label>執行人員
-          <select name="technician_id">
-            <option value="">（未指定）</option>` + technicianOptions() + `
-          </select>
-        </label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">新增保養</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>保養紀錄（共 ` + strconv.Itoa(len(list)) + ` 筆）</h2>` + table + `
-    </div>`
-
-	renderPage(w, "設備保養", "/equipment", user.Username, user.Role, body)
+	pages.EquipmentMaintenancePage(equipID, equipName, technicianOptions(), pageRows, flash(r), user).Render(r.Context(), w)
 }
 
 // CreateEquipmentMaintenance 新增保養紀錄。

@@ -181,27 +181,11 @@ func EditInsuranceCompanyForm(w http.ResponseWriter, r *http.Request, user model
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>編輯保險公司 ` + htmlEsc(ic.Code) + `</h2>
-      <form class="frm" method="POST" action="/insurance-companies/` + strconv.FormatInt(ic.ID, 10) + `">
-        <label>簡稱<input name="code" value="` + htmlEsc(ic.Code) + `" required></label>
-        <label>公司名稱<input name="name" value="` + htmlEsc(ic.Name) + `" required></label>
-        <label>統一編號<input name="tax_id" value="` + htmlEsc(ic.TaxID) + `"></label>
-        <label>客服電話<input name="claim_phone" value="` + htmlEsc(ic.ClaimPhone) + `"></label>
-        <label>一般電話<input name="phone" value="` + htmlEsc(ic.Phone) + `"></label>
-        <label>聯絡人<input name="contact_person" value="` + htmlEsc(ic.ContactPerson) + `"></label>
-        <label>郵遞區號<input name="postal_code" value="` + htmlEsc(ic.PostalCode) + `"></label>
-        <label>地址<input name="address" value="` + htmlEsc(ic.Address) + `"></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(ic.Notes) + `</textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/insurance-companies">取消</a>
-        </div>
-      </form>
-    </div>`
-
-	renderPage(w, "編輯保險公司", "/insurance-companies", user.Username, user.Role, body)
+	pages.EditInsuranceCompanyPage(pages.InsuranceCompanyEditData{
+		ID: ic.ID, Code: ic.Code, Name: ic.Name, TaxID: ic.TaxID,
+		ClaimPhone: ic.ClaimPhone, Phone: ic.Phone, ContactPerson: ic.ContactPerson,
+		Address: ic.Address, PostalCode: ic.PostalCode, Notes: ic.Notes, User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateInsuranceCompany 更新保險公司。

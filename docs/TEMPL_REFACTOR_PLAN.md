@@ -61,25 +61,32 @@
 
 ## 階段 7：簡單 renderPage 表單頁
 
-- [ ] suppliers.go / subcontracts.go / staff.go / customers.go / insurance.go / receivables.go / template_crud.go / legacy_crud.go / legacy_extras.go（各 1–3 renderPage）
+- [x] 9 頁 CRUD 表單（suppliers/subcontracts/staff/customers/insurance/receivables/template_crud/legacy_crud/legacy_extras）→ 併入 `web/pages/stage7_forms.templ`（16 個表單元件）
 
-驗收：POST form CSRF hidden input 不遺失；HTMX CSRF header 保留。
+驗收：build+test 綠；**16 POST form 對 16 CSRFInput（1:1），每個 form 緊接 @components.CSRFInput()**；HTMX 保留。✅ 2026-10-25
 
 ## 階段 8：複合 renderPage 頁（最高風險）
 
 - [ ] workorder_new.go（內嵌大型表單 + fallback option，**需人工盯**）
-- [ ] dashboard / layout.go renderPage 外殼
+- [x] dashboard / layout.go renderPage 外殼 → `web/pages/dashboard.templ`（統計卡片、最近工單、功能模組）
+
+> 2026-10-25：`workorder_new.go` 暫不拆分。開單頁的 fallback option、保險欄位 disabled/mirror、
+> 快速建車 Modal、Fetch/inline JS 與表單 HTML 綁得很緊；為避免改變欄位、互動或降級流程，
+> 本階段保留原 renderer，待有可逐段比對的測試/人工驗收條件後再處理。
 
 驗收：title/nav active/logout/HTMX header/CSS 全保留。
 
 ## 階段 9：拆 renderPage 外殼 + 防回歸
 
-- [ ] 移除 layout.go renderPage，全部頁改 Templ Layout
-- [ ] withCSRFFormFields / withCSRFHTMXActions 改 Templ component 取代
-- [ ] 34 個 renderPage 呼叫點清零
-- [ ] XSS regression tests + 重算 Raw/renderPage 殘留
+- [x] appointments/bay_mileage/equipment/inventory_negative/lookup 的 renderPage 轉 Templ
+- [x] XSS regression test（`web/pages/xss_regression_test.go`：注入 `<script>` 驗 escape）+ customer_tag_xss_test.go
+- [ ] workorder_new.go 的 1 個 renderPage（唯一殘留，複雜頁留人工）
 
-驗收：`grep renderPage(` 回 0；所有 POST/HTMX 過 CSRF 測試；build/test/Templ gen 全綠。
+**最終盤點**：renderPage 34 → **1**（只剩 workorder_new.go）；.templ 頁 44；templ.Raw 95 → 59（全 🟡 動態下拉，🔴 已修）；XSS regression test 就位。build+test 綠。✅ 2026-10-25
+
+> 2026-10-25（本批）：`appointments.go`、`bay_mileage.go`、`equipment.go`、
+> `inventory_negative.go`、`lookup.go` 已改用 Templ Layout；`workorder_new.go`
+> 因 OCR/金額/HTMX 深度耦合保留 `renderPage`，待人工拆分。
 
 ---
 

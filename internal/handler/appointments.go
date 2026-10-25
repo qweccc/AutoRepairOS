@@ -365,35 +365,7 @@ func EditAppointmentForm(w http.ResponseWriter, r *http.Request, user model.User
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>編輯預約 #` + strconv.FormatInt(a.ID, 10) + `</h2>
-      <form class="frm" method="POST" action="/appointments/` + strconv.FormatInt(a.ID, 10) + `">
-        <label>客戶
-          <select name="customer_id" required>` + customerOptions() + `</select>
-        </label>
-        <label>車輛
-          <select name="vehicle_id" required>` + vehicleOptions() + `</select>
-        </label>
-        <label>預約日期<input type="date" name="appointment_date" value="` + htmlEsc(a.AppointmentDate) + `" required></label>
-        <label>時段<input type="time" step="1800" name="appointment_time" value="` + htmlEsc(a.AppointmentTime) + `"></label>
-        <label>工位<select name="bay">` + bayOpts + `</select></label>
-        <label>服務內容<input name="service_type" value="` + htmlEsc(a.ServiceType) + `"></label>
-        <label>狀態
-          <select name="status">
-            <option value="booked"` + selIf(a.Status == "booked") + `>已預約</option>
-            <option value="confirmed"` + selIf(a.Status == "confirmed") + `>已確認</option>
-            <option value="arrived"` + selIf(a.Status == "arrived") + `>已進廠</option>
-            <option value="completed"` + selIf(a.Status == "completed") + `>已完成</option>
-            <option value="cancelled"` + selIf(a.Status == "cancelled") + `>已取消</option>
-          </select>
-        </label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(a.Notes) + `</textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/appointments">取消</a></div>
-      </form>
-    </div>`
-
-	renderPage(w, "編輯預約", "/appointments", user.Username, user.Role, body)
+	pages.EditAppointmentPage(a, customerOptions(), vehicleOptions(), bayOpts, user).Render(r.Context(), w)
 }
 
 // UpdateAppointment 更新預約（SRS 5.9）。

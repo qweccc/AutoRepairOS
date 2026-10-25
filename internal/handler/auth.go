@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -201,7 +200,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
-	var sh strings.Builder
+	statsOut := make([]pages.DashboardStat, 0, len(stats))
 	for _, s := range stats {
 		n := 0
 		if strings.Contains(s.query, "?") {
@@ -217,11 +216,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 				return
 			}
 		}
-		sh.WriteString(`<a class="stat" href="` + s.href + `"><b>` +
-			strconv.Itoa(n) + `</b><span>` + s.label + `</span></a>`)
+		statsOut = append(statsOut, pages.DashboardStat{Label: s.label, Href: s.href, Count: n})
 	}
 
-	var recent string
+	var recentOut []pages.DashboardRecentWorkOrder
 	// 排除種子/測試資料（車牌 TEST-* 或客戶名含「測試」），否則正式工單會被擠掉。
 	rows, err := db.DB.Query(`SELECT wo.id, v.plate_number, v.brand_model, c.name, wo.status
 		FROM active_work_orders wo
@@ -231,9 +229,6 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 		ORDER BY wo.created_at DESC LIMIT 8`)
 	if err == nil {
 		defer rows.Close()
-		var tb strings.Builder
-		tb.WriteString(`<table><tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>`)
-		found := false
 		for rows.Next() {
 			var id int64
 			var plate, model_, cname, status string
@@ -242,32 +237,20 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 				fail(w, "讀取最近工單失敗，請稍後再試")
 				return
 			}
-			found = true
-			tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(id, 10) + `">` + strconv.FormatInt(id, 10) + `</a></td><td>` + htmlEsc(plate) +
-				`</td><td>` + htmlEsc(model_) + `</td><td>` + htmlEsc(cname) + `</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel[status] + `</span></td></tr>`)
+			recentOut = append(recentOut, pages.DashboardRecentWorkOrder{
+				ID: id, PlateNumber: plate, BrandModel: model_, CustomerName: cname,
+				StatusLabel: workOrderStatusLabel[status], StatusPill: statusPill[status],
+			})
 		}
-		tb.WriteString(`</table>`)
 		if err := rows.Err(); err != nil {
 			log.Printf("列舉首頁最近工單失敗: %v", err)
 			fail(w, "讀取最近工單失敗，請稍後再試")
 			return
-		}
-		if found {
-			recent = `<div class="card"><h2>最近工單</h2>` + tb.String() + `</div>`
-		} else {
-			recent = `<div class="card"><h2>最近工單</h2><div class="empty">尚無工單</div></div>`
 		}
 	} else {
 		log.Printf("查詢首頁最近工單失敗: %v", err)
 		fail(w, "讀取最近工單失敗，請稍後再試")
 	}
 
-	body := `
-    <div class="card">
-      <h2>總覽</h2>
-      <div>` + sh.String() + `</div>
-    </div>` + recent + `
-    <div class="card"><h2>功能模組</h2><p style="color:#94a3b8;font-size:13.5px">客戶、車輛、工單、庫存皆可正常使用。</p></div>`
-
-	renderPage(w, "總覽", "/", user.Username, user.Role, body)
+	pages.DashboardPage(statsOut, recentOut, user).Render(r.Context(), w)
 }

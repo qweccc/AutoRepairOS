@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -219,31 +218,12 @@ func EditSubcontractForm(w http.ResponseWriter, r *http.Request, user model.User
 		http.NotFound(w, r)
 		return
 	}
-	body := `
-    <div class="card">
-      <h2>編輯外包 #` + strconv.FormatInt(s.ID, 10) + `</h2>
-      <form class="frm" method="POST" action="/subcontracts/` + strconv.FormatInt(s.ID, 10) + `">
-        <label>工單 ID<input type="number" name="work_order_id" value="` + strconv.FormatInt(s.WorkOrderID, 10) + `" required></label>
-        <label>協力廠商
-          <select name="supplier_id">` + supplierOptionsSel(s.SupplierID) + `</select>
-        </label>
-        <label class="full">加工內容<input name="description" value="` + htmlEsc(s.Description) + `" required></label>
-        <label>成本金額<input type="number" step="0.01" name="cost_amount" value="` + money(s.CostAmount) + `"></label>
-        <label>收費金額<input type="number" step="0.01" name="charge_amount" value="` + money(s.ChargeAmount) + `"></label>
-        <label>預計完成日<input type="date" name="expected_date" value="` + htmlEsc(s.ExpectedDate) + `"></label>
-        <label>狀態
-          <select name="status">
-            <option value="pending"` + selIf(s.Status == "pending") + `>待處理</option>
-            <option value="in_progress"` + selIf(s.Status == "in_progress") + `>進行中</option>
-            <option value="completed"` + selIf(s.Status == "completed") + `>已完成</option>
-            <option value="cancelled"` + selIf(s.Status == "cancelled") + `>已取消</option>
-          </select>
-        </label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(s.Notes) + `</textarea></label>
-        <div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/subcontracts">取消</a></div>
-      </form>
-    </div>`
-	renderPage(w, "編輯外包", "/subcontracts", user.Username, user.Role, body)
+	pages.EditSubcontractPage(pages.SubcontractEditData{
+		ID: s.ID, WorkOrderID: s.WorkOrderID, Description: s.Description, SupplierID: s.SupplierID,
+		CostAmount: money(s.CostAmount), ChargeAmount: money(s.ChargeAmount),
+		ExpectedDate: s.ExpectedDate, Status: s.Status, Notes: s.Notes,
+		SupplierOpts: supplierSelectOptions(s.SupplierID), User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateSubcontract 更新外包工項。

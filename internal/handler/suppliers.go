@@ -3,11 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/components"
 	"autorepairos/web/pages"
 )
 
@@ -69,17 +69,12 @@ func paymentTermsLabel(v string) string {
 	return ""
 }
 
-func paymentTermsOptions(selected string) string {
-	var b strings.Builder
-	b.WriteString(`<option value="">未設定</option>`)
+func paymentTermsSelectOptions(selected string) []components.SelectOption {
+	opts := []components.SelectOption{{Value: "", Label: "未設定", Selected: selected == ""}}
 	for _, p := range paymentTermsList {
-		sel := ""
-		if p.code == selected {
-			sel = " selected"
-		}
-		b.WriteString(`<option value="` + p.code + `"` + sel + `>` + p.label + `</option>`)
+		opts = append(opts, components.SelectOption{Value: p.code, Label: p.label, Selected: p.code == selected})
 	}
-	return b.String()
+	return opts
 }
 
 func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
@@ -279,27 +274,11 @@ func EditSupplierForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		http.NotFound(w, r)
 		return
 	}
-	body := `
-    <div class="card">
-      <h2>編輯供應商 ` + htmlEsc(s.Name) + `</h2>
-      <form class="frm" method="POST" action="/suppliers/` + strconv.FormatInt(s.ID, 10) + `">
-        <label>名稱<input name="name" value="` + htmlEsc(s.Name) + `" required></label>
-        <label>電話<input name="phone" value="` + htmlEsc(s.Phone) + `"></label>
-        <label>聯絡人<input name="contact_person" value="` + htmlEsc(s.ContactPerson) + `"></label>
-        <label>地址<input name="address" value="` + htmlEsc(s.Address) + `"></label>
-        <label>類型<select name="vendor_type">
-          <option value="material"` + selIf(s.VendorType == "material") + `>材料商</option>
-          <option value="vendor"` + selIf(s.VendorType == "vendor") + `>協力廠商</option>
-        </select></label>
-        <label>付款條件<select name="payment_terms">` + paymentTermsOptions(s.PaymentTerms) + `</select></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(s.Notes) + `</textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/suppliers">取消</a>
-        </div>
-      </form>
-    </div>`
-	renderPage(w, "編輯供應商", "/suppliers", user.Username, user.Role, body)
+	pages.EditSupplierPage(pages.SupplierEditData{
+		ID: s.ID, Name: s.Name, Phone: s.Phone, Contact: s.ContactPerson,
+		Address: s.Address, VendorType: s.VendorType, PaymentTerms: s.PaymentTerms,
+		Notes: s.Notes, PaymentOpts: paymentTermsSelectOptions(s.PaymentTerms), User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateSupplier 更新供應商。

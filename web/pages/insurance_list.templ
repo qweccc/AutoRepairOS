@@ -27,9 +27,9 @@ type VehicleInsuranceFormData struct {
 	Title           string
 	Action          string
 	VehicleID       int64
-	VehicleOptions  string
+	VehicleOptions  []components.SelectOption
 	CompanyID       int64
-	CompanyOptions  string
+	CompanyOptions   []components.SelectOption
 	CompanyNo       string
 	Class           string
 	ClassName       string
@@ -45,14 +45,19 @@ templ VehicleInsuranceForm(data VehicleInsuranceFormData) {
 	<div class="card">
 		<h2>{ data.Title }</h2>
 		<form class="frm" method="POST" action={ data.Action }>
+			@components.CSRFInput()
 			if data.ID == 0 {
 				<label>車輛<select name="vehicle_id" required>
-					@templ.Raw(data.VehicleOptions)
+					for _, opt := range data.VehicleOptions {
+						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+					}
 				</select></label>
 			}
 			<label>保險公司<select name="insurance_company_id">
 				<option value="0">未指定</option>
-				@templ.Raw(data.CompanyOptions)
+				for _, opt := range data.CompanyOptions {
+					<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
+				}
 			</select></label>
 			<label>舊系統公司編號<input name="company_no" value={ data.CompanyNo }></label>
 			<label>險種代碼<input name="insurance_class" value={ data.Class }></label>
@@ -73,6 +78,12 @@ templ VehicleInsuranceForm(data VehicleInsuranceFormData) {
 			</div>
 		</form>
 	</div>
+}
+
+templ VehicleInsuranceFormPage(data VehicleInsuranceFormData, user model.User) {
+	@components.Layout(data.Title, "/insurances", user, AppName) {
+		@VehicleInsuranceForm(data)
+	}
 }
 
 // ListVehicleInsurancesPage 車輛投保紀錄頁（HTMX 即時搜尋）。

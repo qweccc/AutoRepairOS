@@ -3,7 +3,6 @@ package handler
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -39,6 +38,7 @@ var lookupCategoryLabel = map[string]string{
 // lookupCategoryLabel 加標籤。只做一半就會出現「半成品」：
 //   - 有標籤沒資料 → 分頁籤點進去是空白（曾發生在 insurance_company）
 //   - 有資料沒標籤 → 資料進得去卻沒有維護入口（曾發生在 vehicle_type）
+//
 // 兩種都不會報錯，只會讓人以為功能壞了，很難查到原因。
 //
 // 這個檢查只 log 警告、不會中斷啟動：空的 category 不該讓服務起不來，
@@ -170,21 +170,7 @@ func NewLookupItemForm(w http.ResponseWriter, r *http.Request, user model.User) 
 	if category == "" {
 		category = "branch"
 	}
-	body := `
-    <div class="card">
-      <h2>新增代碼（` + lookupCategoryLabel[category] + `）</h2>
-      <form class="frm" method="POST" action="/lookup">
-        <input type="hidden" name="category" value="` + htmlEsc(category) + `">
-        <label>代碼<input name="code" required placeholder="例：07 或 A 或 引擎"></label>
-        <label>名稱<input name="label" required placeholder="例：富邦 或 引擎 或 強制險"></label>
-        <label>排序<input name="sort_order" type="number" value="0"></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">新增</button>
-          <a class="btn btn-s" href="/lookup?category=` + category + `">取消</a>
-        </div>
-      </form>
-    </div>`
-	renderPage(w, "新增代碼", "/lookup", user.Username, user.Role, body)
+	pages.NewLookupItemPage(category, lookupCategoryLabel[category], user).Render(r.Context(), w)
 }
 
 // CreateLookupItem 新增代码对照表单项。
@@ -215,20 +201,7 @@ func EditLookupItemForm(w http.ResponseWriter, r *http.Request, user model.User)
 		http.NotFound(w, r)
 		return
 	}
-	body := `
-    <div class="card">
-      <h2>編輯代碼 ` + htmlEsc(li.Code) + `</h2>
-      <form class="frm" method="POST" action="/lookup/` + strconv.FormatInt(li.ID, 10) + `">
-        <label>代碼<input name="code" value="` + htmlEsc(li.Code) + `" required></label>
-        <label>名稱<input name="label" value="` + htmlEsc(li.Label) + `" required></label>
-        <label>排序<input name="sort_order" type="number" value="` + strconv.Itoa(li.SortOrder) + `"></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/lookup?category=` + li.Category + `">取消</a>
-        </div>
-      </form>
-    </div>`
-	renderPage(w, "編輯代碼", "/lookup", user.Username, user.Role, body)
+	pages.EditLookupItemPage(li, user).Render(r.Context(), w)
 }
 
 // UpdateLookupItem 更新代码对照表单项。

@@ -11,6 +11,7 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
+	"autorepairos/web/pages"
 	"github.com/a-h/templ"
 )
 
@@ -292,34 +293,7 @@ func AddVehicleMileageForm(w http.ResponseWriter, r *http.Request, user model.Us
 	}
 
 	last, _, ok := lastMileageEntry(vehicleID)
-	lastHint := ""
-	if ok {
-		lastHint = `　<span style="color:#64748b;font-size:12.5px">（最後一筆：` +
-			strconv.Itoa(last) + ` km）</span>`
-	}
-
-	body := `
-    <div class="card">
-      <h2>新增里程紀錄 — ` + htmlEsc(plate) + `</h2>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        ` + htmlEsc(brand) + lastHint + `
-      </p>
-      <form class="frm" method="POST" action="/vehicles/` + strconv.FormatInt(vehicleID, 10) + `/mileage">
-        <label>里程（km）<input name="mileage" type="number" min="0" step="1" required></label>
-        <label class="full">備註<textarea name="notes" placeholder="例：客戶來電告知已跑 8 萬公里"></textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">記錄</button>
-          <a class="btn btn-s" href="/vehicles/` + strconv.FormatInt(vehicleID, 10) + `">取消</a>
-        </div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin-top:10px">
-        進廠工單會自動帶入里程（來源標示「進廠工單」），這裡是給非進廠時
-        的更新使用。若新里程比上一筆小，系統仍會記錄但標示「回退」，
-        請在備註說明原因（如更換碼表）。
-      </p>
-    </div>`
-
-	renderPage(w, "新增里程", "/vehicles", user.Username, user.Role, body)
+	pages.AddVehicleMileagePage(vehicleID, plate, brand, last, ok, user).Render(r.Context(), w)
 }
 
 // CreateVehicleMileage 手動記錄里程。

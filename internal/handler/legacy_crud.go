@@ -2,7 +2,6 @@
 package handler
 
 import (
-	"bytes"
 	"net/http"
 	"strconv"
 	"strings"
@@ -72,7 +71,7 @@ func NewVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model.
 	vehID := mustInt(r.URL.Query().Get("vehicle"))
 	data := pages.VehicleInsuranceFormData{
 		Title: "新增車輛投保紀錄", Action: "/insurances", VehicleID: vehID,
-		VehicleOptions: vehicleOptionsFor(vehID), CompanyOptions: insuranceCompanyOptions(0),
+		VehicleOptions: vehicleSelectOptions(vehID), CompanyOptions: insuranceCompanySelectOptions(0),
 	}
 	renderVehicleInsuranceForm(w, r, user, data)
 }
@@ -123,7 +122,7 @@ func EditVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model
 	data := pages.VehicleInsuranceFormData{
 		ID: ir.ID, Title: "編輯投保紀錄 #" + strconv.FormatInt(ir.ID, 10),
 		Action:    "/insurances/" + strconv.FormatInt(ir.ID, 10),
-		CompanyID: ir.CompanyID, CompanyOptions: insuranceCompanyOptions(ir.CompanyID),
+		CompanyID: ir.CompanyID, CompanyOptions: insuranceCompanySelectOptions(ir.CompanyID),
 		CompanyNo: ir.CompanyNo, Class: ir.Class, ClassName: ir.ClassName,
 		LicenseDate: normDate(ir.LicenseDate), PolicyNumber: ir.PolicyNumber,
 		ExpiryDate: normDate(ir.ExpiryDate), CardNo: ir.CardNo, AmountRaw: ir.AmountRaw, Notes: ir.Notes,
@@ -132,12 +131,7 @@ func EditVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model
 }
 
 func renderVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model.User, data pages.VehicleInsuranceFormData) {
-	var body bytes.Buffer
-	if err := pages.VehicleInsuranceForm(data).Render(r.Context(), &body); err != nil {
-		http.Error(w, "投保表單產生失敗", http.StatusInternalServerError)
-		return
-	}
-	renderPage(w, data.Title, "/insurances", user.Username, user.Role, body.String())
+	pages.VehicleInsuranceFormPage(data, user).Render(r.Context(), w)
 }
 
 // UpdateVehicleInsurance 更新投保紀錄。
@@ -225,26 +219,10 @@ func scanInspectionRow(rows interface{ Scan(...interface{}) error }) (inspection
 // NewVehicleInspectionForm 新增定檢排程。
 func NewVehicleInspectionForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	vehID := mustInt(r.URL.Query().Get("vehicle"))
-	body := `
-    <div class="card">
-      <h2>新增車輛定檢排程</h2>
-      <form class="frm" method="POST" action="/inspections">
-        <label>車輛<select name="vehicle_id" required>` + vehicleOptionsFor(vehID) + `</select></label>
-        <label>排定檢驗日<input type="date" name="order_date" required></label>
-        <label>實際完成日<input type="date" name="check_date"></label>
-        <label>代檢廠編號<input name="firm_no"></label>
-        <label class="full">備註<textarea name="notes"></textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">建立</button>
-          <a class="btn btn-s" href="/inspections">取消</a>
-        </div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin-top:10px">
-        完成日留空代表「已排定但未驗」；填上完成日即視為已結案。
-      </p>
-    </div>`
-
-	renderPage(w, "新增定檢排程", "/inspections", user.Username, user.Role, body)
+	pages.VehicleInspectionFormPage(pages.InspectionFormData{
+		Title: "新增車輛定檢排程", Action: "/inspections", VehicleID: vehID,
+		VehicleOpts: vehicleSelectOptions(vehID), New: true, User: user,
+	}).Render(r.Context(), w)
 }
 
 // CreateVehicleInspection 建立定檢排程。
@@ -281,22 +259,12 @@ func EditVehicleInspectionForm(w http.ResponseWriter, r *http.Request, user mode
 		return
 	}
 
-	body := `
-    <div class="card">
-      <h2>編輯定檢排程 #` + strconv.FormatInt(ir.ID, 10) + `</h2>
-      <form class="frm" method="POST" action="/inspections/` + strconv.FormatInt(ir.ID, 10) + `">
-        <label>排定檢驗日<input type="date" name="order_date" value="` + htmlEsc(normDate(ir.OrderDate)) + `" required></label>
-        <label>實際完成日<input type="date" name="check_date" value="` + htmlEsc(normDate(ir.CheckDate)) + `"></label>
-        <label>代檢廠編號<input name="firm_no" value="` + htmlEsc(ir.FirmNo) + `"></label>
-        <label class="full">備註<textarea name="notes">` + htmlEsc(ir.Notes) + `</textarea></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">儲存</button>
-          <a class="btn btn-s" href="/inspections">取消</a>
-        </div>
-      </form>
-    </div>`
-
-	renderPage(w, "編輯定檢排程", "/inspections", user.Username, user.Role, body)
+	pages.VehicleInspectionFormPage(pages.InspectionFormData{
+		ID: ir.ID, Title: "編輯定檢排程 #" + strconv.FormatInt(ir.ID, 10),
+		Action:    "/inspections/" + strconv.FormatInt(ir.ID, 10),
+		OrderDate: normDate(ir.OrderDate), CheckDate: normDate(ir.CheckDate),
+		FirmNo: ir.FirmNo, Notes: ir.Notes, User: user,
+	}).Render(r.Context(), w)
 }
 
 // UpdateVehicleInspection 更新定檢排程。
@@ -339,56 +307,6 @@ func DeleteVehicleInspection(w http.ResponseWriter, r *http.Request) {
 }
 
 // ============ 共用小工具 ============
-
-// vehicleOptionsFor 車輛下拉，選到的項目帶 selected。
-// 與 vehicleOptions() 的差別只在是否要預選——避免改動既有的函式。
-func vehicleOptionsFor(selected int64) string {
-	rows, err := db.DB.Query(`SELECT v.id, COALESCE(v.plate_number,''), COALESCE(v.brand_model,''),
-		COALESCE(c.name,'')
-		FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id
-		ORDER BY v.plate_number`)
-	if err != nil {
-		return ""
-	}
-	defer rows.Close()
-	var b strings.Builder
-	for rows.Next() {
-		var id int64
-		var plate, model, cust string
-		if rows.Scan(&id, &plate, &model, &cust) != nil {
-			continue
-		}
-		label := plate + "（" + cust
-		if model != "" {
-			label += " / " + model
-		}
-		label += "）"
-		b.WriteString(`<option value="` + strconv.FormatInt(id, 10) + `"` +
-			selIf(id == selected) + `>` + htmlEsc(label) + `</option>`)
-	}
-	return b.String()
-}
-
-// insuranceCompanyOptions 保險公司下拉（只列啟用中的）。
-func insuranceCompanyOptions(selected int64) string {
-	rows, err := db.DB.Query(`SELECT id, code, name FROM insurance_companies
-		WHERE COALESCE(active,1) = 1 ORDER BY code`)
-	if err != nil {
-		return ""
-	}
-	defer rows.Close()
-	var b strings.Builder
-	for rows.Next() {
-		var id int64
-		var code, name string
-		if rows.Scan(&id, &code, &name) != nil {
-			continue
-		}
-		b.WriteString(`<option value="` + strconv.FormatInt(id, 10) + `"` +
-			selIf(id == selected) + `>` + htmlEsc(code+" "+name) + `</option>`)
-	}
-	return b.String()
-}
 
 // zeroToNil 把 0 轉成 nil，讓 NOT NULL 外鍵欄位在「未指定」時寫入 NULL。
 func zeroToNil(n int64) interface{} {

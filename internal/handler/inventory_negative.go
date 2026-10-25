@@ -2,12 +2,12 @@ package handler
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/pages"
 )
 
 // 舊系統負庫存補正工具。
@@ -109,81 +109,22 @@ func NegativeStockList(w http.ResponseWriter, r *http.Request, user model.User) 
 		list = append(list, it)
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>料號</th><th>名稱</th><th>庫位</th><th>供應商</th>` +
-		`<th class="num">售價</th><th class="num">目前庫存</th><th class="num">建議補正</th><th>操作</th></tr>`)
+	var pageRows []pages.NegativeStockRow
 	for _, it := range list {
 		suggest := -it.StockQuantity
 		if it.MinSafetyStock > 0 {
 			suggest = it.MinSafetyStock - it.StockQuantity
 		}
-		tb.WriteString(`<tr><td><code>` + htmlEsc(it.PartNumber) + `</code></td><td>` + htmlEsc(it.Name) +
-			`</td><td>` + orDash(htmlEsc(it.BinLocation)) + `</td><td>` + orDash(htmlEsc(it.SupplierName)) +
-			`</td><td class="num">` + money(it.SellingPrice) +
-			`</td><td class="num"><b style="color:#f87171">` + strconv.Itoa(it.StockQuantity) +
-			`</b></td><td class="num" style="color:#86efac">+` + strconv.Itoa(suggest) +
-			`</td><td>` +
-			`<a class="btn btn-p" href="/inventory/negative?id=` + strconv.FormatInt(it.ID, 10) + `">補正</a></td></tr>`)
+		pageRows = append(pageRows, pages.NegativeStockRow{ID: it.ID, PartNumber: it.PartNumber,
+			Name: it.Name, BinLocation: orDash(it.BinLocation), SupplierName: orDash(it.SupplierName),
+			SellingPrice: money(it.SellingPrice), StockQuantity: it.StockQuantity, Suggested: suggest})
 	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if len(list) == 0 {
-		table = `<div class="empty">沒有符合條件的負庫存料號</div>`
-	}
-
-	// 篩選籤
-	tab := func(label, key string) string {
-		cls := "btn-s"
-		if sortBy == key {
-			cls = "btn-p"
-		}
-		u := url.Values{}
-		if q != "" {
-			u.Set("q", q)
-		}
-		if key != "" {
-			u.Set("sort", key)
-		}
-		href := "/inventory/negative"
-		if s := u.Encode(); s != "" {
-			href += "?" + s
-		}
-		return `<a class="btn ` + cls + `" href="` + href + `">` + label + `</a>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>負庫存補正</h2>
-      <p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-        舊系統（CAR35）進貨常未登錄就直接出料，匯入後留下負庫存。
-        負庫存會讓扣料與庫存報表失準，建議從「有在賣的熱門件」開始補正。<br>
-        <b>補正會留下紀錄</b>（誰、何時、從多少改成多少），日後可追溯。
-      </p>
-      <div style="margin-bottom:14px">
-        <div class="stat"><b>` + strconv.Itoa(stats.Total) + `</b><span>負庫存料號</span></div>
-        <div class="stat"><b>` + strconv.Itoa(stats.TotalAll) + `</b><span>全部料號</span></div>
-        <div class="stat"><b style="color:#f87171">` + strconv.Itoa(stats.WorstQty) + `</b><span>最負數量</span></div>
-        <div class="stat"><b>` + strconv.Itoa(stats.SumDeficit) + `</b><span>缺口總和</span></div>
-        <div class="stat"><b>` + strconv.Itoa(stats.SellableOnly) + `</b><span>其中有售價</span></div>
-        <div class="stat"><b>` + strconv.Itoa(stats.WithSupplier) + `</b><span>其中有供應商</span></div>
-      </div>
-      <div style="margin-bottom:12px">` +
-		tab("缺口最大優先", "") + ` ` + tab("有售價優先", "sellable") + ` ` + tab("依名稱", "name") +
-		`　<a class="btn btn-s" href="/inventory">回庫存列表</a>
-      </div>
-      <form method="GET" action="/inventory/negative" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋料號 / 名稱 / 庫位" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        ` + hiddenInputs(qv, "q", "page", "per") + `
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/inventory/negative">清除</a>
-      </form>
-      <h2 style="font-size:15px">符合條件 ` + strconv.Itoa(total) + ` 筆</h2>` + table +
-		pager("/inventory/negative", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/inventory/negative", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "負庫存補正", "/inventory", user.Username, user.Role, body)
+	pages.NegativeStockPage(pages.NegativeStockStats{
+		Total: stats.Total, TotalAll: stats.TotalAll, WorstQty: stats.WorstQty,
+		SumDeficit: stats.SumDeficit, SellableOnly: stats.SellableOnly, WithSupplier: stats.WithSupplier,
+	}, pageRows, total, page, size, q, sortBy, hiddenInputs(qv, "q", "page", "per"),
+		pager("/inventory/negative", qv, total, page, size), perPageSel("/inventory/negative", qv, size),
+		flash(r), user).Render(r.Context(), w)
 }
 
 // NegativeStockFixForm 單筆補正表單。
@@ -198,39 +139,7 @@ func NegativeStockFixForm(w http.ResponseWriter, r *http.Request, user model.Use
 		return
 	}
 
-	// 近期異動紀錄，讓使用者判斷該補多少
-	movs := recentMovements(id, 10)
-
-	body := `
-    <div class="card">
-      <h2>負庫存補正 — ` + htmlEsc(it.Name) + `（` + htmlEsc(it.PartNumber) + `）</h2>
-      <p style="color:#94a3b8;font-size:13.5px">
-        目前庫存：<b style="color:#f87171;font-size:20px">` + strconv.Itoa(it.StockQuantity) + `</b>　
-        安全庫存：` + strconv.Itoa(it.MinSafetyStock) + `　
-        售價：` + money(it.SellingPrice) + `
-      </p>
-      <form class="frm" method="POST" action="/inventory/negative/fix">
-        <input type="hidden" name="item_id" value="` + strconv.FormatInt(it.ID, 10) + `">
-        <label>補正方式
-          <select name="mode" id="fixMode" onchange="document.getElementById('customRow').style.display=(this.value=='custom')?'block':'none'">
-            <option value="zero">設為 0（歸零，不補貨）</option>
-            <option value="safety">設為安全庫存（` + strconv.Itoa(it.MinSafetyStock) + `）</option>
-            <option value="custom">設為指定數量</option>
-          </select>
-        </label>
-        <label id="customRow" style="display:none">指定數量<input name="target" type="number" min="0" value="0"></label>
-        <label class="full">補正原因<input name="reason" value="舊系統負庫存補正" placeholder="例：開店盤點實際庫存"></label>
-        <div class="full">
-          <button class="btn btn-p" type="submit">確認補正</button>
-          <a class="btn btn-s" href="/inventory/negative">取消</a>
-        </div>
-      </form>
-      <p style="color:#64748b;font-size:12.5px;margin-top:12px">
-        補正會寫入庫存異動紀錄（source=legacy_fix），並保留補正前的原值以便回復。
-      </p>
-    </div>` + movs
-
-	renderPage(w, "負庫存補正", "/inventory", user.Username, user.Role, body)
+	pages.NegativeStockFixPage(it, recentMovements(id, 10), user).Render(r.Context(), w)
 }
 
 // ApplyNegativeStockFix 執行補正。
@@ -358,10 +267,7 @@ func MovementLog(w http.ResponseWriter, r *http.Request, user model.User) {
 		"import":     "匯入",
 	}
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>時間</th><th>料號</th><th>名稱</th><th>來源</th>` +
-		`<th class="num">異動</th><th class="num">前</th><th class="num">後</th><th>原因</th><th>操作人</th></tr>`)
-	n := 0
+	var pageRows []pages.InventoryMovementRow
 	for rows.Next() {
 		var mid, itemID int64
 		var part, name, reason, src, uname, createdAt string
@@ -371,70 +277,21 @@ func MovementLog(w http.ResponseWriter, r *http.Request, user model.User) {
 			&reason, &src, &woID, &uname, &createdAt); err != nil {
 			continue
 		}
-		n++
-		deltaCell := `<b style="color:#86efac">+` + strconv.Itoa(delta) + `</b>`
-		if delta < 0 {
-			deltaCell = `<b style="color:#f87171">` + strconv.Itoa(delta) + `</b>`
-		}
 		srcText := sourceLabel[src]
 		if srcText == "" {
 			srcText = src
 		}
-		tb.WriteString(`<tr><td style="font-size:12.5px;color:#94a3b8">` + htmlEsc(createdAt) +
-			`</td><td><code>` + htmlEsc(part) + `</code></td><td>` + htmlEsc(name) +
-			`</td><td>` + srcText + `</td><td class="num">` + deltaCell +
-			`</td><td class="num">` + strconv.Itoa(before) + `</td><td class="num">` + strconv.Itoa(after) +
-			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(reason)) +
-			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(uname)) + `</td></tr>`)
+		pageRows = append(pageRows, pages.InventoryMovementRow{CreatedAt: createdAt, PartNumber: part,
+			Name: name, Source: srcText, Reason: orDash(reason), User: orDash(uname),
+			Delta: delta, Before: before, After: after, DeltaPositive: delta >= 0})
 	}
-	tb.WriteString(`</table>`)
-
-	table := tb.String()
-	if n == 0 {
-		table = `<div class="empty">沒有符合條件的異動紀錄</div>`
-	}
-
-	tab := func(label, key string) string {
-		cls := "btn-s"
-		if source == key {
-			cls = "btn-p"
-		}
-		u := url.Values{}
-		if q != "" {
-			u.Set("q", q)
-		}
-		if key != "" {
-			u.Set("source", key)
-		}
-		href := "/inventory/movements"
-		if s := u.Encode(); s != "" {
-			href += "?" + s
-		}
-		return `<a class="btn ` + cls + `" href="` + href + `">` + label + `</a>`
-	}
-
-	body := flash(r) + `
-    <div class="card">
-      <h2>庫存異動紀錄（符合條件 ` + strconv.Itoa(total) + ` 筆）</h2>
-      <div style="margin-bottom:12px">` +
-		tab("全部", "") + ` ` + tab("手動調庫", "manual") + ` ` + tab("結帳扣料", "checkout") +
-		` ` + tab("舊資料補正", "legacy_fix") +
-		`　<a class="btn btn-s" href="/inventory">回庫存列表</a>
-      </div>
-      <form method="GET" action="/inventory/movements" style="margin-bottom:12px">
-        <input name="q" value="` + htmlEsc(q) + `" placeholder="搜尋料號 / 名稱 / 原因" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-        ` + hiddenInputs(qv, "q", "page", "per") + `
-        <button class="btn btn-p" type="submit">搜尋</button>
-        <a class="btn btn-s" href="/inventory/movements">清除</a>
-      </form>` + table + pager("/inventory/movements", qv, total, page, size) +
-		`<div style="margin-top:6px">` + perPageSel("/inventory/movements", qv, size) + `</div>
-    </div>`
-
-	renderPage(w, "庫存異動紀錄", "/inventory", user.Username, user.Role, body)
+	pages.MovementLogPage(pageRows, total, page, size, q, source,
+		hiddenInputs(qv, "q", "page", "per"), pager("/inventory/movements", qv, total, page, size),
+		perPageSel("/inventory/movements", qv, size), user).Render(r.Context(), w)
 }
 
 // recentMovements 某料號的近期異動（HTML 片段）。
-func recentMovements(itemID int64, limit int) string {
+func recentMovements(itemID int64, limit int) []pages.InventoryMovementRow {
 	rows, err := db.DB.Query(`SELECT m.delta, m.before_quantity, m.after_quantity,
 		COALESCE(m.reason,''), m.source, COALESCE(u.name,''), m.created_at
 		FROM inventory_movements m
@@ -442,32 +299,22 @@ func recentMovements(itemID int64, limit int) string {
 		WHERE m.inventory_item_id = ?
 		ORDER BY m.id DESC LIMIT ?`, itemID, limit)
 	if err != nil {
-		return ""
+		return nil
 	}
 	defer rows.Close()
 
-	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>時間</th><th class="num">異動</th><th class="num">前</th><th class="num">後</th><th>來源</th><th>原因</th><th>操作人</th></tr>`)
-	n := 0
+	var result []pages.InventoryMovementRow
 	for rows.Next() {
 		var delta, before, after int
 		var reason, src, uname, createdAt string
 		if err := rows.Scan(&delta, &before, &after, &reason, &src, &uname, &createdAt); err != nil {
 			continue
 		}
-		n++
-		tb.WriteString(`<tr><td style="font-size:12.5px;color:#94a3b8">` + htmlEsc(createdAt) +
-			`</td><td class="num">` + strconv.Itoa(delta) + `</td><td class="num">` + strconv.Itoa(before) +
-			`</td><td class="num">` + strconv.Itoa(after) + `</td><td>` + htmlEsc(src) +
-			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(reason)) +
-			`</td><td style="font-size:12.5px">` + orDash(htmlEsc(uname)) + `</td></tr>`)
+		result = append(result, pages.InventoryMovementRow{CreatedAt: createdAt, Delta: delta,
+			Before: before, After: after, Source: src, Reason: orDash(reason), User: orDash(uname),
+			DeltaPositive: delta >= 0})
 	}
-	tb.WriteString(`</table>`)
-
-	if n == 0 {
-		return `<div class="card"><h2>近期異動</h2><div class="empty">此料號沒有異動紀錄</div></div>`
-	}
-	return `<div class="card"><h2>近期異動（最近 ` + strconv.Itoa(limit) + ` 筆）</h2>` + tb.String() + `</div>`
+	return result
 }
 
 // recordMovement 寫入一筆庫存異動（供其他 handler 呼叫）。
