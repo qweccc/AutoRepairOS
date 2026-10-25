@@ -1,0 +1,32 @@
+package components
+
+type QuickVehicleResultData struct {
+	OK         bool
+	VehicleID  string
+	Label      string
+	Mileage    string
+	Duplicate  bool
+	OwnerName  string
+	OwnerPhone string
+	Error      string
+}
+
+templ QuickVehicleResult(data QuickVehicleResultData) {
+	<div id="quickVehicleResult"
+		data-ok={ boolString(data.OK) }
+		data-vehicle-id={ data.VehicleID }
+		data-label={ data.Label }
+		data-mileage={ data.Mileage }
+		data-duplicate={ boolString(data.Duplicate) }
+		data-owner-name={ data.OwnerName }
+		data-owner-phone={ data.OwnerPhone }>
+		{ data.Error }
+	</div>
+}
+
+func boolString(value bool) string {
+	if value {
+		return "true"
+	}
+	return "false"
+}

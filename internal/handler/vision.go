@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/integration/vision"
+	"autorepairos/web/components"
 )
 
 // visionClient 由 main 在啟動時依 config 設定。nil 表示未啟用視覺辨識。
@@ -65,7 +66,8 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 //
 // POST body: {"image": "data:image/jpeg;base64,...."}
 // 回傳: {"ok":true, "items":[{description,quantity,unit_price,part_number}, ...]}
-//       （items 可能為空陣列 = 圖裡讀不到品項，這不是錯誤）
+//
+//	（items 可能為空陣列 = 圖裡讀不到品項，這不是錯誤）
 func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
 	if visionClient == nil {
 		writeJSON(w, http.StatusServiceUnavailable,
@@ -127,6 +129,17 @@ func SupplierOptionsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	if list == nil {
 		list = []sup{}
+	}
+	if r.Header.Get("HX-Request") == "true" {
+		options := make([]components.SupplierLookupOption, 0, len(list))
+		for _, s := range list {
+			options = append(options, components.SupplierLookupOption{ID: s.ID, Name: s.Name})
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := components.SupplierLookupOptions(options).Render(r.Context(), w); err != nil {
+			http.Error(w, "渲染供應商結果失敗", http.StatusInternalServerError)
+		}
+		return
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "suppliers": list})
 }

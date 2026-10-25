@@ -193,7 +193,9 @@ templ AddItemForm(woID int64) {
 		</label>
 		<label class="full" id="partSearchWrap">零件搜尋（輸入零件名稱或料號）
 			<div class="search-bar">
-				<input type="text" id="partSearch" class="search-input" placeholder="例：機油、煞車片、BE071" autocomplete="off">
+				<input type="search" id="partSearch" class="search-input" placeholder="例：機油、煞車片、BE071" autocomplete="off"
+					hx-get="/api/parts" hx-trigger="keyup changed delay:300ms, search"
+					hx-target="#partResults" hx-swap="innerHTML">
 				@components.BarcodeScanUI("partScanBtn", "partSearch", "partScanBox")
 			</div>
 			<div id="partResults" class="part-results"></div>
@@ -204,7 +206,9 @@ templ AddItemForm(woID int64) {
 			<div style="margin-top:4px">
 				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">📝 常用片語</button>
 				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a">
-					<input type="text" id="phraseSearch" class="search-input" placeholder="搜尋片語..." style="width:100%;margin-bottom:8px">
+					<input type="search" id="phraseSearch" class="search-input" placeholder="搜尋片語..." style="width:100%;margin-bottom:8px"
+						hx-get="/api/phrases/search" hx-trigger="keyup changed delay:300ms, search"
+						hx-target="#phraseResults" hx-swap="innerHTML">
 					<div id="phraseResults" style="max-height:150px;overflow-y:auto"></div>
 				</div>
 			</div>
@@ -354,42 +358,15 @@ templ PartSearchScript() {
 			var hidden = document.getElementById('inventoryItemId');
 			var desc = document.getElementById('itemDesc');
 			var price = document.getElementById('unitPrice');
-			var timer;
 			if (!search || !results) return;
-			search.addEventListener('input', function(){
-				clearTimeout(timer);
-				var q = search.value.trim();
-				if (q.length < 1) { results.style.display = 'none'; return; }
-				timer = setTimeout(function(){
-					fetch('/api/parts?q=' + encodeURIComponent(q))
-						.then(function(r){ return r.json(); })
-						.then(function(list){
-							results.innerHTML = '';
-							if (!list || list.length === 0) {
-								results.innerHTML = '<div style="padding:8px;color:#64748b">查無零件</div>';
-								results.style.display = 'block';
-								return;
-							}
-							list.forEach(function(p){
-								var div = document.createElement('div');
-								div.className = 'part-result-item';
-								// T2.23: 顯示庫位，讓技師掃描條碼後能快速找到零件位置
-								var locText = p.bin_location ? ' <span class="bin-loc">📍' + p.bin_location + '</span>' : '';
-								div.innerHTML = '<b>' + p.name + '</b> <span style="color:#64748b">' + p.part_number + '</span>' + locText + ' <span style="color:#38bdf8">$' + p.price + '</span> <span style="color:#f59e0b">庫存 ' + p.stock + '</span>';
-								div.addEventListener('click', function(){
-									hidden.value = p.id;
-									search.value = p.name + ' / ' + p.part_number;
-									desc.value = p.name;
-									price.value = p.price;
-									results.style.display = 'none';
-								});
-								div.addEventListener('mouseenter', function(){ div.classList.add('part-result-hover'); });
-								div.addEventListener('mouseleave', function(){ div.classList.remove('part-result-hover'); });
-								results.appendChild(div);
-							});
-							results.style.display = 'block';
-						});
-				}, 300);
+			results.addEventListener('click', function(e){
+				var item = e.target.closest('.part-result-item');
+				if (!item) return;
+				hidden.value = item.dataset.partId;
+				search.value = item.dataset.partName + ' / ' + item.dataset.partNumber;
+				desc.value = item.dataset.partName;
+				price.value = item.dataset.partPrice;
+				results.innerHTML = '';
 			});
 			document.addEventListener('click', function(e){
 				if (!results.contains(e.target) && e.target !== search) results.style.display = 'none';
@@ -409,36 +386,13 @@ templ PhrasePickerScript() {
 			var search = document.getElementById('phraseSearch');
 			var results = document.getElementById('phraseResults');
 			var desc = document.getElementById('itemDesc');
-			var timer;
 			if (!search || !results) return;
-			search.addEventListener('input', function(){
-				clearTimeout(timer);
-				var q = search.value.trim();
-				if (q.length < 1) { results.innerHTML = ''; return; }
-				timer = setTimeout(function(){
-					fetch('/api/phrases/search?q=' + encodeURIComponent(q))
-						.then(function(r){ return r.json(); })
-						.then(function(list){
-							results.innerHTML = '';
-							if (!list || list.length === 0) {
-								results.innerHTML = '<div style="padding:8px;color:#64748b;font-size:12px">查無片語</div>';
-								return;
-							}
-							list.forEach(function(p){
-								var div = document.createElement('div');
-								div.style.cssText = 'padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:12.5px';
-								div.innerHTML = '<span style="color:#94a3b">[' + (p.category || '未分類') + ']</span> ' + p.phrase;
-								div.addEventListener('click', function(){
-									desc.value = p.phrase;
-									results.innerHTML = '';
-									search.value = '';
-								});
-								div.addEventListener('mouseenter', function(){ div.style.background = '#1e293b'; });
-								div.addEventListener('mouseleave', function(){ div.style.background = ''; });
-								results.appendChild(div);
-							});
-						});
-				}, 300);
+			results.addEventListener('click', function(e){
+				var item = e.target.closest('.phrase-result-item');
+				if (!item) return;
+				desc.value = item.dataset.phrase;
+				results.innerHTML = '';
+				search.value = '';
 			});
 		})();
 	</script>

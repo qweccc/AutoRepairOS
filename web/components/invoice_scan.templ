@@ -20,6 +20,7 @@ templ InvoiceScanUI() {
 			辨識到 <b id="invoiceScanCount">0</b> 項品項，可直接編輯數量與單價，確認後按下方「建立並加入品項」
 		</div>
 		<div id="invoiceScanSupplier" style="display:none;padding:6px 10px;border-top:1px solid #334155;font-size:13px"></div>
+		<div id="supplierLookup" hx-get="/api/suppliers" hx-trigger="supplier-lookup" style="display:none"></div>
 		<div id="invoiceScanRows"></div>
 	</div>
 	<script>
@@ -29,10 +30,12 @@ templ InvoiceScanUI() {
 			var box = document.getElementById("invoiceScanBox");
 			var rowsBox = document.getElementById("invoiceScanRows");
 			var suppBox = document.getElementById("invoiceScanSupplier");
+			var supplierLookup = document.getElementById("supplierLookup");
 			var countEl = document.getElementById("invoiceScanCount");
 			if (!btn || !input || !rowsBox) return;
 
 			var items = []; // 目前清單（可編輯），送出前序列化進 items_json
+			var pendingSupplierName = "";
 
 			btn.addEventListener("click", function () { input.click(); });
 
@@ -93,32 +96,27 @@ templ InvoiceScanUI() {
 			function matchSupplier(name) {
 				suppBox.style.display = "none";
 				if (!name) return;
-				fetch("/api/suppliers")
-					.then(function (r) { return r.json(); })
-					.then(function (j) {
-						if (!j.ok || !j.suppliers) return;
-						var target = normalizeName(name);
-						var best = null;
-						j.suppliers.forEach(function (s) {
-							if (normalizeName(s.name) === target) { best = s; }
-						});
-						if (!best) {
-							j.suppliers.forEach(function (s) {
-								var sn = normalizeName(s.name);
-								if (sn && target && (sn.indexOf(target) >= 0 || target.indexOf(sn) >= 0) && !best) {
-									best = s;
-								}
-							});
-						}
-						var sel = document.querySelector('[name="supplier_id"]');
-						if (best && sel) {
-							sel.value = String(best.id);
-							showSupplierNote("已帶入供應商：" + best.name, "#4ade80");
-						} else {
-							showSupplierNotFound(name);
-						}
-					})
-					.catch(function () { /* 比對失敗不阻斷，使用者手動選 */ });
+				pendingSupplierName = name;
+				htmx.trigger(supplierLookup, "supplier-lookup");
+			}
+
+			document.addEventListener("htmx:afterRequest", function (e) {
+				if (e.detail.elt !== supplierLookup || !pendingSupplierName) return;
+				var target = normalizeName(pendingSupplierName);
+				var best = null;
+				supplierLookup.querySelectorAll("option").forEach(function (opt) {
+					var sn = normalizeName(opt.dataset.supplierName || opt.textContent);
+					if (sn === target || (!best && sn && target && (sn.indexOf(target) >= 0 || target.indexOf(sn) >= 0))) {
+						best = { id: opt.value, name: opt.dataset.supplierName || opt.textContent };
+					}
+				});
+				var sel = document.querySelector('[name="supplier_id"]');
+				if (best && sel) {
+					sel.value = best.id;
+					showSupplierNote("已帶入供應商：" + best.name, "#4ade80");
+				} else {
+					showSupplierNotFound(pendingSupplierName);
+				}
 			}
 
 			// 找不到供應商：列出「＋ 新增『X』為供應商」按鈕，一鍵建立並帶入下拉選單。
@@ -131,40 +129,32 @@ templ InvoiceScanUI() {
 				var mk = document.createElement("button");
 				mk.type = "button";
 				mk.className = "btn btn-p";
+				mk.name = "name";
+				mk.value = name;
+				mk.setAttribute("hx-post", "/api/suppliers/quick-create");
+				mk.setAttribute("hx-target", "#invoiceScanSupplier");
+				mk.setAttribute("hx-swap", "innerHTML");
 				mk.style.cssText = "margin-left:8px;padding:3px 10px;font-size:12.5px";
 				mk.textContent = "＋ 新增為供應商";
-				mk.addEventListener("click", function () {
-					mk.disabled = true;
-					mk.textContent = "建立中…";
-					fetch("/api/suppliers/quick-create", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ name: name })
-					})
-						.then(function (r) { return r.json(); })
-						.then(function (j) {
-							if (!j.ok) { alert("新增供應商失敗：" + (j.error || "未知錯誤")); mk.disabled = false; mk.textContent = "＋ 新增為供應商"; return; }
-							var sel = document.querySelector('[name="supplier_id"]');
-							if (sel) {
-								// 下拉選單加上新選項並選取（有的話直接選）。
-								var opt = document.createElement("option");
-								opt.value = String(j.id);
-								opt.textContent = j.name;
-								sel.appendChild(opt);
-								sel.value = String(j.id);
-							}
-							var note = j.existing
-								? "已帶入既有供應商：" + j.name
-								: (j.similar
-									? "已新增供應商「" + j.name + "」（注意：系統裡已有類似名稱「" + j.similar + "」，請確認是否為同一家）"
-									: "已新增供應商：" + j.name);
-							showSupplierNote(note, j.existing || !j.similar ? "#4ade80" : "#fbbf24");
-						})
-						.catch(function () { alert("新增供應商請求失敗"); mk.disabled = false; mk.textContent = "＋ 新增為供應商"; });
-				});
 				suppBox.appendChild(mk);
 				suppBox.style.display = "block";
 			}
+
+			document.addEventListener("htmx:afterRequest", function (e) {
+				if (!e.detail.elt || e.detail.elt.name !== "name" || e.detail.elt.getAttribute("hx-post") !== "/api/suppliers/quick-create") return;
+				var parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, "text/html");
+				var result = parsed.getElementById("supplierQuickCreateResult");
+				if (!result) return;
+				var sel = document.querySelector('[name="supplier_id"]');
+				if (sel) {
+					var opt = document.createElement("option");
+					opt.value = result.dataset.id;
+					opt.textContent = result.dataset.name;
+					sel.appendChild(opt);
+					sel.value = result.dataset.id;
+				}
+				showSupplierNote(result.dataset.note, result.dataset.color);
+			});
 
 			function showSupplierNote(text, color) {
 				suppBox.textContent = text;

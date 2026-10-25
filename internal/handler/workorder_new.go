@@ -8,6 +8,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/components"
 	"autorepairos/web/pages"
 )
 
@@ -208,6 +209,10 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := currentUser(r); err != nil {
+		if r.Header.Get("HX-Request") == "true" {
+			writeQuickVehicleFragment(w, r, http.StatusUnauthorized, components.QuickVehicleResultData{Error: "未登入"})
+			return
+		}
 		writeJSON(w, http.StatusUnauthorized, map[string]interface{}{"ok": false, "error": "未登入"})
 		return
 	}
@@ -219,6 +224,10 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 	mileage := strings.TrimSpace(r.FormValue("current_mileage"))
 
 	if plate == "" || brand == "" || name == "" || phone == "" {
+		if r.Header.Get("HX-Request") == "true" {
+			writeQuickVehicleFragment(w, r, http.StatusBadRequest, components.QuickVehicleResultData{Error: "車牌、廠牌、姓名、電話為必填"})
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "車牌、廠牌、姓名、電話為必填"})
 		return
 	}
@@ -235,6 +244,13 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 			COALESCE(c.name,''), COALESCE(c.phone,'')
 			FROM active_vehicles v JOIN active_customers c ON c.id = v.customer_id WHERE v.id = ?`, existingID).
 			Scan(&label, &ownerName, &ownerPhone)
+		if r.Header.Get("HX-Request") == "true" {
+			writeQuickVehicleFragment(w, r, http.StatusOK, components.QuickVehicleResultData{
+				OK: true, VehicleID: strconv.FormatInt(existingID, 10), Label: label,
+				Duplicate: true, OwnerName: ownerName, OwnerPhone: ownerPhone,
+			})
+			return
+		}
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"ok": true, "vehicle_id": existingID, "label": label, "mileage": "",
 			"duplicate":   true,
@@ -277,5 +293,19 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	label := plate + " / " + brand + " / " + name
+	if r.Header.Get("HX-Request") == "true" {
+		writeQuickVehicleFragment(w, r, http.StatusOK, components.QuickVehicleResultData{
+			OK: true, VehicleID: strconv.FormatInt(vehicleID, 10), Label: label, Mileage: mileage,
+		})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "vehicle_id": vehicleID, "label": label, "mileage": mileage})
+}
+
+func writeQuickVehicleFragment(w http.ResponseWriter, r *http.Request, status int, data components.QuickVehicleResultData) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	if err := components.QuickVehicleResult(data).Render(r.Context(), w); err != nil {
+		http.Error(w, "渲染快速建車結果失敗", http.StatusInternalServerError)
+	}
 }

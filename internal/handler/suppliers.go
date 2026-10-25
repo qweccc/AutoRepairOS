@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -221,15 +222,24 @@ func QuickCreateSupplier(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusMethodNotAllowed)
 		return
 	}
-	var body struct {
-		Name string `json:"name"`
+	var name string
+	if r.Header.Get("HX-Request") == "true" {
+		name = strings.TrimSpace(r.FormValue("name"))
+	} else {
+		var body struct {
+			Name string `json:"name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
+			return
+		}
+		name = strings.TrimSpace(body.Name)
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
-		return
-	}
-	name := strings.TrimSpace(body.Name)
 	if name == "" {
+		if r.Header.Get("HX-Request") == "true" {
+			writeSupplierQuickCreateFragment(w, r, http.StatusBadRequest, 0, "", "請輸入供應商名稱", "#f87171")
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請輸入供應商名稱"})
 		return
 	}
@@ -239,6 +249,11 @@ func QuickCreateSupplier(w http.ResponseWriter, r *http.Request) {
 	var existName string
 	err := db.DB.QueryRow(`SELECT id, name FROM active_suppliers WHERE name = ? LIMIT 1`, name).Scan(&existID, &existName)
 	if err == nil {
+		if r.Header.Get("HX-Request") == "true" {
+			writeSupplierQuickCreateFragment(w, r, http.StatusOK, existID, existName,
+				"已帶入既有供應商："+existName, "#4ade80")
+			return
+		}
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"ok": true, "id": existID, "name": existName, "existing": true,
 		})
@@ -255,9 +270,27 @@ func QuickCreateSupplier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := res.LastInsertId()
+	if r.Header.Get("HX-Request") == "true" {
+		note := "已新增供應商：" + name
+		color := "#4ade80"
+		if similar != "" {
+			note = "已新增供應商「" + name + "」（注意：系統裡已有類似名稱「" + similar + "」，請確認是否為同一家）"
+			color = "#fbbf24"
+		}
+		writeSupplierQuickCreateFragment(w, r, http.StatusOK, id, name, note, color)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"ok": true, "id": id, "name": name, "existing": false, "similar": similar,
 	})
+}
+
+func writeSupplierQuickCreateFragment(w http.ResponseWriter, r *http.Request, status int, id int64, name, note, color string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	if err := components.SupplierQuickCreateResult(strconv.FormatInt(id, 10), name, note, color).Render(r.Context(), w); err != nil {
+		http.Error(w, "渲染供應商結果失敗", http.StatusInternalServerError)
+	}
 }
 
 // EditSupplierForm 編輯供應商表單。

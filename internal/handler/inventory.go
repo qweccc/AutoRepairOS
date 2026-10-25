@@ -10,6 +10,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/components"
 	"autorepairos/web/pages"
 )
 
@@ -451,11 +452,16 @@ func inventoryOptions() string {
 	return b.String()
 }
 
-// SearchPartsAPI 零件即時搜尋 API，回傳 JSON。
-// 給工單新增零件時的前端 autocomplete 使用。
+// SearchPartsAPI 零件即時搜尋 API。HTMX 請求回傳結果 fragment，其餘
+// client 維持原本的 JSON response。
 func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
+		if r.Header.Get("HX-Request") == "true" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_ = components.PartLookupResults(nil).Render(r.Context(), w)
+			return
+		}
 		writeJSON(w, http.StatusOK, []interface{}{})
 		return
 	}
@@ -467,6 +473,10 @@ func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 		WHERE name LIKE ? OR part_number LIKE ? OR COALESCE(barcode,'') LIKE ?
 		ORDER BY name LIMIT 20`, like, like, like)
 	if err != nil {
+		if r.Header.Get("HX-Request") == "true" {
+			http.Error(w, "查詢零件失敗", http.StatusInternalServerError)
+			return
+		}
 		writeJSON(w, http.StatusInternalServerError, []interface{}{})
 		return
 	}
@@ -487,6 +497,20 @@ func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		results = append(results, p)
+	}
+	if r.Header.Get("HX-Request") == "true" {
+		fragment := make([]components.PartLookupResult, 0, len(results))
+		for _, p := range results {
+			fragment = append(fragment, components.PartLookupResult{
+				ID: p.ID, Name: p.Name, PartNumber: p.PartNumber,
+				BinLocation: p.BinLocation, Price: money(p.Price), Stock: p.Stock,
+			})
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := components.PartLookupResults(fragment).Render(r.Context(), w); err != nil {
+			http.Error(w, "渲染零件結果失敗", http.StatusInternalServerError)
+		}
+		return
 	}
 	writeJSON(w, http.StatusOK, results)
 }

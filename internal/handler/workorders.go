@@ -976,6 +976,10 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if renderWorkOrderItemsFragment(w, r, woID) {
+		return
+	}
+
 	// AJAX 請求：回傳 JSON 供前端局部更新，不跳頁
 	if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
 		var newTotal float64
@@ -1047,7 +1051,32 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if renderWorkOrderItemsFragment(w, r, woID) {
+		return
+	}
+
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已刪除項目")
+}
+
+func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID int64) bool {
+	if r.Header.Get("HX-Request") != "true" {
+		return false
+	}
+	items, itemTotal := loadWorkOrderItems(woID)
+	techNames := map[int64]string{}
+	for _, it := range items {
+		if it.PrimaryTechnicianID > 0 {
+			techNames[it.PrimaryTechnicianID] = techName(it.PrimaryTechnicianID)
+		}
+		if it.AssistantTechID > 0 {
+			techNames[it.AssistantTechID] = techName(it.AssistantTechID)
+		}
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := pages.WorkOrderItemsTable(woID, items, techNames, true, itemTotal).Render(r.Context(), w); err != nil {
+		http.Error(w, "渲染工單項目失敗", http.StatusInternalServerError)
+	}
+	return true
 }
 
 func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
@@ -1201,117 +1230,6 @@ func statusControls(wo model.WorkOrder, canEdit bool) string {
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
           <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
         </form>`
-}
-
-// addItemForm 產生加入項目的表單；已結帳時不提供。
-func addItemForm(wo model.WorkOrder, canEdit bool) string {
-	if !canEdit {
-		return ""
-	}
-
-	return `
-      <form class="frm" id="addItemForm" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/items" style="margin-top:18px">
-        <label>類型<select name="item_type" id="itemType">
-          <option value="labor">工資</option>
-          <option value="part">零件</option>
-          <option value="subcontract">外包</option>
-        </select></label>
-        <label class="full">零件搜尋（輸入零件名稱或料號）
-          <input type="text" id="partSearch" placeholder="例：機油、煞車片、BE071" autocomplete="off">
-          <div id="partResults" style="display:none;border:1px solid #334155;border-radius:7px;margin-top:4px;max-height:200px;overflow-y:auto;background:#0f172a"></div>
-          <input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
-        </label>
-        <label class="full">描述<input name="description" id="itemDesc" required></label>
-        <label>數量<input name="quantity" type="number" min="1" value="1" required></label>
-        <label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
-        <label>主技師<select name="primary_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <label>助手<select name="assistant_technician_id"><option value="0">-</option>` + technicianOptions() + `</select></label>
-        <div class="full"><button class="btn btn-p" type="submit" id="addItemBtn">加入項目</button></div>
-      </form>
-      <script>
-      (function(){
-        var search = document.getElementById('partSearch');
-        var results = document.getElementById('partResults');
-        var hidden = document.getElementById('inventoryItemId');
-        var desc = document.getElementById('itemDesc');
-        var price = document.getElementById('unitPrice');
-        var type = document.getElementById('itemType');
-        var timer;
-        if (!search || !results) return;
-        type.addEventListener('change', function(){
-          var show = type.value === 'part';
-          search.style.display = show ? '' : 'none';
-          if (!show) { hidden.value = '0'; results.style.display = 'none'; }
-        });
-        search.addEventListener('input', function(){
-          clearTimeout(timer);
-          var q = search.value.trim();
-          if (q.length < 1) { results.style.display = 'none'; return; }
-          timer = setTimeout(function(){
-            fetch('/api/parts?q=' + encodeURIComponent(q))
-              .then(function(r){ return r.json(); })
-              .then(function(list){
-                results.innerHTML = '';
-                if (!list || list.length === 0) {
-                  results.innerHTML = '<div style="padding:8px;color:#64748b">查無零件</div>';
-                  results.style.display = 'block';
-                  return;
-                }
-                list.forEach(function(p){
-                  var div = document.createElement('div');
-                  div.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:13px';
-                  div.innerHTML = '<b>' + p.name + '</b> <span style="color:#64748b">' + p.part_number + '</span> <span style="color:#38bdf8">$' + p.price + '</span> <span style="color:#f59e0b">庫存 ' + p.stock + '</span>';
-                  div.addEventListener('click', function(){
-                    hidden.value = p.id;
-                    search.value = p.name + ' / ' + p.part_number;
-                    desc.value = p.name;
-                    price.value = p.price;
-                    results.style.display = 'none';
-                  });
-                  div.addEventListener('mouseenter', function(){ div.style.background = '#1e293b'; });
-                  div.addEventListener('mouseleave', function(){ div.style.background = ''; });
-                  results.appendChild(div);
-                });
-                results.style.display = 'block';
-              });
-          }, 300);
-        });
-        document.addEventListener('click', function(e){
-          if (!results.contains(e.target) && e.target !== search) results.style.display = 'none';
-        });
-        var form = document.getElementById('addItemForm');
-        if (!form) return;
-        form.addEventListener('submit', function(e){
-          e.preventDefault();
-          var btn = document.getElementById('addItemBtn');
-          btn.disabled = true; btn.textContent = '送出中…';
-          var data = new FormData(form);
-          fetch(form.action, {method:'POST', body:data, headers:{'X-Requested-With':'XMLHttpRequest'}})
-            .then(function(r){ return r.json(); })
-            .then(function(j){
-              if (j.ok) {
-                var tbl = document.querySelector('table');
-                if (tbl) {
-                  var tr = document.createElement('tr');
-                  var typeLabel = {labor:'工資', part:'零件', subcontract:'外包'}[j.item_type] || j.item_type;
-                  tr.innerHTML = '<td><span class="pill p-progress">'+typeLabel+'</span></td><td>'+j.desc+'</td><td class="num">'+j.qty+'</td><td class="num">'+j.unit_price+'</td><td class="num">'+j.subtotal+'</td><td>-</td><td>-</td><td>-</td>';
-                  tbl.appendChild(tr);
-                }
-                var totalEl = document.querySelector('.rpt-total .grand b');
-                if (totalEl) totalEl.textContent = j.total;
-                form.reset();
-                var qty = form.querySelector('[name="quantity"]'); if(qty) qty.value = 1;
-                hidden.value = '0';
-                search.value = '';
-              } else {
-                alert(j.error || '加入失敗');
-              }
-            })
-            .catch(function(){ alert('網路錯誤'); })
-            .finally(function(){ btn.disabled = false; btn.textContent = '加入項目'; });
-        });
-      })();
-      </script>`
 }
 
 func sopToggleLabel(done bool) string {

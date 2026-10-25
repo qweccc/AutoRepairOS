@@ -1,0 +1,53 @@
+package components
+
+import "strconv"
+
+type PartLookupResult struct {
+	ID          int64
+	Name        string
+	PartNumber  string
+	BinLocation string
+	Price       string
+	Stock       int
+}
+
+type PhraseLookupResult struct {
+	ID       int64
+	Phrase   string
+	Category string
+}
+
+templ PartLookupResults(results []PartLookupResult) {
+	if len(results) == 0 {
+		<div style="padding:8px;color:#64748b">查無零件</div>
+	}
+	for _, p := range results {
+		<div class="part-result-item"
+			data-part-id={ strconv.FormatInt(p.ID, 10) }
+			data-part-name={ p.Name }
+			data-part-number={ p.PartNumber }
+			data-part-price={ p.Price }
+			style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:13px">
+			<b>{ p.Name }</b>
+			<span style="color:#64748b">{ p.PartNumber }</span>
+			if p.BinLocation != "" {
+				<span class="bin-loc">📍{ p.BinLocation }</span>
+			}
+			<span style="color:#38bdf8">${ p.Price }</span>
+			<span style="color:#f59e0b">庫存 { strconv.Itoa(p.Stock) }</span>
+		</div>
+	}
+}
+
+templ PhraseLookupResults(results []PhraseLookupResult) {
+	if len(results) == 0 {
+		<div style="padding:8px;color:#64748b;font-size:12px">查無片語</div>
+	}
+	for _, p := range results {
+		<div class="phrase-result-item"
+			data-phrase={ p.Phrase }
+			style="padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:12.5px">
+			<span style="color:#94a3b8">[{ p.Category }]</span> { p.Phrase }
+		</div>
+	}
+}

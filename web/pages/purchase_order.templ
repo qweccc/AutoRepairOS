@@ -306,42 +306,21 @@ templ PurchaseItemLookup(orderID int64) {
 		style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:8px">
 	<div id="po-part-results" style="font-size:13px"></div>
 	<script>
-		// 點零件項目帶入表單（parts API 回 JSON，這裡監聽點擊）。
+		// 查詢交給 HTMX；點選結果仍由小段 JS 將值帶回表單。
 		(function(){
 			var box = document.getElementById('po-part-results');
 			var search = document.getElementById('poPartSearch');
 			if (!box || !search) return;
-			var timer;
-			search.addEventListener('input', function(){
-				clearTimeout(timer);
-				timer = setTimeout(function(){
-					var q = search.value.trim();
-					if (q.length < 1) { box.innerHTML = ''; return; }
-					fetch('/api/parts?q=' + encodeURIComponent(q))
-						.then(function(r){ return r.json(); })
-						.then(function(list){
-							box.innerHTML = '';
-							if (!list || list.length === 0) {
-								box.innerHTML = '<div style="color:#64748b;padding:6px">查無零件</div>';
-								return;
-							}
-							list.forEach(function(p){
-								var div = document.createElement('div');
-								div.style.cssText = 'padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b';
-								div.innerHTML = '<b>' + p.name + '</b> <span style="color:#64748b">' + p.part_number + '</span>';
-								div.addEventListener('click', function(){
-									var form = document.getElementById('addItemForm');
-									form.querySelector('[name="description"]').value = p.name;
-									form.querySelector('[name="unit_price_f"]').value = p.price;
-									document.getElementById('inventoryItemId').value = p.id;
-									document.getElementById('partNumber').value = p.part_number;
-									box.innerHTML = '';
-									search.value = '';
-								});
-								box.appendChild(div);
-							});
-						});
-				}, 300);
+			box.addEventListener('click', function(e){
+				var item = e.target.closest('.part-result-item');
+				if (!item) return;
+				var form = document.getElementById('addItemForm');
+				form.querySelector('[name="description"]').value = item.dataset.partName;
+				form.querySelector('[name="unit_price_f"]').value = item.dataset.partPrice;
+				document.getElementById('inventoryItemId').value = item.dataset.partId;
+				document.getElementById('partNumber').value = item.dataset.partNumber;
+				box.innerHTML = '';
+				search.value = '';
 			});
 		})();
 	</script>

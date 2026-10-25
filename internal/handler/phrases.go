@@ -7,6 +7,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/web/components"
 	"autorepairos/web/pages"
 )
 
@@ -147,6 +148,19 @@ func SearchPhrasesAPI(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		results = append(results, p)
+	}
+	if r.Header.Get("HX-Request") == "true" {
+		fragment := make([]components.PhraseLookupResult, 0, len(results))
+		for _, p := range results {
+			fragment = append(fragment, components.PhraseLookupResult{
+				ID: p.ID, Phrase: p.Phrase, Category: p.Category,
+			})
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := components.PhraseLookupResults(fragment).Render(r.Context(), w); err != nil {
+			http.Error(w, "渲染片語結果失敗", http.StatusInternalServerError)
+		}
+		return
 	}
 	writeJSON(w, http.StatusOK, results)
 }

@@ -127,7 +127,7 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 					<h3>⚡ 快速建立客戶與車輛</h3>
 					<button type="button" class="close-btn" onclick="closeQuickModal()">✕</button>
 				</div>
-				<form id="quickForm" onsubmit="submitQuickVehicle(event)">
+				<form id="quickForm" hx-post="/api/quick-vehicle" hx-target="#quickVehicleStatus" hx-swap="innerHTML">
 					@components.CSRFInput()
 					<div class="frm">
 						<label>車牌號碼<input name="plate_number" id="quickPlate" required/></label>
@@ -140,6 +140,7 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 						<button type="submit" class="btn btn-p">建立並帶入工單</button>
 						<button type="button" class="btn btn-s" onclick="closeQuickModal()">取消</button>
 					</div>
+					<div id="quickVehicleStatus" role="status"></div>
 				</form>
 			</div>
 		</div>
@@ -152,21 +153,18 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 				document.getElementById('quickModal').classList.add('hidden');
 				document.getElementById('quickForm').reset();
 			}
-			function submitQuickVehicle(e) {
-				e.preventDefault();
-				var f = document.getElementById('quickForm');
-				var data = new FormData(f);
-				fetch('/api/quick-vehicle', {method:'POST', body:data})
-					.then(function(r){ return r.json(); })
-					.then(function(j){
-						if (j.ok) {
+			document.addEventListener('htmx:afterRequest', function(e) {
+				if (e.detail.elt !== document.getElementById('quickForm')) return;
+				var parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, 'text/html');
+				var result = parsed.getElementById('quickVehicleResult');
+				if (!result || result.dataset.ok !== 'true') return;
 							// 車牌已存在時先問清楚再帶入。
 							// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於
 							// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。
-							if (j.duplicate) {
-								var who = (j.owner_name || '未知車主') +
-									(j.owner_phone ? '（' + j.owner_phone + '）' : '');
-								var msg = '車牌 ' + j.label.split(' / ')[0] + ' 已經有建檔紀錄。\n\n' +
+							if (result.dataset.duplicate === 'true') {
+								var who = (result.dataset.ownerName || '未知車主') +
+									(result.dataset.ownerPhone ? '（' + result.dataset.ownerPhone + '）' : '');
+								var msg = '車牌 ' + result.dataset.label.split(' / ')[0] + ' 已經有建檔紀錄。\n\n' +
 									'現有車主：' + who + '\n\n' +
 									'要使用這台既有車輛嗎？\n' +
 									'按「取消」可留下來修改車牌，或改用上方的搜尋清單選車。';
@@ -176,19 +174,19 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 							}
 							closeQuickModal();
 							var input = document.getElementById('vehicle_id');
-							input.value = j.vehicle_id;
+							input.value = result.dataset.vehicleId;
 							var vs = document.querySelector('.vs-input');
-							if (vs) vs.value = j.label;
+							if (vs) vs.value = result.dataset.label;
 							var hint = document.querySelector('[name="current_mileage"]');
-							if (hint) hint.value = j.mileage || '';
+							if (hint) hint.value = result.dataset.mileage || '';
 							var btn = document.querySelector('.btn-p');
 							if (btn) btn.focus();
-						} else {
-							alert(j.error || '建立失敗');
-						}
-					})
-					.catch(function(){ alert('網路錯誤'); });
-			}
+			});
+			document.addEventListener('htmx:responseError', function(e) {
+				if (e.detail.elt === document.getElementById('quickForm')) {
+					alert(e.detail.xhr.responseText || '建立失敗');
+				}
+			});
 			document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });
 		</script>
 	}
