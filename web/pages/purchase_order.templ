@@ -297,7 +297,7 @@ templ AddPurchaseItemForm(orderID int64, partCategoryOptions string) {
 
 // PurchaseItemLookup 品項即時搜尋（選庫存零件帶入）。
 templ PurchaseItemLookup(orderID int64) {
-	<input type="search" id="poPartSearch"
+	<input type="search" id="poPartSearch" name="q"
 		placeholder="搜尋庫存零件帶入（例：機油）"
 		hx-get="/api/parts"
 		hx-trigger="keyup changed delay:300ms"

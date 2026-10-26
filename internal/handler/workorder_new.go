@@ -279,8 +279,8 @@ func QuickVehicle(w http.ResponseWriter, r *http.Request) {
 		customerID, _ = res.LastInsertId()
 	}
 
-	res, err := tx.Exec(`INSERT INTO vehicles (customer_id, plate_number, brand_model, current_mileage)
-		VALUES (?, ?, ?, ?)`, customerID, plate, brand, atoiDefault(mileage, 0))
+	res, err := tx.Exec(`INSERT INTO vehicles (customer_id, plate_number, brand_model)
+		VALUES (?, ?, ?)`, customerID, plate, brand)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "建立車輛失敗"})
 		return

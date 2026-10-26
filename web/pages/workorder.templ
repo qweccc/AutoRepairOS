@@ -193,7 +193,7 @@ templ AddItemForm(woID int64) {
 		</label>
 		<label class="full" id="partSearchWrap">零件搜尋（輸入零件名稱或料號）
 			<div class="search-bar">
-				<input type="search" id="partSearch" class="search-input" placeholder="例：機油、煞車片、BE071" autocomplete="off"
+				<input type="search" id="partSearch" name="q" class="search-input" placeholder="例：機油、煞車片、BE071" autocomplete="off"
 					hx-get="/api/parts" hx-trigger="keyup changed delay:300ms, search"
 					hx-target="#partResults" hx-swap="innerHTML">
 				@components.BarcodeScanUI("partScanBtn", "partSearch", "partScanBox")
@@ -206,7 +206,7 @@ templ AddItemForm(woID int64) {
 			<div style="margin-top:4px">
 				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">📝 常用片語</button>
 				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a">
-					<input type="search" id="phraseSearch" class="search-input" placeholder="搜尋片語..." style="width:100%;margin-bottom:8px"
+					<input type="search" id="phraseSearch" name="phrase" class="search-input" placeholder="搜尋片語..." style="width:100%;margin-bottom:8px"
 						hx-get="/api/phrases/search" hx-trigger="keyup changed delay:300ms, search"
 						hx-target="#phraseResults" hx-swap="innerHTML">
 					<div id="phraseResults" style="max-height:150px;overflow-y:auto"></div>
@@ -217,7 +217,7 @@ templ AddItemForm(woID int64) {
 		<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
 		<label>主技師
 			<div class="staff-picker">
-				<input class="staff-picker-input" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
+				<input class="staff-picker-input" name="q" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
 					hx-get="/api/staff/search?format=picker&kind=employee" hx-trigger="keyup changed delay:250ms, search"
 					hx-target="next .staff-picker-results" hx-swap="innerHTML">
 				<input type="hidden" name="primary_technician_id" value="0">
@@ -226,7 +226,7 @@ templ AddItemForm(woID int64) {
 		</label>
 		<label>助手
 			<div class="staff-picker">
-				<input class="staff-picker-input" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
+				<input class="staff-picker-input" name="q" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
 					hx-get="/api/staff/search?format=picker&kind=employee" hx-trigger="keyup changed delay:250ms, search"
 					hx-target="next .staff-picker-results" hx-swap="innerHTML">
 				<input type="hidden" name="assistant_technician_id" value="0">
