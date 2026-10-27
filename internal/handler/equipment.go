@@ -157,7 +157,7 @@ func EditEquipmentForm(w http.ResponseWriter, r *http.Request, user model.User) 
 	id := mustInt(r.PathValue("id"))
 	var e model.Equipment
 	var createdAt string
-	err := db.DB.QueryRow(`SELECT `+equipmentCols+` FROM active_equipment WHERE id = ?`, id).
+	err := db.DB.QueryRow(`SELECT `+equipmentCols+` FROM active_equipment e WHERE e.id = ?`, id).
 		Scan(&e.ID, &e.Name, &e.Model, &e.SerialNumber, &e.Location,
 			&e.PurchaseDate, &e.WarrantyExpiry, &e.Status, &e.Notes, &createdAt)
 	if err != nil {

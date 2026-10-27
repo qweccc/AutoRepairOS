@@ -189,6 +189,7 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
+	c.Birthday = normDate(c.Birthday)
 	pages.EditCustomerPage(pages.CustomerEditData{
 		Customer: c, SMSWarning: c.NotificationPref == "sms",
 		Flash: r.URL.Query().Get("msg"), FlashErr: r.URL.Query().Get("err"), User: user,

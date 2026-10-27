@@ -59,6 +59,12 @@ func scanVehicle(rows interface{ Scan(...interface{}) error }) (model.Vehicle, e
 	if v.BodyStyle != "" {
 		v.BodyStyleLabel = lookupLabel("body_style", v.BodyStyle)
 	}
+	v.LicenseExpiryDate = normDate(v.LicenseExpiryDate)
+	v.ManufactureDate = normDate(v.ManufactureDate)
+	v.LicenseIssueDate = normDate(v.LicenseIssueDate)
+	v.InspectionDueDate = normDate(v.InspectionDueDate)
+	v.NextMaintenanceDate = normDate(v.NextMaintenanceDate)
+	v.LastMaintenanceDate = normDate(v.LastMaintenanceDate)
 	return v, err
 }
 

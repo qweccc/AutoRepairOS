@@ -115,9 +115,19 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
+	// lookupCategoryOrder 固定分頁籤順序（map 迭代是隨機的，導致每頁順序不同）。
+	var lookupCategoryOrder = []string{
+		"vehicle_type", "body_style", "fuel_type", "bank", "category",
+		"insurance_class", "branch", "vehicle_model",
+	}
+
 	// 分类筛选签
 	var tabs strings.Builder
-	for key, label := range lookupCategoryLabel {
+	for _, key := range lookupCategoryOrder {
+		label, ok := lookupCategoryLabel[key]
+		if !ok {
+			continue
+		}
 		cls := "btn-s"
 		if category == key {
 			cls = "btn-p"
