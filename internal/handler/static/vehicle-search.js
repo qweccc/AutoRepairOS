@@ -55,6 +55,9 @@
     }
     if (!opts.length) return;
 
+    var remoteTimer = null;
+    var remoteRequest = 0;
+
     opts.forEach(function (o) {
       o.label = String(o.label || '');
       o.parts = parts(o.label);
@@ -101,6 +104,34 @@
       list.classList.remove('hidden');
     }
 
+    function mergeRemote(items, kw) {
+      var byID = {};
+      opts.forEach(function (o) { byID[String(o.v)] = o; });
+      items.forEach(function (o) {
+        o.label = String(o.label || '');
+        o.parts = parts(o.label);
+        byID[String(o.v)] = o;
+      });
+      opts = Object.keys(byID).map(function (k) { return byID[k]; });
+      render(filter(kw), kw);
+    }
+
+    function searchRemote(kw) {
+      var requestID = ++remoteRequest;
+      fetch('/api/work-orders/vehicles?q=' + encodeURIComponent(kw), {
+        headers: { 'Accept': 'application/json' }
+      }).then(function (response) {
+        if (!response.ok) throw new Error('vehicle search failed');
+        return response.json();
+      }).then(function (items) {
+        if (requestID === remoteRequest && input.value.trim() === kw) {
+          mergeRemote(items, kw);
+        }
+      }).catch(function () {
+        // 保留本地清單結果；伺服器搜尋失敗時不清空使用者目前看到的選項。
+      });
+    }
+
     function pick(o) {
       selected = o;
       hidden.value = o.v;
@@ -124,7 +155,12 @@
         hidden.value = '';
         root.classList.remove('vs-picked');
       }
-      render(filter(input.value), input.value);
+      var kw = input.value;
+      render(filter(kw), kw);
+      if (kw.trim().length >= 2) {
+        clearTimeout(remoteTimer);
+        remoteTimer = setTimeout(function () { searchRemote(kw.trim()); }, 180);
+      }
     });
 
     input.addEventListener('focus', function () {

@@ -198,6 +198,61 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	_ = pages.NewWorkOrderPage(data, user).Render(r.Context(), w)
 }
 
+// SearchWorkOrderVehiclesAPI 回傳開工單選擇器的車輛選項。
+// 開工單頁不再依賴前端載入的前 500 台車，避免舊車因排序靠後而查不到。
+func SearchWorkOrderVehiclesAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		writeJSON(w, http.StatusOK, []interface{}{})
+		return
+	}
+
+	like := "%" + q + "%"
+	rows, err := db.DB.Query(`SELECT v.id, v.plate_number, v.brand_model, c.name
+		FROM active_vehicles v
+		JOIN active_customers c ON c.id = v.customer_id
+		WHERE v.plate_number LIKE ? OR v.brand_model LIKE ?
+			OR c.name LIKE ? OR c.phone LIKE ? OR COALESCE(v.vin,'') LIKE ?
+		ORDER BY
+			CASE WHEN UPPER(v.plate_number) = UPPER(?) THEN 0
+				WHEN v.plate_number LIKE ? THEN 1 ELSE 2 END,
+			v.plate_number
+		LIMIT 60`,
+		like, like, like, like, like, q, q+"%")
+	if err != nil {
+		http.Error(w, "搜尋車輛失敗", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type vehicleOption struct {
+		V     string `json:"v"`
+		Label string `json:"label"`
+	}
+	result := make([]vehicleOption, 0)
+	for rows.Next() {
+		var id int64
+		var plate, brand, customer string
+		if err := rows.Scan(&id, &plate, &brand, &customer); err != nil {
+			http.Error(w, "讀取車輛搜尋結果失敗", http.StatusInternalServerError)
+			return
+		}
+		result = append(result, vehicleOption{
+			V: strconv.FormatInt(id, 10),
+			Label: strings.Join([]string{
+				strings.TrimSpace(plate),
+				strings.TrimSpace(brand),
+				strings.TrimSpace(customer),
+			}, " / "),
+		})
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "列舉車輛搜尋結果失敗", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
 // QuickVehicle 開單頁快速建立客戶與車輛（AJAX）。
 //
 // 為什麼需要：櫃檯開單時若查無車牌，傳統流程要跳出頁面先到 /customers

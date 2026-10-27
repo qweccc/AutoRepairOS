@@ -92,7 +92,7 @@ templ EstimateListPage(rows []EstimateListRow, user model.User) {
 	}
 }
 
-templ EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) {
+templ EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string, user model.User) {
 	@components.Layout("建立估價", "/estimates", user, AppName) {
 		<div class="card">
 			<h2>建立估價草稿</h2>
@@ -101,17 +101,14 @@ templ EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) {
 			}
 			<form class="frm" method="POST" action="/estimates">
 				@components.CSRFInput()
-				<label class="full">車牌（輸入車牌可帶出已建檔車輛）
-					<input name="plate_number" id="estimatePlate" list="estimateVehicleList"
-						placeholder="例：ABC-1234" autocomplete="off" required>
-					<datalist id="estimateVehicleList">
-						for _, v := range vehicles {
-							<option value={ v.PlateNumber } data-vehicle-id={ strconv.FormatInt(v.ID, 10) }
-								data-details={ v.BrandModel + " / " + v.CustomerName }></option>
-						}
-					</datalist>
-					<input type="hidden" name="vehicle_id" id="estimateVehicleID" value="0">
-					<span id="estimateVehicleDetails" style="color:#94a3b8;font-size:12px">選取既有車牌後會顯示車型與車主。</span>
+				<label class="full">車牌（輸入車牌、車型或車主搜尋）
+					<div class="vsearch" data-vsearch data-options={ vehicleOptionsJSON }>
+						<input type="hidden" name="vehicle_id" id="estimateVehicleID" value="0" required>
+						<input name="plate_number" class="vs-input" id="estimatePlate"
+							placeholder="例：8168-D5" autocomplete="off" required>
+						<div class="vs-list hidden"></div>
+					</div>
+					<span style="color:#94a3b8;font-size:12px">選取車輛後會顯示車型與車主；輸入至少 2 個字元可搜尋全部車輛。</span>
 				</label>
 				<label>目前里程
 					<input name="current_mileage" type="number" min="0" value="0" placeholder="例：85000">
@@ -125,25 +122,8 @@ templ EstimateNewPage(vehicles []EstimateVehicleOption, user model.User) {
 				</div>
 			</form>
 		</div>
-		<script>
-			(function() {
-				var plate = document.getElementById('estimatePlate');
-				var vehicleID = document.getElementById('estimateVehicleID');
-				var details = document.getElementById('estimateVehicleDetails');
-				var options = document.querySelectorAll('#estimateVehicleList option');
-				plate.addEventListener('input', function() {
-					vehicleID.value = '0';
-					details.textContent = '車牌未選取既有車輛，送出時會依輸入車牌查詢。';
-					for (var i = 0; i < options.length; i++) {
-						if (options[i].value.toUpperCase() === plate.value.trim().toUpperCase()) {
-							vehicleID.value = options[i].getAttribute('data-vehicle-id');
-							details.textContent = options[i].getAttribute('data-details');
-							return;
-						}
-					}
-				});
-			})();
-		</script>
+		<link rel="stylesheet" href="/static/vehicle-search.css"/>
+		<script src="/static/vehicle-search.js" defer></script>
 	}
 }
 
@@ -193,17 +173,77 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
 					@components.CSRFInput()
 					<label>類型
-						<select name="item_type">
-							<option value="labor">工資 / 服務</option><option value="part">零件</option><option value="subcontract">外包</option>
+						<select name="item_type" id="estimateItemType">
+								<option value="labor" selected>工資 / 服務</option><option value="part">零件</option><option value="subcontract">外包</option>
 						</select>
 					</label>
 					<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
-					<label class="full">描述
-						<input name="description" placeholder="例：更換引擎機油與機油芯" required>
-					</label>
-					<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
-					<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+						<label class="full" id="estimatePhraseSearchWrap">服務/工資片語搜尋
+							<input type="search" id="estimatePhraseSearch" placeholder="輸入關鍵字搜尋或選擇常用片語"
+								hx-get="/api/phrases/search" hx-trigger="focus, keyup changed delay:300ms, search"
+								hx-target="#estimatePhraseResults" hx-swap="innerHTML" autocomplete="off">
+							<div id="estimatePhraseResults" class="part-results"></div>
+						</label>
+						<label class="full" id="estimatePartSearchWrap" style="display:none">零件搜尋（名稱或料號）
+							<input type="search" id="estimatePartSearch" placeholder="例：機油、煞車片、A342"
+								hx-get="/api/parts" hx-trigger="keyup changed delay:300ms, search"
+								hx-target="#estimatePartResults" hx-swap="innerHTML" autocomplete="off">
+							<div id="estimatePartResults" class="part-results"></div>
+						</label>
+						<label class="full">描述
+							<input name="description" id="estimateItemDescription" placeholder="例：更換引擎機油與機油芯" required>
+						</label>
+						<input type="hidden" name="inventory_item_id" id="estimateInventoryItemID" value="0">
+						<label>單價<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
+						<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
 				</form>
+				<script>
+						(function() {
+							var type = document.getElementById('estimateItemType');
+							var phraseWrap = document.getElementById('estimatePhraseSearchWrap');
+							var partWrap = document.getElementById('estimatePartSearchWrap');
+							var phraseSearch = document.getElementById('estimatePhraseSearch');
+							var partSearch = document.getElementById('estimatePartSearch');
+							var phraseResults = document.getElementById('estimatePhraseResults');
+							var partResults = document.getElementById('estimatePartResults');
+							var description = document.getElementById('estimateItemDescription');
+							var price = document.getElementById('estimateUnitPrice');
+							var inventoryID = document.getElementById('estimateInventoryItemID');
+							if (!type || !description || !price || !inventoryID) return;
+
+							function updateLookup() {
+								var isPart = type.value === 'part';
+								phraseWrap.style.display = isPart ? 'none' : '';
+								partWrap.style.display = isPart ? '' : 'none';
+								inventoryID.value = '0';
+								if (isPart) {
+									phraseSearch.value = '';
+									phraseResults.innerHTML = '';
+								} else {
+									partSearch.value = '';
+									partResults.innerHTML = '';
+								}
+							}
+							type.addEventListener('change', updateLookup);
+							phraseResults.addEventListener('click', function(e) {
+								var item = e.target.closest('.phrase-result-item');
+								if (!item) return;
+								description.value = item.dataset.phrase;
+								phraseSearch.value = item.dataset.phrase;
+								phraseResults.innerHTML = '';
+							});
+							partResults.addEventListener('click', function(e) {
+								var item = e.target.closest('.part-result-item');
+								if (!item) return;
+								inventoryID.value = item.dataset.partId;
+								description.value = item.dataset.partName + ' (' + item.dataset.partNumber + ')';
+								partSearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;
+								price.value = item.dataset.partPrice;
+								partResults.innerHTML = '';
+							});
+							updateLookup();
+						})();
+				</script>
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/discount" }>
 					@components.CSRFInput()
 					<label>折扣金額<input name="discount_amount" type="number" min="0" max={ strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64) } step="1" value={ strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64) }></label>

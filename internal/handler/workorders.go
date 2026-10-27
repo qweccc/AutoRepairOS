@@ -205,7 +205,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 				if list[i].PartSummary != "" {
 					list[i].PartSummary += "、"
 				}
-				list[i].PartSummary += part + "×" + trimQty(qty)
+				list[i].PartSummary += partDisplayLabel(part, name) + "×" + trimQty(qty)
 				list[i].PartCount++
 			}
 			if err := pr.Err(); err != nil {
@@ -423,6 +423,19 @@ func trimQty(q float64) string {
 		return strconv.FormatInt(int64(q), 10)
 	}
 	return strconv.FormatFloat(q, 'f', 1, 64)
+}
+
+func partDisplayLabel(part, name string) string {
+	part = strings.TrimSpace(part)
+	name = strings.TrimSpace(name)
+	switch {
+	case name != "" && part != "" && name != part:
+		return name + " (" + part + ")"
+	case name != "":
+		return name
+	default:
+		return part
+	}
 }
 
 // woPartUsage 回傳指定工單用過的零件彙總（料號/名稱/數量），供列表展開顯示。
@@ -1080,10 +1093,18 @@ func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID i
 }
 
 func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
-	rows, err := db.DB.Query(`SELECT id, work_order_id, item_type, COALESCE(inventory_item_id,0),
-		description, COALESCE(quantity,0), COALESCE(unit_price,0), COALESCE(subtotal,0),
-		COALESCE(primary_technician_id,0), COALESCE(assistant_technician_id,0), COALESCE(photo_url,'')
-		FROM work_order_items WHERE work_order_id = ? ORDER BY id`, woID)
+	rows, err := db.DB.Query(`SELECT i.id, i.work_order_id, i.item_type, COALESCE(i.inventory_item_id,0),
+		CASE
+			WHEN i.item_type = 'part' AND COALESCE(ii.name,'') <> '' AND COALESCE(ii.part_number,'') <> ''
+				THEN ii.name || ' (' || ii.part_number || ')'
+			WHEN i.item_type = 'part' AND COALESCE(ii.name,'') <> '' THEN ii.name
+			ELSE i.description
+		END,
+		COALESCE(i.quantity,0), COALESCE(i.unit_price,0), COALESCE(i.subtotal,0),
+		COALESCE(i.primary_technician_id,0), COALESCE(i.assistant_technician_id,0), COALESCE(i.photo_url,'')
+		FROM work_order_items i
+		LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
+		WHERE i.work_order_id = ? ORDER BY i.id`, woID)
 	if err != nil {
 		return nil, 0
 	}

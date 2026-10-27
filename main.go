@@ -101,6 +101,7 @@ func main() {
 	mux.HandleFunc("GET /api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	mux.HandleFunc("GET /api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
 	mux.HandleFunc("GET /api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
+	mux.HandleFunc("GET /api/work-orders/vehicles", handler.RequireLogin(handler.SearchWorkOrderVehiclesAPI))
 	mux.HandleFunc("GET /api/lookup/search", handler.RequireLogin(handler.SearchLookupAPI))
 	mux.HandleFunc("GET /api/insurance/search", handler.RequireLogin(handler.SearchInsuranceAPI))
 	mux.HandleFunc("GET /api/suppliers/search", handler.RequireLogin(handler.SearchSuppliersAPI))

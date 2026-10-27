@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -63,7 +64,30 @@ func NewEstimate(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "讀取車輛資料失敗")
 		return
 	}
-	pages.EstimateNewPage(vehicles, user).Render(r.Context(), w)
+	pages.EstimateNewPage(vehicles, vehicleOptionsJSONFromEstimateVehicles(vehicles), user).Render(r.Context(), w)
+}
+
+func vehicleOptionsJSONFromEstimateVehicles(vehicles []pages.EstimateVehicleOption) string {
+	type option struct {
+		V     string `json:"v"`
+		Label string `json:"label"`
+	}
+	options := make([]option, 0, len(vehicles))
+	for _, v := range vehicles {
+		options = append(options, option{
+			V: strconv.FormatInt(v.ID, 10),
+			Label: strings.Join([]string{
+				strings.TrimSpace(v.PlateNumber),
+				strings.TrimSpace(v.BrandModel),
+				strings.TrimSpace(v.CustomerName),
+			}, " / "),
+		})
+	}
+	raw, err := json.Marshal(options)
+	if err != nil {
+		return "[]"
+	}
+	return string(raw)
 }
 
 func CreateEstimate(w http.ResponseWriter, r *http.Request) {
@@ -119,8 +143,9 @@ func AddEstimateItem(w http.ResponseWriter, r *http.Request) {
 	estimateID := mustInt(r.PathValue("id"))
 	input := service.EstimateItemInput{
 		ItemType: r.FormValue("item_type"), Description: r.FormValue("description"),
-		Quantity:  atoiDefault(r.FormValue("quantity"), 0),
-		UnitPrice: atofDefault(r.FormValue("unit_price"), -1),
+		InventoryItemID: int64(mustInt(r.FormValue("inventory_item_id"))),
+		Quantity:        atoiDefault(r.FormValue("quantity"), 0),
+		UnitPrice:       atofDefault(r.FormValue("unit_price"), -1),
 	}
 	if err := service.New(db.DB).AddEstimateItem(r.Context(), estimateID, input); err != nil {
 		fail(w, "新增估價項目失敗："+err.Error())
