@@ -22,7 +22,15 @@ type DashboardRecentWorkOrder struct {
 	StatusPill   string
 }
 
-templ DashboardPage(stats []DashboardStat, recent []DashboardRecentWorkOrder, user model.User) {
+type DashboardIssue struct {
+	Label  string
+	Detail string
+	Href   string
+	Query  string
+	Count  int
+}
+
+templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []DashboardRecentWorkOrder, user model.User) {
 	@components.Layout("總覽", "/", user, AppName) {
 		@components.Card("總覽") {
 			<div>
@@ -33,6 +41,23 @@ templ DashboardPage(stats []DashboardStat, recent []DashboardRecentWorkOrder, us
 					</a>
 				}
 			</div>
+		}
+		@components.Card("需要編修") {
+			if len(issues) == 0 {
+				@components.Empty("目前沒有發現需要編修的資料")
+			} else {
+				<table>
+					<tr><th>資料</th><th>筆數</th><th>說明</th><th>操作</th></tr>
+					for _, issue := range issues {
+						<tr>
+							<td>{ issue.Label }</td>
+							<td class="num"><b>{ strconv.Itoa(issue.Count) }</b></td>
+							<td>{ issue.Detail }</td>
+							<td><a class="btn btn-s" href={ templ.SafeURL(issue.Href) }>前往編修</a></td>
+						</tr>
+					}
+				</table>
+			}
 		}
 		@components.Card("最近工單") {
 			if len(recent) == 0 {

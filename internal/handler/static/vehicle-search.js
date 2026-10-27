@@ -53,10 +53,9 @@
       if (window.console) console.warn('[vsearch] data-options parse 失敗', e, raw.slice(0, 120));
       return;
     }
-    if (!opts.length) return;
-
     var remoteTimer = null;
     var remoteRequest = 0;
+    var searchURL = root.getAttribute('data-search-url') || '/api/work-orders/vehicles';
 
     opts.forEach(function (o) {
       o.label = String(o.label || '');
@@ -118,7 +117,7 @@
 
     function searchRemote(kw) {
       var requestID = ++remoteRequest;
-      fetch('/api/work-orders/vehicles?q=' + encodeURIComponent(kw), {
+      fetch(searchURL + (searchURL.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(kw), {
         headers: { 'Accept': 'application/json' }
       }).then(function (response) {
         if (!response.ok) throw new Error('vehicle search failed');
@@ -199,6 +198,21 @@
       var o = opts.filter(function (x) { return String(x.v) === String(v); })[0];
       if (o) pick(o);
     };
+
+    var initial = root.getAttribute('data-initial-value');
+    if (initial) {
+      var initialOption = opts.filter(function (o) { return String(o.v) === String(initial); })[0];
+      if (initialOption) pick(initialOption);
+      else {
+        fetch(searchURL + (searchURL.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(initial))
+          .then(function (response) { return response.ok ? response.json() : []; })
+          .then(function (items) {
+            mergeRemote(items, '');
+            var found = opts.filter(function (o) { return String(o.v) === String(initial); })[0];
+            if (found) pick(found);
+          });
+      }
+    }
   }
 
   function init() {

@@ -98,6 +98,7 @@ func main() {
 	mux.HandleFunc("POST /api/suppliers/quick-create", handler.CounterUp(handler.QuickCreateSupplier))
 	mux.HandleFunc("GET /api/parts", handler.RequireLogin(handler.SearchPartsAPI))
 	mux.HandleFunc("GET /api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
+	mux.HandleFunc("GET /api/customers/picker", handler.RequireLogin(handler.CustomerPickerAPI))
 	mux.HandleFunc("GET /api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	mux.HandleFunc("GET /api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
 	mux.HandleFunc("GET /api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
@@ -183,6 +184,9 @@ func main() {
 	mux.HandleFunc("POST /work-orders/{id}/approval-requests/{req_id}/cancel", handler.CounterUp(handler.CancelApprovalRequest))
 	mux.HandleFunc("POST /work-orders/{id}/claim", handler.CounterUp(handler.UpdateWorkOrderClaim))
 	mux.HandleFunc("POST /work-orders/{id}/sop", handler.CounterUp(handler.ToggleWorkOrderSOP))
+	mux.HandleFunc("POST /work-orders/{id}/sop/attach", handler.CounterUp(handler.AttachSOPTemplate))
+	mux.HandleFunc("POST /work-orders/{id}/sop/{template_id}/detach", handler.CounterUp(handler.DetachSOPTemplate))
+	mux.HandleFunc("POST /work-orders/{id}/sop/records/{record_id}/toggle", handler.CounterUpPage(handler.ToggleSOPRecord))
 	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))
 	mux.HandleFunc("POST /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))
 

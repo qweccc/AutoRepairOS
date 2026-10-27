@@ -31,6 +31,7 @@ const NETWORK_FIRST = [
   '/offline.js',
   '/offline.css',
   '/static/vehicle-search.js',
+  '/static/customer-search.js',
   '/static/scan.js',
   '/static/photo-markup.js'
 ];

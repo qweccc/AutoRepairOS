@@ -36,7 +36,7 @@ type BaySummary struct {
 // ListAppointmentsPage 預約排程頁（HTMX 即時搜尋）。
 templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
-	customerOpts, vehicleOpts string, bayOpts templ.Component, baySummary []BaySummary, bayDate string, user model.User) {
+	bayOpts templ.Component, baySummary []BaySummary, bayDate string, user model.User) {
 	@components.Layout("預約排程", "/appointments", user, AppName) {
 		// 建立預約僅限櫃檯以上（POST /appointments 是 CounterUp）。
 		// 技師看到表單卻送不出去（被擋），只會以為系統壞了。
@@ -45,17 +45,19 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 				<h2>新增預約</h2>
 				<form class="frm" method="POST" action="/appointments">
 					@components.CSRFInput()
-					<label>客戶
-						<select name="customer_id" required>
-							<option value="">請選擇客戶</option>
-							@templ.Raw(customerOpts)
-						</select>
+					<label>客戶（輸入姓名或電話搜尋）
+						<div class="vsearch" data-csearch data-search-url="/api/customers/picker">
+							<input type="hidden" name="customer_id" value="" required>
+							<input class="vs-input" placeholder="搜尋客戶姓名 / 電話" autocomplete="off" required>
+							<div class="vs-list hidden"></div>
+						</div>
 					</label>
-					<label>車輛
-						<select name="vehicle_id" required>
-							<option value="">請選擇車輛</option>
-							@templ.Raw(vehicleOpts)
-						</select>
+					<label>車輛（輸入車牌、車型或客戶搜尋）
+						<div class="vsearch" data-vsearch data-search-url="/api/work-orders/vehicles">
+							<input type="hidden" name="vehicle_id" value="" required>
+							<input class="vs-input" placeholder="搜尋車牌 / 車型 / 客戶" autocomplete="off" required>
+							<div class="vs-list hidden"></div>
+						</div>
 					</label>
 					<label>預約日期<input type="date" name="appointment_date" required></label>
 					<label>時段<input type="time" step="1800" name="appointment_time" placeholder="例：09:00"></label>
@@ -125,6 +127,9 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 			}
 			@components.Pager("/appointments", page, calcPages(total, size), total)
 		</div>
+		<link rel="stylesheet" href="/static/vehicle-search.css"/>
+		<script src="/static/vehicle-search.js" defer></script>
+		<script src="/static/customer-search.js" defer></script>
 	}
 }
 

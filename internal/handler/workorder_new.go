@@ -211,14 +211,14 @@ func SearchWorkOrderVehiclesAPI(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.DB.Query(`SELECT v.id, v.plate_number, v.brand_model, c.name
 		FROM active_vehicles v
 		JOIN active_customers c ON c.id = v.customer_id
-		WHERE v.plate_number LIKE ? OR v.brand_model LIKE ?
+		WHERE v.id = ? OR v.plate_number LIKE ? OR v.brand_model LIKE ?
 			OR c.name LIKE ? OR c.phone LIKE ? OR COALESCE(v.vin,'') LIKE ?
 		ORDER BY
 			CASE WHEN UPPER(v.plate_number) = UPPER(?) THEN 0
 				WHEN v.plate_number LIKE ? THEN 1 ELSE 2 END,
 			v.plate_number
 		LIMIT 60`,
-		like, like, like, like, like, q, q+"%")
+		mustInt(q), like, like, like, like, like, q, q+"%")
 	if err != nil {
 		http.Error(w, "搜尋車輛失敗", http.StatusInternalServerError)
 		return

@@ -182,7 +182,7 @@ templ AddItemForm(woID int64) {
 		hx-post={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items" }
 		hx-target="#wo-items"
 		hx-swap="innerHTML"
-		hx-on::after-request="if(event.detail.successful) this.reset(); document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0';">
+		hx-on::after-request="if(event.detail.successful) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }">
 		@components.CSRFInput()
 		<label>類型
 			<select name="item_type" id="itemType" hx-on:change="togglePartSearch(this)">
@@ -322,10 +322,24 @@ templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
 				<td>{ yesNo(r.Required) }</td>
 				<td>
 					if r.Completed {
-						<span class="pill p-completed">已完成</span>
+						if canEdit {
+							<form method="POST" action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle" }>
+								@components.CSRFInput()
+								<button class="pill p-completed" type="submit">已完成</button>
+							</form>
+						} else {
+							<span class="pill p-completed">已完成</span>
+						}
 					}
 					if !r.Completed {
-						<span class="pill p-pending">未勾選</span>
+						if canEdit {
+							<form method="POST" action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle" }>
+								@components.CSRFInput()
+								<button class="pill p-pending" type="submit">未勾選</button>
+							</form>
+						} else {
+							<span class="pill p-pending">未勾選</span>
+						}
 					}
 				</td>
 				<td>{ r.CompletedByName }</td>
@@ -333,13 +347,6 @@ templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
 			</tr>
 		}
 	</table>
-	if canEdit {
-		<form method="POST" action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/complete" }>
-			@components.CSRFInput()
-			<input type="hidden" name="sop_item_id" id="sop_item_id" value="0">
-			<button class="btn btn-s" type="submit" onclick="var cb=document.querySelector('input[name=sop_completed]:checked');if(!cb){alert('請先勾選項目');return false;}document.getElementById('sop_item_id').value=cb.value;">勾選完成</button>
-		</form>
-	}
 }
 
 // PartSearchScript 零件即時搜尋 JS。
@@ -353,6 +360,8 @@ templ PartSearchScript() {
 			}
 		}
 		(function(){
+			var type = document.getElementById('itemType');
+			if (type) togglePartSearch(type);
 			var search = document.getElementById('partSearch');
 			var results = document.getElementById('partResults');
 			var hidden = document.getElementById('inventoryItemId');

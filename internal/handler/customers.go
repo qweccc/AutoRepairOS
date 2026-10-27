@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -91,6 +92,7 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		pages.CustomerSearchRows(nil).Render(r.Context(), w)
 		return
 	}
+
 	like := "%" + q + "%"
 	rows, err := db.DB.Query(`SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
 		COALESCE(address,''), COALESCE(notification_preference,'none'),
@@ -125,6 +127,44 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		result = append(result, c)
 	}
 	pages.CustomerSearchRows(result).Render(r.Context(), w)
+}
+
+// CustomerPickerAPI 回傳客戶選擇器使用的 JSON 選項。
+func CustomerPickerAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if len([]rune(q)) < 1 {
+		writeJSON(w, http.StatusOK, []interface{}{})
+		return
+	}
+	like := "%" + q + "%"
+	rows, err := db.DB.Query(`SELECT id, name, COALESCE(phone,'')
+		FROM active_customers
+		WHERE id = ? OR name LIKE ? OR COALESCE(phone,'') LIKE ? OR COALESCE(address,'') LIKE ?
+		ORDER BY CASE WHEN name = ? THEN 0 WHEN name LIKE ? THEN 1 ELSE 2 END, name
+		LIMIT 60`, mustInt(q), like, like, like, q, q+"%")
+	if err != nil {
+		http.Error(w, "搜尋客戶失敗", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	type customerOption struct {
+		V     string `json:"v"`
+		Label string `json:"label"`
+	}
+	result := make([]customerOption, 0)
+	for rows.Next() {
+		var id int64
+		var name, phone string
+		if err := rows.Scan(&id, &name, &phone); err != nil {
+			http.Error(w, "讀取客戶搜尋結果失敗", http.StatusInternalServerError)
+			return
+		}
+		result = append(result, customerOption{
+			V:     strconv.FormatInt(id, 10),
+			Label: strings.TrimSpace(name) + " / " + strings.TrimSpace(phone),
+		})
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 func CreateCustomer(w http.ResponseWriter, r *http.Request) {

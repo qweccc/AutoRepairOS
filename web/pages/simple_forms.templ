@@ -7,14 +7,28 @@ import (
 	"autorepairos/web/components"
 )
 
-templ EditAppointmentPage(a model.Appointment, customerOptions, vehicleOptions, bayOptions string, user model.User) {
+templ EditAppointmentPage(a model.Appointment, bayOptions string, user model.User) {
 	@components.Layout("編輯預約", "/appointments", user, AppName) {
 		<div class="card">
 			<h2>編輯預約 # { strconv.FormatInt(a.ID, 10) }</h2>
 			<form class="frm" method="POST" action={ "/appointments/" + strconv.FormatInt(a.ID, 10) }>
 				@components.CSRFInput()
-				<label>客戶<select name="customer_id" required>@templ.Raw(customerOptions)</select></label>
-				<label>車輛<select name="vehicle_id" required>@templ.Raw(vehicleOptions)</select></label>
+				<label>客戶（輸入姓名或電話搜尋）
+					<div class="vsearch" data-csearch data-search-url="/api/customers/picker"
+						data-initial-value={ strconv.FormatInt(a.CustomerID, 10) }>
+						<input type="hidden" name="customer_id" value={ strconv.FormatInt(a.CustomerID, 10) } required>
+						<input class="vs-input" placeholder="搜尋客戶姓名 / 電話" autocomplete="off" required>
+						<div class="vs-list hidden"></div>
+					</div>
+				</label>
+				<label>車輛（輸入車牌、車型或客戶搜尋）
+					<div class="vsearch" data-vsearch data-search-url="/api/work-orders/vehicles"
+						data-initial-value={ strconv.FormatInt(a.VehicleID, 10) }>
+						<input type="hidden" name="vehicle_id" value={ strconv.FormatInt(a.VehicleID, 10) } required>
+						<input class="vs-input" placeholder="搜尋車牌 / 車型 / 客戶" autocomplete="off" required>
+						<div class="vs-list hidden"></div>
+					</div>
+				</label>
 				<label>預約日期<input type="date" name="appointment_date" value={ a.AppointmentDate } required></label>
 				<label>時段<input type="time" step="1800" name="appointment_time" value={ a.AppointmentTime }></label>
 				<label>工位<select name="bay">@templ.Raw(bayOptions)</select></label>
@@ -32,6 +46,9 @@ templ EditAppointmentPage(a model.Appointment, customerOptions, vehicleOptions, 
 				<div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/appointments">取消</a></div>
 			</form>
 		</div>
+		<link rel="stylesheet" href="/static/vehicle-search.css"/>
+		<script src="/static/vehicle-search.js" defer></script>
+		<script src="/static/customer-search.js" defer></script>
 	}
 }
 
@@ -130,4 +147,3 @@ templ EquipmentMaintenancePage(equipID int64, equipName, technicianOptions strin
 		</div>
 	}
 }
-

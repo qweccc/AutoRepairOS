@@ -219,6 +219,50 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 		statsOut = append(statsOut, pages.DashboardStat{Label: s.label, Href: s.href, Count: n})
 	}
 
+	issues := []pages.DashboardIssue{
+		{
+			Label:  "客戶名稱疑似亂碼",
+			Detail: "請檢查含替換字元或編碼符號的客戶名稱",
+			Href:   "/customers",
+			Query:  `SELECT COUNT(1) FROM active_customers WHERE name LIKE '%�%' OR name GLOB '*[¤§ª«¬±´µ¸º»ÃÂ]*'`,
+		},
+		{
+			Label:  "廠商名稱疑似亂碼",
+			Detail: "請檢查含替換字元或編碼符號的廠商名稱",
+			Href:   "/suppliers",
+			Query:  `SELECT COUNT(1) FROM active_suppliers WHERE name LIKE '%�%' OR name GLOB '*[¤§ª«¬±´µ¸º»ÃÂ]*'`,
+		},
+		{
+			Label:  "客戶缺少電話",
+			Detail: "電話是客戶搜尋與通知的重要資料",
+			Href:   "/customers",
+			Query:  `SELECT COUNT(1) FROM active_customers WHERE TRIM(COALESCE(phone, '')) = ''`,
+		},
+		{
+			Label:  "車輛資料不完整",
+			Detail: "缺少車牌、車型或車主的車輛需要補正",
+			Href:   "/vehicles",
+			Query: `SELECT COUNT(1) FROM active_vehicles v
+				LEFT JOIN active_customers c ON c.id = v.customer_id
+				WHERE TRIM(COALESCE(v.plate_number, '')) = ''
+				   OR TRIM(COALESCE(v.brand_model, '')) = ''
+				   OR c.id IS NULL`,
+		},
+	}
+	issuesOut := make([]pages.DashboardIssue, 0, len(issues))
+	for _, issue := range issues {
+		var count int
+		if err := db.DB.QueryRow(issue.Query).Scan(&count); err != nil {
+			log.Printf("讀取首頁異常資料「%s」失敗: %v", issue.Label, err)
+			fail(w, "讀取首頁異常資料失敗，請稍後再試")
+			return
+		}
+		if count > 0 {
+			issue.Count = count
+			issuesOut = append(issuesOut, issue)
+		}
+	}
+
 	var recentOut []pages.DashboardRecentWorkOrder
 	// 排除種子/測試資料（車牌 TEST-* 或客戶名含「測試」），否則正式工單會被擠掉。
 	rows, err := db.DB.Query(`SELECT wo.id, v.plate_number, v.brand_model, c.name, wo.status
@@ -252,5 +296,5 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "讀取最近工單失敗，請稍後再試")
 	}
 
-	pages.DashboardPage(statsOut, recentOut, user).Render(r.Context(), w)
+	pages.DashboardPage(statsOut, issuesOut, recentOut, user).Render(r.Context(), w)
 }

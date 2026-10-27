@@ -800,7 +800,7 @@ func AddItemForm(woID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\" hx-target=\"#wo-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset(); document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0';\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\" hx-target=\"#wo-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1292,78 +1292,107 @@ func SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) temp
 				return templ_7745c5c3_Err
 			}
 			if r.Completed {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "<span class=\"pill p-completed\">已完成</span> ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
+				if canEdit {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "<form method=\"POST\" action=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var62 templ.SafeURL
+					templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle")
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 326, Col: 141}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "<button class=\"pill p-completed\" type=\"submit\">已完成</button></form>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<span class=\"pill p-completed\">已完成</span> ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 				}
 			}
 			if !r.Completed {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "<span class=\"pill p-pending\">未勾選</span>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
+				if canEdit {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<form method=\"POST\" action=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var63 templ.SafeURL
+					templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle")
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 336, Col: 141}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "<button class=\"pill p-pending\" type=\"submit\">未勾選</button></form>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "<span class=\"pill p-pending\">未勾選</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "</td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var62 string
-			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(r.CompletedByName)
+			var templ_7745c5c3_Var64 string
+			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(r.CompletedByName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 331, Col: 27}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "</td><td>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var63 string
-			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(r.CompletedAtText)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 332, Col: 27}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "</td></tr>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "</table>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if canEdit {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "<form method=\"POST\" action=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var64 templ.SafeURL
-			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinURLErrs("/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/complete")
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 337, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 345, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+			var templ_7745c5c3_Var65 string
+			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(r.CompletedAtText)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 346, Col: 27}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "<input type=\"hidden\" name=\"sop_item_id\" id=\"sop_item_id\" value=\"0\"> <button class=\"btn btn-s\" type=\"submit\" onclick=\"var cb=document.querySelector('input[name=sop_completed]:checked');if(!cb){alert('請先勾選項目');return false;}document.getElementById('sop_item_id').value=cb.value;\">勾選完成</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "</table>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
 		return nil
 	})
@@ -1386,12 +1415,12 @@ func PartSearchScript() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var65 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var65 == nil {
-			templ_7745c5c3_Var65 = templ.NopComponent
+		templ_7745c5c3_Var66 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var66 == nil {
+			templ_7745c5c3_Var66 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<script>\n\t\tfunction togglePartSearch(sel) {\n\t\t\tvar wrap = document.getElementById('partSearchWrap');\n\t\t\tif (wrap) wrap.style.display = sel.value === 'part' ? '' : 'none';\n\t\t\tif (sel.value !== 'part') {\n\t\t\t\tdocument.getElementById('inventoryItemId').value = '0';\n\t\t\t}\n\t\t}\n\t\t(function(){\n\t\t\tvar search = document.getElementById('partSearch');\n\t\t\tvar results = document.getElementById('partResults');\n\t\t\tvar hidden = document.getElementById('inventoryItemId');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tvar price = document.getElementById('unitPrice');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.part-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\thidden.value = item.dataset.partId;\n\t\t\t\tsearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;\n\t\t\t\tdesc.value = item.dataset.partName;\n\t\t\t\tprice.value = item.dataset.partPrice;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t});\n\t\t\tdocument.addEventListener('click', function(e){\n\t\t\t\tif (!results.contains(e.target) && e.target !== search) results.style.display = 'none';\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "<script>\n\t\tfunction togglePartSearch(sel) {\n\t\t\tvar wrap = document.getElementById('partSearchWrap');\n\t\t\tif (wrap) wrap.style.display = sel.value === 'part' ? '' : 'none';\n\t\t\tif (sel.value !== 'part') {\n\t\t\t\tdocument.getElementById('inventoryItemId').value = '0';\n\t\t\t}\n\t\t}\n\t\t(function(){\n\t\t\tvar type = document.getElementById('itemType');\n\t\t\tif (type) togglePartSearch(type);\n\t\t\tvar search = document.getElementById('partSearch');\n\t\t\tvar results = document.getElementById('partResults');\n\t\t\tvar hidden = document.getElementById('inventoryItemId');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tvar price = document.getElementById('unitPrice');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.part-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\thidden.value = item.dataset.partId;\n\t\t\t\tsearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;\n\t\t\t\tdesc.value = item.dataset.partName;\n\t\t\t\tprice.value = item.dataset.partPrice;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t});\n\t\t\tdocument.addEventListener('click', function(e){\n\t\t\t\tif (!results.contains(e.target) && e.target !== search) results.style.display = 'none';\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1416,12 +1445,12 @@ func PhrasePickerScript() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var66 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var66 == nil {
-			templ_7745c5c3_Var66 = templ.NopComponent
+		templ_7745c5c3_Var67 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var67 == nil {
+			templ_7745c5c3_Var67 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "<script>\n\t\tfunction togglePhrasePicker() {\n\t\t\tvar picker = document.getElementById('phrasePicker');\n\t\t\tif (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';\n\t\t}\n\t\t(function(){\n\t\t\tvar search = document.getElementById('phraseSearch');\n\t\t\tvar results = document.getElementById('phraseResults');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.phrase-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\tdesc.value = item.dataset.phrase;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t\tsearch.value = '';\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "<script>\n\t\tfunction togglePhrasePicker() {\n\t\t\tvar picker = document.getElementById('phrasePicker');\n\t\t\tif (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';\n\t\t}\n\t\t(function(){\n\t\t\tvar search = document.getElementById('phraseSearch');\n\t\t\tvar results = document.getElementById('phraseResults');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.phrase-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\tdesc.value = item.dataset.phrase;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t\tsearch.value = '';\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

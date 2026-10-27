@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS customers (
     phone TEXT NOT NULL UNIQUE,
     line_user_id TEXT,
     address TEXT,
-    notification_preference TEXT DEFAULT 'line',
+    notification_preference TEXT DEFAULT 'none',
     notes TEXT,
     total_spent REAL DEFAULT 0,
     unpaid_amount REAL DEFAULT 0,

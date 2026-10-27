@@ -126,7 +126,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	pages.ListAppointmentsPage(apptRows, total, page, size, date, status,
 		calendarDate, calendarView, calendarDays,
-		customerOptions(), vehicleOptions(), bayOptions(""), baySummary, date,
+		bayOptions(""), baySummary, date,
 		user).Render(r.Context(), w)
 }
 
@@ -365,7 +365,7 @@ func EditAppointmentForm(w http.ResponseWriter, r *http.Request, user model.User
 		return
 	}
 
-	pages.EditAppointmentPage(a, customerOptions(), vehicleOptions(), bayOpts, user).Render(r.Context(), w)
+	pages.EditAppointmentPage(a, bayOpts, user).Render(r.Context(), w)
 }
 
 // UpdateAppointment 更新預約（SRS 5.9）。
