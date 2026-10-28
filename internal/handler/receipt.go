@@ -24,6 +24,12 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 		return
 	}
 
+	// IDOR 防護：技師只能查看指派給自己的工單收據
+	if user.Role == "technician" && wo.TechnicianID != user.ID {
+		http.Error(w, "無權查看此工單", http.StatusForbidden)
+		return
+	}
+
 	items, itemTotal := loadWorkOrderItems(id)
 	// 以 work_orders.total_amount 為權威總額（增刪項目時會重算），
 	// 不另行加稅，避免與結帳時累計到客戶 total_spent 的金額不一致。

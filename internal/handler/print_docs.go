@@ -175,6 +175,12 @@ func PrintWorkOrderCompletion(w http.ResponseWriter, r *http.Request, user model
 		return
 	}
 
+	// IDOR 防護：技師只能查看指派給自己的工單
+	if user.Role == "technician" && wo.TechnicianID != user.ID {
+		http.Error(w, "無權查看此工單", http.StatusForbidden)
+		return
+	}
+
 	items, _ := loadWorkOrderItems(id)
 
 	// 依類別分組：工資 / 零件 / 外包。
