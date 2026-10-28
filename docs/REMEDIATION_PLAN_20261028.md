@@ -49,9 +49,7 @@
 - name: Test
   run: go test ./internal/... ./cmd/... ./web/... -count=1 -coverprofile=coverage.out
 - name: Templ drift
-  run: |
-    go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate ./...
-    git diff --exit-code
+  run: go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -check
 ```
 
 補充：
@@ -152,7 +150,10 @@ func (c *testClient) csrfFrom(html string) string // regexp: name="_csrf" value=
 5. `templ` 有改 `.templ` 就要重生成，並把 `*_templ.go` 一起進版控：
 
 ```powershell
-go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate ./...
+# 產生（會覆寫 *_templ.go）
+go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -path .
+# 只檢查是否同步（CI 用，不會寫檔）
+go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -check
 ```
 
 > 目前環境沒有安裝 `templ` CLI，但 `web/pages/*_templ.go` 已進版控（42 個檔）。用 `go run ...@版本` 可以避免每台機器版本不同。
