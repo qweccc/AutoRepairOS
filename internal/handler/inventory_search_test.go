@@ -15,7 +15,7 @@ func TestSearchInventoryAPICostVisibility(t *testing.T) {
 		canSeeCost bool
 	}{
 		{name: "owner", canSeeCost: true},
-		{name: "counter", canSeeCost: true},
+		{name: "counter", canSeeCost: false},
 		{name: "technician", canSeeCost: false},
 	} {
 		t.Run(role.name, func(t *testing.T) {

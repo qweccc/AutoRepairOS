@@ -159,6 +159,9 @@ func main() {
 
 	// 車輛
 	mux.HandleFunc("GET /vehicles", handler.AllStaff(handler.ListVehicles))
+	mux.HandleFunc("GET /vehicles/new", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/vehicles", http.StatusFound)
+	})
 	mux.HandleFunc("POST /vehicles", handler.CounterUp(handler.CreateVehicle))
 	mux.HandleFunc("GET /vehicles/{id}/edit", handler.AllStaff(handler.EditVehicleForm))
 	mux.HandleFunc("POST /vehicles/{id}", handler.CounterUp(handler.UpdateVehicle))

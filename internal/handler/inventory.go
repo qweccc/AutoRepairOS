@@ -146,7 +146,7 @@ func SearchInventoryAPI(w http.ResponseWriter, r *http.Request, user model.User)
 	}
 	like := "%" + q + "%"
 	costPrice := "0"
-	showMoney := canSeeMoney(user)
+	showMoney := user.Role == "owner"
 	if showMoney {
 		costPrice = "COALESCE(i.cost_price,0)"
 	}
