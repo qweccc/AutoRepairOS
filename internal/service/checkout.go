@@ -320,16 +320,23 @@ func sameReceipt(a, b ReceiptInput) bool {
 }
 
 func receiptCompletesWorkOrder(ctx context.Context, tx sqlExecutor, workOrderID int64) (bool, error) {
+	var status string
 	var total, received float64
-	err := tx.QueryRowContext(ctx, `SELECT wo.total_amount,
+	err := tx.QueryRowContext(ctx, `SELECT wo.status, wo.total_amount,
 		COALESCE((SELECT SUM(r.pay_total) FROM receivables r
 			WHERE r.work_order_id = wo.id AND r.voided = 0),0)
-		FROM active_work_orders wo WHERE wo.id = ?`, workOrderID).Scan(&total, &received)
+		FROM active_work_orders wo WHERE wo.id = ?`, workOrderID).Scan(&status, &total, &received)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, ErrNotFound
 	}
 	if err != nil {
 		return false, fmt.Errorf("calculate work order receipts: %w", err)
+	}
+	if status != "completed" {
+		return false, nil
+	}
+	if total <= 0 {
+		return false, nil
 	}
 	return received >= total, nil
 }
