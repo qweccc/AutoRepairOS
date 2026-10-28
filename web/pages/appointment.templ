@@ -2,6 +2,7 @@ package pages
 
 import (
 	"strconv"
+	"time"
 
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
@@ -59,8 +60,14 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 							<div class="vs-list hidden"></div>
 						</div>
 					</label>
-					<label>預約日期<input type="date" name="appointment_date" required></label>
-					<label>時段<input type="time" step="1800" name="appointment_time" placeholder="例：09:00"></label>
+					<label>預約日期<input type="date" name="appointment_date" value={ date } min={ time.Now().Format("2006-01-02") } required style="min-height:40px"></label>
+					<label>時段<input type="time" step="1800" name="appointment_time" value="09:00" placeholder="例：09:00" style="min-height:40px">
+						<span style="display:inline-flex;gap:4px;margin-left:6px">
+							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='09:00'">09:00</button>
+							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='13:00'">13:00</button>
+							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='17:00'">17:00</button>
+						</span>
+					</label>
 					<label>工位<select name="bay">@bayOpts</select></label>
 					<label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
 					<label class="full">備註<textarea name="notes"></textarea></label>
