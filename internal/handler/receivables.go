@@ -598,10 +598,26 @@ func nextVoucherNo(payDate string) string {
 		day = strings.ReplaceAll(today(), "-", "")
 	}
 	prefix := "RCV-" + day + "-"
+	// 使用 voucher_sequences 序號表原子遞增，避免 COUNT(*) 在併發時撞號
 	var n int
-	db.DB.QueryRow(`SELECT COUNT(1) FROM receivables WHERE voucher_no LIKE ?`,
-		prefix+"%").Scan(&n)
-	return prefix + pad3(n+1)
+	tx, err := db.DB.Begin()
+	if err != nil {
+		// fallback：舊邏輯
+		db.DB.QueryRow(`SELECT COUNT(1) FROM receivables WHERE voucher_no LIKE ?`,
+			prefix+"%").Scan(&n)
+		return prefix + pad3(n+1)
+	}
+	defer tx.Rollback()
+	_, _ = tx.Exec(`INSERT INTO voucher_sequences (prefix, last_seq) VALUES (?, 0) ON CONFLICT(prefix) DO NOTHING`, prefix)
+	tx.QueryRow(`SELECT last_seq FROM voucher_sequences WHERE prefix = ?`, prefix).Scan(&n)
+	n++
+	_, _ = tx.Exec(`UPDATE voucher_sequences SET last_seq = ? WHERE prefix = ?`, n, prefix)
+	if err := tx.Commit(); err != nil {
+		db.DB.QueryRow(`SELECT COUNT(1) FROM receivables WHERE voucher_no LIKE ?`,
+			prefix+"%").Scan(&n)
+		return prefix + pad3(n+1)
+	}
+	return prefix + pad3(n)
 }
 
 func pad3(n int) string {
