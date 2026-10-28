@@ -494,6 +494,20 @@ func ReceivePurchaseOrder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		before := after - int64(it.Quantity)
+		// P1-6: 進貨回寫成本（加權平均）
+		var currentCost float64
+		var currentStock int64
+		tx.QueryRow(`SELECT COALESCE(cost_price,0), COALESCE(stock_quantity,0) - ? FROM inventory_items WHERE id = ?`,
+			int64(it.Quantity), invID).Scan(&currentCost, &currentStock)
+		// currentStock is stock before this receive
+		var newCost float64
+		if currentStock <= 0 {
+			newCost = it.UnitCost
+		} else {
+			newCost = (float64(currentStock)*currentCost + float64(it.Quantity)*it.UnitCost) / float64(currentStock+int64(it.Quantity))
+		}
+		tx.Exec(`UPDATE inventory_items SET cost_price = ? WHERE id = ?`, newCost, invID)
+
 		if _, err := tx.Exec(`INSERT INTO inventory_movements
 			(inventory_item_id, delta, before_quantity, after_quantity, reason, source, purchase_order_item_id)
 			VALUES (?,?,?,?,?,?,?)`,
