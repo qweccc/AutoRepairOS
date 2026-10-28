@@ -74,6 +74,16 @@ func scanTechWorklog(row interface{ Scan(...interface{}) error }) (techWorklog, 
 func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.User) {
 	woID := mustInt(r.PathValue("id"))
 
+	// IDOR 防護：技師只能查看指派給自己的工單工時
+	if user.Role == "technician" {
+		var techID int64
+		db.DB.QueryRow(`SELECT COALESCE(technician_id,0) FROM active_work_orders WHERE id = ?`, woID).Scan(&techID)
+		if techID != user.ID {
+			http.Error(w, "無權查看此工單", http.StatusForbidden)
+			return
+		}
+	}
+
 	rows, err := db.DB.Query(`SELECT `+techWorklogCols+`, u.name, v.plate_number`+techWorklogFrom+
 		`WHERE wl.work_order_id = ? ORDER BY wl.work_date DESC, wl.id DESC`, woID)
 	if err != nil {
