@@ -182,7 +182,7 @@ templ AddItemForm(woID int64) {
 		hx-post={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items" }
 		hx-target="#wo-items"
 		hx-swap="innerHTML"
-		hx-on::after-request="if(event.detail.successful) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }">
+		hx-on::after-request="if(event.detail.successful && event.detail.elt === event.currentTarget) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }">
 		@components.CSRFInput()
 		<label>類型
 			<select name="item_type" id="itemType" hx-on:change="togglePartSearch(this)">
