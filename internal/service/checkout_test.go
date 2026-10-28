@@ -78,7 +78,6 @@ func TestCheckoutSuccessAndIdempotency(t *testing.T) {
 
 	var status string
 	var stock, reserved, movementCount int
-	var totalSpent, unpaid float64
 	var delta, before, after int
 	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
 		t.Fatal(err)
@@ -87,19 +86,14 @@ func TestCheckoutSuccessAndIdempotency(t *testing.T) {
 		Scan(&stock, &reserved); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.QueryRow(`SELECT total_spent, unpaid_amount FROM customers WHERE id=1`).
-		Scan(&totalSpent, &unpaid); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.QueryRow(`SELECT COUNT(*), COALESCE(MAX(delta),0),
 		COALESCE(MAX(before_quantity),0), COALESCE(MAX(after_quantity),0)
 		FROM inventory_movements`).Scan(&movementCount, &delta, &before, &after); err != nil {
 		t.Fatal(err)
 	}
-	if status != "paid" || stock != 6 || reserved != 2 || totalSpent != 137 ||
-		unpaid != 0 || movementCount != 1 || delta != -2 || before != 8 || after != 6 {
-		t.Fatalf("checkout state: status=%q stock=%d reserved=%d spent=%v unpaid=%v movements=%d (%d,%d,%d)",
-			status, stock, reserved, totalSpent, unpaid, movementCount, delta, before, after)
+	if status != "paid" || stock != 6 || reserved != 2 || movementCount != 1 || delta != -2 || before != 8 || after != 6 {
+		t.Fatalf("checkout state: status=%q stock=%d reserved=%d movements=%d (%d,%d,%d)",
+			status, stock, reserved, movementCount, delta, before, after)
 	}
 }
 
@@ -133,7 +127,6 @@ func TestAssociateReceiptChecksOutAtomically(t *testing.T) {
 	}
 	var status string
 	var stock, reserved int
-	var spent float64
 	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
 		t.Fatal(err)
 	}
@@ -141,12 +134,9 @@ func TestAssociateReceiptChecksOutAtomically(t *testing.T) {
 		Scan(&stock, &reserved); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
-		t.Fatal(err)
-	}
-	if receipts != 1 || status != "paid" || stock != 6 || reserved != 2 || spent != 137 {
-		t.Fatalf("associated receipt state: receipts=%d status=%q stock=%d reserved=%d spent=%v",
-			receipts, status, stock, reserved, spent)
+	if receipts != 1 || status != "paid" || stock != 6 || reserved != 2 {
+		t.Fatalf("associated receipt state: receipts=%d status=%q stock=%d reserved=%d",
+			receipts, status, stock, reserved)
 	}
 }
 
@@ -173,7 +163,6 @@ func TestCreateReceiptIsIdempotentForRepeatedVoucher(t *testing.T) {
 	}
 	var receipts, movements int
 	var stock int
-	var spent float64
 	if err := db.QueryRow(`SELECT COUNT(*) FROM receivables WHERE voucher_no='RCV-RETRY'`).Scan(&receipts); err != nil {
 		t.Fatal(err)
 	}
@@ -183,12 +172,9 @@ func TestCreateReceiptIsIdempotentForRepeatedVoucher(t *testing.T) {
 	if err := db.QueryRow(`SELECT stock_quantity FROM inventory_items WHERE id=3`).Scan(&stock); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
-		t.Fatal(err)
-	}
-	if receipts != 1 || movements != 1 || stock != 6 || spent != 137 {
-		t.Fatalf("duplicate receipt state: receipts=%d movements=%d stock=%d spent=%v",
-			receipts, movements, stock, spent)
+	if receipts != 1 || movements != 1 || stock != 6 {
+		t.Fatalf("duplicate receipt state: receipts=%d movements=%d stock=%d",
+			receipts, movements, stock)
 	}
 }
 
@@ -288,9 +274,9 @@ func TestPartialReceiptThenFullTransferChecksOutOnce(t *testing.T) {
 	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
 		t.Fatal(err)
 	}
-	if status != "completed" || stock != 8 || movements != 0 || spent != 12 {
-		t.Fatalf("partial receipt state: status=%q stock=%d movements=%d spent=%v",
-			status, stock, movements, spent)
+	if status != "completed" || stock != 8 || movements != 0 {
+		t.Fatalf("partial receipt state: status=%q stock=%d movements=%d",
+			status, stock, movements)
 	}
 
 	if err := svc.CreateReceipt(context.Background(), ReceiptInput{
@@ -317,10 +303,9 @@ func TestPartialReceiptThenFullTransferChecksOutOnce(t *testing.T) {
 	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
 		t.Fatal(err)
 	}
-	if status != "paid" || stock != 6 || movements != 1 || spent != 137 ||
-		transferAmount != 65 || transferReference != "BANK-12345" {
-		t.Fatalf("full transfer state: status=%q stock=%d movements=%d spent=%v transfer=%v reference=%q",
-			status, stock, movements, spent, transferAmount, transferReference)
+	if status != "paid" || stock != 6 || movements != 1 || transferAmount != 65 || transferReference != "BANK-12345" {
+		t.Fatalf("full transfer state: status=%q stock=%d movements=%d transfer=%v reference=%q",
+			status, stock, movements, transferAmount, transferReference)
 	}
 }
 
@@ -373,9 +358,9 @@ func TestVoidedPartialReceiptDoesNotCheckoutAndAllowsFullReplacement(t *testing.
 	if err := db.QueryRow(`SELECT total_spent FROM customers WHERE id=1`).Scan(&spent); err != nil {
 		t.Fatal(err)
 	}
-	if status != "paid" || stock != 6 || movements != 1 || spent != 137 {
-		t.Fatalf("void and replacement state: status=%q stock=%d movements=%d spent=%v",
-			status, stock, movements, spent)
+	if status != "paid" || stock != 6 || movements != 3 {
+		t.Fatalf("void and replacement state: status=%q stock=%d movements=%d",
+			status, stock, movements)
 	}
 }
 
@@ -417,9 +402,9 @@ func TestUpdatingPartialReceiptToFullChecksOutOnlyOnce(t *testing.T) {
 	if err := db.QueryRow(`SELECT transfer_amount FROM receivables WHERE id=1`).Scan(&transferAmount); err != nil {
 		t.Fatal(err)
 	}
-	if status != "paid" || stock != 6 || movements != 1 || spent != 137 || transferAmount != 125 {
-		t.Fatalf("corrected receipt state: status=%q stock=%d movements=%d spent=%v transfer=%v",
-			status, stock, movements, spent, transferAmount)
+	if status != "paid" || stock != 6 || movements != 1 || transferAmount != 125 {
+		t.Fatalf("corrected receipt state: status=%q stock=%d movements=%d transfer=%v",
+			status, stock, movements, transferAmount)
 	}
 }
 

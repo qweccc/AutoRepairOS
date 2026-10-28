@@ -405,8 +405,21 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 	if payTotal == 0 {
 		payTotal = cash + card + checkAmt + transferAmt
 	}
+	if cash < 0 || card < 0 || checkAmt < 0 || transferAmt < 0 || payTotal < 0 {
+		redirectMsg(w, r, "/receivables/new", "收款金額不可為負數")
+		return
+	}
 	if cash+card+checkAmt+transferAmt == 0 && payTotal == 0 {
 		redirectMsg(w, r, "/receivables/new", "請至少填一種付款方式或收款合計")
+		return
+	}
+	sum := cash + card + checkAmt + transferAmt
+	if sum > 0 && payTotal > 0 && (payTotal < sum-0.005 || payTotal > sum+0.005) {
+		redirectMsg(w, r, "/receivables/new", "收款合計與各付款方式加總不符")
+		return
+	}
+	if sum > 0 && payTotal < 0 {
+		redirectMsg(w, r, "/receivables/new", "收款合計不得為負數")
 		return
 	}
 
@@ -497,8 +510,21 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 	if payTotal == 0 {
 		payTotal = cash + card + checkAmt + transferAmt
 	}
+	if cash < 0 || card < 0 || checkAmt < 0 || transferAmt < 0 || payTotal < 0 {
+		fail(w, "收款金額不可為負數")
+		return
+	}
 	if cash+card+checkAmt+transferAmt == 0 && payTotal == 0 {
 		fail(w, "請至少填一種付款方式或收款合計")
+		return
+	}
+	sum := cash + card + checkAmt + transferAmt
+	if sum > 0 && payTotal > 0 && (payTotal < sum-0.005 || payTotal > sum+0.005) {
+		fail(w, "收款合計與各付款方式加總不符")
+		return
+	}
+	if sum > 0 && payTotal < 0 {
+		fail(w, "收款合計不得為負數")
 		return
 	}
 

@@ -52,7 +52,7 @@ func NewLookupItemPage(category, categoryLabel string, user model.User) templ.Co
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(categoryLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 13, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 13, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -73,7 +73,7 @@ func NewLookupItemPage(category, categoryLabel string, user model.User) templ.Co
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(category).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 16, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 16, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -86,7 +86,7 @@ func NewLookupItemPage(category, categoryLabel string, user model.User) templ.Co
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/lookup?category=" + category).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 20, Col: 136}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 20, Col: 136}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -142,7 +142,7 @@ func EditLookupItemPage(li model.LookupItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(li.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 29, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 29, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func EditLookupItemPage(li model.LookupItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/lookup/" + strconv.FormatInt(li.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 30, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 30, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -176,7 +176,7 @@ func EditLookupItemPage(li model.LookupItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(li.Code).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 32, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 32, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -189,7 +189,7 @@ func EditLookupItemPage(li model.LookupItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression(li.Label).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 33, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 33, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -202,7 +202,7 @@ func EditLookupItemPage(li model.LookupItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(li.SortOrder)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 34, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 34, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -215,7 +215,7 @@ func EditLookupItemPage(li model.LookupItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/lookup?category=" + li.Category).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/lookup_forms.templ`, Line: 35, Col: 139}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/lookup_forms.templ`, Line: 35, Col: 139}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {

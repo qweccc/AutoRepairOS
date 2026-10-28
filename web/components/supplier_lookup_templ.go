@@ -41,7 +41,7 @@ func SupplierLookupOptions(list []SupplierLookupOption) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(s.ID, 10)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 12, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 12, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -54,7 +54,7 @@ func SupplierLookupOptions(list []SupplierLookupOption) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(s.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 12, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 12, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -67,7 +67,7 @@ func SupplierLookupOptions(list []SupplierLookupOption) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(s.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 12, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 12, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -106,7 +106,7 @@ func SupplierQuickCreateResult(id, name, note, color string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 17, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 17, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -119,7 +119,7 @@ func SupplierQuickCreateResult(id, name, note, color string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(name).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 17, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 17, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -132,7 +132,7 @@ func SupplierQuickCreateResult(id, name, note, color string) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(note).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 17, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 17, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -145,7 +145,7 @@ func SupplierQuickCreateResult(id, name, note, color string) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(color).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 17, Col: 108}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 17, Col: 108}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -158,7 +158,7 @@ func SupplierQuickCreateResult(id, name, note, color string) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(note)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/supplier_lookup.templ`, Line: 17, Col: 117}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/supplier_lookup.templ`, Line: 17, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {

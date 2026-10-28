@@ -29,12 +29,17 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	total := countRows(`SELECT COUNT(1) FROM active_customers`+where, args...)
 
-	query := `SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
-		COALESCE(address,''), COALESCE(notification_preference,'none'), COALESCE(notes,''),
-		COALESCE(tags,''), COALESCE(campaign_code,''),
-		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), created_at,
-		COALESCE(birthday,'')
-		FROM active_customers` + where + ` ORDER BY id DESC LIMIT ? OFFSET ?`
+	query := `SELECT c.id, c.name, c.phone, COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+		COALESCE(c.address,''), COALESCE(c.notification_preference,'none'), COALESCE(c.notes,''),
+		COALESCE(c.tags,''), COALESCE(c.campaign_code,''),
+		COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.customer_id = c.id AND r.voided = 0), 0),
+		COALESCE((SELECT SUM(CASE WHEN wo.total_amount - COALESCE(p.paid,0) > 0 THEN wo.total_amount - COALESCE(p.paid,0) ELSE 0 END)
+			FROM active_work_orders wo
+			LEFT JOIN (SELECT work_order_id, SUM(pay_total) paid FROM receivables WHERE voided = 0 GROUP BY work_order_id) p ON p.work_order_id = wo.id
+			WHERE wo.customer_id = c.id AND wo.status = 'completed'), 0),
+		c.created_at,
+		COALESCE(c.birthday,'')
+		FROM active_customers c` + where + ` ORDER BY c.id DESC LIMIT ? OFFSET ?`
 	pageArgs := append(append([]interface{}{}, args...), size, (page-1)*size)
 
 	rows, err := db.DB.Query(query, pageArgs...)
@@ -94,12 +99,16 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	like := "%" + q + "%"
-	rows, err := db.DB.Query(`SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
-		COALESCE(address,''), COALESCE(notification_preference,'none'),
-		COALESCE(total_spent,0), COALESCE(unpaid_amount,0)
-		FROM active_customers
-		WHERE name LIKE ? OR phone LIKE ? OR COALESCE(address,'') LIKE ? OR COALESCE(tags,'') LIKE ?
-		ORDER BY id DESC LIMIT 50`, like, like, like, like)
+	rows, err := db.DB.Query(`SELECT c.id, c.name, c.phone, COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+		COALESCE(c.address,''), COALESCE(c.notification_preference,'none'),
+		COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.customer_id = c.id AND r.voided = 0), 0),
+		COALESCE((SELECT SUM(CASE WHEN wo.total_amount - COALESCE(p.paid,0) > 0 THEN wo.total_amount - COALESCE(p.paid,0) ELSE 0 END)
+			FROM active_work_orders wo
+			LEFT JOIN (SELECT work_order_id, SUM(pay_total) paid FROM receivables WHERE voided = 0 GROUP BY work_order_id) p ON p.work_order_id = wo.id
+			WHERE wo.customer_id = c.id AND wo.status = 'completed'), 0)
+		FROM active_customers c
+		WHERE c.name LIKE ? OR c.phone LIKE ? OR COALESCE(c.address,'') LIKE ? OR COALESCE(c.tags,'') LIKE ?
+		ORDER BY c.id DESC LIMIT 50`, like, like, like, like)
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return

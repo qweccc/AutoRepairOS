@@ -82,6 +82,15 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 		receipt.TransferAmount < 0 || receipt.PayTotal < 0 {
 		return errors.New("receipt amounts cannot be negative")
 	}
+	sum := receipt.Cash + receipt.Card + receipt.CheckAmount + receipt.TransferAmount
+	if sum == 0 && receipt.PayTotal == 0 {
+		return errors.New("receipt total amount is required")
+	}
+	if sum > 0 && receipt.PayTotal > 0 {
+		if receipt.PayTotal < sum-0.005 || receipt.PayTotal > sum+0.005 {
+			return errors.New("receipt total does not match payment methods")
+		}
+	}
 	if receipt.WorkOrderID < 0 {
 		return errors.New("work order ID cannot be negative")
 	}
@@ -223,8 +232,9 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 	})
 }
 
-// VoidReceipt soft-deletes a receipt in a transaction. Voiding a receipt does
-// not reverse an already completed checkout or its inventory/accounting effects.
+// VoidReceipt soft-deletes a receipt in a transaction. If voiding makes the
+// associated work order's effective receipts fall below its total and the work
+// order was checked out, it is reverted to completed and inventory is restored.
 func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 	if s == nil || s.db == nil {
 		return errors.New("service database is nil")
@@ -233,6 +243,25 @@ func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 		return ErrReceiptNotFound
 	}
 	return s.withTx(ctx, "void receipt", func(tx sqlExecutor) error {
+		var workOrderID int64
+		err := tx.QueryRowContext(ctx,
+			`SELECT COALESCE(work_order_id, 0) FROM receivables WHERE id = ? AND voided = 0`,
+			id).Scan(&workOrderID)
+		if errors.Is(err, sql.ErrNoRows) {
+			var exists int
+			err2 := tx.QueryRowContext(ctx, `SELECT 1 FROM receivables WHERE id = ?`, id).Scan(&exists)
+			if errors.Is(err2, sql.ErrNoRows) {
+				return ErrReceiptNotFound
+			}
+			if err2 != nil {
+				return fmt.Errorf("check receipt existence: %w", err2)
+			}
+			return ErrReceiptVoided
+		}
+		if err != nil {
+			return fmt.Errorf("load receipt for void: %w", err)
+		}
+
 		result, err := tx.ExecContext(ctx,
 			`UPDATE receivables SET voided = 1 WHERE id = ? AND voided = 0`, id)
 		if err != nil {
@@ -243,16 +272,90 @@ func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 			return fmt.Errorf("check receipt void: %w", err)
 		}
 		if affected == 0 {
-			var exists int
-			err := tx.QueryRowContext(ctx, `SELECT 1 FROM receivables WHERE id = ?`, id).Scan(&exists)
-			if errors.Is(err, sql.ErrNoRows) {
-				return ErrReceiptNotFound
-			}
-			if err != nil {
-				return fmt.Errorf("check receipt existence: %w", err)
-			}
 			return ErrReceiptVoided
 		}
+
+		if workOrderID <= 0 {
+			return nil
+		}
+
+		var status string
+		var total, received float64
+		err = tx.QueryRowContext(ctx, `SELECT wo.status, wo.total_amount,
+			COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0)
+			FROM active_work_orders wo WHERE wo.id = ?`, workOrderID).Scan(&status, &total, &received)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("recheck work order receipts: %w", err)
+		}
+
+		if status == "paid" && total > 0 && received+0.005 < total {
+			// 退回已結帳工單至「已完成待收款」狀態
+			if _, err := tx.ExecContext(ctx,
+				`UPDATE work_orders SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'paid'`,
+				workOrderID); err != nil {
+				return fmt.Errorf("revert work order status: %w", err)
+			}
+
+			// 回沖庫存：加回零件並記錄異動
+			rows, err := tx.QueryContext(ctx, `SELECT inventory_item_id, quantity
+				FROM work_order_items
+				WHERE work_order_id = ? AND item_type = 'part'
+					AND inventory_item_id > 0 AND quantity > 0
+				ORDER BY id`, workOrderID)
+			if err != nil {
+				return fmt.Errorf("load work order parts for reversal: %w", err)
+			}
+			type partDelta struct {
+				inventoryID int64
+				quantity    int
+			}
+			var deltas []partDelta
+			for rows.Next() {
+				var delta partDelta
+				if err := rows.Scan(&delta.inventoryID, &delta.quantity); err != nil {
+					rows.Close()
+					return fmt.Errorf("scan work order part for reversal: %w", err)
+				}
+				deltas = append(deltas, delta)
+			}
+			if err := rows.Err(); err != nil {
+				rows.Close()
+				return fmt.Errorf("read work order parts for reversal: %w", err)
+			}
+			if err := rows.Close(); err != nil {
+				return fmt.Errorf("close work order parts for reversal: %w", err)
+			}
+
+			for _, delta := range deltas {
+				var before int
+				err := tx.QueryRowContext(ctx, `UPDATE inventory_items
+					SET stock_quantity = stock_quantity + ?,
+						reserved_quantity = COALESCE(reserved_quantity, 0) + ?
+					WHERE id = ?
+					RETURNING stock_quantity - ?`,
+					delta.quantity, delta.quantity, delta.inventoryID, delta.quantity).Scan(&before)
+				if errors.Is(err, sql.ErrNoRows) {
+					return fmt.Errorf("reverse inventory for item %d: not found", delta.inventoryID)
+				}
+				if err != nil {
+					return fmt.Errorf("reverse inventory for item %d: %w", delta.inventoryID, err)
+				}
+				after := before + delta.quantity
+				if _, err = tx.ExecContext(ctx, `INSERT INTO inventory_movements
+					(inventory_item_id, delta, before_quantity, after_quantity, reason, source,
+					 work_order_id, created_by)
+					VALUES (?,?,?,?,?,?,?,?)`,
+					delta.inventoryID, delta.quantity, before, after,
+					fmt.Sprintf("作廢收款回沖（工單 #%d）", workOrderID), "void_receipt",
+					workOrderID, nil); err != nil {
+					return fmt.Errorf("record inventory reversal for item %d: %w", delta.inventoryID, err)
+				}
+			}
+		}
+
 		return nil
 	})
 }
@@ -338,7 +441,10 @@ func receiptCompletesWorkOrder(ctx context.Context, tx sqlExecutor, workOrderID 
 	if total <= 0 {
 		return false, nil
 	}
-	return received >= total, nil
+	if received >= total-0.005 {
+		return true, nil
+	}
+	return false, nil
 }
 
 func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64) error {
@@ -375,6 +481,7 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 	if err != nil {
 		return fmt.Errorf("load work order customer: %w", err)
 	}
+	_ = customerID
 
 	rows, err := tx.QueryContext(ctx, `SELECT inventory_item_id, quantity
 		FROM work_order_items
@@ -432,21 +539,7 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 		}
 	}
 
-	result, err = tx.ExecContext(ctx, `UPDATE customers
-		SET total_spent = COALESCE(total_spent,0) +
-			COALESCE((SELECT total_amount FROM active_work_orders WHERE id = ?),0),
-			unpaid_amount = 0
-		WHERE id = ?`, workOrderID, customerID)
-	if err != nil {
-		return fmt.Errorf("update customer spending: %w", err)
-	}
-	affected, err = result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("check customer update: %w", err)
-	}
-	if affected != 1 {
-		return errors.New("work order customer not found")
-	}
+	// 客戶聚合改由查詢時計算（已收＝有效收款加總、未收＝已完工工單尚欠），不再於結帳時更新 customers 表。
 	return nil
 }
 

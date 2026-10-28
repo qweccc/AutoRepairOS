@@ -135,8 +135,8 @@ func DeleteSOPTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	tx.Exec(`DELETE FROM sop_items WHERE template_id = ?`, id)
-	tx.Exec(`DELETE FROM sop_templates WHERE id = ?`, id)
+	tx.Exec(`UPDATE sop_items SET deleted_at = datetime('now') WHERE template_id = ? AND deleted_at IS NULL`, id)
+	tx.Exec(`UPDATE sop_templates SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL`, id)
 
 	if err := tx.Commit(); err != nil {
 		fail(w, "刪除失敗")
