@@ -353,6 +353,14 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
+	// P1-4: 非 owner 不可查看員工個資（身分證、生日、保險）
+	if user.Role != "owner" {
+		s.NationalID = ""
+		s.Birthday = ""
+		s.InsuranceStart = ""
+		s.InsuranceEnd = ""
+	}
+
 	pages.EditStaffPage(pages.StaffEditData{
 		ID: s.ID, Name: s.Name, Username: s.Username, NationalID: s.NationalID,
 		Birthday: s.Birthday, InsuranceStart: s.InsuranceStart, InsuranceEnd: s.InsuranceEnd,
@@ -365,10 +373,19 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	nationalID := strings.TrimSpace(r.FormValue("national_id"))
-	birthday := strings.TrimSpace(r.FormValue("birthday"))
-	insuranceStart := strings.TrimSpace(r.FormValue("insurance_start"))
-	insuranceEnd := strings.TrimSpace(r.FormValue("insurance_end"))
+	user, _ := currentUser(r)
+	isOwner := user.Role == "owner"
+
+	nationalID := ""
+	birthday := ""
+	insuranceStart := ""
+	insuranceEnd := ""
+	if isOwner {
+		nationalID = strings.TrimSpace(r.FormValue("national_id"))
+		birthday = strings.TrimSpace(r.FormValue("birthday"))
+		insuranceStart = strings.TrimSpace(r.FormValue("insurance_start"))
+		insuranceEnd = strings.TrimSpace(r.FormValue("insurance_end"))
+	}
 	staffKind := strings.TrimSpace(r.FormValue("staff_kind"))
 	staffBranch := strings.TrimSpace(r.FormValue("staff_branch"))
 	active := 1
