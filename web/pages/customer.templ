@@ -65,8 +65,12 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, use
 			<a class="btn btn-s" href="/customers">清除</a>
 			<table>
 				<tr>
-					<th>ID</th><th>姓名</th><th>電話</th><th>標籤</th><th>地址</th><th>通知</th>
-					<th>LINE ID</th><th>Telegram ID</th><th class="num">累計消費</th><th class="num">未付</th><th>操作</th>
+										<th>ID</th><th>姓名</th><th>電話</th><th>標籤</th><th>地址</th><th>通知</th>
+										<th>LINE ID</th><th>Telegram ID</th>
+										if user.Role == "owner" || user.Role == "counter" {
+											<th class="num">累計消費</th><th class="num">未付</th>
+										}
+										<th>操作</th>
 				</tr>
 				<tbody id="customer-rows">
 					for _, c := range rows {
@@ -78,10 +82,12 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, use
 							<td>{ c.Address }</td>
 							<td>{ c.Notification }</td>
 							<td>{ orEmpty(c.LineUserID) }</td>
-							<td>{ orEmpty(c.TelegramUserID) }</td>
-							<td class="num">{ moneyFmt(c.TotalSpent) }</td>
-							<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
-							<td>
+														<td>{ orEmpty(c.TelegramUserID) }</td>
+														if user.Role == "owner" || user.Role == "counter" {
+															<td class="num">{ moneyFmt(c.TotalSpent) }</td>
+															<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
+														}
+														<td>
 								<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>開工單</a>
 								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>編輯</a>
 								<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
@@ -103,7 +109,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, use
 }
 
 // CustomerSearchRows HTMX 即時搜尋回傳的純列（無 Layout）。
-templ CustomerSearchRows(rows []CustomerRow) {
+templ CustomerSearchRows(rows []CustomerRow, user model.User) {
 	if len(rows) == 0 {
 		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">查無客戶</td></tr>
 	}
@@ -117,8 +123,10 @@ templ CustomerSearchRows(rows []CustomerRow) {
 			<td>{ c.Notification }</td>
 			<td>{ orEmpty(c.LineUserID) }</td>
 			<td>{ orEmpty(c.TelegramUserID) }</td>
-			<td class="num">{ moneyFmt(c.TotalSpent) }</td>
-			<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
+			if user.Role == "owner" || user.Role == "counter" {
+				<td class="num">{ moneyFmt(c.TotalSpent) }</td>
+				<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
+			}
 			<td>
 				<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>開工單</a>
 				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>編輯</a>

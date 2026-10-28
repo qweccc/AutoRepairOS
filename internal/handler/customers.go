@@ -92,9 +92,10 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 
 // SearchCustomersAPI 客戶即時搜尋 API（HTMX 用），回傳純 HTML 列。
 func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
+	user, _ := currentUser(r)
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
-		pages.CustomerSearchRows(nil).Render(r.Context(), w)
+		pages.CustomerSearchRows(nil, user).Render(r.Context(), w)
 		return
 	}
 
@@ -135,7 +136,7 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		}
 		result = append(result, c)
 	}
-	pages.CustomerSearchRows(result).Render(r.Context(), w)
+	pages.CustomerSearchRows(result, user).Render(r.Context(), w)
 }
 
 // CustomerPickerAPI 回傳客戶選擇器使用的 JSON 選項。
