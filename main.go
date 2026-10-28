@@ -156,6 +156,7 @@ func main() {
 	mux.HandleFunc("POST /customers/{id}/line-unbind", handler.CounterUp(handler.UnbindCustomerLine))
 	mux.HandleFunc("POST /customers/{id}/telegram-bind", handler.CounterUp(handler.BindCustomerTelegram))
 	mux.HandleFunc("POST /customers/{id}/telegram-unbind", handler.CounterUp(handler.UnbindCustomerTelegram))
+	mux.HandleFunc("POST /customers/{id}/generate-binding-code", handler.CounterUp(handler.GenerateBindingCode))
 
 	// 車輛
 	mux.HandleFunc("GET /vehicles", handler.AllStaff(handler.ListVehicles))

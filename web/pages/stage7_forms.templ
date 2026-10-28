@@ -234,6 +234,10 @@ templ CustomerTelegramBinding(c model.Customer) {
 			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
 		}
 		<p style="color:#94a3b8;font-size:12.5px;margin:12px 0">建議讓客戶自己綁：請客戶在 Telegram 傳送手機號碼，系統會比對客戶資料上的電話並自動連結。若電話對不到或同號多筆，再由櫃檯手動綁定。</p>
+		<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=telegram" } style="margin:8px 0">
+			@components.CSRFInput()
+			<button class="btn btn-s" type="submit">產生 Telegram 綁定碼</button>
+		</form>
 		<details style="margin-top:6px">
 			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">手動綁定</summary>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
