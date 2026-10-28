@@ -740,6 +740,29 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// P1-5: 工單狀態機 — 只允許合法轉換
+	allowedTransitions := map[string][]string{
+		"pending":       {"in_progress", "waiting_parts"},
+		"in_progress":   {"waiting_parts", "completed"},
+		"waiting_parts": {"in_progress", "completed"},
+		"completed":     {"in_progress"},
+		"paid":          {},
+	}
+	currentStatus := countStatus(id)
+	if currentStatus != "" && currentStatus != status && status != "paid" {
+		allowed := false
+		for _, s := range allowedTransitions[currentStatus] {
+			if s == status {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			fail(w, "不允許從「"+workOrderStatusLabel[currentStatus]+"」轉換為「"+workOrderStatusLabel[status]+"」")
+			return
+		}
+	}
+
 	// 結帳扣料的異動紀錄需要操作人
 	actorID := int64(0)
 	if u, uerr := currentUser(r); uerr == nil {
