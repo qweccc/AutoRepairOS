@@ -22,15 +22,16 @@ import (
 //   所有代码对照都在一个页面维护。
 
 var lookupCategoryLabel = map[string]string{
-	"bank":            "銀行",
-	"category":        "零件類別",
-	"insurance_class": "保險險種",
-	"branch":          "部門",
-	"vehicle_model":   "車輛品牌車型",
-	"vehicle_type":    "車輛車種",
-	"body_style":      "車身型式",
-	"fuel_type":       "燃油種類",
-	"bay":             "工位",
+	"bank":                 "銀行",
+	"category":             "零件類別",
+	"insurance_class":      "保險險種",
+	"branch":               "部門",
+	"vehicle_model":        "車輛品牌車型",
+	"vehicle_type":         "車輛車種",
+	"body_style":           "車身型式",
+	"fuel_type":            "燃油種類",
+	"bay":                  "工位",
+	"walkaround_mark_type": "車況標記類型",
 }
 
 // CheckLookupCategories 啟動時檢查每個分頁籤的 category 是否真的有資料。
@@ -119,7 +120,7 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 	// lookupCategoryOrder 固定分頁籤順序（map 迭代是隨機的，導致每頁順序不同）。
 	var lookupCategoryOrder = []string{
 		"vehicle_type", "body_style", "fuel_type", "bank", "category",
-		"insurance_class", "branch", "vehicle_model", "bay",
+		"insurance_class", "branch", "vehicle_model", "bay", "walkaround_mark_type",
 	}
 
 	// 分类筛选签
