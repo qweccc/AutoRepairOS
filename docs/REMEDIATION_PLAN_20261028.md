@@ -13,9 +13,9 @@
 | P0-5 | ✅ 已修 | (handler+service) | 收款金額驗證（負數/零/不一致） |
 | P0-7 | ✅ 已修 | e526996 | receivables.transfer_reference nullable |
 | P1-1 | ✅ 已修 | 9c62d44 | IDOR 防護 — 技師僅查看自己的工單 |
-| P1-3 | ✅ 已修 | caed7cf | 庫存成本價僅 owner 可見 |
+| P1-3 | ✅ 部分 | caed7cf | 庫存成本價僅 owner 可見（customers/workorders 待補） |
 | P0-4 | ⏳ 待修 | — | LINE 綁定碼 |
-| P0-6 | ⏳ 待修 | — | voucher_sequences 序號表 |
+| P0-6 | ✅ 已修 | e24a72a | voucher_sequences 序號表 + 原子遞增 |
 | P1-2 | ⏳ 待修 | — | 工時/佣金 IDOR |
 | P1-4 | ⏳ 待修 | — | 員工個資限制 |
 | P1-5 | ⏳ 待修 | — | 工單狀態機 |
