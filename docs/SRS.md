@@ -121,7 +121,7 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 ### 5.7 員工與權限 (Staff & Roles)
 
 - **FR-STF-01：** 員工基本資料：姓名、電話與角色（owner/counter/technician）。
-- **FR-STF-02：** 角色權限：技師不可修改工單金額、櫃檯不可刪除工單等，權限由後端強制。
+- **FR-STF-02：** 角色權限：技師不可修改工單金額、櫃檯不可刪除工單等，權限由後端強制。櫃檯 (counter) 對 `/staff`、`/reports`、`/technicians/commissions`、`/scheduled-tasks` 等頁面具有唯讀權限（可查看但不可執行寫入/刪除/切換操作），寫入操作一律限制為 owner。
 - **FR-STF-03：** 技師工時與抽成設定，供績效與薪資核算參考。
 - **FR-STF-04：** 技師工時紀錄：每張工單的實際工時與分派技師列表。
 
