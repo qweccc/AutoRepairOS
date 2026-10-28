@@ -21,7 +21,7 @@
 | P1-5 | ⏳ 待修 | — | 工單狀態機 |
 | P1-6 | ⏳ 待修 | — | 進貨回寫成本 |
 | P1-7 | ✅ 已修 | (db.go) | WAL + busy_timeout 已設定 |
-| P1-8 | ⏳ 待修 | — | 登入防護 rate limit |
+| P1-8 | ✅ 已修 | bcc16ac | 登入防護 — IP 級 rate limit |
 
 ---
 
