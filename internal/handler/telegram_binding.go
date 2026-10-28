@@ -192,6 +192,23 @@ func handleTelegramBindMessage(client *telegram.Client, chatID int64, chatStr, t
 		return
 	}
 
+	// 檢查是否為綁定碼格式：「綁定 123456」
+	if strings.HasPrefix(text, "綁定 ") {
+		code := strings.TrimSpace(strings.TrimPrefix(text, "綁定 "))
+		if len(code) == 6 {
+			customerID, err := VerifyBindingCode("telegram", code, chatStr)
+			if err != nil {
+				_ = client.SendMessage(chatStr, "綁定失敗："+err.Error()+"。請向櫃檯索取新的綁定碼。")
+				return
+			}
+			var cname string
+			db.DB.QueryRow("SELECT name FROM active_customers WHERE id = ?", customerID).Scan(&cname)
+			_ = client.SendMessage(chatStr, "✅ 已為您連結，客戶："+cname)
+			return
+		}
+	}
+
+	// 舊流程：手機號碼比對（保留相容，但建議改用綁定碼）
 	phone := normalizePhone(text)
 	if phone == "" {
 		if !wasPrompted(chatID) {
