@@ -4,6 +4,25 @@
 > 本文件只提出**修正方向、具體作法、測試方式**，**尚未修改任何程式碼**。
 > 文中程式碼片段都是草案（pseudo-code），不是已套用的變更。
 
+## 進度追蹤（更新於 2026-10-28）
+
+| 項目 | 狀態 | Commit | 說明 |
+|---|---|---|---|
+| P0-1/P0-2 | ✅ 已修 | eebca04 | receipt 不完成非完成工單 |
+| P0-3 | ✅ 已修 | e526996 | SOP soft delete + receivables validation |
+| P0-5 | ✅ 已修 | (handler+service) | 收款金額驗證（負數/零/不一致） |
+| P0-7 | ✅ 已修 | e526996 | receivables.transfer_reference nullable |
+| P1-1 | ✅ 已修 | 9c62d44 | IDOR 防護 — 技師僅查看自己的工單 |
+| P1-3 | ✅ 已修 | caed7cf | 庫存成本價僅 owner 可見 |
+| P0-4 | ⏳ 待修 | — | LINE 綁定碼 |
+| P0-6 | ⏳ 待修 | — | voucher_sequences 序號表 |
+| P1-2 | ⏳ 待修 | — | 工時/佣金 IDOR |
+| P1-4 | ⏳ 待修 | — | 員工個資限制 |
+| P1-5 | ⏳ 待修 | — | 工單狀態機 |
+| P1-6 | ⏳ 待修 | — | 進貨回寫成本 |
+| P1-7 | ✅ 已修 | (db.go) | WAL + busy_timeout 已設定 |
+| P1-8 | ⏳ 待修 | — | 登入防護 rate limit |
+
 ---
 
 ## 0. 先講結論
