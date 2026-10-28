@@ -195,7 +195,8 @@ templ AddItemForm(woID int64) {
 			<div class="search-bar">
 				<input type="search" id="partSearch" name="q" class="search-input" placeholder="例：機油、煞車片、BE071" autocomplete="off"
 					hx-get="/api/parts" hx-trigger="keyup changed delay:300ms, search"
-					hx-target="#partResults" hx-swap="innerHTML">
+					hx-target="#partResults" hx-swap="innerHTML"
+					hx-on::after-request="if(event.detail.successful) document.getElementById('partResults').style.display='block';">
 				@components.BarcodeScanUI("partScanBtn", "partSearch", "partScanBox")
 			</div>
 			<div id="partResults" class="part-results"></div>
