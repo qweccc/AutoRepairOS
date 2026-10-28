@@ -60,12 +60,12 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 							<div class="vs-list hidden"></div>
 						</div>
 					</label>
-					<label>預約日期<input type="date" name="appointment_date" value={ date } min={ time.Now().Format("2006-01-02") } required style="min-height:40px"></label>
-					<label>時段<input type="time" step="1800" name="appointment_time" value="09:00" placeholder="例：09:00" style="min-height:40px">
+					<label>預約日期<input type="date" name="appointment_date" value={ calendarDate } min={ time.Now().Format("2006-01-02") } required style="min-height:40px"></label>
+					<label>時段<input type="time" step="1800" name="appointment_time" value="08:00" placeholder="例：08:00" style="min-height:40px">
 						<span style="display:inline-flex;gap:4px;margin-left:6px">
-							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='09:00'">09:00</button>
-							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='13:00'">13:00</button>
-							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='17:00'">17:00</button>
+							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='08:00'">08:00</button>
+							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='10:00'">10:00</button>
+							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='13:30'">13:30</button>
 						</span>
 					</label>
 					<label>工位<select name="bay">@bayOpts</select></label>

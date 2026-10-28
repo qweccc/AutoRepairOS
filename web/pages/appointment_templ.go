@@ -93,9 +93,9 @@ func ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(date).Resolve(ctx)
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(calendarDate).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/appointment.templ`, Line: 63, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/appointment.templ`, Line: 63, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 				if templ_7745c5c3_Err != nil {
@@ -108,13 +108,13 @@ func ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(time.Now().Format("2006-01-02")).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/appointment.templ`, Line: 63, Col: 119}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/appointment.templ`, Line: 63, Col: 127}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" required style=\"min-height:40px\"></label> <label>時段<input type=\"time\" step=\"1800\" name=\"appointment_time\" value=\"09:00\" placeholder=\"例：09:00\" style=\"min-height:40px\"> <span style=\"display:inline-flex;gap:4px;margin-left:6px\"><button type=\"button\" class=\"btn btn-s\" onclick=\"this.parentElement.previousElementSibling.value='09:00'\">09:00</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"this.parentElement.previousElementSibling.value='13:00'\">13:00</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"this.parentElement.previousElementSibling.value='17:00'\">17:00</button></span></label> <label>工位<select name=\"bay\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" required style=\"min-height:40px\"></label> <label>時段<input type=\"time\" step=\"1800\" name=\"appointment_time\" value=\"08:00\" placeholder=\"例：08:00\" style=\"min-height:40px\"> <span style=\"display:inline-flex;gap:4px;margin-left:6px\"><button type=\"button\" class=\"btn btn-s\" onclick=\"this.parentElement.previousElementSibling.value='08:00'\">08:00</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"this.parentElement.previousElementSibling.value='10:00'\">10:00</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"this.parentElement.previousElementSibling.value='13:30'\">13:30</button></span></label> <label>工位<select name=\"bay\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
