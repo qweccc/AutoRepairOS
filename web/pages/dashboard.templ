@@ -42,41 +42,41 @@ templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []Das
 				}
 			</div>
 		}
-		@components.Card("需要編修") {
-			if len(issues) == 0 {
-				@components.Empty("目前沒有發現需要編修的資料")
-			} else {
-				<table>
-					<tr><th>資料</th><th>筆數</th><th>說明</th><th>操作</th></tr>
-					for _, issue := range issues {
-						<tr>
-							<td>{ issue.Label }</td>
-							<td class="num"><b>{ strconv.Itoa(issue.Count) }</b></td>
-							<td>{ issue.Detail }</td>
-							<td><a class="btn btn-s" href={ templ.SafeURL(issue.Href) }>前往編修</a></td>
-						</tr>
-					}
-				</table>
+			@components.Card("最近工單") {
+				if len(recent) == 0 {
+					@components.Empty("尚無工單")
+				} else {
+					<table>
+						<tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>
+						for _, wo := range recent {
+							<tr>
+								<td><a href={ templ.SafeURL("/work-orders/" + strconv.FormatInt(wo.ID, 10)) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
+								<td>{ wo.PlateNumber }</td>
+								<td>{ wo.BrandModel }</td>
+								<td>{ wo.CustomerName }</td>
+								<td><span class={ "pill " + wo.StatusPill }>{ wo.StatusLabel }</span></td>
+							</tr>
+						}
+					</table>
+				}
 			}
-		}
-		@components.Card("最近工單") {
-			if len(recent) == 0 {
-				@components.Empty("尚無工單")
-			} else {
-				<table>
-					<tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>
-					for _, wo := range recent {
-						<tr>
-							<td><a href={ templ.SafeURL("/work-orders/" + strconv.FormatInt(wo.ID, 10)) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
-							<td>{ wo.PlateNumber }</td>
-							<td>{ wo.BrandModel }</td>
-							<td>{ wo.CustomerName }</td>
-							<td><span class={ "pill " + wo.StatusPill }>{ wo.StatusLabel }</span></td>
-						</tr>
-					}
-				</table>
+			@components.Card("需要編修") {
+				if len(issues) == 0 {
+					@components.Empty("目前沒有發現需要編修的資料")
+				} else {
+					<table>
+						<tr><th>資料</th><th>筆數</th><th>說明</th><th>操作</th></tr>
+						for _, issue := range issues {
+							<tr>
+								<td>{ issue.Label }</td>
+								<td class="num"><b>{ strconv.Itoa(issue.Count) }</b></td>
+								<td>{ issue.Detail }</td>
+								<td><a class="btn btn-s" href={ templ.SafeURL(issue.Href) }>前往編修</a></td>
+							</tr>
+						}
+					</table>
+				}
 			}
-		}
 		@components.Card("功能模組") {
 			<p style="color:#94a3b8;font-size:13.5px">客戶、車輛、工單、庫存皆可正常使用。</p>
 		}

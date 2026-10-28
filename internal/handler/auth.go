@@ -221,22 +221,16 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	issues := []pages.DashboardIssue{
 		{
-			Label:  "客戶名稱疑似亂碼",
-			Detail: "請檢查含替換字元或編碼符號的客戶名稱",
-			Href:   "/customers",
-			Query:  `SELECT COUNT(1) FROM active_customers WHERE name LIKE '%�%' OR name GLOB '*[¤§ª«¬±´µ¸º»ÃÂ]*'`,
-		},
-		{
-			Label:  "廠商名稱疑似亂碼",
-			Detail: "請檢查含替換字元或編碼符號的廠商名稱",
-			Href:   "/suppliers",
-			Query:  `SELECT COUNT(1) FROM active_suppliers WHERE name LIKE '%�%' OR name GLOB '*[¤§ª«¬±´µ¸º»ÃÂ]*'`,
-		},
-		{
 			Label:  "客戶缺少電話",
 			Detail: "電話是客戶搜尋與通知的重要資料",
 			Href:   "/customers",
 			Query:  `SELECT COUNT(1) FROM active_customers WHERE TRIM(COALESCE(phone, '')) = ''`,
+		},
+		{
+			Label:  "庫存為負數",
+			Detail: "庫存數量小於 0 的零件需要盤點",
+			Href:   "/inventory",
+			Query:  `SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < 0`,
 		},
 		{
 			Label:  "車輛資料不完整",
