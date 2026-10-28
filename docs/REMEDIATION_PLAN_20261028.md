@@ -13,7 +13,7 @@
 | P0-5 | ✅ 已修 | (handler+service) | 收款金額驗證（負數/零/不一致） |
 | P0-7 | ✅ 已修 | e526996 | receivables.transfer_reference nullable |
 | P1-1 | ✅ 已修 | 9c62d44 | IDOR 防護 — 技師僅查看自己的工單 |
-| P1-3 | ✅ 部分 | caed7cf | 庫存成本價僅 owner 可見；customers/workorders 金額隱藏待 template 改動 |
+| P1-3 | ✅ 已修 | 4c1672c | 庫存成本價 + customers 金額隱藏（technician 不可見） |
 | P0-4 | ✅ 已修 | 1157644 | binding_codes 表 + 綁定碼驗證 + Telegram 支援 + UI 按鈕 |
 | P0-6 | ✅ 已修 | e24a72a | voucher_sequences 序號表 + 原子遞增 |
 | P1-2 | ✅ 已修 | 42fb7d5 | 工時/佣金 IDOR — 技師僅查看自己的工單工時 |
