@@ -14,7 +14,7 @@
 | P0-7 | ✅ 已修 | e526996 | receivables.transfer_reference nullable |
 | P1-1 | ✅ 已修 | 9c62d44 | IDOR 防護 — 技師僅查看自己的工單 |
 | P1-3 | ✅ 部分 | caed7cf | 庫存成本價僅 owner 可見（customers/workorders 待補） |
-| P0-4 | ⏳ 待修 | — | LINE 綁定碼 |
+| P0-4 | ✅ 部分 | (binding_code) | binding_codes 表 + 綁定碼驗證 + Telegram 支援（UI 按鈕待補） |
 | P0-6 | ✅ 已修 | e24a72a | voucher_sequences 序號表 + 原子遞增 |
 | P1-2 | ✅ 已修 | 42fb7d5 | 工時/佣金 IDOR — 技師僅查看自己的工單工時 |
 | P1-4 | ⏳ 待修 | — | 員工個資限制 |
