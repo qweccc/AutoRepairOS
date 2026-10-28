@@ -88,6 +88,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
+	ip := loginClientIP(r)
+	if loginLimiter.isLocked(ip) {
+		loginFail(w, r, "登入嘗試次數過多，請 15 分鐘後再試")
+		return
+	}
+
 	if username == "" || password == "" {
 		loginFail(w, r, "請輸入帳號與密碼")
 		return
@@ -98,19 +104,24 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, username, password, role, name, active FROM users WHERE username = ?", username,
 	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name, &user.Active)
 	if err != nil {
+		loginLimiter.recordFail(ip)
 		loginFail(w, r, "帳號或密碼錯誤")
 		return
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
+		loginLimiter.recordFail(ip)
 		loginFail(w, r, "帳號或密碼錯誤")
 		return
 	}
 
 	if user.Active == 0 {
+		loginLimiter.recordFail(ip)
 		loginFail(w, r, "帳號已停用，請聯絡管理員")
 		return
 	}
+
+	loginLimiter.reset(ip)
 
 	// 記錄「登入前所在頁面」，登出後回跳過去。
 	returnTo := r.FormValue("return_to")
