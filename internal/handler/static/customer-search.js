@@ -39,12 +39,15 @@
         });
     }
 
-    function pick(item) {
+    function pick(item, silent) {
       hidden.value = item.v;
       input.value = item.label;
       selected = true;
       list.classList.add('hidden');
       root.classList.add('vs-picked');
+      if (!silent) {
+        document.dispatchEvent(new CustomEvent('customer-selected', {detail: {id: item.v}}));
+      }
     }
 
     var initial = root.getAttribute('data-initial-value');
@@ -53,7 +56,7 @@
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (items) {
           var found = items.filter(function (item) { return String(item.v) === String(initial); })[0];
-          if (found) pick(found);
+          if (found) pick(found, true);
         });
     }
 
@@ -84,6 +87,16 @@
         var first = list.querySelector('.vs-opt');
         if (first) { e.preventDefault(); first.click(); }
       }
+    });
+    document.addEventListener('vehicle-selected', function (e) {
+      if (!root.hasAttribute('data-linked-vehicle') || !e.detail || !e.detail.customerID) return;
+      var id = String(e.detail.customerID);
+      fetch(url + '?q=' + encodeURIComponent(id), {headers: {'Accept': 'application/json'}})
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (items) {
+          var found = items.filter(function (item) { return String(item.v) === id; })[0];
+          if (found) pick(found, true);
+        });
     });
   }
 

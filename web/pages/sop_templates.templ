@@ -1,0 +1,137 @@
+package pages
+
+import (
+	"strconv"
+
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+type SOPTemplateEditItem struct {
+	ID          int64
+	Description string
+	Required    bool
+	SortOrder   int
+}
+
+type SOPTemplateEditData struct {
+	ID         int64
+	Name       string
+	RepairType string
+	Items      []SOPTemplateEditItem
+	User       model.User
+}
+
+type SOPTemplateListRow struct {
+	ID         int64
+	Name       string
+	RepairType string
+	ItemCount  int
+}
+
+type SOPTemplateListData struct {
+	Rows  []SOPTemplateListRow
+	Query string
+	User  model.User
+	Flash string
+}
+
+templ ListSOPTemplatesPage(data SOPTemplateListData) {
+	{{ user := data.User }}
+	@components.Layout("SOP 模板", "/sop-templates", user, AppName) {
+		@components.FlashMsg(data.Flash)
+		<div class="card">
+			<h2>SOP 模板（{ strconv.Itoa(len(data.Rows)) } 個）</h2>
+			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+				工單層級的大修/保養檢查表模板。建立後可在工單中掛入並逐項勾選。
+			</p>
+			<form method="GET" action="/sop-templates" style="margin-bottom:12px">
+				<input name="q" value={ data.Query } placeholder="搜尋模板名稱 / 維修類型" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+				<button class="btn btn-p" type="submit">搜尋</button>
+				<a class="btn btn-s" href="/sop-templates">清除</a>
+				<a class="btn btn-p" href="/sop-templates/new">＋ 新增模板</a>
+			</form>
+			if len(data.Rows) == 0 {
+				<div class="empty">沒有 SOP 模板</div>
+			} else {
+				<table><tr><th>名稱</th><th>維修類型</th><th class="num">項目數</th><th>操作</th></tr>
+					for _, row := range data.Rows {
+						<tr>
+							<td><b>{ row.Name }</b></td>
+							<td>{ row.RepairType }</td>
+							<td class="num">{ strconv.Itoa(row.ItemCount) }</td>
+							<td>
+								<a class="btn btn-p" href={ "/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/edit" }>編輯</a>
+								<form method="POST" action={ "/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除？')">
+									@components.CSRFInput()
+									<button class="btn btn-d" type="submit">刪除</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</table>
+			}
+		</div>
+	}
+}
+
+templ NewSOPTemplatePage(user model.User) {
+	@components.Layout("新增 SOP 模板", "/sop-templates", user, AppName) {
+		<div class="card">
+			<h2>新增 SOP 模板</h2>
+			<form class="frm" method="POST" action="/sop-templates">
+				@components.CSRFInput()
+				<label>模板名稱<input name="name" required placeholder="例：引擎大修檢查表"></label>
+				<label>維修類型<input name="repair_type" placeholder="例：overhaul / maintenance / bodywork"></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">建立</button>
+					<a class="btn btn-s" href="/sop-templates">取消</a>
+				</div>
+			</form>
+		</div>
+	}
+}
+
+templ EditSOPTemplatePage(data SOPTemplateEditData) {
+	{{ user := data.User }}
+	{{ items := data.Items }}
+	@components.Layout("編輯 SOP 模板", "/sop-templates", user, AppName) {
+		<div class="card">
+			<h2>{ data.Name }</h2>
+			<form class="frm" method="POST" action={ "/sop-templates/" + strconv.FormatInt(data.ID, 10) }>
+				@components.CSRFInput()
+				<label>模板名稱<input name="name" value={ data.Name } required></label>
+				<label>維修類型<input name="repair_type" value={ data.RepairType }></label>
+				<div class="full">
+					<button class="btn btn-p" type="submit">儲存</button>
+					<a class="btn btn-s" href="/sop-templates">取消</a>
+				</div>
+			</form>
+		</div>
+		<div class="card">
+			<h2>檢查項目（{ strconv.Itoa(len(items)) } 項）</h2>
+			<form class="frm" method="POST" action={ "/sop-templates/" + strconv.FormatInt(data.ID, 10) + "/items" }>
+				@components.CSRFInput()
+				<table>
+					<tr><th>必填</th><th>檢查項目</th></tr>
+					for _, item := range items {
+						<tr>
+							<td style="text-align:center">
+								<input type="hidden" name="item_id" value={ strconv.FormatInt(item.ID, 10) }>
+								<input type="checkbox" name="required" value="1" checked?={ item.Required }>
+							</td>
+							<td><input name="item_desc" value={ item.Description } placeholder="檢查項目描述"></td>
+						</tr>
+					}
+					<tr>
+						<td style="text-align:center"><input type="checkbox" name="required" value="1"></td>
+						<td><input name="item_desc" placeholder="新增檢查項目（留空白則忽略）"></td>
+					</tr>
+				</table>
+				<div class="full">
+					<button class="btn btn-p" type="submit">儲存項目</button>
+				</div>
+			</form>
+		</div>
+	}
+}

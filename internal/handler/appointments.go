@@ -27,6 +27,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	calendarView := normalizeCalendarView(qv.Get("view"))
 	page := pageNo(r)
 	size := pageSize(r)
+	knownBays := bayList()
 
 	where := ` WHERE 1=1`
 	var args []interface{}
@@ -86,7 +87,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	for _, a := range list {
 		bayLbl := ""
 		if a.Bay != "" {
-			bayLbl = bayLabel(a.Bay)
+			bayLbl = bayLabelFrom(a.Bay, knownBays)
 		}
 		apptRows = append(apptRows, pages.AppointmentRow{
 			ID:              a.ID,
@@ -107,12 +108,12 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 工位總覽卡（有篩選日期時才顯示）
 	var baySummary []pages.BaySummary
 	if date != "" && len(bayUsage) > 0 {
-		for _, b := range bayList {
+		for _, b := range bayList() {
 			slots := bayUsage[b.code]
 			baySummary = append(baySummary, pages.BaySummary{Label: b.label, Slots: slots})
 		}
 		for code, slots := range bayUsage {
-			if bayKnown(code) {
+			if bayKnownFrom(code, knownBays) {
 				continue
 			}
 			baySummary = append(baySummary, pages.BaySummary{Label: code + "（非標準）", Slots: slots})
@@ -184,6 +185,7 @@ func appointmentCalendar(date, view, status string) ([]pages.CalendarDay, error)
 		where += ` AND a.status = ?`
 		args = append(args, status)
 	}
+	knownBays := bayList()
 	rows, err := db.DB.Query(`SELECT a.id, a.appointment_date,
 		COALESCE(a.appointment_time,''), UPPER(COALESCE(a.bay,'')),
 		COALESCE(v.plate_number,''), COALESCE(c.name,''),
@@ -206,7 +208,7 @@ func appointmentCalendar(date, view, status string) ([]pages.CalendarDay, error)
 		}
 		row.BayLabel = ""
 		if row.Bay != "" {
-			row.BayLabel = bayLabel(row.Bay)
+			row.BayLabel = bayLabelFrom(row.Bay, knownBays)
 		}
 		row.StatusLabel = appointmentLabel(row.Status)
 		row.StatusPill = appointmentPill(row.Status)
@@ -311,6 +313,10 @@ func CreateAppointment(w http.ResponseWriter, r *http.Request) {
 		fail(w, "客戶、車輛、預約日期為必填")
 		return
 	}
+	if !appointmentVehicleBelongsToCustomer(vehicleID, customerID) {
+		fail(w, "所選車輛不屬於所選客戶，請重新選擇")
+		return
+	}
 	if !validAppointmentTime(appointmentTime) || (bay != "" && appointmentTime == "") {
 		fail(w, "請輸入有效的預約時間（HH:MM）；指定工位時必須設定時間")
 		return
@@ -384,6 +390,10 @@ func UpdateAppointment(w http.ResponseWriter, r *http.Request) {
 		fail(w, "客戶、車輛、預約日期為必填")
 		return
 	}
+	if !appointmentVehicleBelongsToCustomer(vehicleID, customerID) {
+		fail(w, "所選車輛不屬於所選客戶，請重新選擇")
+		return
+	}
 	if !validAppointmentTime(appointmentTime) || (bay != "" && appointmentTime == "") {
 		fail(w, "請輸入有效的預約時間（HH:MM）；指定工位時必須設定時間")
 		return
@@ -417,6 +427,12 @@ func UpdateAppointment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectMsg(w, r, "/appointments", "預約已更新")
+}
+
+func appointmentVehicleBelongsToCustomer(vehicleID, customerID int64) bool {
+	var ownerID int64
+	return db.DB.QueryRow(`SELECT customer_id FROM active_vehicles WHERE id = ?`, vehicleID).Scan(&ownerID) == nil &&
+		ownerID == customerID
 }
 
 func validAppointmentTime(value string) bool {

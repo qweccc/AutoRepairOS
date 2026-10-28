@@ -202,23 +202,30 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 // 開工單頁不再依賴前端載入的前 500 台車，避免舊車因排序靠後而查不到。
 func SearchWorkOrderVehiclesAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
-	if q == "" {
+	customerID := mustInt(r.URL.Query().Get("customer_id"))
+	if q == "" && customerID == 0 {
 		writeJSON(w, http.StatusOK, []interface{}{})
 		return
 	}
 
 	like := "%" + q + "%"
-	rows, err := db.DB.Query(`SELECT v.id, v.plate_number, v.brand_model, c.name
+	where := `WHERE v.id = ? OR v.plate_number LIKE ? OR v.brand_model LIKE ?
+			OR c.name LIKE ? OR c.phone LIKE ? OR COALESCE(v.vin,'') LIKE ?`
+	args := []interface{}{mustInt(q), like, like, like, like, like}
+	if customerID > 0 {
+		where = `WHERE v.customer_id = ?`
+		args = []interface{}{customerID}
+	}
+	rows, err := db.DB.Query(`SELECT v.id, v.plate_number, v.brand_model, c.name, v.customer_id
 		FROM active_vehicles v
 		JOIN active_customers c ON c.id = v.customer_id
-		WHERE v.id = ? OR v.plate_number LIKE ? OR v.brand_model LIKE ?
-			OR c.name LIKE ? OR c.phone LIKE ? OR COALESCE(v.vin,'') LIKE ?
+		`+where+`
 		ORDER BY
 			CASE WHEN UPPER(v.plate_number) = UPPER(?) THEN 0
 				WHEN v.plate_number LIKE ? THEN 1 ELSE 2 END,
 			v.plate_number
 		LIMIT 60`,
-		mustInt(q), like, like, like, like, like, q, q+"%")
+		append(args, q, q+"%")...)
 	if err != nil {
 		http.Error(w, "搜尋車輛失敗", http.StatusInternalServerError)
 		return
@@ -226,19 +233,22 @@ func SearchWorkOrderVehiclesAPI(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type vehicleOption struct {
-		V     string `json:"v"`
-		Label string `json:"label"`
+		V          string `json:"v"`
+		Label      string `json:"label"`
+		CustomerID string `json:"customer_id"`
 	}
 	result := make([]vehicleOption, 0)
 	for rows.Next() {
 		var id int64
 		var plate, brand, customer string
-		if err := rows.Scan(&id, &plate, &brand, &customer); err != nil {
+		var ownerID int64
+		if err := rows.Scan(&id, &plate, &brand, &customer, &ownerID); err != nil {
 			http.Error(w, "讀取車輛搜尋結果失敗", http.StatusInternalServerError)
 			return
 		}
 		result = append(result, vehicleOption{
-			V: strconv.FormatInt(id, 10),
+			V:          strconv.FormatInt(id, 10),
+			CustomerID: strconv.FormatInt(ownerID, 10),
 			Label: strings.Join([]string{
 				strings.TrimSpace(plate),
 				strings.TrimSpace(brand),

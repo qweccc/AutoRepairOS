@@ -33,7 +33,7 @@ import (
 //
 // 車行規模不同工位數量不同，因此這裡只定義「種類」而不定義數量——
 // 同種類多台時在代碼後加編號（LIFT-1 / LIFT-2），仍屬於已知清單。
-var bayList = []struct{ code, label string }{
+var defaultBayList = []struct{ code, label string }{
 	{"LIFT", "頂高機"},
 	{"ALIGN", "四輪定位機"},
 	{"BODY", "鈑金校正機"},
@@ -42,9 +42,35 @@ var bayList = []struct{ code, label string }{
 	{"DIAG", "電腦診斷位"},
 }
 
+func bayList() []struct{ code, label string } {
+	rows, err := db.DB.Query(`SELECT code, label FROM lookup_items
+		WHERE category = 'bay' AND active <> 0 ORDER BY sort_order, code`)
+	if err != nil {
+		return defaultBayList
+	}
+	defer rows.Close()
+	list := make([]struct{ code, label string }, 0)
+	for rows.Next() {
+		var item struct{ code, label string }
+		if rows.Scan(&item.code, &item.label) == nil && strings.TrimSpace(item.code) != "" {
+			item.code = strings.ToUpper(strings.TrimSpace(item.code))
+			item.label = strings.TrimSpace(item.label)
+			list = append(list, item)
+		}
+	}
+	if len(list) == 0 {
+		return defaultBayList
+	}
+	return list
+}
+
 func bayLabel(code string) string {
+	return bayLabelFrom(code, bayList())
+}
+
+func bayLabelFrom(code string, list []struct{ code, label string }) string {
 	code = strings.ToUpper(strings.TrimSpace(code))
-	for _, b := range bayList {
+	for _, b := range list {
 		if b.code == code {
 			return b.label
 		}
@@ -53,8 +79,9 @@ func bayLabel(code string) string {
 }
 
 func bayOptions(selected string) templ.Component {
-	options := make([]components.BayOption, 0, len(bayList))
-	for _, bay := range bayList {
+	list := bayList()
+	options := make([]components.BayOption, 0, len(list))
+	for _, bay := range list {
 		options = append(options, components.BayOption{Code: bay.code, Label: bay.label})
 	}
 	legacy := selected != "" && bayLabel(selected) == strings.ToUpper(selected) && !bayKnown(selected)
@@ -70,8 +97,12 @@ func bayOptionsHTML(selected string) (string, error) {
 }
 
 func bayKnown(code string) bool {
+	return bayKnownFrom(code, bayList())
+}
+
+func bayKnownFrom(code string, list []struct{ code, label string }) bool {
 	code = strings.ToUpper(strings.TrimSpace(code))
-	for _, b := range bayList {
+	for _, b := range list {
 		if b.code == code {
 			return true
 		}

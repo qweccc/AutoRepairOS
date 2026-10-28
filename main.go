@@ -273,6 +273,15 @@ func main() {
 	mux.HandleFunc("POST /maintenance-templates/{id}", handler.CounterUp(handler.UpdateMaintenanceTemplate))
 	mux.HandleFunc("POST /maintenance-templates/{id}/items", handler.CounterUp(handler.ReplaceMaintenanceTemplateItems))
 	mux.HandleFunc("POST /maintenance-templates/{id}/delete", handler.CounterUp(handler.DeleteMaintenanceTemplate))
+
+	// SOP 模板管理（SRS 5.x：大修檢查表）
+	mux.HandleFunc("GET /sop-templates", handler.AllStaff(handler.ListSOPTemplates))
+	mux.HandleFunc("GET /sop-templates/new", handler.CounterUpPage(handler.NewSOPTemplateForm))
+	mux.HandleFunc("POST /sop-templates", handler.CounterUp(handler.CreateSOPTemplate))
+	mux.HandleFunc("GET /sop-templates/{id}/edit", handler.CounterUpPage(handler.EditSOPTemplateForm))
+	mux.HandleFunc("POST /sop-templates/{id}", handler.CounterUp(handler.UpdateSOPTemplate))
+	mux.HandleFunc("POST /sop-templates/{id}/delete", handler.CounterUp(handler.DeleteSOPTemplate))
+	mux.HandleFunc("POST /sop-templates/{id}/items", handler.CounterUp(handler.ReplaceSOPItems))
 	mux.HandleFunc("GET /expenses", handler.CounterUpPage(handler.ListExpenses))
 
 	// 收款沖銷（CAR35 Customer Pay，90,762 筆）——

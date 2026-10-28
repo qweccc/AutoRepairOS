@@ -72,6 +72,7 @@ var Routes = []Route{
 	{"/suppliers", "廠商", "進貨庫存", nil},
 	{"/inventory", "庫存", "進貨庫存", nil},
 	{"/maintenance-templates", "保養套餐", "保養保險", nil},
+	{"/sop-templates", "SOP 模板", "保養保險", nil},
 	{"/insurances", "投保", "保養保險", nil},
 	{"/insurance-companies", "保險公司", "保養保險", nil},
 	{"/staff", "員工", "帳務人事", nil},

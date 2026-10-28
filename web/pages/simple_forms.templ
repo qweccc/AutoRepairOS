@@ -14,7 +14,7 @@ templ EditAppointmentPage(a model.Appointment, bayOptions string, user model.Use
 			<form class="frm" method="POST" action={ "/appointments/" + strconv.FormatInt(a.ID, 10) }>
 				@components.CSRFInput()
 				<label>客戶（輸入姓名或電話搜尋）
-					<div class="vsearch" data-csearch data-search-url="/api/customers/picker"
+					<div class="vsearch" data-csearch data-search-url="/api/customers/picker" data-linked-vehicle
 						data-initial-value={ strconv.FormatInt(a.CustomerID, 10) }>
 						<input type="hidden" name="customer_id" value={ strconv.FormatInt(a.CustomerID, 10) } required>
 						<input class="vs-input" placeholder="搜尋客戶姓名 / 電話" autocomplete="off" required>
@@ -22,7 +22,7 @@ templ EditAppointmentPage(a model.Appointment, bayOptions string, user model.Use
 					</div>
 				</label>
 				<label>車輛（輸入車牌、車型或客戶搜尋）
-					<div class="vsearch" data-vsearch data-search-url="/api/work-orders/vehicles"
+					<div class="vsearch" data-vsearch data-search-url="/api/work-orders/vehicles" data-linked-customer
 						data-initial-value={ strconv.FormatInt(a.VehicleID, 10) }>
 						<input type="hidden" name="vehicle_id" value={ strconv.FormatInt(a.VehicleID, 10) } required>
 						<input class="vs-input" placeholder="搜尋車牌 / 車型 / 客戶" autocomplete="off" required>

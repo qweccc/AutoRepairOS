@@ -115,6 +115,26 @@
       render(filter(kw), kw);
     }
 
+    function searchForCustomer(customerID) {
+      var requestID = ++remoteRequest;
+      fetch(searchURL + '?customer_id=' + encodeURIComponent(customerID), {
+        headers: { 'Accept': 'application/json' }
+      }).then(function (response) {
+        if (!response.ok) throw new Error('vehicle search failed');
+        return response.json();
+      }).then(function (items) {
+        if (requestID === remoteRequest) {
+          opts = [];
+          mergeRemote(items, '');
+          if (items.length === 1) {
+            pick(opts[0]);
+          } else {
+            list.classList.remove('hidden');
+          }
+        }
+      }).catch(function () {});
+    }
+
     function searchRemote(kw) {
       var requestID = ++remoteRequest;
       fetch(searchURL + (searchURL.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(kw), {
@@ -138,6 +158,11 @@
       list.classList.add('hidden');
       root.classList.add('vs-picked');
       input.dispatchEvent(new Event('change', { bubbles: true }));
+      if (o.customer_id) {
+        document.dispatchEvent(new CustomEvent('vehicle-selected', {
+          detail: {customerID: o.customer_id}
+        }));
+      }
     }
 
     function clear() {
@@ -146,6 +171,12 @@
       list.classList.add('hidden');
       root.classList.remove('vs-picked');
     }
+
+    document.addEventListener('customer-selected', function (e) {
+      if (!root.hasAttribute('data-linked-customer') || !e.detail || !e.detail.id) return;
+      clear();
+      searchForCustomer(e.detail.id);
+    });
 
     input.addEventListener('input', function () {
       // 手動改文字就不算已選，避免送出錯誤的 vehicle_id

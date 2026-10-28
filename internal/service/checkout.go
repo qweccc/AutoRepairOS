@@ -445,7 +445,7 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 
 func nullableString(value string) interface{} {
 	if value == "" {
-		return nil
+		return ""
 	}
 	return value
 }

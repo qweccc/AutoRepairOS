@@ -30,6 +30,7 @@ var lookupCategoryLabel = map[string]string{
 	"vehicle_type":    "車輛車種",
 	"body_style":      "車身型式",
 	"fuel_type":       "燃油種類",
+	"bay":             "工位",
 }
 
 // CheckLookupCategories 啟動時檢查每個分頁籤的 category 是否真的有資料。
@@ -118,7 +119,7 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 	// lookupCategoryOrder 固定分頁籤順序（map 迭代是隨機的，導致每頁順序不同）。
 	var lookupCategoryOrder = []string{
 		"vehicle_type", "body_style", "fuel_type", "bank", "category",
-		"insurance_class", "branch", "vehicle_model",
+		"insurance_class", "branch", "vehicle_model", "bay",
 	}
 
 	// 分类筛选签
