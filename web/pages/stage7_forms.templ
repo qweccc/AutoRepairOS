@@ -205,10 +205,11 @@ templ CustomerLineBinding(c model.Customer) {
 			</form>
 		} else {
 			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
-			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/generate-binding-code?platform=line" } style="margin:8px 0">
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/generate-binding-code?platform=line" } hx-post={ "/customers/" + strconv.FormatInt(c.ID,10) + "/generate-binding-code?platform=line" } hx-target="#line-bind-result" hx-swap="innerHTML" style="margin:8px 0">
 				@components.CSRFInput()
 				<button class="btn btn-s" type="submit">產生 LINE 綁定碼</button>
 			</form>
+			<div id="line-bind-result"></div>
 			<p style="color:#94a3b8;font-size:12px;margin:4px 0 0">將綁定碼交給客戶，請在 LINE 輸入即可完成綁定。</p>
 		}
 	</div>
