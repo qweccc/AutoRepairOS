@@ -135,7 +135,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
 			Active:      s.Active,
-			CanEdit:      true,
+			CanEdit:     true,
 		})
 	}
 
@@ -220,7 +220,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
 			Active:      s.Active,
-			CanEdit:      true,
+			CanEdit:     true,
 		})
 	}
 	pages.StaffSearchRows(result).Render(r.Context(), w)
@@ -401,6 +401,10 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		birthday = strings.TrimSpace(r.FormValue("birthday"))
 		insuranceStart = strings.TrimSpace(r.FormValue("insurance_start"))
 		insuranceEnd = strings.TrimSpace(r.FormValue("insurance_end"))
+	} else {
+		// 非 owner 不可修改個資/保險，保留既有值避免被清空
+		db.DB.QueryRow(`SELECT COALESCE(national_id,''), COALESCE(birthday,''), COALESCE(insurance_start,''), COALESCE(insurance_end,'') FROM users WHERE id=?`, id).
+			Scan(&nationalID, &birthday, &insuranceStart, &insuranceEnd)
 	}
 	staffKind := strings.TrimSpace(r.FormValue("staff_kind"))
 	staffBranch := strings.TrimSpace(r.FormValue("staff_branch"))
