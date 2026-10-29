@@ -199,26 +199,26 @@ type WorkOrderItem struct {
 // 無需登入。身份驗證靠 customers.line_user_id 綁定，不是靠登入 session，
 // 因此本 handler 不需要 RequireLogin / AllStaff 等 middleware。
 type Passbook struct {
-	ID             int64     `json:"id"`
-	CustomerID     int64     `json:"customer_id"`
-	CustomerName   string    `json:"customer_name"`
-	VehicleID      int64     `json:"vehicle_id"`
-	VehiclePlate   string    `json:"vehicle_plate"`
-	WorkOrderID    int64     `json:"work_order_id"`
-	WorkOrderNo    string    `json:"work_order_no,omitempty"`
-	ServiceType    string    `json:"service_type"` // inspection 預檢 / maintenance 保養 / repair 維修 / parts 零件
-	Description    string    `json:"description"`
-	PartsCost      float64   `json:"parts_cost"`
-	LaborCost      float64   `json:"labor_cost"`
-	SubcontractCost float64  `json:"subcontract_cost"` // 外包成本（表有此欄，Scan 需對應）
-	Subtotal       float64   `json:"subtotal"`
-	Tax            float64   `json:"tax"`
-	DiscountAmount float64   `json:"discount_amount"`
-	TotalAmount    float64   `json:"total_amount"`
-	Status         string    `json:"status"` // pending 待付款 / approved 已核准 / paid 已付款 / rejected 已拒絕
-	Notes          string    `json:"notes"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID              int64     `json:"id"`
+	CustomerID      int64     `json:"customer_id"`
+	CustomerName    string    `json:"customer_name"`
+	VehicleID       int64     `json:"vehicle_id"`
+	VehiclePlate    string    `json:"vehicle_plate"`
+	WorkOrderID     int64     `json:"work_order_id"`
+	WorkOrderNo     string    `json:"work_order_no,omitempty"`
+	ServiceType     string    `json:"service_type"` // inspection 預檢 / maintenance 保養 / repair 維修 / parts 零件
+	Description     string    `json:"description"`
+	PartsCost       float64   `json:"parts_cost"`
+	LaborCost       float64   `json:"labor_cost"`
+	SubcontractCost float64   `json:"subcontract_cost"` // 外包成本（表有此欄，Scan 需對應）
+	Subtotal        float64   `json:"subtotal"`
+	Tax             float64   `json:"tax"`
+	DiscountAmount  float64   `json:"discount_amount"`
+	TotalAmount     float64   `json:"total_amount"`
+	Status          string    `json:"status"` // pending 待付款 / approved 已核准 / paid 已付款 / rejected 已拒絕
+	Notes           string    `json:"notes"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type LookupItem struct {

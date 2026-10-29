@@ -26,7 +26,7 @@ func RegisterStatic(mux *http.ServeMux) {
 	}
 
 	// 離線資產：sw.js、offline.js、offline.css
-	// 路徑前綴必須用完整路徑（Go 1.22+ ServeMux 不接受裸檔名，例如 "GET sw.js" 會 panic）。  
+	// 路徑前綴必須用完整路徑（Go 1.22+ ServeMux 不接受裸檔名，例如 "GET sw.js" 會 panic）。
 	for _, name := range []string{"sw.js", "offline.js", "offline.css"} {
 		mux.Handle("GET "+"/"+name, RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			serveStatic(w, r, sub, name)

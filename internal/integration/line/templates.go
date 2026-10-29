@@ -23,15 +23,15 @@ func (m EstimateMessage) ToFlex() map[string]interface{} {
 			"spec": map[string]interface{}{
 				"separator": true,
 				"layout": map[string]interface{}{
-					"type":    "VBOX",
+					"type": "VBOX",
 					"contents": []map[string]interface{}{
 						{
 							"type": "text",
 							"tag":  "fill",
 							"spec": map[string]interface{}{
-								"text": m.Title,
-								"size": "md",
-								"color": "#008527",
+								"text":   m.Title,
+								"size":   "md",
+								"color":  "#008527",
 								"weight": "bold",
 							},
 						},
@@ -39,8 +39,8 @@ func (m EstimateMessage) ToFlex() map[string]interface{} {
 							"type": "text",
 							"tag":  "fill",
 							"spec": map[string]interface{}{
-								"text": m.SubText,
-								"size": "sm",
+								"text":  m.SubText,
+								"size":  "sm",
 								"color": "#003838",
 							},
 						},
@@ -53,7 +53,7 @@ func (m EstimateMessage) ToFlex() map[string]interface{} {
 			"tag":  "fill",
 			"spec": map[string]interface{}{
 				"layout": map[string]interface{}{
-					"type": "VBOX",
+					"type":     "VBOX",
 					"contents": flexRows(m.Items),
 				},
 			},
@@ -69,9 +69,9 @@ func (m EstimateMessage) ToFlex() map[string]interface{} {
 							"type": "text",
 							"tag":  "fill",
 							"spec": map[string]interface{}{
-								"text": fmt.Sprintf("總計：%s", money(m.Total)),
-								"size": "md",
-								"color": "#008527",
+								"text":   fmt.Sprintf("總計：%s", money(m.Total)),
+								"size":   "md",
+								"color":  "#008527",
 								"weight": "bold",
 							},
 						},
@@ -92,9 +92,9 @@ func (m EstimateMessage) ToFlex() map[string]interface{} {
 		})
 	}
 	return map[string]interface{}{
-		"type":        "flex",
-		"altText":     m.Title,
-		"contents":    contents,
+		"type":     "flex",
+		"altText":  m.Title,
+		"contents": contents,
 	}
 }
 

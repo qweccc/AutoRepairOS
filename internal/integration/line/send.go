@@ -10,12 +10,12 @@ import (
 
 // Notification 為 LINE 通知佇列項目（與 cron.Notification 欄位對齊，避免循環匯入）。
 type Notification struct {
-	ID          int64
-	CustomerID  int64
-	Channel     string
-	Kind        string
-	Subject     string
-	Body        string
+	ID         int64
+	CustomerID int64
+	Channel    string
+	Kind       string
+	Subject    string
+	Body       string
 }
 
 // DeliverNotification 把一條 LINE 通道通知送到 LINE（用客戶的 line_user_id）。

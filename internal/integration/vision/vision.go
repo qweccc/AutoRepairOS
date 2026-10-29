@@ -19,8 +19,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -32,31 +32,31 @@ import (
 // Reading 行照/車牌辨識的結構化結果。
 // 欄位對應台灣行車執照；辨識不到的空著，由上層決定要不要覆蓋既有值。
 type Reading struct {
-	PlateNumber    string `json:"plate_number"`
-	BrandModel     string `json:"brand_model"`
-	VIN            string `json:"vin"`
-	EngineNumber   string `json:"engine_number"`
-	OwnerName      string `json:"owner_name"`
-	OwnerAddress   string `json:"owner_address"`
-	OwnerIDNumber  string `json:"owner_id_number"`
-	FuelType       string `json:"fuel_type"`
-	Displacement   string `json:"displacement"`
-	ManufactureDate string `json:"manufacture_date"`
+	PlateNumber      string `json:"plate_number"`
+	BrandModel       string `json:"brand_model"`
+	VIN              string `json:"vin"`
+	EngineNumber     string `json:"engine_number"`
+	OwnerName        string `json:"owner_name"`
+	OwnerAddress     string `json:"owner_address"`
+	OwnerIDNumber    string `json:"owner_id_number"`
+	FuelType         string `json:"fuel_type"`
+	Displacement     string `json:"displacement"`
+	ManufactureDate  string `json:"manufacture_date"`
 	LicenseIssueDate string `json:"license_issue_date"`
 	SeatingCapacity  string `json:"seating_capacity"`
-	RawText        string `json:"raw_text,omitempty"` // 原始回傳，除錯用
+	RawText          string `json:"raw_text,omitempty"` // 原始回傳，除錯用
 }
 
 // InvoiceLine 進貨單據（供應商出貨單/發票）拍照辨識出的**單行品項**。
 // 一張單據通常有多行，所以 RecognizeInvoice 回傳的是切片；每行獨立帶入
 // 「加入品項」表單，讓櫃檯人員逐行確認數量與單價（OCR 數字一律要人眼複核）。
 type InvoiceLine struct {
-	Description  string  `json:"description"`           // 品項名稱（例：機油 5W-30）
-	Quantity     float64 `json:"quantity"`              // 數量；模型沒給或不合理時由上層改 1
-	UnitPrice    float64 `json:"unit_price"`            // 進貨單價（給廠商的價）
-	PartNumber   string  `json:"part_number,omitempty"` // 料號（選填）
-	GuessCategory string `json:"guess_category,omitempty"` // 依品名關鍵字猜的零件類別（lookup code）
-	RawText      string  `json:"raw_text,omitempty"`    // 該行原文，除錯用
+	Description   string  `json:"description"`              // 品項名稱（例：機油 5W-30）
+	Quantity      float64 `json:"quantity"`                 // 數量；模型沒給或不合理時由上層改 1
+	UnitPrice     float64 `json:"unit_price"`               // 進貨單價（給廠商的價）
+	PartNumber    string  `json:"part_number,omitempty"`    // 料號（選填）
+	GuessCategory string  `json:"guess_category,omitempty"` // 依品名關鍵字猜的零件類別（lookup code）
+	RawText       string  `json:"raw_text,omitempty"`       // 該行原文，除錯用
 }
 
 // categoryKeywords 零件類別關鍵字：品名含任一關鍵字就歸到該類別。
@@ -136,11 +136,11 @@ type Client struct {
 	// 第一次辨識時若服務沒開，後端自動背景啟動 llama-server（載入約 10-60 秒），
 	// 用完閒置 IdleMin 分鐘後自動關閉程序。只管理「自己啟動的」程序，
 	// 使用者手動開的服務（如 start-qwen-vision.bat）不會被動到。
-	AutoStart bool
-	IdleMin   int
-	HFModel   string // llama-server -hf 的模型規格（無 ModelPath 時用；會連 HF 驗證）
-	ModelPath string // 本地 GGUF 主模型檔（優先；離線部署不碰網路）
-	MmprojPath string // 視覺投影檔 mmproj（視覺模型必備，搭配 ModelPath）
+	AutoStart     bool
+	IdleMin       int
+	HFModel       string // llama-server -hf 的模型規格（無 ModelPath 時用；會連 HF 驗證）
+	ModelPath     string // 本地 GGUF 主模型檔（優先；離線部署不碰網路）
+	MmprojPath    string // 視覺投影檔 mmproj（視覺模型必備，搭配 ModelPath）
 	LocalProtocol string // local 模式協定："openai"（預設，llama-server）或 "custom"（自訂 /recognize API）
 
 	mu        sync.Mutex
@@ -181,19 +181,19 @@ func NewClient(mode, apiURL, apiKey, model, localURL string, autoStart bool, idl
 		localProtocol = "openai"
 	}
 	return &Client{
-		Mode:        mode,
-		APIURL:      apiURL,
-		APIKey:      apiKey,
-		Model:       model,
-		LocalURL:    localURL,
-		HTTP:        &http.Client{Timeout: 120 * time.Second},
-		AutoStart:   autoStart,
-		IdleMin:     idleMin,
-		HFModel:     hfModel,
-		ModelPath:   modelPath,
-		MmprojPath:  mmprojPath,
+		Mode:          mode,
+		APIURL:        apiURL,
+		APIKey:        apiKey,
+		Model:         model,
+		LocalURL:      localURL,
+		HTTP:          &http.Client{Timeout: 120 * time.Second},
+		AutoStart:     autoStart,
+		IdleMin:       idleMin,
+		HFModel:       hfModel,
+		ModelPath:     modelPath,
+		MmprojPath:    mmprojPath,
 		LocalProtocol: localProtocol,
-		stopWatch:   make(chan struct{}),
+		stopWatch:     make(chan struct{}),
 	}
 }
 

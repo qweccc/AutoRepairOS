@@ -11,11 +11,11 @@ import (
 // Supplier 種子：建立預設供應商。已存在者以 INSERT OR IGNORE 略過，可重複安全呼叫。
 func RunSuppliers(cfg *config.Config) error {
 	defaults := []struct {
-		id        int
-		name      string
-		phone     string
-		address   string
-		notes     string
+		id      int
+		name    string
+		phone   string
+		address string
+		notes   string
 	}{
 		{1, "鋒勝汽車零件", "02-2300-0001", "台北 仁愛路三段 88 號", "機油系、機油濾芯"},
 		{2, "東陽車業總經銷", "02-2750-0002", "台北 松山 八德路四段", "煞車、懸吊"},
@@ -50,16 +50,16 @@ func RunSuppliers(cfg *config.Config) error {
 // RunInventorySeed 建立預設零件庫存。已存在者以 INSERT OR IGNORE 略過，可重複安全呼叫。
 func RunInventorySeed(cfg *config.Config) error {
 	defaults := []struct {
-		id        int
-		partNo    string
-		barcode   string
-		supplier  int
-		name      string
-		binLoc    string
-		cost      float64
-		sell      float64
-		stock     int
-		minSafe   int
+		id       int
+		partNo   string
+		barcode  string
+		supplier int
+		name     string
+		binLoc   string
+		cost     float64
+		sell     float64
+		stock    int
+		minSafe  int
 	}{
 		{1, "0W20", "BR0W20A001", 3, "機油 5W-30 (LNG)", "A-01-1", 480, 980, 30, 5},
 		{2, "MF1", "BRMF1A0002", 1, "機油濾芯", "A-01-2", 220, 380, 40, 5},

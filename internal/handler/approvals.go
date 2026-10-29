@@ -543,79 +543,79 @@ func renderApprovalPage(w http.ResponseWriter, data pages.ApprovalPageData) {
 	return
 	/*
 
-		html := `<!DOCTYPE html>
-	<html lang="zh-TW">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <title>追加維修授權</title>
-	    <style>
-	        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
-	        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
-	        h1 { color: #4a9eff; margin-top: 0; }
-	        .error { color: #ff6b6b; background: #3d1f1f; padding: 15px; border-radius: 4px; }
-	        .success { color: #51cf66; background: #1f3d2f; padding: 15px; border-radius: 4px; }
-	        .info { background: #1f2d3d; padding: 15px; border-radius: 4px; margin: 15px 0; }
-	        .btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }
-	        .btn-approve { background: #51cf66; color: white; }
-	        .btn-reject { background: #ff6b6b; color: white; }
-	        .btn:hover { opacity: 0.9; }
-	        .item { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
-	        .item:last-child { border-bottom: none; }
-	    </style>
-	</head>
-	<body>
-	    <div class="container">
-	        <h1>🔧 追加維修授權</h1>`
+			html := `<!DOCTYPE html>
+		<html lang="zh-TW">
+		<head>
+		    <meta charset="UTF-8">
+		    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		    <title>追加維修授權</title>
+		    <style>
+		        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
+		        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
+		        h1 { color: #4a9eff; margin-top: 0; }
+		        .error { color: #ff6b6b; background: #3d1f1f; padding: 15px; border-radius: 4px; }
+		        .success { color: #51cf66; background: #1f3d2f; padding: 15px; border-radius: 4px; }
+		        .info { background: #1f2d3d; padding: 15px; border-radius: 4px; margin: 15px 0; }
+		        .btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }
+		        .btn-approve { background: #51cf66; color: white; }
+		        .btn-reject { background: #ff6b6b; color: white; }
+		        .btn:hover { opacity: 0.9; }
+		        .item { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
+		        .item:last-child { border-bottom: none; }
+		    </style>
+		</head>
+		<body>
+		    <div class="container">
+		        <h1>🔧 追加維修授權</h1>`
 
-		if data.ErrorMsg != "" {
-			html += fmt.Sprintf(`<div class="error">%s</div>`, data.ErrorMsg)
-		} else if data.IsExpired {
-			html += `<div class="error">授權已過期，請連絡車廠</div>`
-		} else if data.IsDecided {
-			html += fmt.Sprintf(`<div class="success">此授權%s（%s）</div>`, data.DecidedText, data.Request.DecidedAt)
-		} else if data.Request != nil && data.WorkOrder != nil {
-			html += fmt.Sprintf(`
-	        <div class="info">
-	            <strong>工單編號：</strong>#%d<br>
-	            <strong>客戶：</strong>%s<br>
-	            <strong>車牌：</strong>%s<br>
-	            <strong>過期時間：</strong>%s
-	        </div>`,
-				data.WorkOrder.ID, data.Customer.Name, data.WorkOrder.PlateNumber, data.Request.ExpiresAt)
-
-			if data.Request.ItemSummary != "" {
+			if data.ErrorMsg != "" {
+				html += fmt.Sprintf(`<div class="error">%s</div>`, data.ErrorMsg)
+			} else if data.IsExpired {
+				html += `<div class="error">授權已過期，請連絡車廠</div>`
+			} else if data.IsDecided {
+				html += fmt.Sprintf(`<div class="success">此授權%s（%s）</div>`, data.DecidedText, data.Request.DecidedAt)
+			} else if data.Request != nil && data.WorkOrder != nil {
 				html += fmt.Sprintf(`
-	        <div class="info">
-	            <strong>追加項目：</strong><br>
-	            %s
-	        </div>`, data.Request.ItemSummary)
-			}
+		        <div class="info">
+		            <strong>工單編號：</strong>#%d<br>
+		            <strong>客戶：</strong>%s<br>
+		            <strong>車牌：</strong>%s<br>
+		            <strong>過期時間：</strong>%s
+		        </div>`,
+					data.WorkOrder.ID, data.Customer.Name, data.WorkOrder.PlateNumber, data.Request.ExpiresAt)
 
-			if len(data.Items) > 0 {
-				html += `<div class="info"><strong>工單項目：</strong><br>`
-				for _, item := range data.Items {
-					html += fmt.Sprintf(`<div class="item">%s x%d - $%.0f</div>`,
-						item.Description, item.Quantity, item.Subtotal)
+				if data.Request.ItemSummary != "" {
+					html += fmt.Sprintf(`
+		        <div class="info">
+		            <strong>追加項目：</strong><br>
+		            %s
+		        </div>`, data.Request.ItemSummary)
 				}
-				html += `</div>`
+
+				if len(data.Items) > 0 {
+					html += `<div class="info"><strong>工單項目：</strong><br>`
+					for _, item := range data.Items {
+						html += fmt.Sprintf(`<div class="item">%s x%d - $%.0f</div>`,
+							item.Description, item.Quantity, item.Subtotal)
+					}
+					html += `</div>`
+				}
+
+				html += `
+		        <form method="POST" action="/approval/approve/` + data.Request.Token + `">
+		            <button type="submit" class="btn btn-approve">✅ 同意</button>
+		        </form>
+		        <form method="POST" action="/approval/reject/` + data.Request.Token + `">
+		            <button type="submit" class="btn btn-reject">❌ 拒絕</button>
+		        </form>`
 			}
 
 			html += `
-	        <form method="POST" action="/approval/approve/` + data.Request.Token + `">
-	            <button type="submit" class="btn btn-approve">✅ 同意</button>
-	        </form>
-	        <form method="POST" action="/approval/reject/` + data.Request.Token + `">
-	            <button type="submit" class="btn btn-reject">❌ 拒絕</button>
-	        </form>`
-		}
+		    </div>
+		</body>
+		</html>`
 
-		html += `
-	    </div>
-	</body>
-	</html>`
-
-		w.Write([]byte(html))
+			w.Write([]byte(html))
 	*/
 }
 
@@ -626,42 +626,42 @@ func renderApprovalResult(w http.ResponseWriter, status, message string) {
 	return
 	/*
 
-		var cssClass string
-		switch status {
-		case "success":
-			cssClass = "success"
-		case "error", "expired", "decided":
-			cssClass = "error"
-		default:
-			cssClass = "info"
-		}
+			var cssClass string
+			switch status {
+			case "success":
+				cssClass = "success"
+			case "error", "expired", "decided":
+				cssClass = "error"
+			default:
+				cssClass = "info"
+			}
 
-		html := fmt.Sprintf(`<!DOCTYPE html>
-	<html lang="zh-TW">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <title>授權結果</title>
-	    <style>
-	        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
-	        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
-	        h1 { color: #4a9eff; margin-top: 0; }
-	        .%s { padding: 15px; border-radius: 4px; margin: 20px 0; }
-	        .success { color: #51cf66; background: #1f3d2f; }
-	        .error { color: #ff6b6b; background: #3d1f1f; }
-	        .info { color: #4a9eff; background: #1f2d3d; }
-	    </style>
-	</head>
-	<body>
-	    <div class="container">
-	        <h1>🔧 授權結果</h1>
-	        <div class="%s">%s</div>
-	        <p>您可以關閉此頁面。</p>
-	    </div>
-	</body>
-	</html>`, cssClass, cssClass, message)
+			html := fmt.Sprintf(`<!DOCTYPE html>
+		<html lang="zh-TW">
+		<head>
+		    <meta charset="UTF-8">
+		    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		    <title>授權結果</title>
+		    <style>
+		        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
+		        .container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
+		        h1 { color: #4a9eff; margin-top: 0; }
+		        .%s { padding: 15px; border-radius: 4px; margin: 20px 0; }
+		        .success { color: #51cf66; background: #1f3d2f; }
+		        .error { color: #ff6b6b; background: #3d1f1f; }
+		        .info { color: #4a9eff; background: #1f2d3d; }
+		    </style>
+		</head>
+		<body>
+		    <div class="container">
+		        <h1>🔧 授權結果</h1>
+		        <div class="%s">%s</div>
+		        <p>您可以關閉此頁面。</p>
+		    </div>
+		</body>
+		</html>`, cssClass, cssClass, message)
 
-		w.Write([]byte(html))
+			w.Write([]byte(html))
 	*/
 }
 

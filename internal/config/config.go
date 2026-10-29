@@ -26,16 +26,16 @@ type Config struct {
 	// VisionAPIKey 只給 cloud 用；VisionLocalURL 給 local 用。兩者皆空則功能停用。
 	// VisionAutoStart=true 時，local 模式的服務沒開會由後端自動啟動 llama-server，
 	// 閒置 VisionIdleMinutes 分鐘後自動關閉（車行人員不必手動管理 LLM）。
-	VisionMode      string
-	VisionAPIURL    string
-	VisionAPIKey    string
-	VisionModel     string
-	VisionLocalURL  string
-	VisionAutoStart bool
-	VisionIdleMin   int
-	VisionHFModel   string
-	VisionModelPath string  // 本地 GGUF 主模型檔（優先於 HFModel；離線部署用）
-	VisionMmprojPath string // 視覺投影檔 mmproj（搭配 ModelPath 使用）
+	VisionMode          string
+	VisionAPIURL        string
+	VisionAPIKey        string
+	VisionModel         string
+	VisionLocalURL      string
+	VisionAutoStart     bool
+	VisionIdleMin       int
+	VisionHFModel       string
+	VisionModelPath     string // 本地 GGUF 主模型檔（優先於 HFModel；離線部署用）
+	VisionMmprojPath    string // 視覺投影檔 mmproj（搭配 ModelPath 使用）
 	VisionLocalProtocol string // local 模式協定：openai（預設，llama-server）或 custom（自訂 /recognize API）
 }
 
@@ -173,11 +173,11 @@ func Load() *Config {
 		VisionModel:    os.Getenv("VISION_MODEL"),
 		VisionLocalURL: os.Getenv("VISION_LOCAL_URL"),
 
-		VisionAutoStart: envBool("VISION_AUTOSTART", false),
-		VisionIdleMin:   envInt("VISION_IDLE_MINUTES", 10),
-		VisionHFModel:   envOrDefault("VISION_HF_MODEL", "unsloth/Qwen2.5-VL-3B-Instruct-GGUF:Q4_K_M"),
-		VisionModelPath:  visionModelPath,
-		VisionMmprojPath: visionMmprojPath,
+		VisionAutoStart:     envBool("VISION_AUTOSTART", false),
+		VisionIdleMin:       envInt("VISION_IDLE_MINUTES", 10),
+		VisionHFModel:       envOrDefault("VISION_HF_MODEL", "unsloth/Qwen2.5-VL-3B-Instruct-GGUF:Q4_K_M"),
+		VisionModelPath:     visionModelPath,
+		VisionMmprojPath:    visionMmprojPath,
 		VisionLocalProtocol: os.Getenv("VISION_LOCAL_PROTOCOL"),
 	}
 }

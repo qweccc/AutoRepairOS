@@ -173,4 +173,3 @@ func TestStaffActive_CurrentUserRejectsInactive(t *testing.T) {
 		t.Fatalf("active=0 的 currentUser 應讓 AllStaff 302，got %d", rec.Code)
 	}
 }
-

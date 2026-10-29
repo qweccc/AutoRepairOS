@@ -35,7 +35,7 @@ func newMigratedTestDB(t *testing.T) *sql.DB {
 func newTestHTTPClient() *http.Client {
 	jar, _ := cookiejar.New(nil)
 	return &http.Client{
-		Jar:     jar,
+		Jar: jar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
