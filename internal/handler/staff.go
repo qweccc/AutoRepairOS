@@ -134,7 +134,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
 			Active:      s.Active,
-			CanEdit:     s.Kind == "employee" || s.Kind == "family",
+			CanEdit:      true,
 		})
 	}
 
@@ -219,7 +219,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
 			Active:      s.Active,
-			CanEdit:     s.Kind == "employee" || s.Kind == "family",
+			CanEdit:      true,
 		})
 	}
 	pages.StaffSearchRows(result).Render(r.Context(), w)
@@ -390,6 +390,15 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	active := 1
 	if r.FormValue("active") == "0" {
 		active = 0
+	}
+	password := strings.TrimSpace(r.FormValue("password"))
+	if password != "" {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			fail(w, "密碼雜湊失敗")
+			return
+		}
+		db.DB.Exec(`UPDATE users SET password = ? WHERE id = ?`, string(hashed), id)
 	}
 
 	// 驗證身分別

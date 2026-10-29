@@ -121,7 +121,8 @@ templ EditStaffPage(data StaffEditData) {
 			<form class="frm" method="POST" action={ "/staff/" + strconv.FormatInt(data.ID, 10) }>
 				@components.CSRFInput()
 				<label>姓名<input value={ data.Name } disabled style="opacity:0.6"></label>
-				<label>帳號<input value={ data.Username } disabled style="opacity:0.6"></label>
+								<label>帳號<input value={ data.Username } disabled style="opacity:0.6"></label>
+								<label>新密碼<input name="password" type="password" placeholder="留空則不修改"></label>
 				<label>狀態<select name="active">
 					<option value="1" selected?={ data.Active == 1 }>在職</option>
 					<option value="0" selected?={ data.Active == 0 }>離職</option>
