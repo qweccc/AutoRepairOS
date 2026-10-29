@@ -1161,7 +1161,7 @@ func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
 
 func recalcWorkOrderTotal(tx *sql.Tx, woID int64) error {
 	_, err := tx.Exec(`UPDATE work_orders SET total_amount =
-		COALESCE((SELECT SUM(subtotal) FROM work_order_items WHERE work_order_id = ?), 0),
+		COALESCE((SELECT SUM(COALESCE(subtotal, COALESCE(quantity,0)*COALESCE(unit_price,0))) FROM work_order_items WHERE work_order_id = ?), 0),
 		updated_at = CURRENT_TIMESTAMP WHERE id = ?`, woID, woID)
 	return err
 }
