@@ -47,12 +47,13 @@ templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []Das
 					@components.Empty("尚無工單")
 				} else {
 					<table>
-						<tr><th>#</th><th>車牌</th><th>客戶</th><th>狀態</th></tr>
+						<tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>
 						for _, wo := range recent {
 							<tr>
 								<td><a href={ templ.SafeURL("/work-orders/" + strconv.FormatInt(wo.ID, 10)) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
 								<td>{ wo.PlateNumber }</td>
-														<td>{ wo.CustomerName }</td>
+								<td>{ wo.BrandModel }</td>
+								<td>{ wo.CustomerName }</td>
 								<td><span class={ "pill " + wo.StatusPill }>{ wo.StatusLabel }</span></td>
 							</tr>
 						}
