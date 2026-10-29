@@ -470,3 +470,8 @@ Docker 模式的地端視覺 LLM 由 compose 內的 `ollama` 容器提供（`oll
 - 員工頁：角色下拉移除重複、新增空白選項；編輯頁可修改密碼。
 - 員工健保異動歷史：編輯頁底部顯示；修改加保/退保日會自動記錄。
 - 權限強化：技師僅能查看自己的工單/工時/收據；客戶金額對技師隱藏。
+
+## Access 舊資料匯入與增量同步
+- 完整匯入：`python unpublished/analysis-and-tests/tools/full_import_access.py <mdb> <sqlite>`（支援 --dry-run）
+- 增量同步：`python unpublished/analysis-and-tests/tools/sync_access_incremental.py <mdb_new> <sqlite>`（支援 --dry-run）
+- 匯入前自動備份 SQLite；完整匯入會清除舊匯入資料後重建。
