@@ -89,8 +89,12 @@ func VerifyBindingCode(platform, code, chatOrLineID string) (int64, error) {
 	// 檢查過期
 	exp, err := time.Parse("2006-01-02 15:04:05", expiresAt)
 	if err != nil || time.Now().After(exp) {
+		db.DB.Exec(`UPDATE binding_codes SET attempts = attempts + 1 WHERE id = ?`, id)
 		return 0, fmt.Errorf("綁定碼已過期")
 	}
+
+	// 遞增嘗試次數
+	db.DB.Exec(`UPDATE binding_codes SET attempts = attempts + 1 WHERE id = ?`, id)
 
 	// 綁定
 	if platform == "telegram" {
@@ -105,14 +109,20 @@ func VerifyBindingCode(platform, code, chatOrLineID string) (int64, error) {
 		return 0, fmt.Errorf("不支援的綁定平台")
 	}
 
-// 標記已使用
+	// 標記已使用（使用交易避免競爭條件）
 	tx, err := db.DB.Begin()
 	if err != nil {
 		return 0, fmt.Errorf("開始交易失敗")
 	}
-	if _, err := tx.Exec(`UPDATE binding_codes SET used_at = CURRENT_TIMESTAMP WHERE id = ?`, id); err != nil {
+	res, err := tx.Exec(`UPDATE binding_codes SET used_at = CURRENT_TIMESTAMP WHERE id = ? AND used_at IS NULL`, id)
+	if err != nil {
 		tx.Rollback()
 		return 0, fmt.Errorf("標記綁定碼已使用失敗")
+	}
+	aff, _ := res.RowsAffected()
+	if aff == 0 {
+		tx.Rollback()
+		return 0, fmt.Errorf("此碼已使用")
 	}
 	if err := tx.Commit(); err != nil {
 		return 0, fmt.Errorf("提交交易失敗")
