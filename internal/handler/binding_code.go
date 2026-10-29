@@ -105,9 +105,17 @@ func VerifyBindingCode(platform, code, chatOrLineID string) (int64, error) {
 		return 0, fmt.Errorf("不支援的綁定平台")
 	}
 
-	// 標記已使用
-	if _, err := db.DB.Exec(`UPDATE binding_codes SET used_at = CURRENT_TIMESTAMP WHERE id = ?`, id); err != nil {
+// 標記已使用
+	tx, err := db.DB.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("開始交易失敗")
+	}
+	if _, err := tx.Exec(`UPDATE binding_codes SET used_at = CURRENT_TIMESTAMP WHERE id = ?`, id); err != nil {
+		tx.Rollback()
 		return 0, fmt.Errorf("標記綁定碼已使用失敗")
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("提交交易失敗")
 	}
 	return customerID, nil
 }

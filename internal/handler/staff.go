@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -466,7 +466,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	if changed {
 		if _, err := db.DB.Exec(`INSERT INTO insurance_history (user_id, event_type, event_date, note, created_by) VALUES (?,?,?,?,?)`,
 			id, eventType, eventDate, "由員工編輯頁更新", user.ID); err != nil {
-			fmt.Println("insurance_history insert failed:", err)
+			log.Printf("insurance_history insert failed: %v", err)
 		}
 	}
 
