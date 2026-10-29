@@ -1258,7 +1258,7 @@ func CustomerTelegramBinding(c model.Customer) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "<p style=\"color:#94a3b8;font-size:12.5px;margin:12px 0\">建議讓客戶自己綁：請客戶在 Telegram 傳送手機號碼，系統會比對客戶資料上的電話並自動連結。若電話對不到或同號多筆，再由櫃檯手動綁定。</p><form method=\"POST\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "<p style=\"color:#94a3b8;font-size:12.5px;margin:12px 0\">建議讓客戶自己綁：由櫃台產生綁定碼後交給客戶，請客戶在 Telegram 輸入「綁定 &lt;綁定碼&gt;」即可完成綁定。</p><form method=\"POST\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
