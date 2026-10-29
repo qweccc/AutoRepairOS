@@ -138,7 +138,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	roleOpts := `<option value="technician">技師</option><option value="counter">櫃檯人員</option>`
+	roleOpts := `<option value="">—</option><option value="technician">技師</option><option value="counter">櫃檯人員</option>`
 	if user.Role == "owner" {
 		roleOpts = roleOpts + `<option value="owner">系統管理員</option>`
 	}
