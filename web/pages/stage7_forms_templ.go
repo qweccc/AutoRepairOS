@@ -66,7 +66,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(data.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 27, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 27, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -79,7 +79,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/suppliers/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 28, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 28, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -100,7 +100,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 30, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 30, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -113,7 +113,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Phone).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 31, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 31, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
@@ -126,7 +126,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Contact).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 32, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 32, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 			if templ_7745c5c3_Err != nil {
@@ -139,7 +139,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Address).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 33, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 33, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -177,7 +177,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(opt.Value).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 40, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 40, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 				if templ_7745c5c3_Err != nil {
@@ -200,7 +200,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 40, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 40, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -218,7 +218,7 @@ func EditSupplierPage(data SupplierEditData) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 43, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 43, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -289,7 +289,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(data.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 71, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 71, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -302,7 +302,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/subcontracts/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 72, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 72, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 			if templ_7745c5c3_Err != nil {
@@ -323,7 +323,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(data.WorkOrderID, 10)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 74, Col: 109}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 74, Col: 109}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -351,7 +351,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(opt.Value).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 78, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 78, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 				if templ_7745c5c3_Err != nil {
@@ -374,7 +374,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 78, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 78, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -392,7 +392,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Description).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 81, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 81, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -405,7 +405,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CostAmount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 82, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 82, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -418,7 +418,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.ChargeAmount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 83, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 83, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.ExpectedDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 84, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 84, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 			if templ_7745c5c3_Err != nil {
@@ -484,7 +484,7 @@ func EditSubcontractPage(data SubcontractEditData) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 91, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 91, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -556,7 +556,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(data.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 120, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 120, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -569,7 +569,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/staff/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 121, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 121, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 			if templ_7745c5c3_Err != nil {
@@ -590,7 +590,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 123, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 123, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 			if templ_7745c5c3_Err != nil {
@@ -603,7 +603,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Username).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 124, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 124, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 			if templ_7745c5c3_Err != nil {
@@ -661,7 +661,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(opt.Value).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 135, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 135, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 				if templ_7745c5c3_Err != nil {
@@ -684,7 +684,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 135, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 135, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -702,7 +702,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.NationalID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 138, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 138, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 			if templ_7745c5c3_Err != nil {
@@ -715,7 +715,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Birthday).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 139, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 139, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -728,7 +728,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.InsuranceStart).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 140, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 140, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -741,7 +741,7 @@ func EditStaffPage(data StaffEditData) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.InsuranceEnd).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 141, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 141, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -814,7 +814,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(data.Customer.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 165, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 165, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -827,7 +827,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/customers/" + strconv.FormatInt(data.Customer.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 166, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 166, Col: 99}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 			if templ_7745c5c3_Err != nil {
@@ -848,7 +848,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Customer.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 168, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 168, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 			if templ_7745c5c3_Err != nil {
@@ -861,7 +861,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Customer.Phone).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 169, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 169, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 			if templ_7745c5c3_Err != nil {
@@ -914,7 +914,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Customer.Birthday).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 178, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 178, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 			if templ_7745c5c3_Err != nil {
@@ -927,7 +927,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Customer.Address).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 179, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 179, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {
@@ -940,7 +940,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Customer.Tags).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 180, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 180, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 			if templ_7745c5c3_Err != nil {
@@ -953,7 +953,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Customer.CampaignCode).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 181, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 181, Col: 104}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
@@ -966,7 +966,7 @@ func EditCustomerPage(data CustomerEditData) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(data.Customer.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 182, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 182, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -1023,7 +1023,7 @@ func CustomerLineBinding(c model.Customer) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(c.LineUserID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 201, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 201, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -1036,7 +1036,7 @@ func CustomerLineBinding(c model.Customer) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/customers/" + strconv.FormatInt(c.ID, 10) + "/line-unbind").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 203, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 203, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
@@ -1067,7 +1067,7 @@ func CustomerLineBinding(c model.Customer) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/customers/" + strconv.FormatInt(c.ID, 10) + "/line-bind").ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 213, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 213, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 		if templ_7745c5c3_Err != nil {
@@ -1088,7 +1088,7 @@ func CustomerLineBinding(c model.Customer) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(lineBindLabel(c))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 216, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 216, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1131,7 +1131,7 @@ func CustomerTelegramBinding(c model.Customer) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(c.TelegramUserID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 227, Col: 120}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 227, Col: 120}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -1144,7 +1144,7 @@ func CustomerTelegramBinding(c model.Customer) templ.Component {
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-unbind").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 229, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 229, Col: 96}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
@@ -1175,7 +1175,7 @@ func CustomerTelegramBinding(c model.Customer) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=telegram").ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 237, Col: 119}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 237, Col: 119}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
@@ -1196,7 +1196,7 @@ func CustomerTelegramBinding(c model.Customer) templ.Component {
 		var templ_7745c5c3_Var56 string
 		templ_7745c5c3_Var56, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-bind").ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 243, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 243, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 		if templ_7745c5c3_Err != nil {
@@ -1217,7 +1217,7 @@ func CustomerTelegramBinding(c model.Customer) templ.Component {
 		var templ_7745c5c3_Var57 string
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(telegramBindLabel(c))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 246, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 246, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 		if templ_7745c5c3_Err != nil {
@@ -1288,7 +1288,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(data.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 273, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 273, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1301,7 +1301,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/insurance-companies/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 274, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 274, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 			if templ_7745c5c3_Err != nil {
@@ -1322,7 +1322,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Code).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 276, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 276, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 			if templ_7745c5c3_Err != nil {
@@ -1335,7 +1335,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 277, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 277, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 			if templ_7745c5c3_Err != nil {
@@ -1348,7 +1348,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TaxID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 278, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 278, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 			if templ_7745c5c3_Err != nil {
@@ -1361,7 +1361,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.ClaimPhone).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 279, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 279, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1374,7 +1374,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Phone).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 280, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 280, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 			if templ_7745c5c3_Err != nil {
@@ -1387,7 +1387,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.ContactPerson).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 281, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 281, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 			if templ_7745c5c3_Err != nil {
@@ -1400,7 +1400,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.PostalCode).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 282, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 282, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 			if templ_7745c5c3_Err != nil {
@@ -1413,7 +1413,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Address).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 283, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 283, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 			if templ_7745c5c3_Err != nil {
@@ -1426,7 +1426,7 @@ func EditInsuranceCompanyPage(data InsuranceCompanyEditData) templ.Component {
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 284, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 284, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 			if templ_7745c5c3_Err != nil {
@@ -1492,7 +1492,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(data.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 304, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 304, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 			if templ_7745c5c3_Err != nil {
@@ -1505,7 +1505,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Action).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 305, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 305, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 			if templ_7745c5c3_Err != nil {
@@ -1532,7 +1532,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 					var templ_7745c5c3_Var75 string
 					templ_7745c5c3_Var75, templ_7745c5c3_Err = templruntime.NewAttributeExpression(opt.Value).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 310, Col: 32}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 310, Col: 32}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 					if templ_7745c5c3_Err != nil {
@@ -1555,7 +1555,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 					var templ_7745c5c3_Var76 string
 					templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 310, Col: 73}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 310, Col: 73}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 					if templ_7745c5c3_Err != nil {
@@ -1578,7 +1578,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 			var templ_7745c5c3_Var77 string
 			templ_7745c5c3_Var77, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.OrderDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 314, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 314, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 			if templ_7745c5c3_Err != nil {
@@ -1591,7 +1591,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 			var templ_7745c5c3_Var78 string
 			templ_7745c5c3_Var78, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 315, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 315, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var78)
 			if templ_7745c5c3_Err != nil {
@@ -1604,7 +1604,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 			var templ_7745c5c3_Var79 string
 			templ_7745c5c3_Var79, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.FirmNo).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 316, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 316, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var79)
 			if templ_7745c5c3_Err != nil {
@@ -1617,7 +1617,7 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 			var templ_7745c5c3_Var80 string
 			templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 317, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 317, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 			if templ_7745c5c3_Err != nil {
@@ -1711,7 +1711,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var83 string
 			templ_7745c5c3_Var83, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Action).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 348, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 348, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var83)
 			if templ_7745c5c3_Err != nil {
@@ -1732,7 +1732,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var84 string
 			templ_7745c5c3_Var84, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.VoucherNo).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 350, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 350, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var84)
 			if templ_7745c5c3_Err != nil {
@@ -1745,7 +1745,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var85 string
 			templ_7745c5c3_Var85, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.PayDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 351, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 351, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var85)
 			if templ_7745c5c3_Err != nil {
@@ -1758,7 +1758,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var86 string
 			templ_7745c5c3_Var86, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CustomerName).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 352, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 352, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var86)
 			if templ_7745c5c3_Err != nil {
@@ -1771,7 +1771,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var87 string
 			templ_7745c5c3_Var87, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CustomerID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 352, Col: 181}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 352, Col: 181}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var87)
 			if templ_7745c5c3_Err != nil {
@@ -1784,7 +1784,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var88 string
 			templ_7745c5c3_Var88, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.WorkOrderID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 353, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 353, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var88)
 			if templ_7745c5c3_Err != nil {
@@ -1797,7 +1797,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Cash).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 355, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 355, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var89)
 			if templ_7745c5c3_Err != nil {
@@ -1810,7 +1810,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var90 string
 			templ_7745c5c3_Var90, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Card).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 356, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 356, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var90)
 			if templ_7745c5c3_Err != nil {
@@ -1823,7 +1823,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var91 string
 			templ_7745c5c3_Var91, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CardNo).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 357, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 357, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var91)
 			if templ_7745c5c3_Err != nil {
@@ -1836,7 +1836,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var92 string
 			templ_7745c5c3_Var92, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckAmount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 358, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 358, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var92)
 			if templ_7745c5c3_Err != nil {
@@ -1849,7 +1849,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var93 string
 			templ_7745c5c3_Var93, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckNo).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 359, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 359, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 			if templ_7745c5c3_Err != nil {
@@ -1862,7 +1862,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var94 string
 			templ_7745c5c3_Var94, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 360, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 360, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var94)
 			if templ_7745c5c3_Err != nil {
@@ -1875,7 +1875,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var95 string
 			templ_7745c5c3_Var95, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Bank).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 361, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 361, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var95)
 			if templ_7745c5c3_Err != nil {
@@ -1888,7 +1888,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var96 string
 			templ_7745c5c3_Var96, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TransferAmount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 362, Col: 111}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 362, Col: 111}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var96)
 			if templ_7745c5c3_Err != nil {
@@ -1901,7 +1901,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var97 string
 			templ_7745c5c3_Var97, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TransferReference).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 363, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 363, Col: 104}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var97)
 			if templ_7745c5c3_Err != nil {
@@ -1914,7 +1914,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var98 string
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.DetailTotal).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 365, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 365, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var98)
 			if templ_7745c5c3_Err != nil {
@@ -1927,7 +1927,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var99 string
 			templ_7745c5c3_Var99, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Discount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 366, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 366, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var99)
 			if templ_7745c5c3_Err != nil {
@@ -1940,7 +1940,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var100 string
 			templ_7745c5c3_Var100, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Tax).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 367, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 367, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var100)
 			if templ_7745c5c3_Err != nil {
@@ -1953,7 +1953,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.PayTotal).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 368, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 368, Col: 99}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var101)
 			if templ_7745c5c3_Err != nil {
@@ -1966,7 +1966,7 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 			var templ_7745c5c3_Var102 string
 			templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 369, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 369, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 			if templ_7745c5c3_Err != nil {
@@ -2064,7 +2064,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 			var templ_7745c5c3_Var105 string
 			templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(data.Rows)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 418, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 418, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 			if templ_7745c5c3_Err != nil {
@@ -2077,7 +2077,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 			var templ_7745c5c3_Var106 string
 			templ_7745c5c3_Var106, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Query).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 421, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 421, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var106)
 			if templ_7745c5c3_Err != nil {
@@ -2105,7 +2105,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					var templ_7745c5c3_Var107 string
 					templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(row.Code)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 432, Col: 28}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 432, Col: 28}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 					if templ_7745c5c3_Err != nil {
@@ -2118,7 +2118,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					var templ_7745c5c3_Var108 string
 					templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 432, Col: 59}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 432, Col: 59}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 					if templ_7745c5c3_Err != nil {
@@ -2131,7 +2131,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					var templ_7745c5c3_Var109 string
 					templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(row.ItemCount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 432, Col: 115}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 432, Col: 115}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var109))
 					if templ_7745c5c3_Err != nil {
@@ -2144,7 +2144,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					var templ_7745c5c3_Var110 string
 					templ_7745c5c3_Var110, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 434, Col: 97}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 434, Col: 97}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var110)
 					if templ_7745c5c3_Err != nil {
@@ -2157,7 +2157,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					var templ_7745c5c3_Var111 string
 					templ_7745c5c3_Var111, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 435, Col: 104}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 435, Col: 104}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var111)
 					if templ_7745c5c3_Err != nil {
@@ -2170,7 +2170,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					var templ_7745c5c3_Var112 string
 					templ_7745c5c3_Var112, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 436, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 436, Col: 107}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var112)
 					if templ_7745c5c3_Err != nil {
@@ -2206,7 +2206,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 				var templ_7745c5c3_Var113 string
 				templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.JoinStringErrs(data.Detail.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 448, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 448, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var113))
 				if templ_7745c5c3_Err != nil {
@@ -2219,7 +2219,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 				var templ_7745c5c3_Var114 string
 				templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.JoinStringErrs(data.Detail.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 448, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 448, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var114))
 				if templ_7745c5c3_Err != nil {
@@ -2232,7 +2232,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 				var templ_7745c5c3_Var115 string
 				templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(data.Detail.Items)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 448, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 448, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 				if templ_7745c5c3_Err != nil {
@@ -2260,7 +2260,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 						var templ_7745c5c3_Var116 string
 						templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(i + 1))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 454, Col: 49}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 49}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 						if templ_7745c5c3_Err != nil {
@@ -2273,7 +2273,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 						var templ_7745c5c3_Var117 string
 						templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.JoinStringErrs(item.PartNumber)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 454, Col: 83}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 83}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var117))
 						if templ_7745c5c3_Err != nil {
@@ -2286,7 +2286,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 						var templ_7745c5c3_Var118 string
 						templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 454, Col: 119}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 119}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var118))
 						if templ_7745c5c3_Err != nil {
@@ -2299,7 +2299,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 						var templ_7745c5c3_Var119 string
 						templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.JoinStringErrs(item.Quantity)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 454, Col: 157}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 157}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var119))
 						if templ_7745c5c3_Err != nil {
@@ -2312,7 +2312,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 						var templ_7745c5c3_Var120 string
 						templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.JoinStringErrs(item.Price)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 454, Col: 192}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 192}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var120))
 						if templ_7745c5c3_Err != nil {
@@ -2431,7 +2431,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var125 string
 			templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.JoinStringErrs(data.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 483, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 483, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var125))
 			if templ_7745c5c3_Err != nil {
@@ -2444,7 +2444,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var126 string
 			templ_7745c5c3_Var126, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 484, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 484, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var126)
 			if templ_7745c5c3_Err != nil {
@@ -2465,7 +2465,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var127 string
 			templ_7745c5c3_Var127, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Code).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 486, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 486, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var127)
 			if templ_7745c5c3_Err != nil {
@@ -2478,7 +2478,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var128 string
 			templ_7745c5c3_Var128, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 487, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 487, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var128)
 			if templ_7745c5c3_Err != nil {
@@ -2491,7 +2491,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var129 string
 			templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 488, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 488, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 			if templ_7745c5c3_Err != nil {
@@ -2504,7 +2504,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var130 string
 			templ_7745c5c3_Var130, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/items").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 492, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 492, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var130)
 			if templ_7745c5c3_Err != nil {
@@ -2530,7 +2530,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 				var templ_7745c5c3_Var131 string
 				templ_7745c5c3_Var131, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.PartNumber).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 499, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 499, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var131)
 				if templ_7745c5c3_Err != nil {
@@ -2543,7 +2543,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 				var templ_7745c5c3_Var132 string
 				templ_7745c5c3_Var132, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Description).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 500, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 500, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var132)
 				if templ_7745c5c3_Err != nil {
@@ -2556,7 +2556,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 				var templ_7745c5c3_Var133 string
 				templ_7745c5c3_Var133, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Quantity).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 501, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 501, Col: 90}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var133)
 				if templ_7745c5c3_Err != nil {
@@ -2569,7 +2569,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 				var templ_7745c5c3_Var134 string
 				templ_7745c5c3_Var134, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Price).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 502, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 502, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var134)
 				if templ_7745c5c3_Err != nil {
@@ -2587,7 +2587,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			var templ_7745c5c3_Var135 string
 			templ_7745c5c3_Var135, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/stage7_forms.templ`, Line: 515, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 515, Col: 104}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var135)
 			if templ_7745c5c3_Err != nil {

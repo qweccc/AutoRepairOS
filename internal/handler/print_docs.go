@@ -174,6 +174,14 @@ func PrintWorkOrderCompletion(w http.ResponseWriter, r *http.Request, user model
 		http.NotFound(w, r)
 		return
 	}
+	if user.Role == "technician" && wo.TechnicianID != user.ID {
+		http.Error(w, "無權限檢視此工單", http.StatusForbidden)
+		return
+	}
+	if user.Role == "reception" {
+		http.Error(w, "無權限", http.StatusForbidden)
+		return
+	}
 
 	// IDOR 防護：技師只能查看指派給自己的工單
 	if user.Role == "technician" && wo.TechnicianID != user.ID {

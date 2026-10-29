@@ -97,8 +97,12 @@ func VerifyBindingCode(platform, code, chatOrLineID string) (int64, error) {
 		if err := bindTelegramUser(chatOrLineID, customerID); err != nil {
 			return 0, err
 		}
+	} else if platform == "line" {
+		if err := bindLineUser(chatOrLineID, customerID); err != nil {
+			return 0, err
+		}
 	} else {
-		// LINE binding would go here
+		return 0, fmt.Errorf("不支援的綁定平台")
 	}
 
 	// 標記已使用

@@ -35,7 +35,7 @@ func TestTemplDynamicValuesEscapeXSS(t *testing.T) {
 		},
 		{
 			name: "customer tags",
-			out:  renderForXSS(t, CustomerSearchRows([]CustomerRow{{Name: injected, Tags: injected}})),
+			out:  renderForXSS(t, CustomerSearchRows([]CustomerRow{{Name: injected, Tags: injected}}, user)),
 		},
 		{
 			name: "receipt",

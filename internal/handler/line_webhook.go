@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -524,4 +525,12 @@ func headStr(raw []byte, n int) string {
 
 func welcomeMessage() string {
 	return "您好，歡迎加入汽車修的 LINE。為您建立通知關聯後，車輛保養與維修進度會自動通知您。"
+}
+func generateBindingCode() (string, error) {
+	b := make([]byte, 3)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	num := int(b[0])*256*256 + int(b[1])*256 + int(b[2])
+	return fmt.Sprintf("%06d", num%1000000), nil
 }
