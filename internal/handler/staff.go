@@ -352,7 +352,18 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	// P1-4: 非 owner 不可查看員工個資（身分證、生日、保險）
+	// 載入健保異動歷史
+	var history []pages.InsuranceHistoryItem
+	hRows, _ := db.DB.Query(`SELECT id, event_type, event_date, COALESCE(note,'') FROM insurance_history WHERE user_id = ? ORDER BY event_date DESC, id DESC`, id)
+	if hRows != nil {
+		defer hRows.Close()
+		for hRows.Next() {
+			var it pages.InsuranceHistoryItem
+			if err := hRows.Scan(&it.ID, &it.EventType, &it.EventDate, &it.Note); err == nil {
+				history = append(history, it)
+			}
+		}
+	}
 	if user.Role != "owner" {
 		s.NationalID = ""
 		s.Birthday = ""
@@ -365,6 +376,7 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		Birthday: s.Birthday, InsuranceStart: s.InsuranceStart, InsuranceEnd: s.InsuranceEnd,
 		Kind: s.Kind, Branch: s.Branch, Active: s.Active,
 		BranchOpts: lookupSelectOptions("branch", s.Branch), User: user,
+		InsuranceHistory: history,
 	}).Render(r.Context(), w)
 }
 

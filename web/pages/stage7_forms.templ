@@ -98,19 +98,26 @@ templ EditSubcontractPage(data SubcontractEditData) {
 	}
 }
 
+type InsuranceHistoryItem struct {
+	ID        int64
+	EventType string
+	EventDate string
+	Note      string
+}
 type StaffEditData struct {
-	ID             int64
-	Name           string
-	Username       string
-	NationalID     string
-	Birthday       string
-	InsuranceStart string
-	InsuranceEnd   string
-	Kind           string
-	Branch         string
-	Active         int
-	BranchOpts     []components.SelectOption
-	User           model.User
+	ID               int64
+	Name             string
+	Username         string
+	NationalID       string
+	Birthday         string
+	InsuranceStart   string
+	InsuranceEnd     string
+	Kind             string
+	Branch           string
+	Active           int
+	BranchOpts       []components.SelectOption
+	InsuranceHistory []InsuranceHistoryItem
+	User             model.User
 }
 
 templ EditStaffPage(data StaffEditData) {
@@ -144,8 +151,15 @@ templ EditStaffPage(data StaffEditData) {
 					<button class="btn btn-p" type="submit">儲存</button>
 					<a class="btn btn-s" href="/staff">取消</a>
 				</div>
-			</form>
-		</div>
+				</form>
+				<h3 style="margin:16px 0 8px">健保異動紀錄</h3>
+				<table>
+				<tr><th>日期</th><th>類型</th><th>備註</th></tr>
+				for _, h := range data.InsuranceHistory {
+					<tr><td>{ h.EventDate }</td><td>{ h.EventType }</td><td>{ h.Note }</td></tr>
+				}
+				</table>
+				</div>
 	}
 }
 
