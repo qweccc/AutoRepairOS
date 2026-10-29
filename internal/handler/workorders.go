@@ -996,9 +996,18 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	if itemType == "part" && invID > 0 {
 		if _, err := tx.Exec(`UPDATE inventory_items
 			SET reserved_quantity = COALESCE(reserved_quantity,0) + ?
-			WHERE id = ?`, qty, invID); err != nil {
+			WHERE id = ? AND COALESCE(stock_quantity,0) - COALESCE(reserved_quantity,0) >= ?`, qty, invID, qty); err != nil {
 			fail(w, "更新預扣量失敗")
 			return
+		}
+		if n, _ := func() (int64, error) { res, _ := tx.Exec(`UPDATE inventory_items SET reserved_quantity = COALESCE(reserved_quantity,0) + ? WHERE id = ? AND COALESCE(stock_quantity,0) - COALESCE(reserved_quantity,0) >= ?`, qty, invID, qty); return res.RowsAffected() }(); n == 0 {
+			// Try to get better error
+			var stock, reserved int
+			tx.QueryRow(`SELECT COALESCE(stock_quantity,0), COALESCE(reserved_quantity,0) FROM inventory_items WHERE id = ?`, invID).Scan(&stock, &reserved)
+			if stock-reserved < qty {
+				fail(w, "庫存不足")
+				return
+			}
 		}
 	}
 

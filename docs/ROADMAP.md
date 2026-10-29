@@ -67,9 +67,29 @@
 - go test ./... 通過
 - 無回歸
 
-## 暫不納入的候選項目
+## Vision 模組改善
 
-- 個人化儀表板
-- 全域搜尋
-EOF
-git add docs/ROADMAP.md && git commit -m "docs: 建立改善 Roadmap"
+### [ ] T2.1 Context 超時檢查
+- 確認 vision.Client 使用 http.NewRequestWithContext 並設定逾時
+- 涉及檔案：internal/integration/vision/client.go
+- 驗收：超時時 Go Routine 不堆積
+
+### [ ] T2.2 圖片大小限制
+- 檢查 Base64 長度並限制最大 10MB
+- 涉及檔案：internal/handler/vision.go
+- 驗收：超過限制回 413
+
+### [ ] T2.3 SupplierOptions 搜尋過濾
+- 加入 search 參數，避免每次都撈 300 筆
+- 涉及檔案：internal/handler/vision.go, web/pages/*.templ
+- 驗收：關鍵字過濾正常
+
+### [ ] T2.4 共用錯誤處理封裝
+- 封裝「解析圖片 → 呼叫辨識 → 回傳結果」Helper
+- 涉及檔案：internal/handler/vision.go
+- 驗收：減少重複程式碼
+
+### [ ] T2.5 辨識進度回報（未來）
+- 考慮 WebSocket 或 polling
+- 涉及檔案：web/static/*.js
+- 驗收：使用者感知進度
