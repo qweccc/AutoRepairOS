@@ -413,7 +413,29 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		db.DB.Exec(`UPDATE users SET password = ? WHERE id = ?`, string(hashed), id)
 	}
 
-	// 驗證身分別
+	// 讀取舊值以判斷是否異動
+	var oldStart, oldEnd string
+	db.DB.QueryRow(`SELECT COALESCE(insurance_start,''), COALESCE(insurance_end,'') FROM users WHERE id=?`, id).Scan(&oldStart, &oldEnd)
+
+	// 寫入異動歷史（若日期有變）
+	if isOwner && (insuranceStart != oldStart || insuranceEnd != oldEnd) {
+		eventType := "change"
+		eventDate := insuranceStart
+		if eventDate == "" {
+			eventDate = insuranceEnd
+		}
+		if eventDate == "" {
+			eventDate = time.Now().Format("2006-01-02")
+		}
+		if oldEnd == "" && insuranceEnd != "" {
+			eventType = "withdraw"
+		}
+		if oldStart == "" && insuranceStart != "" {
+			eventType = "enroll"
+		}
+		db.DB.Exec(`INSERT INTO insurance_history (user_id, event_type, event_date, note, created_by) VALUES (?,?,?,?,?)`,
+			id, eventType, eventDate, "由員工編輯頁更新", 0)
+	}
 	if staffKind != "employee" && staffKind != "dependent" {
 		staffKind = "employee"
 	}
