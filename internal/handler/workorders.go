@@ -993,23 +993,25 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	// 零件預扣：工單加入零件時 reserved_quantity += qty，
 	// 可用庫存 = stock_quantity - reserved_quantity，避免多工單並行搶料。
 	// 實際扣料仍在結帳（status=paid）時執行（見 UpdateWorkOrderStatus）。
-	if itemType == "part" && invID > 0 {
-		if _, err := tx.Exec(`UPDATE inventory_items
-			SET reserved_quantity = COALESCE(reserved_quantity,0) + ?
-			WHERE id = ? AND COALESCE(stock_quantity,0) - COALESCE(reserved_quantity,0) >= ?`, qty, invID, qty); err != nil {
-			fail(w, "更新預扣量失敗")
-			return
-		}
-		if n, _ := func() (int64, error) { res, _ := tx.Exec(`UPDATE inventory_items SET reserved_quantity = COALESCE(reserved_quantity,0) + ? WHERE id = ? AND COALESCE(stock_quantity,0) - COALESCE(reserved_quantity,0) >= ?`, qty, invID, qty); return res.RowsAffected() }(); n == 0 {
-			// Try to get better error
-			var stock, reserved int
-			tx.QueryRow(`SELECT COALESCE(stock_quantity,0), COALESCE(reserved_quantity,0) FROM inventory_items WHERE id = ?`, invID).Scan(&stock, &reserved)
-			if stock-reserved < qty {
-				fail(w, "庫存不足")
+		if itemType == "part" && invID > 0 {
+			res, err := tx.Exec(`UPDATE inventory_items
+				SET reserved_quantity = COALESCE(reserved_quantity,0) + ?
+				WHERE id = ? AND COALESCE(stock_quantity,0) - COALESCE(reserved_quantity,0) >= ?`, qty, invID, qty)
+			if err != nil {
+				fail(w, "更新預扣量失敗")
+				return
+			}
+			if n, _ := res.RowsAffected(); n == 0 {
+				var stock, reserved int
+				tx.QueryRow(`SELECT COALESCE(stock_quantity,0), COALESCE(reserved_quantity,0) FROM inventory_items WHERE id = ?`, invID).Scan(&stock, &reserved)
+				if stock-reserved < qty {
+					fail(w, "庫存不足")
+					return
+				}
+				fail(w, "更新預扣量失敗")
 				return
 			}
 		}
-	}
 
 	if err := recalcWorkOrderTotal(tx, woID); err != nil {
 		fail(w, "重算金額失敗")
