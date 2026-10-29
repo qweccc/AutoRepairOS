@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -384,7 +385,11 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	user, _ := currentUser(r)
+	user, err := currentUser(r)
+	if err != nil {
+		http.Error(w, "未登入", http.StatusUnauthorized)
+		return
+	}
 	isOwner := user.Role == "owner"
 
 	nationalID := ""
@@ -447,7 +452,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		staffBranch = ""
 	}
 
-	_, err := db.DB.Exec(`UPDATE users SET
+	_, err = db.DB.Exec(`UPDATE users SET
 		national_id = ?, birthday = ?, insurance_start = ?, insurance_end = ?,
 		staff_kind = ?, staff_branch = ?, active = ?, updated_at = datetime('now','localtime')
 		WHERE id = ?`,
@@ -460,7 +465,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	if changed {
 		if _, err := db.DB.Exec(`INSERT INTO insurance_history (user_id, event_type, event_date, note, created_by) VALUES (?,?,?,?,?)`,
 			id, eventType, eventDate, "由員工編輯頁更新", user.ID); err != nil {
-			// non-fatal
+			fmt.Println("insurance_history insert failed:", err)
 		}
 	}
 
