@@ -199,26 +199,21 @@ templ CustomerLineBinding(c model.Customer) {
 		<h2>LINE 綁定</h2>
 		if c.LineUserID != "" {
 			<p style="margin:0 0 10px"><span class="pill p-done">已綁定</span><code style="margin-left:8px">{ c.LineUserID }</code></p>
-			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">此客戶已可在 LINE 傳「進度」查維修狀態、傳「履歷」查維修紀錄。</p>
-			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-unbind" } onsubmit="return confirm('確定取消綁定？取消後這位客戶將無法在 LINE 查到自己的維修紀錄。')">
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/line-unbind" } onsubmit="return confirm('確定取消綁定？取消後這位客戶將無法在 LINE 查到自己的維修紀錄。')">
 				@components.CSRFInput()
 				<button class="btn btn-d" type="submit">取消綁定</button>
 			</form>
 		} else {
 			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
-			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">建議讓客戶自己綁：請客戶加官方帳號好友並傳送手機號碼，系統會自動連結（比對的是客戶資料上的電話，所以請先確認電話已建檔且正確）。<br/>客戶加好友時，系統會在「排程」頁留下一則「新的 LINE 好友（待綁定）」通知，內含他的 LINE User ID。</p>
-		}
-		<details style="margin-top:6px">
-			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">手動綁定（從排程頁的通知複製 LINE User ID）</summary>
-			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/generate-binding-code?platform=line" } style="margin:8px 0">
 				@components.CSRFInput()
-				<input name="line_user_id" placeholder="U1234567890abcdef" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-				<button class="btn btn-p" type="submit">{ lineBindLabel(c) }</button>
+				<button class="btn btn-s" type="submit">產生 LINE 綁定碼</button>
 			</form>
-			<p style="color:#64748b;font-size:12px;margin:8px 0 0">同一個 LINE 帳號不能綁兩個客戶——那會讓對方看到不屬於他的維修紀錄，系統會直接擋下。</p>
-		</details>
+			<p style="color:#94a3b8;font-size:12px;margin:4px 0 0">將綁定碼交給客戶，請在 LINE 輸入即可完成綁定。</p>
+		}
 	</div>
 }
+
 
 templ CustomerTelegramBinding(c model.Customer) {
 	<div class="card">
