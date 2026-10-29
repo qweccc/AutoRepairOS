@@ -2,8 +2,8 @@ package handler
 
 import (
 	"net/http"
-
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -415,12 +415,15 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 
 	// 讀取舊值以判斷是否異動
 	var oldStart, oldEnd string
-	db.DB.QueryRow(`SELECT COALESCE(insurance_start,''), COALESCE(insurance_end,'') FROM users WHERE id=?`, id).Scan(&oldStart, &oldEnd)
+	if err := db.DB.QueryRow(`SELECT COALESCE(insurance_start,''), COALESCE(insurance_end,'') FROM users WHERE id=?`, id).Scan(&oldStart, &oldEnd); err != nil {
+		oldStart, oldEnd = "", ""
+	}
 
-	// 寫入異動歷史（若日期有變）
-	if isOwner && (insuranceStart != oldStart || insuranceEnd != oldEnd) {
-		eventType := "change"
-		eventDate := insuranceStart
+	changed := isOwner && (insuranceStart != oldStart || insuranceEnd != oldEnd)
+	var eventType, eventDate string
+	if changed {
+		eventType = "change"
+		eventDate = insuranceStart
 		if eventDate == "" {
 			eventDate = insuranceEnd
 		}
@@ -433,8 +436,6 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		if oldStart == "" && insuranceStart != "" {
 			eventType = "enroll"
 		}
-		db.DB.Exec(`INSERT INTO insurance_history (user_id, event_type, event_date, note, created_by) VALUES (?,?,?,?,?)`,
-			id, eventType, eventDate, "由員工編輯頁更新", 0)
 	}
 	if staffKind != "employee" && staffKind != "dependent" {
 		staffKind = "employee"
@@ -455,6 +456,12 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, "更新失敗")
 		return
+	}
+	if changed {
+		if _, err := db.DB.Exec(`INSERT INTO insurance_history (user_id, event_type, event_date, note, created_by) VALUES (?,?,?,?,?)`,
+			id, eventType, eventDate, "由員工編輯頁更新", user.ID); err != nil {
+			// non-fatal
+		}
 	}
 
 	redirectMsg(w, r, "/staff", "員工資料已更新")

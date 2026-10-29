@@ -106,6 +106,8 @@ func VerifyBindingCode(platform, code, chatOrLineID string) (int64, error) {
 	}
 
 	// 標記已使用
-	db.DB.Exec(`UPDATE binding_codes SET used_at = CURRENT_TIMESTAMP WHERE id = ?`, id)
+	if _, err := db.DB.Exec(`UPDATE binding_codes SET used_at = CURRENT_TIMESTAMP WHERE id = ?`, id); err != nil {
+		return 0, fmt.Errorf("標記綁定碼已使用失敗")
+	}
 	return customerID, nil
 }
