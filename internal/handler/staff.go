@@ -435,6 +435,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		if eventDate == "" {
 			eventDate = time.Now().Format("2006-01-02")
 		}
+		// 優先序：若同時新設加保與退保，以「enroll」為主（最後覆寫）
 		if oldEnd == "" && insuranceEnd != "" {
 			eventType = "withdraw"
 		}
