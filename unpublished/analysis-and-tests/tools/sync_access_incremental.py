@@ -31,11 +31,22 @@ def main():
 
     module = load_migrator()
     conn = sqlite3.connect(args.sqlite_db)
-    ensure_sync_schema_if_needed(conn)
-    state_count = conn.execute("SELECT COUNT(*) FROM legacy_import_state").fetchone()[0]
-    missing_legacy = conn.execute(
-        "SELECT COUNT(*) FROM work_orders WHERE legacy_no = ''"
-    ).fetchone()[0]
+    # --dry-run 不得修改 schema（review T3.5）：只在真正寫入時才 ensure。
+    if not args.dry_run:
+        ensure_sync_schema_if_needed(conn)
+    try:
+        state_count = conn.execute(
+            "SELECT COUNT(*) FROM legacy_import_state"
+        ).fetchone()[0]
+        missing_legacy = conn.execute(
+            "SELECT COUNT(*) FROM work_orders WHERE legacy_no = ''"
+        ).fetchone()[0]
+    except sqlite3.Error as e:
+        conn.close()
+        parser.error(
+            "資料庫缺少同步 schema（legacy_import_state / work_orders.legacy_no）："
+            f"{e}。請先執行 full_import_access.py 完成完整匯入。"
+        )
     if state_count == 0:
         parser.error("找不到完整匯入索引，請先執行 full_import_access.py")
     if missing_legacy:
@@ -66,7 +77,8 @@ def main():
         print("DRY-RUN：未寫入資料庫。")
         return
 
-    print(f"已備份 → {backup_database(args.sqlite_db)}")
+    backup = backup_database(args.sqlite_db)
+    print(f"已備份 → {backup}")
     # 需要完整的工單／進貨單主檔來解析新增明細；工單方法會以 legacy_no 去重。
     new_data["Maintain Header"] = data["Maintain Header"]
     new_data["Material Header"] = data["Material Header"]
@@ -75,7 +87,15 @@ def main():
     preload_work_order_map(migrator)
     # 這些表在增量模式已經先用 row_hash 去重，不能再用「整批已存在」保護。
     migrator._guard_append_only = lambda table, expected: False
-    migrator.run()
+    try:
+        migrator.run()
+    except Exception:
+        migrator.conn.rollback()
+        migrator.conn.close()
+        import shutil
+        shutil.copy2(backup, args.sqlite_db)
+        print(f"同步失敗，已從備份復原 → {args.sqlite_db}", file=sys.stderr)
+        raise
 
     conn = sqlite3.connect(args.sqlite_db)
     save_state(conn, module, data)

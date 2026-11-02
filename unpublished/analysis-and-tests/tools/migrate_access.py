@@ -366,6 +366,12 @@ class Migrator:
         self.cust_by_name = {}   # Customer.Name → customers.id
         # 統計每個解析路徑命中次數，讓「救回多少」可從輸出看出來
         self.resolve_via = defaultdict(int)
+        # 工單 Insurance Name（客戶手寫的自由文字）→ insurance_companies.id
+        # 對照（review T3.4）。原本讀了 ins_name 卻沒用它關聯，導致保險工單
+        # insurance_company_id 全 NULL、依保險公司統計失靈。
+        self._ins_map = None
+        self.ins_wo_hit = 0
+        self.ins_wo_miss = 0
 
     # ---------- 1. 客戶 ----------
     def migrate_customers(self):
@@ -1179,6 +1185,46 @@ class Migrator:
 
         self.stats['purchases'] = len(rows)
 
+    def _insurance_company_map(self):
+        """保險公司「名稱／簡稱」正規化 → id 對照（供工單 Insurance Name 關聯，T3.4）。
+
+        工單的 Insurance Name 是客戶手寫的公司名（自由文字），不是編號，
+        因此以 insurance_companies 的 name（全名）/ code（簡稱）建立正規化
+        對照（正規化＝移除所有空白）。解析時先精確比對，miss 再用「最長包含」
+        備援；比不到回 None（不硬猜，避免把帳記到錯的保險公司）。
+        """
+        if self._ins_map is not None:
+            return self._ins_map
+        self._ins_map = {}
+        try:
+            rows = self.cur.execute(
+                "SELECT id, code, name FROM insurance_companies"
+            ).fetchall()
+        except sqlite3.Error:
+            return self._ins_map
+        for cid, code, name in rows:
+            for variant in (code, name):
+                key = ''.join((variant or '').split())
+                if key and key not in self._ins_map:
+                    self._ins_map[key] = cid
+        return self._ins_map
+
+    def resolve_insurance_company(self, ins_name):
+        """工單 Insurance Name → insurance_companies.id；比不到回 None。"""
+        norm = ''.join((ins_name or '').split())
+        if not norm:
+            return None
+        ins_map = self._insurance_company_map()
+        if norm in ins_map:
+            return ins_map[norm]
+        # 最長包含備援：key 是 norm 子串（工單寫全名）或 norm 是 key 子串
+        # （工單寫簡稱），取最長者以降低誤配。
+        best_key = ''
+        for key in ins_map:
+            if key and len(key) > len(best_key) and (key in norm or norm in key):
+                best_key = key
+        return ins_map[best_key] if best_key else None
+
     # ---------- 6. 工單 ----------
     def migrate_work_orders(self):
         print("\n[6] 工單 (Maintain Header → work_orders)")
@@ -1218,6 +1264,14 @@ class Migrator:
             date = convert_roc_date(col(t, 'Date', i))
             ins_flag = clean_bool(col(t, 'Insurance Flag', i))
             ins_name = clean_str(col(t, 'Insurance Name', i))
+            if ins_name:
+                ins_company_id = self.resolve_insurance_company(ins_name)
+                if ins_company_id is None:
+                    self.ins_wo_miss += 1
+                else:
+                    self.ins_wo_hit += 1
+            else:
+                ins_company_id = None
 
             values = (
                 vid,                                        # vehicle_id
@@ -1232,7 +1286,7 @@ class Migrator:
                 clean_str(col(t, 'Remark', i)),             # notes
                 date,                                       # created_at
                 date,                                       # updated_at
-                None,                                       # insurance_company_id
+                ins_company_id,                               # insurance_company_id
                 clean_str(col(t, 'Insurance Table No', i)) or '',  # claim_no
                 ins_flag,                                   # is_insurance
                 '',                                         # accident_date
@@ -1260,12 +1314,16 @@ class Migrator:
             no = clean_str(col(t, 'No', i))
             if no:
                 self.wo_by_legacy_no[no] = self.wo_id[i]
+                existing_legacy.add(no)
 
         if self.dry_run:
             print(f"  [DRY-RUN] 將新增 {len(self.wo_id)} 筆工單")
         else:
             self.conn.commit()
             print(f"  新增 {len(self.wo_id)} 筆工單")
+        if self.ins_wo_hit or self.ins_wo_miss:
+            print(f"  保險公司關聯：命中 {self.ins_wo_hit:,}、比不到 {self.ins_wo_miss:,}"
+                  f"（保險工單 insurance_company_id 由此填入，T3.4）")
         self.stats['work_orders'] = len(self.wo_id)
 
     # ---------- 7. 工單明細 ----------
@@ -1773,6 +1831,14 @@ class Migrator:
 
         # 收集 (work_order_id, staff_no) 對
         wo_staff_pairs = []
+        worklog_rows = []
+        if self.dry_run:
+            existing_worklog_keys = set()
+        else:
+            self.cur.execute(
+                "SELECT legacy_key FROM technician_worklogs WHERE legacy_key <> ''"
+            )
+            existing_worklog_keys = {row[0] for row in self.cur.fetchall()}
         no_cursor2 = defaultdict(int)
         for i in range(len(md['No'])):
             no = clean_str(col(md, 'No', i))
@@ -1792,6 +1858,25 @@ class Migrator:
             staff_no = clean_str(col(md, 'Staff No', i))
             if staff_no:
                 wo_staff_pairs.append((wo_id, staff_no))
+                legacy_key = f"{no}:{clean_str(col(md, 'Sequence No', i))}"
+                if legacy_key not in existing_worklog_keys:
+                    header_idx = indices[pos]
+                    work_date = convert_roc_date(
+                        col(mh, 'Date', header_idx)
+                    ) or ''
+                    worklog_rows.append((
+                        wo_id,
+                        self.user_id.get(staff_no),
+                        work_date,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        clean_str(col(md, 'Remark', i)),
+                        legacy_key,
+                    ))
+                    existing_worklog_keys.add(legacy_key)
 
         # 更新 work_order_items 的 primary_technician_id
         updates = []
@@ -1813,7 +1898,19 @@ class Migrator:
                 self.conn.commit()
             print(f"  更新 {len(updates)} 筆 work_order_items")
 
-        self.stats['technician_worklogs'] = len(updates)
+            worklog_rows = [row for row in worklog_rows if row[1]]
+            if worklog_rows:
+                self.cur.executemany("""
+                    INSERT INTO technician_worklogs
+                      (work_order_id, technician_id, work_date, hours,
+                       hourly_rate, labor_amount, commission_rate,
+                       commission_amount, notes, legacy_key)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, worklog_rows)
+                self.conn.commit()
+            print(f"  新增 {len(worklog_rows)} 筆技師工時")
+
+        self.stats['technician_worklogs'] = len(worklog_rows)
 
     def migrate_expenses(self):
         """Spend List → expenses（3,390 筆）。
@@ -1891,6 +1988,14 @@ class Migrator:
         # 改用「非 seed 代碼」判定：seed 只建 ACME-001。
         self.cur.execute("DELETE FROM insurance_companies WHERE code <> 'ACME-001'")
         print(f"  insurance_companies(舊資料): -{self.cur.rowcount}")
+        # 收款沖銷（Customer Pay → receivables）金額最大且是帳務資料：完整重匯
+        # 若不先清，舊收款會留著、其 legacy_no 又在 state 裡被增量同步跳過，
+        # 於是收款永遠停在舊值（review T3.3）。technician_worklogs 同理，
+        # 重匯會連帶重寫技師分工，不清就翻倍。
+        self.cur.execute("DELETE FROM receivables")
+        print(f"  receivables: -{self.cur.rowcount}")
+        self.cur.execute("DELETE FROM technician_worklogs")
+        print(f"  technician_worklogs: -{self.cur.rowcount}")
         self.conn.commit()
 
     def run(self, lookups_path=None):

@@ -28,20 +28,33 @@ def main():
             parser.error(f"找不到檔案: {path}")
 
     module = load_migrator()
-    conn = sqlite3.connect(args.sqlite_db)
-    ensure_sync_schema_if_needed(conn)
-    conn.close()
 
+    # --dry-run 不得修改 schema（review T3.5）：ensure_sync_schema_if_needed 會
+    # ALTER TABLE / CREATE TABLE，因此只在真正寫入時才呼叫。
+    backup = None
     if not args.dry_run:
-        print(f"已備份 → {backup_database(args.sqlite_db)}")
+        backup = backup_database(args.sqlite_db)
+        print(f"已備份 → {backup}")
+        conn = sqlite3.connect(args.sqlite_db)
+        ensure_sync_schema_if_needed(conn)
+        conn.close()
 
     data = module.extract_tables(args.access_mdb, module.ALL_TABLES)
     migrator = module.Migrator(data, args.sqlite_db, dry_run=args.dry_run)
-    if not args.dry_run:
-        migrator.reset()
-        migrator.cur.execute("DELETE FROM legacy_import_state")
-        migrator.conn.commit()
-    migrator.run()
+    try:
+        if not args.dry_run:
+            migrator.reset()
+            migrator.cur.execute("DELETE FROM legacy_import_state")
+            migrator.conn.commit()
+        migrator.run()
+    except Exception:
+        if not args.dry_run:
+            migrator.conn.rollback()
+            migrator.conn.close()
+            import shutil
+            shutil.copy2(backup, args.sqlite_db)
+            print(f"匯入失敗，已從備份復原 → {args.sqlite_db}", file=sys.stderr)
+        raise
 
     if not args.dry_run:
         conn = sqlite3.connect(args.sqlite_db)
