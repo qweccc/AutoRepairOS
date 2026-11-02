@@ -57,9 +57,19 @@ def main():
         raise
 
     if not args.dry_run:
-        conn = sqlite3.connect(args.sqlite_db)
-        save_state(conn, module, data)
-        conn.close()
+        try:
+            conn = sqlite3.connect(args.sqlite_db)
+            save_state(conn, module, data)
+            conn.close()
+        except Exception:
+            try:
+                conn.close()
+            except UnboundLocalError:
+                pass
+            import shutil
+            shutil.copy2(backup, args.sqlite_db)
+            print(f"同步索引寫入失敗，已從備份復原 → {args.sqlite_db}", file=sys.stderr)
+            raise
         print("已建立 legacy_import_state，之後可使用增量同步工具。")
 
 

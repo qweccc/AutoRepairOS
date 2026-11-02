@@ -22,6 +22,10 @@ SOURCE_KEY_TARGETS = {
     "Customer Pay": ("receivables", "legacy_no"),
     "Spend List": ("expenses", "sequence_no"),
     "Insurance Company": ("insurance_companies", "legacy_no"),
+    "Maintain Detail": ("work_order_items", "legacy_key"),
+    "Material Detail": ("inventory_movements", "legacy_key"),
+    "Car Insurance List": ("vehicle_insurances", "legacy_key"),
+    "Car Check List": ("vehicle_inspections", "legacy_key"),
 }
 
 
@@ -43,6 +47,17 @@ def ensure_sync_schema_if_needed(conn):
     columns = {row[1] for row in conn.execute("PRAGMA table_info(work_orders)")}
     if "legacy_no" not in columns:
         ensure_sync_schema(conn)
+    for table_name in (
+        "work_order_items",
+        "inventory_movements",
+        "vehicle_insurances",
+        "vehicle_inspections",
+    ):
+        columns = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})")}
+        if "legacy_key" not in columns:
+            conn.execute(
+                f"ALTER TABLE {table_name} ADD COLUMN legacy_key TEXT NOT NULL DEFAULT ''"
+            )
     worklog_columns = {
         row[1] for row in conn.execute("PRAGMA table_info(technician_worklogs)")
     }
@@ -98,7 +113,7 @@ def all_state_rows(module, data):
             yield (
                 table_name,
                 row_hash(table, index),
-                source_key(module, table, index),
+                source_row_key(module, table_name, table, index),
             )
 
 
@@ -123,6 +138,30 @@ def table_key_col(table):
     return None
 
 
+def source_row_key(module, table_name, table, index):
+    """Return a stable source key for a master or detail row."""
+    if table_name in ("Maintain Detail", "Material Detail"):
+        return ":".join(
+            (
+                module.clean_str(module.col(table, "No", index)),
+                module.clean_str(module.col(table, "Sequence No", index)),
+            )
+        ).strip(":")
+    if table_name == "Car Insurance List":
+        return ":".join(
+            module.clean_str(module.col(table, key, index)) or ""
+            for key in ("No", "Insurance Class", "Card No")
+        ).strip(":")
+    if table_name == "Car Check List":
+        return ":".join(
+            (
+                module.clean_str(module.col(table, "No", index)),
+                module.clean_str(module.col(table, "Order Date", index)) or "",
+            )
+        ).strip(":")
+    return source_key(module, table, index)
+
+
 def existing_db_keys(conn, table_name, db_col="legacy_no"):
     """從 DB 現有資料讀取已匯入的來源主鍵集合。
 
@@ -134,7 +173,7 @@ def existing_db_keys(conn, table_name, db_col="legacy_no"):
     """
     try:
         return {
-            r[0] for r in conn.execute(
+            str(r[0]) for r in conn.execute(
                 f"SELECT {db_col} FROM {table_name} WHERE {db_col} <> ''"
             )
             if r[0]
@@ -177,7 +216,7 @@ def filter_new_rows(module, data, conn):
         if key_col and target:
             target_table, target_column = target
             seen = existing_db_keys(conn, target_table, target_column)
-            if seen:  # DB 有既有資料才用主鍵法；空庫等同全留，與舊行為一致。
+            if target:
                 batch_seen = set()
                 state_hashes = {
                     (row[0], row[1])
@@ -187,7 +226,7 @@ def filter_new_rows(module, data, conn):
                 }
                 keep = []
                 for i in range(row_count(table)):
-                    key = module.clean_str(module.col(table, key_col, i))
+                    key = source_row_key(module, table_name, table, i)
                     if not key:
                         if (table_name, row_hash(table, i)) not in state_hashes:
                             keep.append(i)

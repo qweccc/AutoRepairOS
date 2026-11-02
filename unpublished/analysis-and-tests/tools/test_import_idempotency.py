@@ -53,6 +53,22 @@ def _base_schema(conn):
             id INTEGER PRIMARY KEY,
             sequence_no INTEGER
         );
+        CREATE TABLE work_order_items (
+            id INTEGER PRIMARY KEY,
+            legacy_key TEXT DEFAULT ''
+        );
+        CREATE TABLE inventory_movements (
+            id INTEGER PRIMARY KEY,
+            legacy_key TEXT DEFAULT ''
+        );
+        CREATE TABLE vehicle_insurances (
+            id INTEGER PRIMARY KEY,
+            legacy_key TEXT DEFAULT ''
+        );
+        CREATE TABLE vehicle_inspections (
+            id INTEGER PRIMARY KEY,
+            legacy_key TEXT DEFAULT ''
+        );
         CREATE TABLE legacy_import_state (
             table_name TEXT NOT NULL,
             row_hash TEXT NOT NULL,
@@ -175,6 +191,24 @@ class FilterNewRowsIdempotencyTest(unittest.TestCase):
         }
         kept = aid.filter_new_rows(ma, data, self.conn)["Customer"]["No"]
         self.assertEqual(kept, ["C002"])
+
+    def test_detail_row_change_is_not_duplicated(self):
+        """明細內容修改時，仍依穩定的來源單號/序號去重。"""
+        self.conn.execute(
+            "INSERT INTO work_order_items (legacy_key) VALUES (?)",
+            ("WO1:2",),
+        )
+        self.conn.commit()
+        data = {
+            "Maintain Detail": {
+                "No": ["WO1", "WO2", "WO2"],
+                "Sequence No": [2, 1, 1],
+                "Price": [999, 100, 101],
+            }
+        }
+        kept = aid.filter_new_rows(ma, data, self.conn)["Maintain Detail"]
+        self.assertEqual(kept["No"], ["WO2"])
+        self.assertEqual(kept["Sequence No"], [1])
 
 
 class ResetClearsReceivablesTest(unittest.TestCase):

@@ -1169,7 +1169,11 @@ class Migrator:
             firm_no = clean_str(col(mh, 'Firm No', mh_idx))
             sup_id = self.sup_id.get(firm_no)
 
-            rows.append((inv_id, amount, 0, 0, 'legacy_purchase', 'import', None, None, pay_date))
+            legacy_key = f"{no}:{clean_str(col(md, 'Sequence No', i))}"
+            rows.append((
+                inv_id, amount, 0, 0, 'legacy_purchase', 'import',
+                None, None, pay_date, legacy_key,
+            ))
 
         if self.dry_run:
             print(f"  [DRY-RUN] 將新增 {len(rows)} 筆進貨明細")
@@ -1180,8 +1184,9 @@ class Migrator:
                 self.cur.executemany("""
                     INSERT INTO inventory_movements
                       (inventory_item_id, delta, before_quantity, after_quantity,
-                       reason, source, work_order_id, created_by, created_at)
-                    VALUES (?,?,?,?,?,?,?,?,?)
+                       reason, source, work_order_id, created_by, created_at,
+                       legacy_key)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)
                 """, rows)
                 self.conn.commit()
             print(f"  新增 {len(rows)} 筆進貨明細")
@@ -1391,6 +1396,7 @@ class Migrator:
                 self.user_id.get(clean_str(col(md, 'Staff No', i))),  # primary_technician_id
                 None,                                       # assistant_technician_id
                 None,                                       # photo_url
+                f"{no}:{clean_str(col(md, 'Sequence No', i))}",  # legacy_key
             ))
 
         if self.dry_run:
@@ -1402,8 +1408,8 @@ class Migrator:
                     INSERT INTO work_order_items
                       (work_order_id, item_type, inventory_item_id, description,
                        quantity, unit_price, subtotal, primary_technician_id,
-                       assistant_technician_id, photo_url)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                       assistant_technician_id, photo_url, legacy_key)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, rows[s:s + BATCH])
                 self.conn.commit()
             print(f"  新增 {len(rows)} 筆工單明細")
@@ -1516,6 +1522,11 @@ class Migrator:
                 clean_str(col(t, 'Card No', i)),                # card_no
                 clean_str(col(t, 'Remark', i)),                 # amount_raw
                 None,                                           # notes
+                ":".join((
+                    plate,
+                    cls,
+                    clean_str(col(t, 'Card No', i)) or '',
+                )).strip(":"),                                  # legacy_key
             ))
 
         if self.dry_run:
@@ -1524,8 +1535,9 @@ class Migrator:
             self.cur.executemany("""
                 INSERT INTO vehicle_insurances
                   (vehicle_id, insurance_company_id, company_no, insurance_class,
-                   insurance_class_name, license_date, card_no, amount_raw, notes)
-                VALUES (?,?,?,?,?,?,?,?,?)
+                   insurance_class_name, license_date, card_no, amount_raw, notes,
+                   legacy_key)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
             """, rows)
             self.conn.commit()
             print(f"  新增 {len(rows)} 筆投保紀錄（{skip_no_vehicle} 筆無對應車輛）")
@@ -1565,6 +1577,10 @@ class Migrator:
                 convert_roc_date(col(t, 'Check Date', i)),
                 clean_str(col(t, 'Firm No', i)),
                 clean_str(col(t, 'Remark', i)),
+                ":".join((
+                    plate,
+                    clean_str(col(t, 'Order Date', i)) or '',
+                )).strip(":"),                                  # legacy_key
             ))
 
         if self.dry_run:
@@ -1574,8 +1590,8 @@ class Migrator:
             for s in range(0, len(rows), BATCH):
                 self.cur.executemany("""
                     INSERT INTO vehicle_inspections
-                      (vehicle_id, order_date, check_date, firm_no, notes)
-                    VALUES (?,?,?,?,?)
+                      (vehicle_id, order_date, check_date, firm_no, notes, legacy_key)
+                    VALUES (?,?,?,?,?,?)
                 """, rows[s:s + BATCH])
                 self.conn.commit()
             print(f"  新增 {len(rows)} 筆定檢排程（{skip_no_vehicle} 筆無對應車輛）")
