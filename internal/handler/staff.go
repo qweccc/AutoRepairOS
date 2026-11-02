@@ -464,7 +464,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec(`UPDATE users SET
 		national_id = ?, birthday = ?, insurance_start = ?, insurance_end = ?,
-		staff_kind = ?, staff_branch = ?, active = ?, updated_at = datetime('now','localtime')
+		staff_kind = ?, staff_branch = ?, active = ?
 		WHERE id = ?`,
 		nullStr(nationalID), nullStr(birthday), nullStr(insuranceStart), nullStr(insuranceEnd),
 		staffKind, staffBranch, active, id)
@@ -494,7 +494,7 @@ func renderStaffUpdateError(w http.ResponseWriter, r *http.Request, user model.U
 func DeactivateStaff(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	_, err := db.DB.Exec(`UPDATE users SET active = 0, updated_at = datetime('now','localtime') WHERE id = ?`, id)
+	_, err := db.DB.Exec(`UPDATE users SET active = 0 WHERE id = ?`, id)
 	if err != nil {
 		fail(w, "停用失敗")
 		return
@@ -510,7 +510,7 @@ func DeactivateStaff(w http.ResponseWriter, r *http.Request) {
 func ReactivateStaff(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	_, err := db.DB.Exec(`UPDATE users SET active = 1, updated_at = datetime('now','localtime') WHERE id = ?`, id)
+	_, err := db.DB.Exec(`UPDATE users SET active = 1 WHERE id = ?`, id)
 	if err != nil {
 		fail(w, "復職失敗")
 		return
