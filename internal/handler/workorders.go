@@ -1109,6 +1109,11 @@ func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID i
 	if r.Header.Get("HX-Request") != "true" {
 		return false
 	}
+	user, err := currentUser(r)
+	if err != nil {
+		http.Error(w, "無法確認登入身分", http.StatusUnauthorized)
+		return true
+	}
 	items, itemTotal := loadWorkOrderItems(woID)
 	techNames := map[int64]string{}
 	for _, it := range items {
@@ -1120,7 +1125,7 @@ func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID i
 		}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := pages.WorkOrderItemsTable(woID, items, techNames, true, itemTotal).Render(r.Context(), w); err != nil {
+	if err := pages.WorkOrderItemsTable(woID, items, techNames, true, itemTotal, user).Render(r.Context(), w); err != nil {
 		http.Error(w, "渲染工單項目失敗", http.StatusInternalServerError)
 	}
 	return true

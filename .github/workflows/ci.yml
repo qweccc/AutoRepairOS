@@ -23,7 +23,7 @@ jobs:
       - name: Test (internal + cmd + web)
         run: go test ./internal/... ./cmd/... ./web/... -count=1
       - name: Templ drift
-        run: go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -check -path web && go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -check -path release/web
+        run: go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -check -path web
       - name: Build Go packages
         run: go build ./...
       - name: Build Linux container

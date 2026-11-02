@@ -116,6 +116,17 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 				</table>
 			</div>
 		}
+	}
+}
+
+// StatusFlow 狀態進度條。
+templ StatusFlow(current string, labels map[string]string) {
+	{{ flow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} }}
+	<div style="display:flex;gap:4px;margin:10px 0">
+		for i, s := range flow {
+			@StatusStep(s, current, labels[s], i < len(flow)-1)
+		}
+	</div>
 }
 
 templ StatusStep(step, current, label string, showArrow bool) {
