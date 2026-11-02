@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -12,6 +14,11 @@ import (
 
 // visionClient 由 main 在啟動時依 config 設定。nil 表示未啟用視覺辨識。
 var visionClient *vision.Client
+
+const (
+	maxVisionImageBytes = 10 << 20
+	maxVisionRequest    = maxVisionImageBytes*4/3 + 1<<20
+)
 
 // SetVisionClient 由 main 在啟動時呼叫一次。
 func SetVisionClient(c *vision.Client) {
@@ -39,10 +46,16 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, maxVisionRequest)
 	var body struct {
 		Image string `json:"image"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		if errors.As(err, new(*http.MaxBytesError)) {
+			writeJSON(w, http.StatusRequestEntityTooLarge,
+				map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限"})
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
 		return
 	}
@@ -53,6 +66,11 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b64 := vision.DecodeDataURL(body.Image)
+	if !validVisionImageBase64(b64) {
+		writeJSON(w, http.StatusRequestEntityTooLarge,
+			map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限或格式錯誤"})
+		return
+	}
 	reading, err := visionClient.Recognize(r.Context(), b64)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]interface{}{"ok": false, "error": err.Error()})
@@ -75,10 +93,16 @@ func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, maxVisionRequest)
 	var body struct {
 		Image string `json:"image"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		if errors.As(err, new(*http.MaxBytesError)) {
+			writeJSON(w, http.StatusRequestEntityTooLarge,
+				map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限"})
+			return
+		}
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
 		return
 	}
@@ -89,11 +113,17 @@ func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b64 := vision.DecodeDataURL(body.Image)
+	if !validVisionImageBase64(b64) {
+		writeJSON(w, http.StatusRequestEntityTooLarge,
+			map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限或格式錯誤"})
+		return
+	}
 	doc, err := visionClient.RecognizeInvoice(r.Context(), b64)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]interface{}{"ok": false, "error": err.Error()})
 		return
 	}
+
 	if doc.Items == nil {
 		doc.Items = []vision.InvoiceLine{} // 空陣列而不是 null，前端好判斷
 	}
@@ -103,6 +133,14 @@ func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
 		"order_date":    doc.OrderDate,
 		"items":         doc.Items,
 	})
+}
+
+func validVisionImageBase64(value string) bool {
+	if value == "" || len(value) > base64.StdEncoding.EncodedLen(maxVisionImageBytes)+4 {
+		return false
+	}
+	decoded, err := base64.StdEncoding.DecodeString(value)
+	return err == nil && len(decoded) <= maxVisionImageBytes
 }
 
 // SupplierOptionsAPI 供應商 id/name 清單（JSON），給前端把辨識出的供應商名

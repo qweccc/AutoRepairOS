@@ -69,12 +69,12 @@
 
 ## Vision 模組改善
 
-### [ ] T2.1 Context 超時檢查
+### [x] T2.1 Context 超時檢查
 - 確認 vision.Client 使用 http.NewRequestWithContext 並設定逾時
 - 涉及檔案：internal/integration/vision/client.go
 - 驗收：超時時 Go Routine 不堆積
 
-### [ ] T2.2 圖片大小限制
+### [x] T2.2 圖片大小限制
 - 檢查 Base64 長度並限制最大 10MB
 - 涉及檔案：internal/handler/vision.go
 - 驗收：超過限制回 413
