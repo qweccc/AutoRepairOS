@@ -136,6 +136,13 @@ class FilterNewRowsIdempotencyTest(unittest.TestCase):
         kept = aid.filter_new_rows(ma, data, self.conn)["work_orders"]["No"]
         self.assertEqual(kept, ["WO1", "WO2"])
 
+    def test_duplicate_keys_in_same_batch_are_kept_once(self):
+        """同一批來源重複單號只應保留第一筆。"""
+        _seed_work_orders(self.conn, ["WO1"], [100.0])
+        data = _wo_data(["WO1", "WO2", "WO2", ""], [100.0, 200.0, 201.0, 300.0])
+        kept = aid.filter_new_rows(ma, data, self.conn)["work_orders"]["No"]
+        self.assertEqual(kept, ["WO2", ""])
+
 
 class ResetClearsReceivablesTest(unittest.TestCase):
     """T3.3：reset() 必須清除 receivables 與 technician_worklogs。"""

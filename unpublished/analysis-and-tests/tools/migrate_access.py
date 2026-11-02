@@ -40,6 +40,11 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 try:
     import access_parser.utils as access_parser_utils
     from access_parser import AccessParser
