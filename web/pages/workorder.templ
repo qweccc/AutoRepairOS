@@ -17,6 +17,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 	canCreateApproval bool, pendingApprovals []PendingApproval, user model.User) {
 
 	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, AppName) {
+		{{ showMoney := user.Role == "owner" || user.Role == "counter" }}
 		if flashMsg != "" {
 			<div class="msg msg-ok">{ flashMsg }</div>
 		}
@@ -104,7 +105,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 			<div id="walkaround-status" role="status" style="margin-top:6px;color:#94a3b8"></div>
 		</div>
 
-				if user.Role == "owner" || user.Role == "counter" {
+		if showMoney {
 			<div class="card">
 				<h2>合計</h2>
 				<table>
@@ -116,6 +117,17 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 				</table>
 			</div>
 		}
+}
+}
+
+// StatusFlow 狀態進度條。
+templ StatusFlow(current string, labels map[string]string) {
+	{{ flow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} }}
+	<div style="display:flex;gap:4px;margin:10px 0">
+		for i, s := range flow {
+			@StatusStep(s, current, labels[s], i < len(flow)-1)
+		}
+	</div>
 }
 
 templ StatusStep(step, current, label string, showArrow bool) {

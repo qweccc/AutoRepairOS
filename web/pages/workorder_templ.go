@@ -52,6 +52,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
+			showMoney := user.Role == "owner" || user.Role == "counter"
 			if flashMsg != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"msg msg-ok\">")
 				if templ_7745c5c3_Err != nil {
@@ -60,7 +61,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(flashMsg)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 21, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 22, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -78,7 +79,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(wo.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 24, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 25, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -91,7 +92,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(wo.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 24, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 25, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -112,7 +113,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(wo.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 28, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 29, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -125,7 +126,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(wo.CurrentMileage))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 29, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 30, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -138,7 +139,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(wo.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 32, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 33, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -151,7 +152,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(wo.CustomerPhone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 32, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 33, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -164,7 +165,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(wo.TechnicianName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 33, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 34, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -190,7 +191,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var11).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -217,7 +218,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(statusLabels[wo.Status])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 37, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 38, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -243,7 +244,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var14).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 				if templ_7745c5c3_Err != nil {
@@ -270,7 +271,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(approvalLabels[wo.ApprovalStatus])
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 39, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 40, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -283,7 +284,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(wo.CustomerComplaint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 41, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 42, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -296,7 +297,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(sopStatusText(wo.SOPCompleted, len(sopRecords)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 43, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 44, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -309,7 +310,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(wo.CreatedAt.Format("2006-01-02 15:04"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 44, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 45, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -338,7 +339,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 51, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 52, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -351,7 +352,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/quotation?paper=a4").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 52, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 53, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
@@ -364,7 +365,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/completion").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 53, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 54, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 			if templ_7745c5c3_Err != nil {
@@ -377,7 +378,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/worklogs").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 54, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 55, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -390,7 +391,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/photos").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 55, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 56, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 			if templ_7745c5c3_Err != nil {
@@ -421,7 +422,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 					var templ_7745c5c3_Var25 string
 					templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/sop/attach").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 71, Col: 96}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 72, Col: 96}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 					if templ_7745c5c3_Err != nil {
@@ -453,7 +454,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal, user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -491,35 +492,41 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<label>備註<input id=\"walkaround-note\" type=\"text\" placeholder=\"例：左前葉子板凹痕\"></label></div><div id=\"walkaround-status\" role=\"status\" style=\"margin-top:6px;color:#94a3b8\"></div></div><div class=\"card\"><h2>合計</h2><table><tr><th>項目小計</th><td class=\"num\" id=\"item-total\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<label>備註<input id=\"walkaround-note\" type=\"text\" placeholder=\"例：左前葉子板凹痕\"></label></div><div id=\"walkaround-status\" role=\"status\" style=\"margin-top:6px;color:#94a3b8\"></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var26 string
-			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(money(itemTotal))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 110, Col: 79}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</td></tr><tr><th>工單總額</th><td class=\"num\" id=\"wo-total\" style=\"font-size:20px;font-weight:700;color:#38bdf8\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var27 string
-			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(money(wo.TotalAmount))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 113, Col: 111}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</td></tr></table><p style=\"color:#64748b;font-size:12.5px;margin-top:10px\">新增或刪除項目時自動重算工單總額。</p></div><script src=\"/static/photo-markup.js\"></script>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if showMoney {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"card\"><h2>合計</h2><table><tr><th>項目小計</th><td class=\"num\" id=\"item-total\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var26 string
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(money(itemTotal))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 112, Col: 80}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</td></tr><tr><th>工單總額</th><td class=\"num\" id=\"wo-total\" style=\"font-size:20px;font-weight:700;color:#38bdf8\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var27 string
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(money(wo.TotalAmount))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 115, Col: 112}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</td></tr></table></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 			return nil
 		})
@@ -550,7 +557,7 @@ func StatusFlow(current string, labels map[string]string) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		flow := []string{"pending", "in_progress", "waiting_parts", "completed", "paid"}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div style=\"display:flex;gap:4px;margin:10px 0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<div style=\"display:flex;gap:4px;margin:10px 0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -560,7 +567,7 @@ func StatusFlow(current string, labels map[string]string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -587,38 +594,38 @@ func StatusStep(step, current, label string, showArrow bool) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		idx := statusIndex(current)
 		curIdx := statusIndex(step)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span class=\"pill\" style=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<span class=\"pill\" style=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(statusStepStyle(curIdx, idx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 135, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 136, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 135, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 136, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</span> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if showArrow {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<span style=\"color:#475569;align-self:center\">→</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<span style=\"color:#475569;align-self:center\">→</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -628,7 +635,7 @@ func StatusStep(step, current, label string, showArrow bool) templ.Component {
 }
 
 // WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
-func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) templ.Component {
+func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -645,19 +652,30 @@ func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
+		showMoney := user.Role == "owner" || user.Role == "counter"
 		if len(items) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<div class=\"empty\">尚未加入任何工資或零件</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<div class=\"empty\">尚未加入任何工資或零件</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if len(items) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<table><tr><th>類型</th><th>描述</th><th class=\"num\">數量</th><th class=\"num\">單價</th><th class=\"num\">小計</th><th>主技師</th><th>助手</th><th>操作</th></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<table><tr><th>類型</th><th>描述</th><th class=\"num\">數量</th>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if showMoney {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<th class=\"num\">單價</th><th class=\"num\">小計</th>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<th>主技師</th><th>助手</th><th>操作</th></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, it := range items {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<tr><td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<tr><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -665,119 +683,129 @@ func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</td><td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</td><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(it.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 155, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 160, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</td><td class=\"num\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</td><td class=\"num\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(it.Quantity))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 156, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 161, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</td><td class=\"num\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var35 string
-				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(money(it.UnitPrice))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 157, Col: 42}
+				if showMoney {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<td class=\"num\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var35 string
+					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(money(it.UnitPrice))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 163, Col: 43}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</td><td class=\"num\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var36 string
+					templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(money(it.Subtotal))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 164, Col: 42}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</td>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</td><td class=\"num\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(money(it.Subtotal))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 158, Col: 41}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</td><td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(techNames[it.PrimaryTechnicianID])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 159, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 166, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</td><td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</td><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(techNames[it.AssistantTechID])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 160, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 167, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if canEdit {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "<td><a class=\"btn btn-d\" hx-post=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<td><a class=\"btn btn-d\" hx-post=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var39 string
 					templ_7745c5c3_Var39, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) + "/delete").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 164, Col: 118}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 171, Col: 118}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" hx-target=\"#wo-items\" hx-swap=\"innerHTML\" hx-confirm=\"刪除此項目？\">刪除</a></td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "\" hx-target=\"#wo-items\" hx-swap=\"innerHTML\" hx-confirm=\"刪除此項目？\">刪除</a></td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 				if canEdit == false {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<td style=\"color:#64748b\">—</td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<td style=\"color:#64748b\">—</td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</table>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</table>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -804,20 +832,20 @@ func AddItemForm(woID int64) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<form hx-post=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<form hx-post=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(woID, 10) + "/items").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 182, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 189, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "\" hx-target=\"#wo-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful && event.detail.elt === event.currentTarget) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "\" hx-target=\"#wo-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful && event.detail.elt === event.currentTarget) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -825,7 +853,7 @@ func AddItemForm(woID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<label>類型 <select name=\"item_type\" id=\"itemType\" hx-on:change=\"togglePartSearch(this)\"><option value=\"labor\">工資</option> <option value=\"part\">零件</option> <option value=\"subcontract\">外包</option></select></label> <label class=\"full\" id=\"partSearchWrap\">零件搜尋（輸入零件名稱或料號；點選結果會自動切換為零件）<div class=\"search-bar\"><input type=\"search\" id=\"partSearch\" name=\"q\" class=\"search-input\" placeholder=\"例：機油、煞車片、BE071\" autocomplete=\"off\" hx-get=\"/api/parts\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#partResults\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) document.getElementById('partResults').style.display='block';\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "<label>類型 <select name=\"item_type\" id=\"itemType\" hx-on:change=\"togglePartSearch(this)\"><option value=\"labor\">工資</option> <option value=\"part\">零件</option> <option value=\"subcontract\">外包</option></select></label> <label class=\"full\" id=\"partSearchWrap\">零件搜尋（輸入零件名稱或料號；點選結果會自動切換為零件）<div class=\"search-bar\"><input type=\"search\" id=\"partSearch\" name=\"q\" class=\"search-input\" placeholder=\"例：機油、煞車片、BE071\" autocomplete=\"off\" hx-get=\"/api/parts\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#partResults\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) document.getElementById('partResults').style.display='block';\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -833,7 +861,7 @@ func AddItemForm(woID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</div><div id=\"partResults\" class=\"part-results\"></div><input type=\"hidden\" name=\"inventory_item_id\" id=\"inventoryItemId\" value=\"0\"></label> <label class=\"full\">描述 <input name=\"description\" id=\"itemDesc\" placeholder=\"例：更換煞車油、補胎\" required><div style=\"margin-top:4px\"><button type=\"button\" class=\"btn btn-s\" id=\"phraseBtn\" onclick=\"togglePhrasePicker()\">📝 常用片語</button><div id=\"phrasePicker\" style=\"display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a\"><input type=\"search\" id=\"phraseSearch\" name=\"phrase\" class=\"search-input\" placeholder=\"搜尋片語...\" style=\"width:100%;margin-bottom:8px\" hx-get=\"/api/phrases/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#phraseResults\" hx-swap=\"innerHTML\"><div id=\"phraseResults\" style=\"max-height:150px;overflow-y:auto\"></div></div></div></label> <label>數量<input name=\"quantity\" type=\"number\" min=\"1\" value=\"1\" required></label> <label>單價<input name=\"unit_price\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" required id=\"unitPrice\"></label> <label>主技師<div class=\"staff-picker\"><input class=\"staff-picker-input\" name=\"q\" type=\"search\" placeholder=\"搜尋姓名或部門\" autocomplete=\"off\" hx-get=\"/api/staff/search?format=picker&kind=employee\" hx-trigger=\"keyup changed delay:250ms, search\" hx-target=\"next .staff-picker-results\" hx-swap=\"innerHTML\"> <input type=\"hidden\" name=\"primary_technician_id\" value=\"0\"><div class=\"staff-picker-results\"></div></div></label> <label>助手<div class=\"staff-picker\"><input class=\"staff-picker-input\" name=\"q\" type=\"search\" placeholder=\"搜尋姓名或部門\" autocomplete=\"off\" hx-get=\"/api/staff/search?format=picker&kind=employee\" hx-trigger=\"keyup changed delay:250ms, search\" hx-target=\"next .staff-picker-results\" hx-swap=\"innerHTML\"> <input type=\"hidden\" name=\"assistant_technician_id\" value=\"0\"><div class=\"staff-picker-results\"></div></div></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "</div><div id=\"partResults\" class=\"part-results\"></div><input type=\"hidden\" name=\"inventory_item_id\" id=\"inventoryItemId\" value=\"0\"></label> <label class=\"full\">描述 <input name=\"description\" id=\"itemDesc\" placeholder=\"例：更換煞車油、補胎\" required><div style=\"margin-top:4px\"><button type=\"button\" class=\"btn btn-s\" id=\"phraseBtn\" onclick=\"togglePhrasePicker()\">📝 常用片語</button><div id=\"phrasePicker\" style=\"display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a\"><input type=\"search\" id=\"phraseSearch\" name=\"phrase\" class=\"search-input\" placeholder=\"搜尋片語...\" style=\"width:100%;margin-bottom:8px\" hx-get=\"/api/phrases/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#phraseResults\" hx-swap=\"innerHTML\"><div id=\"phraseResults\" style=\"max-height:150px;overflow-y:auto\"></div></div></div></label> <label>數量<input name=\"quantity\" type=\"number\" min=\"1\" value=\"1\" required></label> <label>單價<input name=\"unit_price\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" required id=\"unitPrice\"></label> <label>主技師<div class=\"staff-picker\"><input class=\"staff-picker-input\" name=\"q\" type=\"search\" placeholder=\"搜尋姓名或部門\" autocomplete=\"off\" hx-get=\"/api/staff/search?format=picker&kind=employee\" hx-trigger=\"keyup changed delay:250ms, search\" hx-target=\"next .staff-picker-results\" hx-swap=\"innerHTML\"> <input type=\"hidden\" name=\"primary_technician_id\" value=\"0\"><div class=\"staff-picker-results\"></div></div></label> <label>助手<div class=\"staff-picker\"><input class=\"staff-picker-input\" name=\"q\" type=\"search\" placeholder=\"搜尋姓名或部門\" autocomplete=\"off\" hx-get=\"/api/staff/search?format=picker&kind=employee\" hx-trigger=\"keyup changed delay:250ms, search\" hx-target=\"next .staff-picker-results\" hx-swap=\"innerHTML\"> <input type=\"hidden\" name=\"assistant_technician_id\" value=\"0\"><div class=\"staff-picker-results\"></div></div></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -868,20 +896,20 @@ func StatusControls(wo model.WorkOrder, canEdit bool) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		if canEdit {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<form hx-post=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<form hx-post=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/status").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 246, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 253, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\" hx-target=\"#wo-status\" hx-swap=\"innerHTML\" style=\"display:inline;margin:0 8px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\" hx-target=\"#wo-status\" hx-swap=\"innerHTML\" style=\"display:inline;margin:0 8px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -889,70 +917,70 @@ func StatusControls(wo model.WorkOrder, canEdit bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<select name=\"status\" onchange=\"htmx.trigger(this.closest('form'), 'submit')\" style=\"padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0\"><option value=\"pending\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<select name=\"status\" onchange=\"htmx.trigger(this.closest('form'), 'submit')\" style=\"padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0\"><option value=\"pending\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.Status == "pending" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, ">待處理</option> <option value=\"in_progress\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, ">待處理</option> <option value=\"in_progress\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.Status == "in_progress" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, ">進行中</option> <option value=\"waiting_parts\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, ">進行中</option> <option value=\"waiting_parts\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.Status == "waiting_parts" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, ">等零件</option> <option value=\"completed\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, ">等零件</option> <option value=\"completed\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.Status == "completed" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, ">已完成</option> <option value=\"paid\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, ">已完成</option> <option value=\"paid\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.Status == "paid" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, ">已結帳</option></select></form><form hx-post=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, ">已結帳</option></select></form><form hx-post=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/approval").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 260, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 267, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" hx-target=\"#wo-approval\" hx-swap=\"innerHTML\" style=\"display:inline;margin:0 8px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "\" hx-target=\"#wo-approval\" hx-swap=\"innerHTML\" style=\"display:inline;margin:0 8px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -960,50 +988,50 @@ func StatusControls(wo model.WorkOrder, canEdit bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<select name=\"approval_status\" onchange=\"htmx.trigger(this.closest('form'), 'submit')\" style=\"padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0\"><option value=\"pending\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "<select name=\"approval_status\" onchange=\"htmx.trigger(this.closest('form'), 'submit')\" style=\"padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0\"><option value=\"pending\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.ApprovalStatus == "pending" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, ">待核准</option> <option value=\"approved\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, ">待核准</option> <option value=\"approved\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.ApprovalStatus == "approved" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, ">已核准</option> <option value=\"rejected\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, ">已核准</option> <option value=\"rejected\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if wo.ApprovalStatus == "rejected" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, " selected")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, " selected")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, ">已駁回</option></select></form><form hx-post=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, ">已駁回</option></select></form><form hx-post=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/sop").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 272, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 279, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "\" hx-target=\"#wo-sop\" hx-swap=\"innerHTML\" style=\"display:inline;margin:0 8px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "\" hx-target=\"#wo-sop\" hx-swap=\"innerHTML\" style=\"display:inline;margin:0 8px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1011,20 +1039,20 @@ func StatusControls(wo model.WorkOrder, canEdit bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<button class=\"btn btn-s\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "<button class=\"btn btn-s\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(sopLabel(wo.SOPCompleted))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 277, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 284, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1052,88 +1080,88 @@ func InsuranceRow(wo model.WorkOrder, canEdit bool) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<tr><th>件別</th><td><span class=\"pill p-progress\">保險理賠</span></td><th>保險公司</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<tr><th>件別</th><td><span class=\"pill p-progress\">保險理賠</span></td><th>保險公司</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(wo.InsuranceName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 286, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 293, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "</td></tr><tr><th>理賠編號</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</td></tr><tr><th>理賠編號</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(wo.ClaimNo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 287, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 294, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "</td><th>事故日期</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "</td><th>事故日期</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(wo.AccidentDate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 288, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 295, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "</td></tr><tr><th>自負額</th><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "</td></tr><tr><th>自負額</th><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(money(wo.DeductibleAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 289, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 296, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "</td><th></th><td></td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, "</td><th></th><td></td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if wo.IsInsurance == false && wo.InsuranceCompanyID == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<tr><th>件別</th><td><span class=\"pill\">自費</span></td><th></th><td></td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, "<tr><th>件別</th><td><span class=\"pill\">自費</span></td><th></th><td></td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "<tr><td colspan=\"4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "<tr><td colspan=\"4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if canEdit {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "<form class=\"frm\" method=\"POST\" action=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "<form class=\"frm\" method=\"POST\" action=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/claim").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 298, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 305, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 105, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1141,102 +1169,102 @@ func InsuranceRow(wo model.WorkOrder, canEdit bool) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, "<label>理賠日期<input type=\"date\" name=\"claim_date\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "<label>理賠日期<input type=\"date\" name=\"claim_date\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(wo.ClaimDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 300, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 307, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, "\"></label> <label>理賠金額<input type=\"number\" name=\"claim_amount\" min=\"0\" step=\"0.01\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, "\"></label> <label>理賠金額<input type=\"number\" name=\"claim_amount\" min=\"0\" step=\"0.01\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(wo.ClaimAmount, 'f', 2, 64)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 301, Col: 140}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 308, Col: 140}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "\"></label> <label class=\"full\">理賠備註<textarea name=\"claim_note\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 108, "\"></label> <label class=\"full\">理賠備註<textarea name=\"claim_note\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(wo.ClaimNote)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 302, Col: 79}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 309, Col: 79}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "</textarea></label><div class=\"full\"><button class=\"btn btn-s\" type=\"submit\">儲存理賠資料</button></div></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "</textarea></label><div class=\"full\"><button class=\"btn btn-s\" type=\"submit\">儲存理賠資料</button></div></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if !canEdit {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 105, "<b>理賠日期</b> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "<b>理賠日期</b> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(wo.ClaimDate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 307, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 314, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, " <b>理賠金額</b> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, " <b>理賠金額</b> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(money(wo.ClaimAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 308, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 315, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, " ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if !canEdit && wo.ClaimNote != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 108, "<p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "<p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(wo.ClaimNote)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 311, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 318, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "</td></tr>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "</td></tr>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1261,57 +1289,57 @@ func SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) temp
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, "<table><tr><th>檢查項目</th><th>必填</th><th>狀態</th><th>完成者</th><th>完成時間</th></tr>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<table><tr><th>檢查項目</th><th>必填</th><th>狀態</th><th>完成者</th><th>完成時間</th></tr>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, r := range records {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "<tr><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<tr><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(r.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 322, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 329, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "</td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(yesNo(r.Required))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 323, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 330, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "</td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if r.Completed {
 				if canEdit {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "<form method=\"POST\" action=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "<form method=\"POST\" action=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var62 string
 					templ_7745c5c3_Var62, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 327, Col: 141}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 334, Col: 141}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1319,12 +1347,12 @@ func SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) temp
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<button class=\"pill p-completed\" type=\"submit\">已完成</button></form>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<button class=\"pill p-completed\" type=\"submit\">已完成</button></form>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "<span class=\"pill p-completed\">已完成</span> ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "<span class=\"pill p-completed\">已完成</span> ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1332,20 +1360,20 @@ func SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) temp
 			}
 			if !r.Completed {
 				if canEdit {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "<form method=\"POST\" action=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "<form method=\"POST\" action=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var63 string
 					templ_7745c5c3_Var63, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 337, Col: 141}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 344, Col: 141}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1353,49 +1381,49 @@ func SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) temp
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "<button class=\"pill p-pending\" type=\"submit\">未勾選</button></form>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "<button class=\"pill p-pending\" type=\"submit\">未勾選</button></form>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<span class=\"pill p-pending\">未勾選</span>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 127, "<span class=\"pill p-pending\">未勾選</span>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 123, "</td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 128, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(r.CompletedByName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 346, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 353, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 124, "</td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 129, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(r.CompletedAtText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 347, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/workorder.templ`, Line: 354, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "</td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 130, "</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 126, "</table>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 131, "</table>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1421,7 +1449,7 @@ func PartSearchScript() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 127, "<script>\n\t\tfunction togglePartSearch(sel) {\n\t\t\tvar wrap = document.getElementById('partSearchWrap');\n\t\t\tif (wrap) wrap.style.display = '';\n\t\t\tif (sel.value !== 'part') {\n\t\t\t\tdocument.getElementById('inventoryItemId').value = '0';\n\t\t\t}\n\t\t}\n\t\t(function(){\n\t\t\tvar type = document.getElementById('itemType');\n\t\t\tif (type) togglePartSearch(type);\n\t\t\tvar search = document.getElementById('partSearch');\n\t\t\tvar results = document.getElementById('partResults');\n\t\t\tvar hidden = document.getElementById('inventoryItemId');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tvar price = document.getElementById('unitPrice');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.part-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\tvar type = document.getElementById('itemType');\n\t\t\t\tif (type) type.value = 'part';\n\t\t\t\thidden.value = item.dataset.partId;\n\t\t\t\tsearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;\n\t\t\t\tdesc.value = item.dataset.partName;\n\t\t\t\tprice.value = item.dataset.partPrice;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t});\n\t\t\tdocument.addEventListener('click', function(e){\n\t\t\t\tif (!results.contains(e.target) && e.target !== search) results.style.display = 'none';\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 132, "<script>\n\t\tfunction togglePartSearch(sel) {\n\t\t\tvar wrap = document.getElementById('partSearchWrap');\n\t\t\tif (wrap) wrap.style.display = '';\n\t\t\tif (sel.value !== 'part') {\n\t\t\t\tdocument.getElementById('inventoryItemId').value = '0';\n\t\t\t}\n\t\t}\n\t\t(function(){\n\t\t\tvar type = document.getElementById('itemType');\n\t\t\tif (type) togglePartSearch(type);\n\t\t\tvar search = document.getElementById('partSearch');\n\t\t\tvar results = document.getElementById('partResults');\n\t\t\tvar hidden = document.getElementById('inventoryItemId');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tvar price = document.getElementById('unitPrice');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.part-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\tvar type = document.getElementById('itemType');\n\t\t\t\tif (type) type.value = 'part';\n\t\t\t\thidden.value = item.dataset.partId;\n\t\t\t\tsearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;\n\t\t\t\tdesc.value = item.dataset.partName;\n\t\t\t\tprice.value = item.dataset.partPrice;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t});\n\t\t\tdocument.addEventListener('click', function(e){\n\t\t\t\tif (!results.contains(e.target) && e.target !== search) results.style.display = 'none';\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1447,7 +1475,7 @@ func PhrasePickerScript() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 128, "<script>\n\t\tfunction togglePhrasePicker() {\n\t\t\tvar picker = document.getElementById('phrasePicker');\n\t\t\tif (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';\n\t\t}\n\t\t(function(){\n\t\t\tvar search = document.getElementById('phraseSearch');\n\t\t\tvar results = document.getElementById('phraseResults');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.phrase-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\tdesc.value = item.dataset.phrase;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t\tsearch.value = '';\n\t\t\t});\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 133, "<script>\n\t\tfunction togglePhrasePicker() {\n\t\t\tvar picker = document.getElementById('phrasePicker');\n\t\t\tif (picker) picker.style.display = picker.style.display === 'none' ? 'block' : 'none';\n\t\t}\n\t\t(function(){\n\t\t\tvar search = document.getElementById('phraseSearch');\n\t\t\tvar results = document.getElementById('phraseResults');\n\t\t\tvar desc = document.getElementById('itemDesc');\n\t\t\tif (!search || !results) return;\n\t\t\tresults.addEventListener('click', function(e){\n\t\t\t\tvar item = e.target.closest('.phrase-result-item');\n\t\t\t\tif (!item) return;\n\t\t\t\tdesc.value = item.dataset.phrase;\n\t\t\t\tresults.innerHTML = '';\n\t\t\t\tsearch.value = '';\n\t\t\t});\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
