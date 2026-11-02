@@ -11,16 +11,6 @@ autorepairos
 data/
 **/data/
 unpublished/
-!unpublished/
-unpublished/*
-!unpublished/analysis-and-tests/
-unpublished/analysis-and-tests/*
-!unpublished/analysis-and-tests/tools/
-unpublished/analysis-and-tests/tools/*
-!unpublished/analysis-and-tests/tools/migrate_access.py
-!unpublished/analysis-and-tests/tools/access_import_common.py
-!unpublished/analysis-and-tests/tools/full_import_access.py
-!unpublished/analysis-and-tests/tools/sync_access_incremental.py
 _trash/
 _verify/
 *.db
