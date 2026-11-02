@@ -373,7 +373,7 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.EditStaffPage(pages.StaffEditData{
-		ID: s.ID, Name: s.Name, Username: s.Username, NationalID: s.NationalID,
+		ID: s.ID, Name: s.Name, Username: s.Username, Error: r.URL.Query().Get("err"), NationalID: s.NationalID,
 		Birthday: s.Birthday, InsuranceStart: s.InsuranceStart, InsuranceEnd: s.InsuranceEnd,
 		Kind: s.Kind, Branch: s.Branch, Active: s.Active,
 		BranchOpts: lookupSelectOptions("branch", s.Branch), User: user,
@@ -416,10 +416,15 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	if password != "" {
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			fail(w, "密碼雜湊失敗")
+			log.Printf("員工 #%d 密碼雜湊失敗: %v", id, err)
+			renderStaffUpdateError(w, r, user, "密碼更新失敗，請稍後再試")
 			return
 		}
-		db.DB.Exec(`UPDATE users SET password = ? WHERE id = ?`, string(hashed), id)
+		if _, err := db.DB.Exec(`UPDATE users SET password = ? WHERE id = ?`, string(hashed), id); err != nil {
+			log.Printf("員工 #%d 密碼更新失敗: %v", id, err)
+			renderStaffUpdateError(w, r, user, "密碼更新失敗，請確認資料庫可寫入後再試")
+			return
+		}
 	}
 
 	// 讀取舊值以判斷是否異動
@@ -464,7 +469,8 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 		nullStr(nationalID), nullStr(birthday), nullStr(insuranceStart), nullStr(insuranceEnd),
 		staffKind, staffBranch, active, id)
 	if err != nil {
-		fail(w, "更新失敗")
+		log.Printf("員工 #%d 資料更新失敗: %v", id, err)
+		renderStaffUpdateError(w, r, user, "更新失敗，請確認資料庫可寫入後再試")
 		return
 	}
 	if changed {
@@ -475,6 +481,13 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectMsg(w, r, "/staff", "員工資料已更新")
+}
+
+func renderStaffUpdateError(w http.ResponseWriter, r *http.Request, user model.User, message string) {
+	query := r.URL.Query()
+	query.Set("err", message)
+	r.URL.RawQuery = query.Encode()
+	EditStaffForm(w, r, user)
 }
 
 // DeactivateStaff 停用員工（軟刪除，標記為離職）。

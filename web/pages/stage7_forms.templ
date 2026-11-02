@@ -108,6 +108,7 @@ type StaffEditData struct {
 	ID               int64
 	Name             string
 	Username         string
+	Error            string
 	NationalID       string
 	Birthday         string
 	InsuranceStart   string
@@ -125,6 +126,9 @@ templ EditStaffPage(data StaffEditData) {
 	@components.Layout("編輯員工", "/staff", user, AppName) {
 		<div class="card">
 			<h2>編輯員工 { data.Name }</h2>
+			if data.Error != "" {
+				<div class="msg msg-err" style="margin-bottom:14px">{ data.Error }</div>
+			}
 			<form class="frm" method="POST" action={ "/staff/" + strconv.FormatInt(data.ID, 10) }>
 				@components.CSRFInput()
 				<label>姓名<input value={ data.Name } disabled style="opacity:0.6"></label>
