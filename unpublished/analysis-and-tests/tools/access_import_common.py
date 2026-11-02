@@ -13,6 +13,17 @@ from datetime import datetime
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MIGRATOR_PATH = os.path.join(SCRIPT_DIR, "migrate_access.py")
 
+SOURCE_KEY_TARGETS = {
+    "Customer": ("customers", "notes"),
+    "Car": ("vehicles", "plate_number"),
+    "Material": ("inventory_items", "part_number"),
+    "Maintain Header": ("work_orders", "legacy_no"),
+    "work_orders": ("work_orders", "legacy_no"),
+    "Customer Pay": ("receivables", "legacy_no"),
+    "Spend List": ("expenses", "sequence_no"),
+    "Insurance Company": ("insurance_companies", "legacy_no"),
+}
+
 
 def load_migrator():
     spec = importlib.util.spec_from_file_location("migrate_access", MIGRATOR_PATH)
@@ -132,6 +143,19 @@ def existing_db_keys(conn, table_name, db_col="legacy_no"):
         return set()
 
 
+def target_key(conn, source_table):
+    """Return the target table/column that stores a source stable key."""
+    target = SOURCE_KEY_TARGETS.get(source_table)
+    if not target:
+        return None
+    table_name, column = target
+    try:
+        columns = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})")}
+    except sqlite3.Error:
+        return None
+    return (table_name, column) if column in columns else None
+
+
 def filter_new_rows(module, data, conn):
     """挑出來源中「DB 裡還沒有」的列。
 
@@ -148,9 +172,11 @@ def filter_new_rows(module, data, conn):
     filtered = {}
     for table_name, table in data.items():
         key_col = table_key_col(table)
+        target = target_key(conn, table_name)
         keep = None
-        if key_col:
-            seen = existing_db_keys(conn, table_name)
+        if key_col and target:
+            target_table, target_column = target
+            seen = existing_db_keys(conn, target_table, target_column)
             if seen:  # DB 有既有資料才用主鍵法；空庫等同全留，與舊行為一致。
                 batch_seen = set()
                 state_hashes = {

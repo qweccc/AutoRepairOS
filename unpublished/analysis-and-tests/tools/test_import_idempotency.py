@@ -36,6 +36,23 @@ def _base_schema(conn):
             pay_total REAL,
             legacy_no TEXT DEFAULT ''
         );
+        CREATE TABLE customers (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            notes TEXT DEFAULT ''
+        );
+        CREATE TABLE vehicles (
+            id INTEGER PRIMARY KEY,
+            plate_number TEXT
+        );
+        CREATE TABLE inventory_items (
+            id INTEGER PRIMARY KEY,
+            part_number TEXT
+        );
+        CREATE TABLE expenses (
+            id INTEGER PRIMARY KEY,
+            sequence_no INTEGER
+        );
         CREATE TABLE legacy_import_state (
             table_name TEXT NOT NULL,
             row_hash TEXT NOT NULL,
@@ -142,6 +159,22 @@ class FilterNewRowsIdempotencyTest(unittest.TestCase):
         data = _wo_data(["WO1", "WO2", "WO2", ""], [100.0, 200.0, 201.0, 300.0])
         kept = aid.filter_new_rows(ma, data, self.conn)["work_orders"]["No"]
         self.assertEqual(kept, ["WO2", ""])
+
+    def test_source_table_uses_target_table_key(self):
+        """來源表名與 SQLite 表名不同時，仍使用目標穩定鍵去重。"""
+        self.conn.execute(
+            "INSERT INTO customers (name, notes) VALUES (?, ?)",
+            ("客戶甲", "C001"),
+        )
+        self.conn.commit()
+        data = {
+            "Customer": {
+                "No": ["C001", "C002"],
+                "Name": ["客戶甲（已修改）", "客戶乙"],
+            }
+        }
+        kept = aid.filter_new_rows(ma, data, self.conn)["Customer"]["No"]
+        self.assertEqual(kept, ["C002"])
 
 
 class ResetClearsReceivablesTest(unittest.TestCase):
