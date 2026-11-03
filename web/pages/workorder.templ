@@ -83,7 +83,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 		<div class="card">
 			<h2>工單項目</h2>
 			<div id="wo-items">
-				@WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal)
+				@WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal, user)
 			</div>
 			if canEdit {
 				@AddItemForm(wo.ID)
@@ -120,7 +120,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 }
 
 // WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
-templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) {
+templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64, user model.User) {
 	if len(items) == 0 {
 		<div class="empty">尚未加入任何工資或零件</div>
 	}
@@ -128,7 +128,8 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 	<table>
 		<tr>
 			<th>類型</th><th>描述</th><th class="num">數量</th>
-			if true {
+			{{ showMoney := user.Role == "owner" || user.Role == "counter" }}
+			if showMoney {
 				<th class="num">單價</th><th class="num">小計</th>
 			}
 			<th>主技師</th><th>助手</th><th>操作</th>
@@ -138,7 +139,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 					<td>@components.Pill(itemTypeLabel(it.ItemType), "p-progress")</td>
 					<td>{ it.Description }</td>
 					<td class="num">{ strconv.Itoa(it.Quantity) }</td>
-					if true {
+					if showMoney {
 						<td class="num">{ money(it.UnitPrice) }</td>
 						<td class="num">{ money(it.Subtotal) }</td>
 					}
