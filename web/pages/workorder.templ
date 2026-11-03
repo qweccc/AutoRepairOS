@@ -118,18 +118,10 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 		}
 }
 
-templ StatusStep(step, current, label string, showArrow bool) {
-	{{ idx := statusIndex(current) }}
-	{{ curIdx := statusIndex(step) }}
-	<span class="pill" style={ statusStepStyle(curIdx, idx) }>{ label }</span>
-	if showArrow {
-		<span style="color:#475569;align-self:center">→</span>
-	}
 }
 
 // WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
 templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) {
-	{{ showMoney := true }}
 	if len(items) == 0 {
 		<div class="empty">尚未加入任何工資或零件</div>
 	}
@@ -137,7 +129,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 	<table>
 		<tr>
 			<th>類型</th><th>描述</th><th class="num">數量</th>
-			if showMoney {
+			if true {
 				<th class="num">單價</th><th class="num">小計</th>
 			}
 			<th>主技師</th><th>助手</th><th>操作</th>
@@ -147,7 +139,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 					<td>@components.Pill(itemTypeLabel(it.ItemType), "p-progress")</td>
 					<td>{ it.Description }</td>
 					<td class="num">{ strconv.Itoa(it.Quantity) }</td>
-					if showMoney {
+					if true {
 						<td class="num">{ money(it.UnitPrice) }</td>
 						<td class="num">{ money(it.Subtotal) }</td>
 					}
