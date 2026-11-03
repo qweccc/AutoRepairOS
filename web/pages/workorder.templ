@@ -84,7 +84,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 		<div class="card">
 			<h2>工單項目</h2>
 			<div id="wo-items">
-				@WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal, user)
+				@WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal)
 			</div>
 			if canEdit {
 				@AddItemForm(wo.ID)
@@ -128,8 +128,8 @@ templ StatusStep(step, current, label string, showArrow bool) {
 }
 
 // WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
-templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64, user model.User) {
-	{{ showMoney := user.Role == "owner" || user.Role == "counter" }}
+templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) {
+	{{ showMoney := true }}
 	if len(items) == 0 {
 		<div class="empty">尚未加入任何工資或零件</div>
 	}
