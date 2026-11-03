@@ -191,8 +191,8 @@ func main() {
 	mux.HandleFunc("POST /work-orders/{id}/sop/attach", handler.CounterUp(handler.AttachSOPTemplate))
 	mux.HandleFunc("POST /work-orders/{id}/sop/{template_id}/detach", handler.CounterUp(handler.DetachSOPTemplate))
 	mux.HandleFunc("POST /work-orders/{id}/sop/records/{record_id}/toggle", handler.CounterUpPage(handler.ToggleSOPRecord))
-	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUp(handler.AddWorkOrderItem))
-	mux.HandleFunc("POST /work-orders/{id}/items/{item_id}/delete", handler.CounterUp(handler.DeleteWorkOrderItem))
+	mux.HandleFunc("POST /work-orders/{id}/items", handler.CounterUpPage(handler.AddWorkOrderItem))
+	mux.HandleFunc("POST /work-orders/{id}/items/{item_id}/delete", handler.CounterUpPage(handler.DeleteWorkOrderItem))
 
 	// T2.9：獨立估價草稿。估價寫入與轉換限櫃檯、管理員。
 	mux.HandleFunc("GET /estimates", handler.AllStaff(handler.ListEstimates))

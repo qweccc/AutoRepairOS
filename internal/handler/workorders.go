@@ -916,7 +916,7 @@ func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "SOP 狀態已切換")
 }
 
-func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
+func AddWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 	woID := mustInt(r.PathValue("id"))
 	if err := requireOrderMutable(woID); err != nil {
 		fail(w, err.Error())
@@ -1023,7 +1023,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if renderWorkOrderItemsFragment(w, r, woID) {
+	if renderWorkOrderItemsFragment(w, r, woID, user) {
 		return
 	}
 
@@ -1042,7 +1042,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已加入項目")
 }
 
-func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
+func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 	woID := mustInt(r.PathValue("id"))
 	itemID := mustInt(r.PathValue("item_id"))
 
@@ -1098,14 +1098,14 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if renderWorkOrderItemsFragment(w, r, woID) {
+	if renderWorkOrderItemsFragment(w, r, woID, user) {
 		return
 	}
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已刪除項目")
 }
 
-func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID int64) bool {
+func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID int64, user model.User) bool {
 	if r.Header.Get("HX-Request") != "true" {
 		return false
 	}
