@@ -1,11 +1,8 @@
 // AutoRepair OS Service Worker
 // 快取靜態資源，並在離線時提供應用程式外殼。
 
-const CACHE = 'autorepairos-v3';
-const SHELL = [
-  '/offline.js',
-  '/offline.css'
-];
+const CACHE = "autorepairos-v3";
+const SHELL = ["/offline.js", "/offline.css"];
 
 // 會隨版本改變的檔：不做長期快取，一律 network-first（快取只當離線備援）。
 // 為什麼需要這份清單：靜態資源原本是 cache-first，命中快取就永不回伺服器驗證，
@@ -27,68 +24,71 @@ const SHELL = [
 // 仍留在清單裡：SHELL 本來就會預快取它，列進 network-first 只是避免日後
 // 真的接上時踩到同一種 stale 問題。
 const NETWORK_FIRST = [
-  '/static/app.css',
-  '/offline.js',
-  '/offline.css',
-  '/static/vehicle-search.js',
-  '/static/customer-search.js',
-  '/static/scan.js',
-  '/static/photo-markup.js'
+  "/static/app.css",
+  "/offline.js",
+  "/offline.css",
+  "/static/vehicle-search.js",
+  "/static/customer-search.js",
+  "/static/scan.js",
+  "/static/photo-markup.js",
 ];
 
 // 純 vendor 靜態檔：版本固定、內容不變，cache-first 沒有 stale 風險，
 // 而且離線時仍要能用（離線區網部署的核心需求）。
-const CACHE_FOREVER = [
-  '/static/htmx.min.js',
-  '/static/html5-qrcode.min.js'
-];
+const CACHE_FOREVER = ["/static/htmx.min.js", "/static/html5-qrcode.min.js"];
 
-self.addEventListener('install', (e) => {
+self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE)
+    caches
+      .open(CACHE)
       .then((c) => Promise.allSettled(SHELL.map((u) => c.add(u))))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
-self.addEventListener('activate', (e) => {
+self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(
-        keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
 // 頁面按下「立即更新」時的通知：讓等待中的新版本立刻接管，
 // 不必等所有分頁都關閉（預設行為）。少了這段，提示橫幅按了不會有反應。
-self.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'SKIP_WAITING') {
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-self.addEventListener('fetch', (e) => {
+self.addEventListener("fetch", (e) => {
   const req = e.request;
 
   // 只處理 GET；API 與照片交由網路直接處理（避免 stale 資料）
-  if (req.method !== 'GET') return;
+  if (req.method !== "GET") return;
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/')) return;
+  if (url.pathname.startsWith("/api/")) return;
 
   // 導覽請求：network-first，離線時回退到快取的登入頁外殼
-  if (req.mode === 'navigate') {
+  if (req.mode === "navigate") {
     e.respondWith(
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('/offline-shell', copy));
+          caches.open(CACHE).then((c) => c.put("/offline-shell", copy));
           return res;
         })
-        .catch(() => caches.match('/offline-shell').then((r) => r || offlineResponse()))
+        .catch(() =>
+          caches.match("/offline-shell").then((r) => r || offlineResponse()),
+        ),
     );
     return;
   }
@@ -99,13 +99,13 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
-          if (res.ok && res.type === 'basic') {
+          if (res.ok && res.type === "basic") {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(req, copy));
           }
           return res;
         })
-        .catch(() => caches.match(req).then((r) => r || offlineResponse()))
+        .catch(() => caches.match(req).then((r) => r || offlineResponse())),
     );
     return;
   }
@@ -114,27 +114,29 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(req).then((hit) => {
       if (hit) return hit;
-      return fetch(req).then((res) => {
-        if (res.ok && res.type === 'basic') {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => offlineResponse());
-    })
+      return fetch(req)
+        .then((res) => {
+          if (res.ok && res.type === "basic") {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => offlineResponse());
+    }),
   );
 });
 
 function offlineResponse() {
   return new Response(
     '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">' +
-    '<title>離線 - AutoRepair OS</title>' +
-    '<style>body{background:#0f172a;color:#e2e8f0;font-family:"Segoe UI","Microsoft JhengHei",sans-serif;' +
-    'display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}' +
-    'h1{color:#38bdf8;font-size:22px}p{color:#94a3b8;font-size:14px}</style></head>' +
-    '<body><div><h1>⚠ 離線模式</h1>' +
-    '<p>無法連線至伺服器。已啟用的本地資料仍可檢視，' +
-    '提交的操作會暫存並於恢復連線後自動上傳。</p></div></body></html>',
-    { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 503 }
+      "<title>離線 - AutoRepair OS</title>" +
+      '<style>body{background:#0f172a;color:#e2e8f0;font-family:"Segoe UI","Microsoft JhengHei",sans-serif;' +
+      "display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}" +
+      "h1{color:#38bdf8;font-size:22px}p{color:#94a3b8;font-size:14px}</style></head>" +
+      "<body><div><h1>⚠ 離線模式</h1>" +
+      "<p>無法連線至伺服器。已啟用的本地資料仍可檢視，" +
+      "提交的操作會暫存並於恢復連線後自動上傳。</p></div></body></html>",
+    { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 503 },
   );
 }

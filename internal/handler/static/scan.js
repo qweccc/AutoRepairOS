@@ -13,7 +13,9 @@
     var fileInput = document.getElementById(opts.inputId);
     if (!btn || !fileInput) return;
 
-    btn.addEventListener("click", function () { fileInput.click(); });
+    btn.addEventListener("click", function () {
+      fileInput.click();
+    });
 
     fileInput.addEventListener("change", function () {
       var file = fileInput.files && fileInput.files[0];
@@ -27,9 +29,11 @@
         fetch("/api/vision/recognize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: reader.result })
+          body: JSON.stringify({ image: reader.result }),
         })
-          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            return r.json();
+          })
           .then(function (j) {
             if (!j.ok) {
               alert("辨識失敗：" + (j.error || "未知錯誤"));
@@ -37,7 +41,9 @@
             }
             fillFields(j.reading, opts.fieldMap || {});
           })
-          .catch(function () { alert("辨識請求失敗（網路或伺服器錯誤）"); })
+          .catch(function () {
+            alert("辨識請求失敗（網路或伺服器錯誤）");
+          })
           .finally(function () {
             btn.disabled = false;
             btn.textContent = oldText;
@@ -55,7 +61,8 @@
       var val = reading[apiField];
       if (!val) return;
       var el = document.querySelector('[name="' + inputName + '"]');
-      if (el && !el.value) {           // 只填空欄，不覆蓋使用者已輸入
+      if (el && !el.value) {
+        // 只填空欄，不覆蓋使用者已輸入
         el.value = val;
         filled++;
       }
@@ -73,34 +80,46 @@
 
     var scanner = null;
     btn.addEventListener("click", function () {
-      if (scanner) { stopScan(); return; }
+      if (scanner) {
+        stopScan();
+        return;
+      }
       var div = document.getElementById(opts.containerId);
       if (!div) return;
       div.style.display = "block";
       btn.textContent = "停止掃描";
       scanner = new Html5Qrcode(opts.containerId);
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        function (decodedText) {
-          var target = document.getElementById(opts.targetId);
-          if (target) {
-            target.value = decodedText;
-            target.dispatchEvent(new Event("input", { bubbles: true }));
-            target.dispatchEvent(new Event("change", { bubbles: true }));
-          }
+      scanner
+        .start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          function (decodedText) {
+            var target = document.getElementById(opts.targetId);
+            if (target) {
+              target.value = decodedText;
+              target.dispatchEvent(new Event("input", { bubbles: true }));
+              target.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            stopScan();
+          },
+          function () {
+            /* 持續掃描，忽略單幀失敗 */
+          },
+        )
+        .catch(function () {
+          alert("無法啟動相機（請確認已授權相機權限）");
           stopScan();
-        },
-        function () { /* 持續掃描，忽略單幀失敗 */ }
-      ).catch(function () {
-        alert("無法啟動相機（請確認已授權相機權限）");
-        stopScan();
-      });
+        });
     });
 
     function stopScan() {
       if (scanner) {
-        scanner.stop().then(function () { scanner.clear(); }).catch(function () {});
+        scanner
+          .stop()
+          .then(function () {
+            scanner.clear();
+          })
+          .catch(function () {});
         scanner = null;
       }
       var div = document.getElementById(opts.containerId);
