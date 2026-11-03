@@ -453,7 +453,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal, user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -628,7 +628,7 @@ func StatusStep(step, current, label string, showArrow bool) templ.Component {
 }
 
 // WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
-func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64) templ.Component {
+func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64, user model.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
