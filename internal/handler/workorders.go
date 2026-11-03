@@ -1120,7 +1120,7 @@ func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID i
 		}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := pages.WorkOrderItemsTable(woID, items, techNames, true, itemTotal, user).Render(r.Context(), w); err != nil {
+	if err := pages.WorkOrderItemsTable(woID, items, techNames, true, itemTotal).Render(r.Context(), w); err != nil {
 		http.Error(w, "渲染工單項目失敗", http.StatusInternalServerError)
 	}
 	return true
