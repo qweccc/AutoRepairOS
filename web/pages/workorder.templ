@@ -22,8 +22,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 		}
 		<div class="card">
 			<h2>工單 #{ strconv.FormatInt(wo.ID, 10) } — { wo.PlateNumber }</h2>
-			@StatusFlow(wo.Status, statusLabels)
-			<table>
+					<table>
 				<tr>
 					<th style="width:130px">車型</th><td>{ wo.BrandModel }</td>
 					<th style="width:130px">進廠里程</th><td>{ strconv.Itoa(wo.CurrentMileage) } km</td>
