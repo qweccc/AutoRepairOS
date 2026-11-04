@@ -4,7 +4,7 @@
 package routes
 
 import (
-	"net/http"
+	"github.com/go-chi/chi/v5"
 
 	"autorepairos/internal/handler"
 )
@@ -13,10 +13,14 @@ import (
 type Deps struct{}
 
 // New 建立應用路由，外層需加上 middleware（如 CSRFProtection）。
-// 目前暫時回傳空 mux，實際路由仍由 main 註冊；等遷移完成再整併。
-func New(d Deps) http.Handler {
-	mux := http.NewServeMux()
-	// TODO: 將 main.go 的路由逐步遷移至此
-	_ = handler.CSRFProtection(mux)
-	return mux
+func New(d Deps) *chi.Mux {
+	r := chi.NewRouter()
+	// Phase 1：唯讀搜尋 API
+	r.Get("/api/parts", handler.RequireLogin(handler.SearchPartsAPI))
+	r.Get("/api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
+	r.Get("/api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
+	r.Get("/api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
+	r.Get("/api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
+	_ = handler.CSRFProtection(r)
+	return r
 }
