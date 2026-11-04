@@ -86,7 +86,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(data.Rows)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 44, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 44, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -99,7 +99,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Query).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 49, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 49, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -127,7 +127,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 60, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 60, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -140,7 +140,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(row.RepairType)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 61, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 61, Col: 27}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -153,7 +153,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(row.ItemCount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 62, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 62, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -166,7 +166,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/edit").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 64, Col: 95}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 64, Col: 95}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 					if templ_7745c5c3_Err != nil {
@@ -179,7 +179,7 @@ func ListSOPTemplatesPage(data SOPTemplateListData) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/delete").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 65, Col: 98}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 65, Col: 98}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 					if templ_7745c5c3_Err != nil {
@@ -306,7 +306,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(data.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 100, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 100, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -319,7 +319,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sop-templates/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 101, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 101, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 			if templ_7745c5c3_Err != nil {
@@ -340,7 +340,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 103, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 103, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -353,7 +353,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.RepairType).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 104, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 104, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 			if templ_7745c5c3_Err != nil {
@@ -366,7 +366,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(items)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 112, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 112, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -379,7 +379,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/sop-templates/" + strconv.FormatInt(data.ID, 10) + "/items").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 113, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 113, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -405,7 +405,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(item.ID, 10)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 120, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 120, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 				if templ_7745c5c3_Err != nil {
@@ -428,7 +428,7 @@ func EditSOPTemplatePage(data SOPTemplateEditData) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Description).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/sop_templates.templ`, Line: 123, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/sop_templates.templ`, Line: 123, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 				if templ_7745c5c3_Err != nil {

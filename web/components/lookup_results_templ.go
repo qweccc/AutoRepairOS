@@ -57,7 +57,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(p.ID, 10)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 26, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 26, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -70,7 +70,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 27, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 27, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -83,7 +83,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.PartNumber).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 28, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 28, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -96,7 +96,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Price).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 29, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 29, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -109,7 +109,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 31, Col: 14}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 31, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -122,7 +122,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(p.PartNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 32, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 32, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -140,7 +140,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(p.BinLocation)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 34, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 34, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -158,7 +158,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(p.Price)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 36, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 36, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -171,7 +171,7 @@ func PartLookupResults(results []PartLookupResult) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(p.Stock))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 37, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 37, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -217,7 +217,7 @@ func PhraseLookupResults(results []PhraseLookupResult) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.Phrase).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 48, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 48, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -230,7 +230,7 @@ func PhraseLookupResults(results []PhraseLookupResult) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(p.Category)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 50, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 50, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -243,7 +243,7 @@ func PhraseLookupResults(results []PhraseLookupResult) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p.Phrase)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/lookup_results.templ`, Line: 50, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/lookup_results.templ`, Line: 50, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
