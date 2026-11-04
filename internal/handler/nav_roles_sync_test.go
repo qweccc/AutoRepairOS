@@ -53,7 +53,7 @@ func TestNavRolesMatchMainGoPermissions(t *testing.T) {
 	// main.go: "GET /path", handler.Wrapper(Handler)
 	// 注意根路徑寫成 "/{$}"（stdlib ServeMux 的精確匹配語法），
 	// 要正規化成 "/" 才能與選單對上。
-	routeRe := regexp.MustCompile(`"GET (/[^"]*)",\s*(?:handler\.)?([A-Za-z]+)\(`)
+	routeRe := regexp.MustCompile(`r\.Get\("([^"]*)",\s*(?:handler\.)?([A-Za-z]+)\(`)
 	routes := map[string]string{}
 	for _, m := range routeRe.FindAllStringSubmatch(mainSrc, -1) {
 		routes[normalizeRoutePath(m[1])] = m[2]
@@ -238,7 +238,7 @@ func TestNavPathsHaveGetRoutes(t *testing.T) {
 	mainSrc := readRepoFile(t, "main.go")
 	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
 
-	routeRe := regexp.MustCompile(`"GET (/[^"]*)",`)
+	routeRe := regexp.MustCompile(`r\.Get\("([^"]*)",`)
 	routes := map[string]bool{}
 	for _, m := range routeRe.FindAllStringSubmatch(mainSrc, -1) {
 		routes[normalizeRoutePath(m[1])] = true

@@ -201,6 +201,10 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// FIX: Use POST /customers/new for customer creation via a specific route.
+	// If this handler is reached via /customers/new, it will still work because
+	// r.FormValue doesn't care about the path. However, we need to ensure 
+	// the router is configured correctly.
 	_, err := db.DB.Exec(`INSERT INTO customers
 		(name, phone, telegram_user_id, address, notification_preference, notes, tags, campaign_code, birthday)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,

@@ -727,7 +727,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	pages.ShowWorkOrderPage(wo, items, itemTotal,
 		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
-		techNames, canEdit, flash(r),
+		techNames, canEdit, flashText(r),
 		sopRecords, sopTemplateOpts, attachedTemplates,
 		canCreateApproval, pendingApprovalRows(id), user).Render(r.Context(), w)
 }

@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"autorepairos/internal/model"
 )
 
@@ -15,11 +17,74 @@ import (
 var staticFS embed.FS
 
 // RegisterStatic 掛載靜態資源。唯一來源是 internal/handler/static/ 這份
-// （//go:embed 編進 binary）；web/static/ 已於 v20261015 刪除（純冗餘副本，
-// 從未被讀取）。templ 全部 link /static/... 由 embed 提供，改 CSS/JS 一律改
-// 本目錄後重新 build，不需要也不應該把檔案複製到 release/web/。
-// 需登入才能取得，避免離線快取洩漏資料。
-func RegisterStatic(mux *http.ServeMux) {
+func RegisterStatic(mux http.Handler) {
+	if r, ok := mux.(*chi.Mux); ok {
+		registerStaticChi(r)
+		return
+	}
+	if sm, ok := mux.(*http.ServeMux); ok {
+		registerStaticServeMux(sm)
+		return
+	}
+	// For other routers with chi-like methods
+	if h, ok := mux.(interface {
+		Get(string, ...interface{})
+	}); ok {
+		sub, err := fs.Sub(staticFS, "static")
+		if err != nil {
+			return
+		}
+		for _, name := range []string{"sw.js", "offline.js", "offline.css"} {
+			n := name
+			h.Get("/"+n, RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				serveStatic(w, req, sub, n)
+			})).ServeHTTP)
+		}
+		h.Get("/static/app.css", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serveStatic(w, req, sub, "app.css")
+		}).ServeHTTP)
+		h.Get("/static/htmx.min.js", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serveStatic(w, req, sub, "htmx.min.js")
+		}).ServeHTTP)
+		// Try to register wildcard
+		if h2, ok2 := mux.(interface {
+			HandleFunc(string, func(http.ResponseWriter, *http.Request))
+		}); ok2 {
+			h2.HandleFunc("/static/*", RequireLogin(func(w http.ResponseWriter, req *http.Request) {
+				serveSub(w, req, sub)
+			}))
+			return
+		}
+		return
+	}
+}
+
+func registerStaticChi(r *chi.Mux) {
+	sub, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		return
+	}
+	for _, name := range []string{"sw.js", "offline.js", "offline.css"} {
+		n := name
+		r.Get("/"+n, RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			serveStatic(w, req, sub, n)
+		})))
+	}
+	r.Get("/static/app.css", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		serveStatic(w, req, sub, "app.css")
+	}))
+	r.Get("/static/htmx.min.js", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		serveStatic(w, req, sub, "htmx.min.js")
+	}))
+	r.Get("/static/*", RequireLogin(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		serveSub(w, req, sub)
+	})))
+}
+
+func registerStaticServeMux(mux *http.ServeMux) {
+	if mux == nil {
+		return
+	}
 	sub, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		return

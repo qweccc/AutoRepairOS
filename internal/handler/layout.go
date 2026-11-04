@@ -175,6 +175,10 @@ func flash(r *http.Request) string {
 	return `<div class="msg msg-ok">` + html.EscapeString(msg) + `</div>`
 }
 
+func flashText(r *http.Request) string {
+	return r.URL.Query().Get("msg")
+}
+
 // redirectErrMsg 與 redirectMsg 相同，但走另一個參數（err）並以紅色樣式呈現。
 //
 // 為什麼不共用 msg：flash() 一律輸出綠色 msg-ok。把失敗訊息也塞進 msg 會讓

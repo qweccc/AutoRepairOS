@@ -458,8 +458,44 @@ func SearchPartsAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
 		if r.Header.Get("HX-Request") == "true" {
+			// For HX requests, return a few recent items to help users
+			rows, err := db.DB.Query(`SELECT id, name, part_number, COALESCE(bin_location,''),
+				COALESCE(selling_price,0), COALESCE(stock_quantity,0)
+				FROM active_inventory_items
+				ORDER BY id DESC LIMIT 20`)
+			if err != nil {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				_ = components.PartLookupResults(nil).Render(r.Context(), w)
+				return
+			}
+			defer rows.Close()
+			type partResult struct {
+				ID          int64
+				Name        string
+				PartNumber  string
+				BinLocation string
+				Price       float64
+				Stock       int
+			}
+			var results []partResult
+			for rows.Next() {
+				var p partResult
+				if err := rows.Scan(&p.ID, &p.Name, &p.PartNumber, &p.BinLocation, &p.Price, &p.Stock); err != nil {
+					continue
+				}
+				results = append(results, p)
+			}
+			fragment := make([]components.PartLookupResult, 0, len(results))
+			for _, p := range results {
+				fragment = append(fragment, components.PartLookupResult{
+					ID: p.ID, Name: p.Name, PartNumber: p.PartNumber,
+					BinLocation: p.BinLocation, Price: money(p.Price), Stock: p.Stock,
+				})
+			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_ = components.PartLookupResults(nil).Render(r.Context(), w)
+			if err := components.PartLookupResults(fragment).Render(r.Context(), w); err != nil {
+				http.Error(w, "渲染零件結果失敗", http.StatusInternalServerError)
+			}
 			return
 		}
 		writeJSON(w, http.StatusOK, []interface{}{})

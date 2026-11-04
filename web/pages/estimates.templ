@@ -178,28 +178,36 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 						</select>
 					</label>
 					<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
-						<label class="full" id="estimatePhraseSearchWrap">服務/工資片語搜尋
-							<input type="search" id="estimatePhraseSearch" placeholder="輸入關鍵字搜尋或選擇常用片語"
-								hx-get="/api/phrases/search" hx-trigger="focus, keyup changed delay:300ms, search"
-								hx-target="#estimatePhraseResults" hx-swap="innerHTML" autocomplete="off">
-							<div id="estimatePhraseResults" class="part-results"></div>
-						</label>
-						<label class="full" id="estimatePartSearchWrap" style="display:none">零件搜尋（名稱或料號）
-							<input type="search" id="estimatePartSearch" placeholder="例：機油、煞車片、A342"
-								hx-get="/api/parts" hx-trigger="keyup changed delay:300ms, search"
-								hx-target="#estimatePartResults" hx-swap="innerHTML" autocomplete="off">
-							<div id="estimatePartResults" class="part-results"></div>
-						</label>
-						<label class="full">描述
-							<input name="description" id="estimateItemDescription" placeholder="例：更換引擎機油與機油芯" required>
-						</label>
-						<input type="hidden" name="inventory_item_id" id="estimateInventoryItemID" value="0">
-						<label>單價<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
-						<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+				</form>
+				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
+					@components.CSRFInput()
+					<label class="full" id="estimatePhraseSearchWrap">服務/工資片語搜尋
+						<input type="search" id="estimatePhraseSearch" name="q" placeholder="輸入關鍵字搜尋或選擇常用片語"
+							hx-get="/api/phrases/search" hx-trigger="keyup delay:300ms"
+							hx-target="#estimatePhraseResults" hx-swap="innerHTML" hx-on::after-request="document.getElementById('estimatePhraseResults').style.display='block'; console.log('phrase resp', event.detail.xhr.status, event.detail.xhr.responseText.slice(0,100))" autocomplete="off">
+						<div id="estimatePhraseResults" class="part-results"></div>
+					</label>
+					<label class="full" id="estimatePartSearchWrap" style="display:none">零件搜尋（名稱或料號）
+						<input type="search" id="estimatePartSearch" name="q" placeholder="例：機油、煞車片、A342"
+							hx-get="/api/parts" hx-trigger="keyup delay:300ms"
+							hx-target="#estimatePartResults" hx-swap="innerHTML" hx-on::after-request="document.getElementById('estimatePartResults').style.display='block';" autocomplete="off">
+						<div id="estimatePartResults" class="part-results"></div>
+					</label>
+					<label class="full">描述
+						<input name="description" id="estimateItemDescription" placeholder="例：更換引擎機油與機油芯" required>
+					</label>
+					<input type="hidden" name="inventory_item_id" id="estimateInventoryItemID" value="0">
+					<input type="hidden" name="item_type" id="estimateItemTypeHidden" value="labor">
+					<input type="hidden" name="quantity" id="estimateQuantityHidden" value="1">
+					<label>單價<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
+					<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
 				</form>
 				<script>
 						(function() {
 							var type = document.getElementById('estimateItemType');
+							var typeHidden = document.getElementById('estimateItemTypeHidden');
+							var qtyHidden = document.getElementById('estimateQuantityHidden');
+							var qtyInput = document.querySelector('form.frm input[name="quantity"]');
 							var phraseWrap = document.getElementById('estimatePhraseSearchWrap');
 							var partWrap = document.getElementById('estimatePartSearchWrap');
 							var phraseSearch = document.getElementById('estimatePhraseSearch');
@@ -213,34 +221,45 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 
 							function updateLookup() {
 								var isPart = type.value === 'part';
+								if (typeHidden) typeHidden.value = type.value;
 								phraseWrap.style.display = isPart ? 'none' : '';
 								partWrap.style.display = isPart ? '' : 'none';
 								inventoryID.value = '0';
 								if (isPart) {
-									phraseSearch.value = '';
-									phraseResults.innerHTML = '';
+									if (phraseSearch) phraseSearch.value = '';
+									if (phraseResults) phraseResults.innerHTML = '';
 								} else {
-									partSearch.value = '';
-									partResults.innerHTML = '';
+									if (partSearch) partSearch.value = '';
+									if (partResults) partResults.innerHTML = '';
 								}
 							}
+							if (qtyInput && qtyHidden) {
+								qtyHidden.value = qtyInput.value || '1';
+								qtyInput.addEventListener('change', function(){ qtyHidden.value = qtyInput.value || '1'; });
+							}
 							type.addEventListener('change', updateLookup);
-							phraseResults.addEventListener('click', function(e) {
-								var item = e.target.closest('.phrase-result-item');
-								if (!item) return;
-								description.value = item.dataset.phrase;
-								phraseSearch.value = item.dataset.phrase;
-								phraseResults.innerHTML = '';
-							});
-							partResults.addEventListener('click', function(e) {
-								var item = e.target.closest('.part-result-item');
-								if (!item) return;
-								inventoryID.value = item.dataset.partId;
-								description.value = item.dataset.partName + ' (' + item.dataset.partNumber + ')';
-								partSearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;
-								price.value = item.dataset.partPrice;
-								partResults.innerHTML = '';
-							});
+							if (phraseResults) {
+								phraseResults.addEventListener('click', function(e) {
+									var item = e.target.closest('.phrase-result-item');
+									if (!item) return;
+									description.value = item.dataset.phrase || '';
+									if (phraseSearch) phraseSearch.value = item.dataset.phrase || '';
+									phraseResults.innerHTML = '';
+								});
+							}
+							if (partResults) {
+								partResults.addEventListener('click', function(e) {
+									var item = e.target.closest('.part-result-item');
+									if (!item) return;
+									inventoryID.value = item.dataset.partId || '0';
+									description.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' (' + item.dataset.partNumber + ')' : '');
+									if (partSearch) partSearch.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' / ' + item.dataset.partNumber : '');
+									if (item.dataset.partPrice) {
+										price.value = item.dataset.partPrice.replace(/[^0-9.]/g, '') || item.dataset.partPrice;
+									}
+									partResults.innerHTML = '';
+								});
+							}
 							updateLookup();
 						})();
 				</script>

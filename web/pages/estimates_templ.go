@@ -117,7 +117,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var3 string
 					templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 68, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 68, Col: 41}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 					if templ_7745c5c3_Err != nil {
@@ -130,7 +130,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 69, Col: 26}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 69, Col: 26}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
@@ -143,7 +143,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 69, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 69, Col: 45}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -156,7 +156,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 70, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 70, Col: 27}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -185,7 +185,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 79, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 79, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -198,7 +198,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(e.CreatedAt)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 80, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 80, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -211,7 +211,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID)).ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 82, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 82, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 					if templ_7745c5c3_Err != nil {
@@ -229,7 +229,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 						var templ_7745c5c3_Var10 string
 						templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10)).ResolveURL(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 84, Col: 100}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 84, Col: 100}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 						if templ_7745c5c3_Err != nil {
@@ -318,7 +318,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression(vehicleOptionsJSON).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 105, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 105, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -374,7 +374,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 133, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 133, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -387,7 +387,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 135, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 135, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -400,7 +400,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 135, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 135, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -413,7 +413,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 135, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 135, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -426,7 +426,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerPhone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 135, Col: 125}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 135, Col: 125}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -439,7 +439,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(e.CurrentMileage))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -452,7 +452,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(e.CreatedAt)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -465,7 +465,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerComplaint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 137, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 137, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -483,7 +483,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ConvertedWorkOrderID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 140, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 140, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -496,7 +496,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 140, Col: 146}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 140, Col: 146}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -509,7 +509,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10)).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 142, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 142, Col: 96}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 				if templ_7745c5c3_Err != nil {
@@ -522,7 +522,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) + "/estimate-source").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 143, Col: 117}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 143, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 				if templ_7745c5c3_Err != nil {
@@ -556,7 +556,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var28 string
 					templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(estimateItemType(item.ItemType))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 157, Col: 74}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 157, Col: 74}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 					if templ_7745c5c3_Err != nil {
@@ -569,7 +569,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var29 string
 					templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 158, Col: 29}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 158, Col: 29}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 					if templ_7745c5c3_Err != nil {
@@ -582,7 +582,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var30 string
 					templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 158, Col: 81}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 158, Col: 81}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 					if templ_7745c5c3_Err != nil {
@@ -595,7 +595,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var31 string
 					templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.UnitPrice))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 159, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 159, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 					if templ_7745c5c3_Err != nil {
@@ -608,7 +608,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.Subtotal))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 159, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 159, Col: 107}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -626,7 +626,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 						var templ_7745c5c3_Var33 string
 						templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/items/" + strconv.FormatInt(item.ID, 10) + "/delete").ResolveURL(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 162, Col: 112}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 162, Col: 112}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 						if templ_7745c5c3_Err != nil {
@@ -663,7 +663,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/items").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 173, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 173, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 				if templ_7745c5c3_Err != nil {
@@ -677,14 +677,14 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<label>類型 <select name=\"item_type\" id=\"estimateItemType\"><option value=\"labor\" selected>工資 / 服務</option><option value=\"part\">零件</option><option value=\"subcontract\">外包</option></select></label> <label>數量<input name=\"quantity\" type=\"number\" min=\"1\" value=\"1\" required></label> <label class=\"full\" id=\"estimatePhraseSearchWrap\">服務/工資片語搜尋 <input type=\"search\" id=\"estimatePhraseSearch\" placeholder=\"輸入關鍵字搜尋或選擇常用片語\" hx-get=\"/api/phrases/search\" hx-trigger=\"focus, keyup changed delay:300ms, search\" hx-target=\"#estimatePhraseResults\" hx-swap=\"innerHTML\" autocomplete=\"off\"><div id=\"estimatePhraseResults\" class=\"part-results\"></div></label> <label class=\"full\" id=\"estimatePartSearchWrap\" style=\"display:none\">零件搜尋（名稱或料號） <input type=\"search\" id=\"estimatePartSearch\" placeholder=\"例：機油、煞車片、A342\" hx-get=\"/api/parts\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#estimatePartResults\" hx-swap=\"innerHTML\" autocomplete=\"off\"><div id=\"estimatePartResults\" class=\"part-results\"></div></label> <label class=\"full\">描述 <input name=\"description\" id=\"estimateItemDescription\" placeholder=\"例：更換引擎機油與機油芯\" required></label> <input type=\"hidden\" name=\"inventory_item_id\" id=\"estimateInventoryItemID\" value=\"0\"> <label>單價<input name=\"unit_price\" id=\"estimateUnitPrice\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" placeholder=\"例：1200\" required></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form><script>\r\n\t\t\t\t\t\t(function() {\r\n\t\t\t\t\t\t\tvar type = document.getElementById('estimateItemType');\r\n\t\t\t\t\t\t\tvar phraseWrap = document.getElementById('estimatePhraseSearchWrap');\r\n\t\t\t\t\t\t\tvar partWrap = document.getElementById('estimatePartSearchWrap');\r\n\t\t\t\t\t\t\tvar phraseSearch = document.getElementById('estimatePhraseSearch');\r\n\t\t\t\t\t\t\tvar partSearch = document.getElementById('estimatePartSearch');\r\n\t\t\t\t\t\t\tvar phraseResults = document.getElementById('estimatePhraseResults');\r\n\t\t\t\t\t\t\tvar partResults = document.getElementById('estimatePartResults');\r\n\t\t\t\t\t\t\tvar description = document.getElementById('estimateItemDescription');\r\n\t\t\t\t\t\t\tvar price = document.getElementById('estimateUnitPrice');\r\n\t\t\t\t\t\t\tvar inventoryID = document.getElementById('estimateInventoryItemID');\r\n\t\t\t\t\t\t\tif (!type || !description || !price || !inventoryID) return;\r\n\r\n\t\t\t\t\t\t\tfunction updateLookup() {\r\n\t\t\t\t\t\t\t\tvar isPart = type.value === 'part';\r\n\t\t\t\t\t\t\t\tphraseWrap.style.display = isPart ? 'none' : '';\r\n\t\t\t\t\t\t\t\tpartWrap.style.display = isPart ? '' : 'none';\r\n\t\t\t\t\t\t\t\tinventoryID.value = '0';\r\n\t\t\t\t\t\t\t\tif (isPart) {\r\n\t\t\t\t\t\t\t\t\tphraseSearch.value = '';\r\n\t\t\t\t\t\t\t\t\tphraseResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t} else {\r\n\t\t\t\t\t\t\t\t\tpartSearch.value = '';\r\n\t\t\t\t\t\t\t\t\tpartResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\ttype.addEventListener('change', updateLookup);\r\n\t\t\t\t\t\t\tphraseResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\tvar item = e.target.closest('.phrase-result-item');\r\n\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\tdescription.value = item.dataset.phrase;\r\n\t\t\t\t\t\t\t\tphraseSearch.value = item.dataset.phrase;\r\n\t\t\t\t\t\t\t\tphraseResults.innerHTML = '';\r\n\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\tpartResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\tvar item = e.target.closest('.part-result-item');\r\n\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\tinventoryID.value = item.dataset.partId;\r\n\t\t\t\t\t\t\t\tdescription.value = item.dataset.partName + ' (' + item.dataset.partNumber + ')';\r\n\t\t\t\t\t\t\t\tpartSearch.value = item.dataset.partName + ' / ' + item.dataset.partNumber;\r\n\t\t\t\t\t\t\t\tprice.value = item.dataset.partPrice;\r\n\t\t\t\t\t\t\t\tpartResults.innerHTML = '';\r\n\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\tupdateLookup();\r\n\t\t\t\t\t\t})();\r\n\t\t\t\t</script> <form class=\"frm\" method=\"POST\" action=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<label>類型 <select name=\"item_type\" id=\"estimateItemType\"><option value=\"labor\" selected>工資 / 服務</option><option value=\"part\">零件</option><option value=\"subcontract\">外包</option></select></label> <label>數量<input name=\"quantity\" type=\"number\" min=\"1\" value=\"1\" required></label></form><form class=\"frm\" method=\"POST\" action=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var35 string
-				templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/discount").ResolveURL(ctx)
+				templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/items").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 247, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 182, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 				if templ_7745c5c3_Err != nil {
@@ -698,95 +698,20 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<label>折扣金額<input name=\"discount_amount\" type=\"number\" min=\"0\" max=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<label class=\"full\" id=\"estimatePhraseSearchWrap\">服務/工資片語搜尋 <input type=\"search\" id=\"estimatePhraseSearch\" name=\"q\" placeholder=\"輸入關鍵字搜尋或選擇常用片語\" hx-get=\"/api/phrases/search\" hx-trigger=\"keyup delay:300ms\" hx-target=\"#estimatePhraseResults\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('estimatePhraseResults').style.display='block'; console.log('phrase resp', event.detail.xhr.status, event.detail.xhr.responseText.slice(0,100))\" autocomplete=\"off\"><div id=\"estimatePhraseResults\" class=\"part-results\"></div></label> <label class=\"full\" id=\"estimatePartSearchWrap\" style=\"display:none\">零件搜尋（名稱或料號） <input type=\"search\" id=\"estimatePartSearch\" name=\"q\" placeholder=\"例：機油、煞車片、A342\" hx-get=\"/api/parts\" hx-trigger=\"keyup delay:300ms\" hx-target=\"#estimatePartResults\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('estimatePartResults').style.display='block';\" autocomplete=\"off\"><div id=\"estimatePartResults\" class=\"part-results\"></div></label> <label class=\"full\">描述 <input name=\"description\" id=\"estimateItemDescription\" placeholder=\"例：更換引擎機油與機油芯\" required></label> <input type=\"hidden\" name=\"inventory_item_id\" id=\"estimateInventoryItemID\" value=\"0\"> <input type=\"hidden\" name=\"item_type\" id=\"estimateItemTypeHidden\" value=\"labor\"> <input type=\"hidden\" name=\"quantity\" id=\"estimateQuantityHidden\" value=\"1\"> <label>單價<input name=\"unit_price\" id=\"estimateUnitPrice\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" placeholder=\"例：1200\" required></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form><script>\r\n\t\t\t\t\t\t(function() {\r\n\t\t\t\t\t\t\tvar type = document.getElementById('estimateItemType');\r\n\t\t\t\t\t\t\tvar typeHidden = document.getElementById('estimateItemTypeHidden');\r\n\t\t\t\t\t\t\tvar qtyHidden = document.getElementById('estimateQuantityHidden');\r\n\t\t\t\t\t\t\tvar qtyInput = document.querySelector('form.frm input[name=\"quantity\"]');\r\n\t\t\t\t\t\t\tvar phraseWrap = document.getElementById('estimatePhraseSearchWrap');\r\n\t\t\t\t\t\t\tvar partWrap = document.getElementById('estimatePartSearchWrap');\r\n\t\t\t\t\t\t\tvar phraseSearch = document.getElementById('estimatePhraseSearch');\r\n\t\t\t\t\t\t\tvar partSearch = document.getElementById('estimatePartSearch');\r\n\t\t\t\t\t\t\tvar phraseResults = document.getElementById('estimatePhraseResults');\r\n\t\t\t\t\t\t\tvar partResults = document.getElementById('estimatePartResults');\r\n\t\t\t\t\t\t\tvar description = document.getElementById('estimateItemDescription');\r\n\t\t\t\t\t\t\tvar price = document.getElementById('estimateUnitPrice');\r\n\t\t\t\t\t\t\tvar inventoryID = document.getElementById('estimateInventoryItemID');\r\n\t\t\t\t\t\t\tif (!type || !description || !price || !inventoryID) return;\r\n\r\n\t\t\t\t\t\t\tfunction updateLookup() {\r\n\t\t\t\t\t\t\t\tvar isPart = type.value === 'part';\r\n\t\t\t\t\t\t\t\tif (typeHidden) typeHidden.value = type.value;\r\n\t\t\t\t\t\t\t\tphraseWrap.style.display = isPart ? 'none' : '';\r\n\t\t\t\t\t\t\t\tpartWrap.style.display = isPart ? '' : 'none';\r\n\t\t\t\t\t\t\t\tinventoryID.value = '0';\r\n\t\t\t\t\t\t\t\tif (isPart) {\r\n\t\t\t\t\t\t\t\t\tif (phraseSearch) phraseSearch.value = '';\r\n\t\t\t\t\t\t\t\t\tif (phraseResults) phraseResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t} else {\r\n\t\t\t\t\t\t\t\t\tif (partSearch) partSearch.value = '';\r\n\t\t\t\t\t\t\t\t\tif (partResults) partResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (qtyInput && qtyHidden) {\r\n\t\t\t\t\t\t\t\tqtyHidden.value = qtyInput.value || '1';\r\n\t\t\t\t\t\t\t\tqtyInput.addEventListener('change', function(){ qtyHidden.value = qtyInput.value || '1'; });\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\ttype.addEventListener('change', updateLookup);\r\n\t\t\t\t\t\t\tif (phraseResults) {\r\n\t\t\t\t\t\t\t\tphraseResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\t\tvar item = e.target.closest('.phrase-result-item');\r\n\t\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\t\tdescription.value = item.dataset.phrase || '';\r\n\t\t\t\t\t\t\t\t\tif (phraseSearch) phraseSearch.value = item.dataset.phrase || '';\r\n\t\t\t\t\t\t\t\t\tphraseResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (partResults) {\r\n\t\t\t\t\t\t\t\tpartResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\t\tvar item = e.target.closest('.part-result-item');\r\n\t\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\t\tinventoryID.value = item.dataset.partId || '0';\r\n\t\t\t\t\t\t\t\t\tdescription.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' (' + item.dataset.partNumber + ')' : '');\r\n\t\t\t\t\t\t\t\t\tif (partSearch) partSearch.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' / ' + item.dataset.partNumber : '');\r\n\t\t\t\t\t\t\t\t\tif (item.dataset.partPrice) {\r\n\t\t\t\t\t\t\t\t\t\tprice.value = item.dataset.partPrice.replace(/[^0-9.]/g, '') || item.dataset.partPrice;\r\n\t\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t\t\tpartResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tupdateLookup();\r\n\t\t\t\t\t\t})();\r\n\t\t\t\t</script> <form class=\"frm\" method=\"POST\" action=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64)).Resolve(ctx)
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/discount").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 249, Col: 138}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 266, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" step=\"1\" value=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64)).Resolve(ctx)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 249, Col: 207}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\"></label><div><button class=\"btn btn-s\" type=\"submit\">更新折扣</button></div></form>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</div><div class=\"card\"><h2>報價總計</h2><table><tr><th>項目小計</th><td class=\"num\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var38 string
-			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(estimateSubtotal(items)))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 257, Col: 85}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</td></tr><tr><th>折扣</th><td class=\"num\">-")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var39 string
-			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.DiscountAmount))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 258, Col: 73}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</td></tr><tr><th>估價總額</th><td class=\"num\" style=\"font-size:20px;font-weight:700;color:#38bdf8\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var40 string
-			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 259, Col: 128}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</td></tr></table>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			if canEdit && e.Status == "draft" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<form method=\"POST\" action=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var41 string
-				templ_7745c5c3_Var41, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/convert").ResolveURL(ctx)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 262, Col: 63}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" style=\"margin-top:16px\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -794,12 +719,108 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<button class=\"btn btn-p\" type=\"submit\" data-confirm=\"將此估價轉為正式工單？轉換後草稿將鎖定。\">轉為正式工單</button></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<label>折扣金額<input name=\"discount_amount\" type=\"number\" min=\"0\" max=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var37 string
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64)).Resolve(ctx)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 268, Col: 138}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" step=\"1\" value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var38 string
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64)).Resolve(ctx)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 268, Col: 207}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "\"></label><div><button class=\"btn btn-s\" type=\"submit\">更新折扣</button></div></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<p><a class=\"btn btn-s\" href=\"/estimates\">回估價列表</a></p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</div><div class=\"card\"><h2>報價總計</h2><table><tr><th>項目小計</th><td class=\"num\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var39 string
+			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(estimateSubtotal(items)))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 276, Col: 85}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</td></tr><tr><th>折扣</th><td class=\"num\">-")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var40 string
+			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.DiscountAmount))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 277, Col: 73}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</td></tr><tr><th>估價總額</th><td class=\"num\" style=\"font-size:20px;font-weight:700;color:#38bdf8\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var41 string
+			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 278, Col: 128}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</td></tr></table>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if canEdit && e.Status == "draft" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<form method=\"POST\" action=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var42 string
+				templ_7745c5c3_Var42, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/convert").ResolveURL(ctx)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 281, Col: 63}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\" style=\"margin-top:16px\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = components.CSRFInput().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<button class=\"btn btn-p\" type=\"submit\" data-confirm=\"將此估價轉為正式工單？轉換後草稿將鎖定。\">轉為正式工單</button></form>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<p><a class=\"btn btn-s\" href=\"/estimates\">回估價列表</a></p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -830,7 +851,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var43 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var44 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -842,188 +863,162 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<div class=\"card\"><h2>工單 #")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var44 string
-			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(workOrderID, 10))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 275, Col: 51}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, " 的估價來源</h2><p>來源估價 #")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "<div class=\"card\"><h2>工單 #")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var45 string
-			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(workOrderID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 276, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "，車輛 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, " 的估價來源</h2><p>來源估價 #")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var46 string
-			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
+			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 276, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, " / ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "，車輛 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var47 string
-			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
+			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 276, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "，客戶 ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, " / ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var48 string
-			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
+			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 276, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "。</p><p>原始報價總額：<strong>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "，客戶 ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var49 string
-			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteTotal))
+			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 277, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "</strong>；原始折扣：")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "。</p><p>原始報價總額：<strong>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var50 string
-			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteDiscount))
+			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteTotal))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 277, Col: 121}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 296, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "</p><a class=\"btn btn-p\" href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "</strong>；原始折扣：")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(workOrderID, 10)).ResolveURL(ctx)
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteDiscount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 278, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 296, Col: 121}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\">開啟正式工單</a> <a class=\"btn btn-s\" href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "</p><a class=\"btn btn-p\" href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var52 string
-			templ_7745c5c3_Var52, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID)).ResolveURL(ctx)
+			templ_7745c5c3_Var52, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(workOrderID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 279, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 297, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "\">查看估價草稿</a></div><div class=\"card\"><h2>原始報價項目（轉換時封存）</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\">開啟正式工單</a> <a class=\"btn btn-s\" href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var53 string
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID)).ResolveURL(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 298, Col: 48}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\">查看估價草稿</a></div><div class=\"card\"><h2>原始報價項目（轉換時封存）</h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(items) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "<div class=\"empty\">原估價沒有項目</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<div class=\"empty\">原估價沒有項目</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if len(items) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "<table><tr><th>類型</th><th>描述</th><th class=\"num\">數量</th><th class=\"num\">單價</th><th class=\"num\">小計</th></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<table><tr><th>類型</th><th>描述</th><th class=\"num\">數量</th><th class=\"num\">單價</th><th class=\"num\">小計</th></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, item := range items {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "<tr><td>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var53 string
-					templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(estimateItemType(item.ItemType))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 290, Col: 47}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</td><td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<tr><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var54 string
-					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
+					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(estimateItemType(item.ItemType))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 290, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 309, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "</td><td class=\"num\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "</td><td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var55 string
-					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
+					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 309, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "</td><td class=\"num\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var56 string
-					templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.UnitPrice))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 106}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1031,32 +1026,58 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var57 string
-					templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.Subtotal))
+					var templ_7745c5c3_Var56 string
+					templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 292, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 310, Col: 52}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "</td><td class=\"num\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var57 string
+					templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.UnitPrice))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 310, Col: 106}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "</td></tr>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</td><td class=\"num\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var58 string
+					templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.Subtotal))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 311, Col: 53}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</td></tr>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</table>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "</table>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout("工單估價來源", "/estimates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout("工單估價來源", "/estimates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var44), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
