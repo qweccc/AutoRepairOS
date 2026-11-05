@@ -15,8 +15,8 @@ import (
 	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
 	"autorepairos/internal/handler"
-	"autorepairos/internal/routes"
 	"autorepairos/internal/integration/vision"
+	"autorepairos/internal/routes"
 	"autorepairos/internal/seed"
 	"autorepairos/web/pages"
 )
@@ -87,24 +87,24 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-r.Use(func(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		rc := chi.RouteContext(req.Context())
-		if rc != nil {
-			for i := 0; i < len(rc.URLParams.Keys); i++ {
-				if i < len(rc.URLParams.Values) {
-					req.SetPathValue(rc.URLParams.Keys[i], rc.URLParams.Values[i])
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			rc := chi.RouteContext(req.Context())
+			if rc != nil {
+				for i := 0; i < len(rc.URLParams.Keys); i++ {
+					if i < len(rc.URLParams.Values) {
+						req.SetPathValue(rc.URLParams.Keys[i], rc.URLParams.Values[i])
+					}
 				}
 			}
-		}
-		next.ServeHTTP(w, req)
+			next.ServeHTTP(w, req)
+		})
 	})
-})
 
-// 路由已遷移至 internal/routes
-r.Mount("/", routes.New(routes.Deps{}))
+	// 路由已遷移至 internal/routes
+	r.Mount("/", routes.New(routes.Deps{}))
 
-port := cfg.Port
+	port := cfg.Port
 	if port == "" {
 		port = "8080"
 	}
