@@ -47,7 +47,7 @@ var navRoleVars = map[string][]string{
 //
 // 順帶驗證每個選單路徑都有對應的 GET 路由：沒有的話那個選單項會 404。
 func TestNavRolesMatchMainGoPermissions(t *testing.T) {
-	mainSrc := readRepoFile(t, "main.go")
+	mainSrc := readRepoFile(t, filepath.Join("internal", "routes", "routes.go"))
 	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
 
 	// main.go: "GET /path", handler.Wrapper(Handler)
@@ -235,7 +235,7 @@ func readRepoFile(t *testing.T, rel string) string {
 // TestNavPathsHaveGetRoutes 單獨檢查「每個選單路徑都有 GET 路由」，
 // 讓 404 的死連結有一個明確的失敗訊息（而不是混在角色比對裡）。
 func TestNavPathsHaveGetRoutes(t *testing.T) {
-	mainSrc := readRepoFile(t, "main.go")
+	mainSrc := readRepoFile(t, filepath.Join("internal", "routes", "routes.go"))
 	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
 
 	routeRe := regexp.MustCompile(`r\.Get\("([^"]*)",`)
