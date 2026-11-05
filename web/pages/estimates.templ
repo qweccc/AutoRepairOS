@@ -180,6 +180,7 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 					<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
 				</form>
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
+					@components.CSRFInput()
 					<label class="full" id="estimateSearchWrap">服務/工資/零件搜尋
 						<input type="search" id="estimateSearch" name="q" placeholder="輸入關鍵字搜尋服務片語或零件"
 							hx-get="/api/estimate-items/search" hx-trigger="keyup delay:300ms"
