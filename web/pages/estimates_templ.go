@@ -690,14 +690,14 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\"><label class=\"full\" id=\"estimateSearchWrap\">服務/工資/零件搜尋 <input type=\"search\" id=\"estimateSearch\" name=\"q\" placeholder=\"輸入關鍵字搜尋服務片語或零件\" hx-get=\"/api/estimate-items/search\" hx-trigger=\"keyup delay:300ms\" hx-target=\"#estimateSearchResults\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('estimateSearchResults').style.display='block';\" autocomplete=\"off\"><div id=\"estimateSearchResults\" class=\"part-results\"></div></label> <label class=\"full\">描述 <input name=\"description\" id=\"estimateItemDescription\" placeholder=\"例：更換引擎機油與機油芯\" required></label> <input type=\"hidden\" name=\"inventory_item_id\" id=\"estimateInventoryItemID\" value=\"0\"> <input type=\"hidden\" name=\"item_type\" id=\"estimateItemTypeHidden\" value=\"labor\"> <input type=\"hidden\" name=\"quantity\" id=\"estimateQuantityHidden\" value=\"1\"> <label>單價<input name=\"unit_price\" id=\"estimateUnitPrice\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" placeholder=\"例：1200\" required></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form><script>\r\n\t\t\t\t\t\t(function() {\r\n\t\t\t\t\t\t\tvar type = document.getElementById('estimateItemType');\r\n\t\t\t\t\t\t\tvar typeHidden = document.getElementById('estimateItemTypeHidden');\r\n\t\t\t\t\t\t\tvar qtyHidden = document.getElementById('estimateQuantityHidden');\r\n\t\t\t\t\t\t\tvar qtyInput = document.querySelector('form.frm input[name=\"quantity\"]');\r\n\t\t\t\t\t\t\tvar phraseWrap = document.getElementById('estimatePhraseSearchWrap');\r\n\t\t\t\t\t\t\tvar partWrap = document.getElementById('estimatePartSearchWrap');\r\n\t\t\t\t\t\t\tvar phraseSearch = document.getElementById('estimatePhraseSearch');\r\n\t\t\t\t\t\t\tvar partSearch = document.getElementById('estimatePartSearch');\r\n\t\t\t\t\t\t\tvar phraseResults = document.getElementById('estimatePhraseResults');\r\n\t\t\t\t\t\t\tvar partResults = document.getElementById('estimatePartResults');\r\n\t\t\t\t\t\t\tvar description = document.getElementById('estimateItemDescription');\r\n\t\t\t\t\t\t\tvar price = document.getElementById('estimateUnitPrice');\r\n\t\t\t\t\t\t\tvar inventoryID = document.getElementById('estimateInventoryItemID');\r\n\t\t\t\t\t\t\tif (!type || !description || !price || !inventoryID) return;\r\n\r\n\t\t\t\t\t\t\tfunction updateLookup() {\r\n\t\t\t\t\t\t\t\tvar isPart = type.value === 'part';\r\n\t\t\t\t\t\t\t\tif (typeHidden) typeHidden.value = type.value;\r\n\t\t\t\t\t\t\t\tphraseWrap.style.display = isPart ? 'none' : '';\r\n\t\t\t\t\t\t\t\tpartWrap.style.display = isPart ? '' : 'none';\r\n\t\t\t\t\t\t\t\tinventoryID.value = '0';\r\n\t\t\t\t\t\t\t\tif (isPart) {\r\n\t\t\t\t\t\t\t\t\tif (phraseSearch) phraseSearch.value = '';\r\n\t\t\t\t\t\t\t\t\tif (phraseResults) phraseResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t} else {\r\n\t\t\t\t\t\t\t\t\tif (partSearch) partSearch.value = '';\r\n\t\t\t\t\t\t\t\t\tif (partResults) partResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (qtyInput && qtyHidden) {\r\n\t\t\t\t\t\t\t\tqtyHidden.value = qtyInput.value || '1';\r\n\t\t\t\t\t\t\t\tqtyInput.addEventListener('change', function(){ qtyHidden.value = qtyInput.value || '1'; });\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\ttype.addEventListener('change', updateLookup);\r\n\t\t\t\t\t\t\tif (phraseResults) {\r\n\t\t\t\t\t\t\t\tphraseResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\t\tvar item = e.target.closest('.phrase-result-item');\r\n\t\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\t\tdescription.value = item.dataset.phrase || '';\r\n\t\t\t\t\t\t\t\t\tif (phraseSearch) phraseSearch.value = item.dataset.phrase || '';\r\n\t\t\t\t\t\t\t\t\tphraseResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (partResults) {\r\n\t\t\t\t\t\t\t\tpartResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\t\tvar item = e.target.closest('.part-result-item');\r\n\t\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\t\tinventoryID.value = item.dataset.partId || '0';\r\n\t\t\t\t\t\t\t\t\tdescription.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' (' + item.dataset.partNumber + ')' : '');\r\n\t\t\t\t\t\t\t\t\tif (partSearch) partSearch.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' / ' + item.dataset.partNumber : '');\r\n\t\t\t\t\t\t\t\t\tif (item.dataset.partPrice) {\r\n\t\t\t\t\t\t\t\t\t\tprice.value = item.dataset.partPrice.replace(/[^0-9.]/g, '') || item.dataset.partPrice;\r\n\t\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t\t\tpartResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tupdateLookup();\r\n\t\t\t\t\t\t})();\r\n\t\t\t\t</script> <form class=\"frm\" method=\"POST\" action=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\"><label class=\"full\" id=\"estimateSearchWrap\">服務/工資/零件搜尋 <input type=\"search\" id=\"estimateSearch\" name=\"q\" placeholder=\"輸入關鍵字搜尋服務片語或零件\" hx-get=\"/api/estimate-items/search\" hx-trigger=\"keyup delay:300ms\" hx-target=\"#estimateSearchResults\" hx-swap=\"innerHTML\" hx-on::after-request=\"document.getElementById('estimateSearchResults').style.display='block';\" autocomplete=\"off\"><div id=\"estimateSearchResults\" class=\"part-results\"></div></label> <label class=\"full\">描述 <input name=\"description\" id=\"estimateItemDescription\" placeholder=\"例：更換引擎機油與機油芯\" required></label> <input type=\"hidden\" name=\"inventory_item_id\" id=\"estimateInventoryItemID\" value=\"0\"> <input type=\"hidden\" name=\"item_type\" id=\"estimateItemTypeHidden\" value=\"labor\"> <input type=\"hidden\" name=\"quantity\" id=\"estimateQuantityHidden\" value=\"1\"> <label>單價<input name=\"unit_price\" id=\"estimateUnitPrice\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" placeholder=\"例：1200\" required></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">加入項目</button></div></form><script>\r\n\t\t\t\t\t\t(function() {\r\n\t\t\t\t\t\t\tvar type = document.getElementById('estimateItemType');\r\n\t\t\t\t\t\t\tvar typeHidden = document.getElementById('estimateItemTypeHidden');\r\n\t\t\t\t\t\t\tvar qtyHidden = document.getElementById('estimateQuantityHidden');\r\n\t\t\t\t\t\t\tvar qtyInput = document.querySelector('form.frm input[name=\"quantity\"]');\r\n\t\t\t\t\t\t\tvar phraseWrap = document.getElementById('estimatePhraseSearchWrap');\r\n\t\t\t\t\t\t\tvar partWrap = document.getElementById('estimatePartSearchWrap');\r\n\t\t\t\t\t\t\tvar phraseSearch = document.getElementById('estimatePhraseSearch');\r\n\t\t\t\t\t\t\tvar partSearch = document.getElementById('estimatePartSearch');\r\n\t\t\t\t\t\t\tvar searchResults = document.getElementById('estimateSearchResults');\r\n\t\t\t\t\t\t\tvar description = document.getElementById('estimateItemDescription');\r\n\t\t\t\t\t\t\tvar price = document.getElementById('estimateUnitPrice');\r\n\t\t\t\t\t\t\tvar inventoryID = document.getElementById('estimateInventoryItemID');\r\n\t\t\t\t\t\t\tif (!type || !description || !price || !inventoryID) return;\r\n\r\n\t\t\t\t\t\t\tfunction updateLookup() {\r\n\t\t\t\t\t\t\t\tvar isPart = type.value === 'part';\r\n\t\t\t\t\t\t\t\tif (typeHidden) typeHidden.value = type.value;\r\n\t\t\t\t\t\t\t\tphraseWrap.style.display = isPart ? 'none' : '';\r\n\t\t\t\t\t\t\t\tpartWrap.style.display = isPart ? '' : 'none';\r\n\t\t\t\t\t\t\t\tinventoryID.value = '0';\r\n\t\t\t\t\t\t\t\tif (searchResults) searchResults.innerHTML = '';\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (qtyInput && qtyHidden) {\r\n\t\t\t\t\t\t\t\tqtyHidden.value = qtyInput.value || '1';\r\n\t\t\t\t\t\t\t\tqtyInput.addEventListener('change', function(){ qtyHidden.value = qtyInput.value || '1'; });\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\ttype.addEventListener('change', updateLookup);\r\n\t\t\t\t\t\t\tif (searchResults) {\r\n\t\t\t\t\t\t\t\tsearchResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\t\tvar phraseItem = e.target.closest('.phrase-result-item');\r\n\t\t\t\t\t\t\t\t\tif (phraseItem) {\r\n\t\t\t\t\t\t\t\t\t\tdescription.value = phraseItem.dataset.phrase || '';\r\n\t\t\t\t\t\t\t\t\t\tsearchResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t\t\treturn;\r\n\t\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t\t\tvar partItem = e.target.closest('.part-result-item');\r\n\t\t\t\t\t\t\t\t\tif (partItem) {\r\n\t\t\t\t\t\t\t\t\t\tinventoryID.value = partItem.dataset.partId || '0';\r\n\t\t\t\t\t\t\t\t\t\tdescription.value = (partItem.dataset.partName || '') + (partItem.dataset.partNumber ? ' (' + partItem.dataset.partNumber + ')' : '');\r\n\t\t\t\t\t\t\t\t\t\tif (partItem.dataset.partPrice) {\r\n\t\t\t\t\t\t\t\t\t\t\tprice.value = partItem.dataset.partPrice.replace(/[^0-9.]/g, '') || partItem.dataset.partPrice;\r\n\t\t\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t\t\t\tsearchResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (partResults) {\r\n\t\t\t\t\t\t\t\tpartResults.addEventListener('click', function(e) {\r\n\t\t\t\t\t\t\t\t\tvar item = e.target.closest('.part-result-item');\r\n\t\t\t\t\t\t\t\t\tif (!item) return;\r\n\t\t\t\t\t\t\t\t\tinventoryID.value = item.dataset.partId || '0';\r\n\t\t\t\t\t\t\t\t\tdescription.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' (' + item.dataset.partNumber + ')' : '');\r\n\t\t\t\t\t\t\t\t\tif (partSearch) partSearch.value = (item.dataset.partName || '') + (item.dataset.partNumber ? ' / ' + item.dataset.partNumber : '');\r\n\t\t\t\t\t\t\t\t\tif (item.dataset.partPrice) {\r\n\t\t\t\t\t\t\t\t\t\tprice.value = item.dataset.partPrice.replace(/[^0-9.]/g, '') || item.dataset.partPrice;\r\n\t\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t\t\tpartResults.innerHTML = '';\r\n\t\t\t\t\t\t\t\t});\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tupdateLookup();\r\n\t\t\t\t\t\t})();\r\n\t\t\t\t</script> <form class=\"frm\" method=\"POST\" action=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/discount").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 259, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 262, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {
@@ -718,7 +718,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 261, Col: 138}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 264, Col: 138}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 				if templ_7745c5c3_Err != nil {
@@ -731,7 +731,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 261, Col: 207}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 264, Col: 207}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 				if templ_7745c5c3_Err != nil {
@@ -749,7 +749,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(estimateSubtotal(items)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 269, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 272, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
@@ -762,7 +762,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.DiscountAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 270, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 273, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
@@ -775,7 +775,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 271, Col: 128}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 274, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -793,7 +793,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/convert").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 274, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 277, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 				if templ_7745c5c3_Err != nil {
@@ -862,7 +862,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(workOrderID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 287, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 290, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -875,7 +875,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 288, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -888,7 +888,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 288, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -901,7 +901,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 288, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -914,7 +914,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 288, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
@@ -927,7 +927,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteTotal))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 289, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 292, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -940,7 +940,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteDiscount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 289, Col: 121}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 292, Col: 121}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -953,7 +953,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(workOrderID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 290, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 293, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -966,7 +966,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 291, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 			if templ_7745c5c3_Err != nil {
@@ -995,7 +995,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var54 string
 					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(estimateItemType(item.ItemType))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 302, Col: 47}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 305, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 					if templ_7745c5c3_Err != nil {
@@ -1008,7 +1008,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var55 string
 					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 302, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 305, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 					if templ_7745c5c3_Err != nil {
@@ -1021,7 +1021,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var56 string
 					templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 303, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 					if templ_7745c5c3_Err != nil {
@@ -1034,7 +1034,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var57 string
 					templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.UnitPrice))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 303, Col: 106}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 106}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 					if templ_7745c5c3_Err != nil {
@@ -1047,7 +1047,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var58 string
 					templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.Subtotal))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 304, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 307, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 					if templ_7745c5c3_Err != nil {

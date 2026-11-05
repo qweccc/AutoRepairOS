@@ -205,8 +205,7 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 							var partWrap = document.getElementById('estimatePartSearchWrap');
 							var phraseSearch = document.getElementById('estimatePhraseSearch');
 							var partSearch = document.getElementById('estimatePartSearch');
-							var phraseResults = document.getElementById('estimatePhraseResults');
-							var partResults = document.getElementById('estimatePartResults');
+							var searchResults = document.getElementById('estimateSearchResults');
 							var description = document.getElementById('estimateItemDescription');
 							var price = document.getElementById('estimateUnitPrice');
 							var inventoryID = document.getElementById('estimateInventoryItemID');
@@ -218,26 +217,30 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 								phraseWrap.style.display = isPart ? 'none' : '';
 								partWrap.style.display = isPart ? '' : 'none';
 								inventoryID.value = '0';
-								if (isPart) {
-									if (phraseSearch) phraseSearch.value = '';
-									if (phraseResults) phraseResults.innerHTML = '';
-								} else {
-									if (partSearch) partSearch.value = '';
-									if (partResults) partResults.innerHTML = '';
-								}
+								if (searchResults) searchResults.innerHTML = '';
 							}
 							if (qtyInput && qtyHidden) {
 								qtyHidden.value = qtyInput.value || '1';
 								qtyInput.addEventListener('change', function(){ qtyHidden.value = qtyInput.value || '1'; });
 							}
 							type.addEventListener('change', updateLookup);
-							if (phraseResults) {
-								phraseResults.addEventListener('click', function(e) {
-									var item = e.target.closest('.phrase-result-item');
-									if (!item) return;
-									description.value = item.dataset.phrase || '';
-									if (phraseSearch) phraseSearch.value = item.dataset.phrase || '';
-									phraseResults.innerHTML = '';
+							if (searchResults) {
+								searchResults.addEventListener('click', function(e) {
+									var phraseItem = e.target.closest('.phrase-result-item');
+									if (phraseItem) {
+										description.value = phraseItem.dataset.phrase || '';
+										searchResults.innerHTML = '';
+										return;
+									}
+									var partItem = e.target.closest('.part-result-item');
+									if (partItem) {
+										inventoryID.value = partItem.dataset.partId || '0';
+										description.value = (partItem.dataset.partName || '') + (partItem.dataset.partNumber ? ' (' + partItem.dataset.partNumber + ')' : '');
+										if (partItem.dataset.partPrice) {
+											price.value = partItem.dataset.partPrice.replace(/[^0-9.]/g, '') || partItem.dataset.partPrice;
+										}
+										searchResults.innerHTML = '';
+									}
 								});
 							}
 							if (partResults) {
