@@ -180,18 +180,11 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 					<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
 				</form>
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
-					@components.CSRFInput()
-					<label class="full" id="estimatePhraseSearchWrap">服務/工資片語搜尋
-						<input type="search" id="estimatePhraseSearch" name="q" placeholder="輸入關鍵字搜尋或選擇常用片語"
-							hx-get="/api/phrases/search" hx-trigger="keyup delay:300ms"
-							hx-target="#estimatePhraseResults" hx-swap="innerHTML" hx-on::after-request="document.getElementById('estimatePhraseResults').style.display='block'; console.log('phrase resp', event.detail.xhr.status, event.detail.xhr.responseText.slice(0,100))" autocomplete="off">
-						<div id="estimatePhraseResults" class="part-results"></div>
-					</label>
-					<label class="full" id="estimatePartSearchWrap" style="display:none">零件搜尋（名稱或料號）
-						<input type="search" id="estimatePartSearch" name="q" placeholder="例：機油、煞車片、A342"
-							hx-get="/api/parts" hx-trigger="keyup delay:300ms"
-							hx-target="#estimatePartResults" hx-swap="innerHTML" hx-on::after-request="document.getElementById('estimatePartResults').style.display='block';" autocomplete="off">
-						<div id="estimatePartResults" class="part-results"></div>
+					<label class="full" id="estimateSearchWrap">服務/工資/零件搜尋
+						<input type="search" id="estimateSearch" name="q" placeholder="輸入關鍵字搜尋服務片語或零件"
+							hx-get="/api/estimate-items/search" hx-trigger="keyup delay:300ms"
+							hx-target="#estimateSearchResults" hx-swap="innerHTML" hx-on::after-request="document.getElementById('estimateSearchResults').style.display='block';" autocomplete="off">
+						<div id="estimateSearchResults" class="part-results"></div>
 					</label>
 					<label class="full">描述
 						<input name="description" id="estimateItemDescription" placeholder="例：更換引擎機油與機油芯" required>

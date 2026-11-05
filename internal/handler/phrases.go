@@ -165,8 +165,50 @@ func SearchPhrasesAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, results)
 }
 
-/*
-// generatePhrasesHTML 產生片語列表的「頁面內容」HTML。
+func SearchEstimateItemsAPI(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// phrases
+	pwhere := ` WHERE active = 1 AND deleted_at IS NULL`
+	pargs := []interface{}{}
+	if q != "" {
+		pwhere += ` AND phrase LIKE ?`
+		pargs = append(pargs, "%"+q+"%")
+	}
+	prows, _ := db.DB.Query(`SELECT id, phrase, category FROM active_technician_phrases`+pwhere+` ORDER BY category, sort_order, phrase LIMIT 20`, pargs...)
+	var phrases []components.PhraseLookupResult
+	if prows != nil {
+		defer prows.Close()
+		for prows.Next() {
+			var id int64
+			var phrase, cat string
+			if err := prows.Scan(&id, &phrase, &cat); err == nil {
+				phrases = append(phrases, components.PhraseLookupResult{ID: id, Phrase: phrase, Category: cat})
+			}
+		}
+	}
+	_ = components.PhraseLookupResults(phrases).Render(r.Context(), w)
+	// parts
+	like := "%" + q + "%"
+	partsRows, _ := db.DB.Query(`SELECT id, name, part_number, COALESCE(bin_location,''), COALESCE(selling_price,0), COALESCE(stock_quantity,0)
+		FROM active_inventory_items
+		WHERE name LIKE ? OR part_number LIKE ? OR COALESCE(barcode,'') LIKE ?
+		ORDER BY name LIMIT 20`, like, like, like)
+	var parts []components.PartLookupResult
+	if partsRows != nil {
+		defer partsRows.Close()
+		for partsRows.Next() {
+			var id int64
+			var name, pn, bin string
+			var price float64
+			var stock int
+			if err := partsRows.Scan(&id, &name, &pn, &bin, &price, &stock); err == nil {
+				parts = append(parts, components.PartLookupResult{ID: id, Name: name, PartNumber: pn, BinLocation: bin, Price: money(price), Stock: stock})
+			}
+		}
+	}
+	_ = components.PartLookupResults(parts).Render(r.Context(), w)
+}
 //
 // 只回傳 body 內容（不自造 DOCTYPE/html/head）：版面外壳（含右側導覽）由
 // renderPage 統一提供。少了這層，這頁就不會有右側選單，使用者會覺得「只有
@@ -216,4 +258,3 @@ func generatePhraseEditForm(p model.TechnicianPhrase) string {
 	b.WriteString(`</form></div>`)
 	return b.String()
 }
-*/

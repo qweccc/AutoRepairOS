@@ -170,6 +170,7 @@ func New(d Deps) *chi.Mux {
 	r.Get("/technicians/commissions", handler.AllStaff(handler.ListTechnicianCommissions))
 	r.Get("/ap", handler.CounterUpPage(handler.APHome))
 	r.Get("/api/parts", handler.RequireLogin(handler.SearchPartsAPI))
+	r.Get("/api/estimate-items/search", handler.RequireLogin(handler.SearchEstimateItemsAPI))
 	r.Get("/api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
 	r.Get("/api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	r.Get("/api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
