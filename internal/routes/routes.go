@@ -175,6 +175,5 @@ func New(d Deps) *chi.Mux {
 	r.Get("/api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	r.Get("/api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
 	r.Get("/api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
-	_ = handler.CSRFProtection(r)
 	return r
 }
