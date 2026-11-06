@@ -169,8 +169,8 @@ templ AddItemForm(woID int64) {
 		hx-post={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items" }
 		hx-target="#wo-items"
 		hx-swap="innerHTML"
-		hx-on::after-request="if(event.detail.successful && event.detail.elt === event.currentTarget) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; }">
-		@components.CSRFInput()
+			hx-on::after-request="if(event.detail.successful && event.detail.elt === event.currentTarget) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; document.getElementById('addItemError').textContent=''; } if(!event.detail.successful){ document.getElementById('addItemError').textContent = event.detail.xhr.responseText || '加入失敗'; }">
+			@components.CSRFInput()
 		<label>類型
 			<select name="item_type" id="itemType" hx-on:change="togglePartSearch(this)">
 				<option value="labor">工資</option>
@@ -221,7 +221,8 @@ templ AddItemForm(woID int64) {
 				<div class="staff-picker-results"></div>
 			</div>
 		</label>
-		<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+				<div id="addItemError" style="color:#f87171;margin-top:6px;font-size:13px"></div>
+				<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
 	</form>
 	@PartSearchScript()
 	@PhrasePickerScript()
