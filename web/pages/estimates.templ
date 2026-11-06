@@ -194,6 +194,7 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 					<input type="hidden" name="item_type" id="estimateItemTypeHidden" value="labor">
 					<input type="hidden" name="quantity" id="estimateQuantityHidden" value="1">
 					<label>單價<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
+					<div id="estAddErr" style="color:#f87171;margin-top:6px;font-size:13px"></div>
 					<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
 				</form>
 				<script>
