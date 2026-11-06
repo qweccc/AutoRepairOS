@@ -656,7 +656,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" style=\"display:inline\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" hx-on::response-error=\"alert(event.detail.xhr.responseText || '操作失敗')\" style=\"display:inline\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -671,7 +671,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 185, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 186, Col: 96}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 				if templ_7745c5c3_Err != nil {
@@ -684,7 +684,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive").Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 186, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 187, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 				if templ_7745c5c3_Err != nil {
@@ -707,7 +707,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 191, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 192, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 				if templ_7745c5c3_Err != nil {
@@ -720,7 +720,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete").Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 192, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 193, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 				if templ_7745c5c3_Err != nil {
@@ -800,7 +800,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(it.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 223, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 224, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
@@ -813,7 +813,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(it.Category))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 224, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 225, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -826,7 +826,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(orEmpty(it.PartNumber))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 225, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 226, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -839,7 +839,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 				var templ_7745c5c3_Var41 string
 				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(trimQtyF(it.Quantity))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 226, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 227, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
@@ -852,7 +852,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(it.UnitCost))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 227, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 228, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -865,7 +865,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 				var templ_7745c5c3_Var43 string
 				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(it.Subtotal))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 228, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 229, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 				if templ_7745c5c3_Err != nil {
@@ -883,7 +883,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 					var templ_7745c5c3_Var44 string
 					templ_7745c5c3_Var44, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items/" + strconv.FormatInt(it.ID, 10)).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 232, Col: 115}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 233, Col: 115}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 					if templ_7745c5c3_Err != nil {
@@ -912,7 +912,7 @@ func PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, tot
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(total))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 245, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 246, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -955,13 +955,13 @@ func AddPurchaseItemForm(orderID int64, partCategoryOptions string) templ.Compon
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items").Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 258, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/purchase_order.templ`, Line: 259, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" style=\"margin-top:18px\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" hx-on::response-error=\"alert(event.detail.xhr.responseText || '操作失敗')\" style=\"margin-top:18px\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

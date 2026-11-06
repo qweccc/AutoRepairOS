@@ -178,6 +178,7 @@ templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderI
 						hx-target="#po-items"
 						hx-swap="innerHTML"
 						hx-on::after-request="if(event.detail.successful) this.reset();"
+hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
 						style="display:inline">
 						@components.CSRFInput()
 						<button class="btn btn-p" type="submit">＋ 加入品項（於下方表單）</button>
@@ -259,6 +260,7 @@ templ AddPurchaseItemForm(orderID int64, partCategoryOptions string) {
 		hx-target="#po-items"
 		hx-swap="innerHTML"
 		hx-on::after-request="if(event.detail.successful) this.reset();"
+hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
 		style="margin-top:18px">
 		@components.CSRFInput()
 		<label class="full">品項名稱
