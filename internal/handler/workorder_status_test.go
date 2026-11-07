@@ -50,3 +50,18 @@ func TestWorkOrderStatusLabel(t *testing.T) {
 		}
 	}
 }
+
+func TestShouldCheckTransition(t *testing.T) {
+	if !shouldCheckTransition("pending", "completed") {
+		t.Error("should check")
+	}
+	if shouldCheckTransition("", "completed") {
+		t.Error("empty current should not check")
+	}
+	if shouldCheckTransition("pending", "pending") {
+		t.Error("same status should not check")
+	}
+	if shouldCheckTransition("pending", "paid") {
+		t.Error("target paid should not check")
+	}
+}
