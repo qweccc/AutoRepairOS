@@ -21,7 +21,7 @@ import (
 var errAPPaymentRejected = errors.New("付款金額超過應付餘額或帳款已結清")
 
 func createAPPayable(tx db.TxExecutor, sourceType string, sourceID, supplierID int64, amount float64, issueDate string) error {
-	if sourceType != "purchase_receive" && sourceType != "subcontract" {
+	if !isAPPayableSource(sourceType) {
 		return fmt.Errorf("unsupported AP source type %q", sourceType)
 	}
 	if sourceID <= 0 || supplierID <= 0 {
@@ -50,6 +50,11 @@ func createAPPayable(tx db.TxExecutor, sourceType string, sourceID, supplierID i
 // isSettledStatus checks if an AP status is settled (paid or void).
 func isSettledStatus(status string) bool {
 	return status == "paid" || status == "void"
+}
+
+// isAPPayableSource checks if the source type creates AP payables.
+func isAPPayableSource(sourceType string) bool {
+	return sourceType == "purchase_receive" || sourceType == "subcontract"
 }
 
 func apDueDate(terms, issueDate string) (string, error) {
