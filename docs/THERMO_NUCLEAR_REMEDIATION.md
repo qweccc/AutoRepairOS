@@ -158,7 +158,7 @@
 | 項目 | 狀態 | Commit |
 |------|------|--------|
 | T1 | ✅ | |
-| T2 | ⏸️ (複雜度高，需專項重構) | |
+| T2 | ✅ (backup functions extracted) | |
 | T3 | 🔄 (partial: status transition tests added) | |
 | T4 | ⏸️ (需大量測試補充) | |
 | T5 | ⏸️ (需大量測試補充) | |
