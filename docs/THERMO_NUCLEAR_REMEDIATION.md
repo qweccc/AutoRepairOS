@@ -159,13 +159,13 @@
 |------|------|--------|
 | T1 | ✅ | |
 | T2 | ⏸️ (複雜度高，需專項重構) | |
-| T3 | ⏸️ (需大量測試補充) | |
+| T3 | 🔄 (partial: status transition tests added) | |
 | T4 | ⏸️ (需大量測試補充) | |
 | T5 | ⏸️ (需大量測試補充) | |
 | T6 | ⏸️ (需 owner 確認業務規則) | |
 | T7 | ✅ (已實作 applyApprovalItems) | |
 | T8 | ⏸️ (長期重構) | |
-| T9 | 🔄 (partial: allowedTransitions extracted) | |
+| T9 | 🔄 (partial: allowedTransitions extracted + tests) | |
 
 ---
 
