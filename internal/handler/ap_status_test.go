@@ -12,3 +12,12 @@ func TestApStatusPresentation(t *testing.T) {
 		t.Errorf("got %s %s", label, pill)
 	}
 }
+
+func TestApSourceLabel(t *testing.T) {
+	if got := apSourceLabel("purchase_receive", 1); got != "採購進貨 #1" {
+		t.Errorf("got %s", got)
+	}
+	if got := apSourceLabel("subcontract", 2); got != "外包 #2" {
+		t.Errorf("got %s", got)
+	}
+}
