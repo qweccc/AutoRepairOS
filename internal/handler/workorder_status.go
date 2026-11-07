@@ -23,6 +23,11 @@ var allowedTransitions = map[string][]string{
 }
 
 
+// shouldCheckTransition determines if a status transition needs validation.
+func shouldCheckTransition(current, target string) bool {
+	return current != "" && current != target && target != "paid"
+}
+
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	status := r.FormValue("status")
@@ -33,7 +38,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 
 	// P1-5: 工單狀態機 — 只允許合法轉換
 	currentStatus := countStatus(id)
-	if currentStatus != "" && currentStatus != status && status != "paid" {
+	if shouldCheckTransition(currentStatus, status) {
 		allowed := false
 		for _, s := range allowedTransitions[currentStatus] {
 			if s == status {
