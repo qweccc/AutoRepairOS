@@ -78,8 +78,13 @@ func pendingApprovalRequests(woID int64) ([]model.ApprovalRequest, error) {
 //
 // 查詢失敗時不擋（與 CheckSOPCompletionForStatus 一致）：這是輔助關卡，
 // 不該因為查詢問題讓車廠無法交車。
+// isCompletionOrPayment checks if status is completed or paid.
+func isCompletionOrPayment(status string) bool {
+	return status == "completed" || status == "paid"
+}
+
 func CheckApprovalForStatus(woID int64, targetStatus string) error {
-	if targetStatus != "completed" && targetStatus != "paid" {
+	if !isCompletionOrPayment(targetStatus) {
 		return nil
 	}
 	pending, err := pendingApprovalRequests(woID)

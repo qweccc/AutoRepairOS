@@ -497,7 +497,7 @@ func SOPTemplateOptions(excludeIDs []int64) string {
 // 回傳 nil 表示可完工（或無 SOP 限制）；回傳 error 表示不可完工。
 func CheckSOPCompletionForStatus(woID int64, targetStatus string) error {
 	// 只在轉「completed」或「paid」時檢查
-	if targetStatus != "completed" && targetStatus != "paid" {
+	if !isCompletionOrPayment(targetStatus) {
 		return nil
 	}
 
