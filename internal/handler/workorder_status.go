@@ -13,6 +13,14 @@ import (
 "autorepairos/internal/service"
 )
 
+// allowedTransitions defines valid work order status transitions.
+var allowedTransitions = map[string][]string{
+	"pending":       {"in_progress", "waiting_parts"},
+	"in_progress":   {"waiting_parts", "completed"},
+	"waiting_parts": {"in_progress", "completed"},
+	"completed":     {"in_progress"},
+	"paid":          {},
+}
 
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -24,13 +32,6 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// P1-5: 工單狀態機 — 只允許合法轉換
-	allowedTransitions := map[string][]string{
-		"pending":       {"in_progress", "waiting_parts"},
-		"in_progress":   {"waiting_parts", "completed"},
-		"waiting_parts": {"in_progress", "completed"},
-		"completed":     {"in_progress"},
-		"paid":          {},
-	}
 	currentStatus := countStatus(id)
 	if currentStatus != "" && currentStatus != status && status != "paid" {
 		allowed := false
@@ -53,7 +54,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 已結帳的工單是財務憑證，不允許再改狀態：否則扣料與營收會與實物對不上。
-	if currentStatus := countStatus(id); currentStatus == "paid" {
+	if currentStatus == "paid" {
 		if status != "paid" {
 			fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel[status]+"」。如需更正請另行開立沖銷單。")
 			return
