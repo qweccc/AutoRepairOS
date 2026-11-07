@@ -76,7 +76,8 @@ func (s *Service) AddEstimateItem(ctx context.Context, estimateID int64, input E
 	if estimateID <= 0 {
 		return ErrEstimateNotFound
 	}
-	if input.ItemType != "labor" && input.ItemType != "part" && input.ItemType != "subcontract" {
+	validTypes := map[string]bool{"labor": true, "part": true, "subcontract": true}
+	if !validTypes[input.ItemType] {
 		return errors.New("invalid estimate item type")
 	}
 	if input.Description = strings.TrimSpace(input.Description); input.Description == "" {
