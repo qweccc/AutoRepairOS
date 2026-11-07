@@ -35,13 +35,9 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	selfLabel := "自費"
 
 	// ============ 營收卡（保險 / 自費分欄）============
-	// 營收 = SUM(total_amount) WHERE status='paid'。
-	// 純 filter 拆兩組:保險 = SUM(total_amount WHERE is_insurance=1),自費 = SUM(total_amount WHERE is_insurance=0)。
-	//
-	// TODO(業務): 保險營收要不要扣免額?
-	//   目前保險營收 = SUM(total_amount)(修理成本視角)。
-	//   若會計定義為「保險公司實際拿到的」,則應 = SUM(total_amount) - SUM(deductible_amount)。
-	//   免額的會計歸屬待 owner 確認後再決定(不影響分欄結構)。
+	// 營收 = SUM(total_amount) WHERE status='paid'（修理成本視角）。
+	// 免額 (deductible_amount) 為客戶自付部分，不從車行營收扣除。
+	// 若需「保險公司實際支付」視角，使用 SUM(total_amount - deductible_amount)。
 	var insRevenue, selfRevenue float64
 	var insCount, selfCount int
 	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount),0), COUNT(1) FROM active_work_orders
