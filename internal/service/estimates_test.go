@@ -124,3 +124,41 @@ func TestEstimateDraftTotalsAndConversionAreIdempotent(t *testing.T) {
 		t.Fatalf("estimate status/source = %q/%d, want converted/%d", status, convertedID, firstID)
 	}
 }
+
+func TestDeleteEstimateItem(t *testing.T) {
+	ctx := context.Background()
+	d := newEstimateTestDB(t)
+	svc := New(d)
+	estimateID, err := svc.CreateEstimate(ctx, EstimateInput{
+		VehicleID: 7, CurrentMileage: 85000, CustomerComplaint: "冷氣不冷", CreatedBy: 3,
+	})
+	if err != nil {
+		t.Fatalf("CreateEstimate: %v", err)
+	}
+	if err := svc.AddEstimateItem(ctx, estimateID, EstimateItemInput{
+		ItemType: "labor", Description: "冷氣系統檢修", Quantity: 2, UnitPrice: 500,
+	}); err != nil {
+		t.Fatalf("AddEstimateItem: %v", err)
+	}
+	// Get item ID
+	var itemID int64
+	if err := d.QueryRow(`SELECT id FROM estimate_items WHERE estimate_id = ?`, estimateID).Scan(&itemID); err != nil {
+		t.Fatal(err)
+	}
+	// Delete
+	if err := svc.DeleteEstimateItem(ctx, estimateID, itemID); err != nil {
+		t.Fatalf("DeleteEstimateItem: %v", err)
+	}
+	// Verify deleted
+	var count int
+	if err := d.QueryRow(`SELECT COUNT(*) FROM estimate_items WHERE id = ?`, itemID).Scan(&count); err != nil {
+		t.Fatal(err)
+	}
+	if count != 0 {
+		t.Errorf("item should be deleted, got count %d", count)
+	}
+	// Delete non-existent should fail
+	if err := svc.DeleteEstimateItem(ctx, estimateID, 9999); err == nil {
+		t.Error("should fail for non-existent item")
+	}
+}
