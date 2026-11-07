@@ -157,15 +157,15 @@
 
 | 項目 | 狀態 | Commit |
 |------|------|--------|
-| T1 | ✅ | |
-| T2 | ✅ (backup functions extracted) | |
-| T3 | 🔄 (partial: status transition tests added) | |
-| T4 | ⏸️ (需大量測試補充) | |
-| T5 | ⏸️ (需大量測試補充) | |
+| T1 | ✅ (workorders.go 拆分為 3 檔) | eebca04 |
+| T2 | ✅ (cron backup 提取為 cron_backup.go) | |
+| T3 | 🔄 (35+ 測試檔案，handler 21.9%) | |
+| T4 | ⏸️ (db 17.9%，需大量測試補充) | |
+| T5 | ⏸️ (session 7.8%，需大量測試補充) | |
 | T6 | ⏸️ (需 owner 確認業務規則) | |
 | T7 | ✅ (已實作 applyApprovalItems) | |
 | T8 | ⏸️ (長期重構) | |
-| T9 | 🔄 (partial: allowedTransitions extracted + tests) | |
+| T9 | 🔄 (15+ helper/map lookup 重構) | |
 
 ---
 
