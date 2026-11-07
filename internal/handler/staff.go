@@ -275,7 +275,8 @@ func CreateStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "帳號、密碼、姓名為必填")
 		return
 	}
-	if role != "owner" && role != "counter" && role != "technician" {
+	validRoles := map[string]bool{"owner": true, "counter": true, "technician": true}
+	if !validRoles[role] {
 		role = "technician"
 	}
 	// 只有系統管理員能建立管理員帳號（櫃檯自建 owner = 自己升權）。

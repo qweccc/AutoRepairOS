@@ -467,7 +467,8 @@ func DeleteWorkOrderPhoto(w http.ResponseWriter, r *http.Request) {
 }
 
 func canViewWorkOrder(user model.User, workOrderID int64) (bool, error) {
-	if user.Role != "owner" && user.Role != "counter" && user.Role != "technician" {
+	validRoles := map[string]bool{"owner": true, "counter": true, "technician": true}
+	if !validRoles[user.Role] {
 		return false, nil
 	}
 	var technicianID int64

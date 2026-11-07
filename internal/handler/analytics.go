@@ -430,7 +430,8 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		from, to = periodRange(gran, from, to)
 	}
 	groupBy := strings.TrimSpace(qv.Get("group"))
-	if groupBy != "kind" && groupBy != "customer" && groupBy != "vehicle" {
+	validGroups := map[string]bool{"kind": true, "customer": true, "vehicle": true}
+	if !validGroups[groupBy] {
 		groupBy = "kind"
 	}
 	showCost := canExportReportCosts(user)
