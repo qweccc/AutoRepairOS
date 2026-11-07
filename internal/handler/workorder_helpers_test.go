@@ -49,3 +49,45 @@ func TestHiddenStatus(t *testing.T) {
 	}
 }
 
+
+func TestPartDisplayLabel(t *testing.T) {
+	if got := partDisplayLabel("P001", "煞車皮"); got != "煞車皮 (P001)" {
+		t.Errorf("got %s", got)
+	}
+	if got := partDisplayLabel("P001", "P001"); got != "P001" {
+		t.Errorf("got %s", got)
+	}
+	if got := partDisplayLabel("", "煞車皮"); got != "煞車皮" {
+		t.Errorf("got %s", got)
+	}
+	if got := partDisplayLabel("P001", ""); got != "P001" {
+		t.Errorf("got %s", got)
+	}
+}
+
+func TestParseClaimAmount(t *testing.T) {
+	v, err := parseClaimAmount("")
+	if err != nil || v != 0 {
+		t.Errorf("empty: %v %v", v, err)
+	}
+	v, err = parseClaimAmount("123.45")
+	if err != nil || v != 123.45 {
+		t.Errorf("valid: %v %v", v, err)
+	}
+	_, err = parseClaimAmount("abc")
+	if err == nil {
+		t.Error("invalid should error")
+	}
+}
+
+func TestOrDash(t *testing.T) {
+	if orDash("") != "-" {
+		t.Error("empty should be dash")
+	}
+	if orDash("  ") != "-" {
+		t.Error("whitespace should be dash")
+	}
+	if orDash("abc") != "abc" {
+		t.Error("non-empty should pass through")
+	}
+}
