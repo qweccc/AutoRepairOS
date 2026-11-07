@@ -69,6 +69,11 @@ type receivable struct {
 	Source            string
 }
 
+// paymentMismatch checks if payment total doesn't match the sum of payment methods.
+func paymentMismatch(sum, payTotal float64) bool {
+	return sum > 0 && payTotal > 0 && (payTotal < sum-0.005 || payTotal > sum+0.005)
+}
+
 func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, error) {
 	var r receivable
 	err := rows.Scan(&r.ID, &r.VoucherNo, &r.CustomerID, &r.CustomerName,
@@ -414,7 +419,7 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sum := cash + card + checkAmt + transferAmt
-	if sum > 0 && payTotal > 0 && (payTotal < sum-0.005 || payTotal > sum+0.005) {
+	if paymentMismatch(sum, payTotal) {
 		redirectMsg(w, r, "/receivables/new", "收款合計與各付款方式加總不符")
 		return
 	}
@@ -519,7 +524,7 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sum := cash + card + checkAmt + transferAmt
-	if sum > 0 && payTotal > 0 && (payTotal < sum-0.005 || payTotal > sum+0.005) {
+	if paymentMismatch(sum, payTotal) {
 		fail(w, "收款合計與各付款方式加總不符")
 		return
 	}
