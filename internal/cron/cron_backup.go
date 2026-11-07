@@ -16,6 +16,15 @@ import (
 	"autorepairos/internal/db"
 )
 
+// BackupConfig 設定備份目標。
+type BackupConfig struct {
+	BackupDir string
+	PhotoDir  string
+}
+
+// backupCfg 是預設備份設定，可透過 SetBackupDir 或環境變數 BACKUP_DIR 覆寫。
+var backupCfg = defaultBackupConfig()
+
 func defaultBackupConfig() BackupConfig {
 	dir := strings.TrimSpace(os.Getenv("BACKUP_DIR"))
 	if dir == "" {
