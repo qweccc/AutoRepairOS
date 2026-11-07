@@ -27,6 +27,11 @@ const supplierCols = `s.id, s.name, COALESCE(s.phone,''), COALESCE(s.contact_per
 	COALESCE(s.payment_terms,''),
 	COALESCE(s.active,1), s.created_at`
 
+// isSupplierType checks if the supplier type is material or vendor.
+func isSupplierType(vtype string) bool {
+	return vtype == "material" || vtype == "vendor"
+}
+
 func scanSupplier(rows interface{ Scan(...interface{}) error }) (model.Supplier, error) {
 	var s model.Supplier
 	var createdAt string
@@ -196,7 +201,7 @@ func CreateSupplier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vtype := strings.TrimSpace(r.FormValue("vendor_type"))
-	if vtype != "material" && vtype != "vendor" {
+	if !isSupplierType(vtype) {
 		vtype = "material"
 	}
 	_, err := db.DB.Exec(`INSERT INTO suppliers (name, phone, contact_person, address, notes, vendor_type, payment_terms)
@@ -323,7 +328,7 @@ func UpdateSupplier(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vtype := strings.TrimSpace(r.FormValue("vendor_type"))
-	if vtype != "material" && vtype != "vendor" {
+	if !isSupplierType(vtype) {
 		vtype = "material"
 	}
 	_, err := db.DB.Exec(`UPDATE suppliers SET name=?, phone=?, contact_person=?, address=?, notes=?, vendor_type=?, payment_terms=? WHERE id=?`,
