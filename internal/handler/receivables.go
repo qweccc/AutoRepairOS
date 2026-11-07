@@ -73,7 +73,6 @@ type receivable struct {
 func paymentMismatch(sum, payTotal float64) bool {
 	return sum > 0 && payTotal > 0 && (payTotal < sum-0.005 || payTotal > sum+0.005)
 }
-
 func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, error) {
 	var r receivable
 	err := rows.Scan(&r.ID, &r.VoucherNo, &r.CustomerID, &r.CustomerName,
