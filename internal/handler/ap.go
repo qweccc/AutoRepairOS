@@ -47,6 +47,11 @@ func createAPPayable(tx db.TxExecutor, sourceType string, sourceID, supplierID i
 	return err
 }
 
+// isSettledStatus checks if an AP status is settled (paid or void).
+func isSettledStatus(status string) bool {
+	return status == "paid" || status == "void"
+}
+
 func apDueDate(terms, issueDate string) (string, error) {
 	issued, err := time.Parse("2006-01-02", issueDate)
 	if err != nil {
@@ -227,7 +232,7 @@ func loadAPRows(supplierID int64, status string, from, to string, statement bool
 		}
 		row.SourceLabel = apSourceLabel(sourceType, sourceID)
 		row.StatusLabel, row.StatusPill = apStatusPresentation(row.Status)
-		if !statement && row.Status != "paid" && row.Status != "void" {
+		if !statement && !isSettledStatus(row.Status) {
 			row.Aging, row.AgeDays, err = apAgeBucket(row.DueDate, row.CreatedAt, today())
 			if err != nil {
 				return nil, err
