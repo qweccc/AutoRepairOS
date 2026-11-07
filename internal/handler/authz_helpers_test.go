@@ -17,3 +17,15 @@ func TestCanSeeMoney(t *testing.T) {
 		t.Error("technician should not see money")
 	}
 }
+
+func TestIsOwnerOrCounter(t *testing.T) {
+	if !isOwnerOrCounter("owner") {
+		t.Error("owner should pass")
+	}
+	if !isOwnerOrCounter("counter") {
+		t.Error("counter should pass")
+	}
+	if isOwnerOrCounter("technician") {
+		t.Error("technician should fail")
+	}
+}
