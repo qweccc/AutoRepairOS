@@ -21,6 +21,11 @@ const subcontractCols = `sc.id, sc.work_order_id, COALESCE(sc.supplier_id,0),
 	COALESCE(sc.charge_amount,0), sc.status, COALESCE(sc.expected_date,''),
 	COALESCE(sc.completed_date,''), COALESCE(sc.notes,''), sc.created_at`
 
+// shouldCreatePayable checks if an AP payable should be created for a subcontract.
+func shouldCreatePayable(supplierID int64, costAmount float64, status string) bool {
+	return supplierID > 0 && costAmount > 0 && status != "cancelled"
+}
+
 func scanSubcontract(rows interface{ Scan(...interface{}) error }) (model.Subcontract, error) {
 	var s model.Subcontract
 	var createdAt string
@@ -189,7 +194,7 @@ func CreateSubcontract(w http.ResponseWriter, r *http.Request) {
 		fail(w, "新增外包失敗")
 		return
 	}
-	if supplierID > 0 && costAmount > 0 && status != "cancelled" {
+	if shouldCreatePayable(supplierID, costAmount, status) {
 		if err := createAPPayable(tx, "subcontract", subcontractID, supplierID, costAmount, today()); err != nil {
 			log.Printf("建立外包應付帳款失敗: %v", err)
 			fail(w, "建立外包應付帳款失敗")
@@ -274,7 +279,7 @@ func UpdateSubcontract(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if !hasPayable && supplierID > 0 && costAmount > 0 && status != "cancelled" {
+	if !hasPayable && shouldCreatePayable(supplierID, costAmount, status) {
 		if err := createAPPayable(tx, "subcontract", id, supplierID, costAmount, today()); err != nil {
 			log.Printf("建立外包應付帳款失敗: %v", err)
 			fail(w, "建立外包應付帳款失敗")
