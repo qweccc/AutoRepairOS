@@ -49,6 +49,11 @@ var staffKindLabel = map[string]string{
 }
 
 // ListStaff 員工與健保資料頁。
+// isValidStaffKind checks if the staff kind is employee or dependent.
+func isValidStaffKind(kind string) bool {
+	return kind == "employee" || kind == "dependent"
+}
+
 func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 	qv := r.URL.Query()
 	q := strings.TrimSpace(qv.Get("q"))
@@ -284,7 +289,7 @@ func CreateStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		fail(w, "權限不足：只有系統管理員能建立管理員帳號")
 		return
 	}
-	if staffKind != "employee" && staffKind != "dependent" {
+	if !isValidStaffKind(staffKind) {
 		staffKind = "employee"
 	}
 
@@ -453,7 +458,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 			eventType = "enroll"
 		}
 	}
-	if staffKind != "employee" && staffKind != "dependent" {
+	if !isValidStaffKind(staffKind) {
 		staffKind = "employee"
 	}
 
