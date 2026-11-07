@@ -415,7 +415,8 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	if gran == "" {
 		gran = "year"
 	}
-	if gran != "day" && gran != "week" && gran != "month" && gran != "year" && gran != "custom" {
+	validGrans := map[string]bool{"day": true, "week": true, "month": true, "year": true, "custom": true}
+	if !validGrans[gran] {
 		gran = "year"
 	}
 	if gran == "custom" {
