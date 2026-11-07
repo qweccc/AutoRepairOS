@@ -65,3 +65,12 @@ func TestShouldCheckTransition(t *testing.T) {
 		t.Error("target paid should not check")
 	}
 }
+
+func TestSopToggleLabel(t *testing.T) {
+	if got := sopToggleLabel(true); got != "取消 SOP 完成" {
+		t.Errorf("got %s", got)
+	}
+	if got := sopToggleLabel(false); got != "標記 SOP 完成" {
+		t.Errorf("got %s", got)
+	}
+}
