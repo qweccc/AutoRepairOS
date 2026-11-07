@@ -13,3 +13,15 @@ func TestIsAPPayableSource(t *testing.T) {
 		t.Error("other should be false")
 	}
 }
+
+func TestIsSettledStatus(t *testing.T) {
+	if !isSettledStatus("paid") {
+		t.Error("paid should pass")
+	}
+	if !isSettledStatus("void") {
+		t.Error("void should pass")
+	}
+	if isSettledStatus("pending") {
+		t.Error("pending should fail")
+	}
+}

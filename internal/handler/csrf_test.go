@@ -174,3 +174,21 @@ func TestCsrfExempt(t *testing.T) {
 		t.Error("/dashboard should not be exempt")
 	}
 }
+
+func TestIsStateChangingMethod(t *testing.T) {
+	if !isStateChangingMethod("POST") {
+		t.Error("POST should be true")
+	}
+	if !isStateChangingMethod("PUT") {
+		t.Error("PUT should be true")
+	}
+	if !isStateChangingMethod("PATCH") {
+		t.Error("PATCH should be true")
+	}
+	if !isStateChangingMethod("DELETE") {
+		t.Error("DELETE should be true")
+	}
+	if isStateChangingMethod("GET") {
+		t.Error("GET should be false")
+	}
+}
