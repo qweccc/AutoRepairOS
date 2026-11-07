@@ -14,10 +14,15 @@ import (
 
 // GenerateBindingCode 產生一次性綁定碼（POST /customers/{id}/generate-binding-code?platform=line|telegram）。
 // 僅 owner/counter 可呼叫。碼顯示一次，10 分鐘有效。
+// isValidPlatform checks if the platform is line or telegram.
+func isValidPlatform(platform string) bool {
+	return platform == "line" || platform == "telegram"
+}
+
 func GenerateBindingCode(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	platform := strings.TrimSpace(r.URL.Query().Get("platform"))
-	if platform != "line" && platform != "telegram" {
+	if !isValidPlatform(platform) {
 		platform = "telegram"
 	}
 

@@ -27,6 +27,11 @@ func CounterUp(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 // allStaff 三種角色都能讀取頁面（內容由各頁自行依角色隱藏敏感欄位）。
+// isOwnerOrCounter checks if the role is owner or counter.
+func isOwnerOrCounter(role string) bool {
+	return role == "owner" || role == "counter"
+}
+
 func AllStaff(fn func(http.ResponseWriter, *http.Request, model.User)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := currentUser(r)
@@ -47,7 +52,7 @@ func CounterUpPage(fn func(http.ResponseWriter, *http.Request, model.User)) http
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
-		if user.Role != "owner" && user.Role != "counter" {
+		if !isOwnerOrCounter(user.Role) {
 			http.Error(w, "權限不足：開立工單僅限 櫃檯人員、系統管理員 使用", http.StatusForbidden)
 			return
 		}
