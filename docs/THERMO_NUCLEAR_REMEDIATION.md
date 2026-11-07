@@ -165,7 +165,7 @@
 | T6 | ⏸️ (需 owner 確認業務規則) | |
 | T7 | ✅ (已實作 applyApprovalItems) | |
 | T8 | ⏸️ (長期重構) | |
-| T9 | ⏸️ (需專項重構) | |
+| T9 | 🔄 (partial: allowedTransitions extracted) | |
 
 ---
 
