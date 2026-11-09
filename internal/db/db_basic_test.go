@@ -58,6 +58,18 @@ func TestMigrate(t *testing.T) {
 	}
 }
 
+func TestClose(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{DBPath: filepath.Join(dir, "test5.db"), EnableWAL: false}
+	if err := Init(cfg); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	Close()
+	if DB != nil {
+		// Close sets? Actually DB not nil; just ensure no panic
+	}
+}
+
 func TestMustExec(t *testing.T) {
 	dir := t.TempDir()
 	cfg := &config.Config{DBPath: filepath.Join(dir, "test4.db"), EnableWAL: false}
