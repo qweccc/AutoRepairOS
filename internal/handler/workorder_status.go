@@ -113,7 +113,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if n, _ := cas.RowsAffected(); n == 0 {
-		if countStatus(id) == "paid" {
+		if WorkOrderStatus(countStatus(id)) == WorkOrderStatusPaid {
 			redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10),
 				"此工單已是「已結帳」，未重複計算")
 			return
