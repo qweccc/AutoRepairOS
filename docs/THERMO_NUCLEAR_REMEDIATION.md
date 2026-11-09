@@ -59,6 +59,13 @@
 
 **目標**：從 20.8% 提升至 60%+
 
+**拆分（可執行範圍）**：
+- T3a: appointments handler 測試（List/Create/Update/Delete/Calendar/Search）
+- T3b: AP handler 測試（APHome/RecordAPPayment/APStatement）
+- T3c: analytics handler 測試（AnalyticsHome/AnalyticsExport）
+- T3d: IDOR/狀態機/金額驗證優先測試
+- T3e: 其餘 handler 端點 happy+error path
+
 **步驟**：
 1. 識別未覆蓋的 handler 函式（使用 `go test -coverprofile`）
 2. 優先測試：IDOR 防護、狀態機、金額驗證
