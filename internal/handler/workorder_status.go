@@ -13,14 +13,7 @@ import (
 "autorepairos/internal/service"
 )
 
-// allowedTransitions defines valid work order status transitions.
-var allowedTransitions = map[WorkOrderStatus][]WorkOrderStatus{
-	WorkOrderStatusPending:       {WorkOrderStatusInProgress, WorkOrderStatusWaitingParts},
-	WorkOrderStatusInProgress:    {WorkOrderStatusWaitingParts, WorkOrderStatusCompleted},
-	WorkOrderStatusWaitingParts:  {WorkOrderStatusInProgress, WorkOrderStatusCompleted},
-	WorkOrderStatusCompleted:     {WorkOrderStatusInProgress},
-	WorkOrderStatusPaid:          {},
-}
+// allowedTransitions moved to service layer.
 
 
 // shouldCheckTransition determines if a status transition needs validation.
@@ -39,14 +32,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	// P1-5: 工單狀態機 — 只允許合法轉換
 	currentStatus := countStatus(id)
 	if shouldCheckTransition(currentStatus, status) {
-		allowed := false
-		for _, s := range allowedTransitions[WorkOrderStatus(currentStatus)] {
-			if s == WorkOrderStatus(status) {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
+		if err := service.ValidateWorkOrderTransition(currentStatus, status); err != nil {
 			fail(w, "不允許從「"+workOrderStatusLabel[currentStatus]+"」轉換為「"+workOrderStatusLabel[status]+"」")
 			return
 		}
