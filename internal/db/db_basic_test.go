@@ -26,3 +26,22 @@ func TestInitAndPath(t *testing.T) {
 	defer func() { os.Remove(Path()) }()
 	Close()
 }
+
+func TestBeginImmediate(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{DBPath: filepath.Join(dir, "test2.db"), EnableWAL: false}
+	if err := Init(cfg); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	defer Close()
+	tx, err := BeginImmediate()
+	if err != nil {
+		t.Fatalf("BeginImmediate: %v", err)
+	}
+	if _, err := tx.Exec("CREATE TABLE t (id INTEGER)"); err != nil {
+		t.Fatalf("Exec: %v", err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+}
