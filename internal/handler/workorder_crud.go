@@ -255,7 +255,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		tabs.WriteString(`<a href="` + mineURL + `" class="btn ` + btnIf(mine, "btn-p", "btn-s") + `">我的工單</a> `)
 	}
-	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(status == "" && !mine, "btn-p", "btn-s") + `">全部</a> `)
+	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(WorkOrderStatus(status) == "" && !mine, "btn-p", "btn-s") + `">全部</a> `)
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
 		tabs.WriteString(`<a href="` + woTabURL(qv, s) + `" class="btn ` + btnIf(status == s, "btn-p", "btn-s") + `">` +
 			workOrderStatusLabel[s] + `</a> `)
