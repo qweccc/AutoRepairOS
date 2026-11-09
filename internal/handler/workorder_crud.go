@@ -709,7 +709,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	items, itemTotal := loadWorkOrderItems(id)
 
 	// 已結帳工單唯讀：隱藏所有編輯與刪除控件（後端也擋，見 requireOrderMutable）。
-	locked := wo.Status == "paid"
+	locked := WorkOrderStatus(wo.Status) == WorkOrderStatusPaid
 	canEdit := !locked
 
 	// 追加維修授權僅限櫃檯以上（POST /work-orders/{id}/approval-request 是
