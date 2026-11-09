@@ -165,7 +165,7 @@
 | T6 | ✅ (採用定義 A，不扣免額) | 5a82693 |
 | T7 | ✅ (已實作 applyApprovalItems) | |
 | T8 | ⏸️ (長期重構) | |
-| T9 | 🔄 (15+ helper/map lookup 重構) | |
+| T9 | 🔄 (WorkOrderStatus enum + 4 sites) | |
 
 ---
 
