@@ -159,8 +159,8 @@
 |------|------|--------|
 | T1 | ✅ (workorders.go 拆分為 3 檔) | eebca04 |
 | T2 | ✅ (backup + reminder scanning extracted) | f7964ae |
-| T3 | 🔄 (35+ 測試檔案，handler 21.9%) | |
-| T4 | ⏸️ (db 17.9%，需大量測試補充) | |
+| T3 | 🔄 (handler 25.7%，需補測試) | |
+| T4 | ⏸️ (db 14.9%，需大量測試補充) | |
 | T5 | ⏸️ (session 7.8%，需大量測試補充) | |
 | T6 | ✅ (採用定義 A，不扣免額) | 5a82693 |
 | T7 | ✅ (已實作 applyApprovalItems) | |

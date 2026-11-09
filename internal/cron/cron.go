@@ -27,28 +27,28 @@ func init() {
 
 	Register(Task{
 		Key:      "work_order_ready",
-		Name:     "完工通知",
+		Name:     "工作單就緒掃描",
 		Interval: 6 * time.Hour,
 		Run:      scanWorkOrderReady,
 	})
 
 	Register(Task{
 		Key:      "maintenance_due_scan",
-		Name:     "車輛到期提醒掃描",
+		Name:     "維護到期掃描",
 		Interval: 24 * time.Hour,
 		Run:      scanMaintenanceDue,
 	})
 
 	Register(Task{
 		Key:      "appointment_reminder_scan",
-		Name:     "預約前日提醒掃描",
+		Name:     "預約提醒掃描",
 		Interval: 24 * time.Hour,
 		Run:      scanAppointmentReminders,
 	})
 
 	Register(Task{
 		Key:      "birthday_reminder_scan",
-		Name:     "客戶生日關懷掃描",
+		Name:     "生日提醒掃描",
 		Interval: 24 * time.Hour,
 		Run:      scanBirthdayReminders,
 	})
