@@ -14,12 +14,12 @@ import (
 )
 
 // allowedTransitions defines valid work order status transitions.
-var allowedTransitions = map[string][]string{
-	"pending":       {"in_progress", "waiting_parts"},
-	"in_progress":   {"waiting_parts", "completed"},
-	"waiting_parts": {"in_progress", "completed"},
-	"completed":     {"in_progress"},
-	"paid":          {},
+var allowedTransitions = map[WorkOrderStatus][]WorkOrderStatus{
+	WorkOrderStatusPending:       {WorkOrderStatusInProgress, WorkOrderStatusWaitingParts},
+	WorkOrderStatusInProgress:    {WorkOrderStatusWaitingParts, WorkOrderStatusCompleted},
+	WorkOrderStatusWaitingParts:  {WorkOrderStatusInProgress, WorkOrderStatusCompleted},
+	WorkOrderStatusCompleted:     {WorkOrderStatusInProgress},
+	WorkOrderStatusPaid:          {},
 }
 
 
@@ -40,8 +40,8 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	currentStatus := countStatus(id)
 	if shouldCheckTransition(currentStatus, status) {
 		allowed := false
-		for _, s := range allowedTransitions[currentStatus] {
-			if s == status {
+		for _, s := range allowedTransitions[WorkOrderStatus(currentStatus)] {
+			if s == WorkOrderStatus(status) {
 				allowed = true
 				break
 			}
