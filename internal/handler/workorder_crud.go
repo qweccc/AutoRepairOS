@@ -756,7 +756,7 @@ func countStatus(id int64) string {
 // 已結帳代表已收款、已扣料、已開立收據，此時改內容會讓金額與實物對不上。
 
 func requireOrderMutable(woID int64) error {
-	if countStatus(woID) == "paid" {
+	if WorkOrderStatus(countStatus(woID)) == WorkOrderStatusPaid {
 		return errOrderLocked
 	}
 	return nil
