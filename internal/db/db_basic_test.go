@@ -45,3 +45,15 @@ func TestBeginImmediate(t *testing.T) {
 		t.Fatalf("Commit: %v", err)
 	}
 }
+
+func TestMigrate(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{DBPath: filepath.Join(dir, "test3.db"), EnableWAL: false}
+	if err := Init(cfg); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	defer Close()
+	if err := Migrate(); err != nil {
+		t.Fatalf("Migrate: %v", err)
+	}
+}
