@@ -169,7 +169,7 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User
 
 	// 已結帳（paid）的工單不允許再改動項目，否則庫存與帳務會對不上。
 	var status string
-	if err := tx.QueryRow("SELECT status FROM active_work_orders WHERE id = ?", woID).Scan(&status); err == nil && status == "paid" {
+	if err := tx.QueryRow("SELECT status FROM active_work_orders WHERE id = ?", woID).Scan(&status); err == nil && WorkOrderStatus(status) == WorkOrderStatusPaid {
 		fail(w, "工單已結帳，無法刪除項目")
 		return
 	}
