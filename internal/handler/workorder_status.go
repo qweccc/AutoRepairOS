@@ -81,7 +81,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if status == "paid" {
+	if WorkOrderStatus(status) == WorkOrderStatusPaid {
 		if err := service.New(db.DB).Checkout(r.Context(), id, actorID); err != nil {
 			if errors.Is(err, service.ErrNotFound) {
 				http.NotFound(w, r)
