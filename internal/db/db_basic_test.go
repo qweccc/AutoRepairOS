@@ -57,3 +57,13 @@ func TestMigrate(t *testing.T) {
 		t.Fatalf("Migrate: %v", err)
 	}
 }
+
+func TestMustExec(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{DBPath: filepath.Join(dir, "test4.db"), EnableWAL: false}
+	if err := Init(cfg); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	defer Close()
+	MustExec("CREATE TABLE t2 (id INTEGER)")
+}
