@@ -127,7 +127,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if status == "completed" && previousStatus != "completed" {
+	if WorkOrderStatus(status) == WorkOrderStatusCompleted && previousStatus != string(WorkOrderStatusCompleted) {
 		var customerID int64
 		if err := db.DB.QueryRow("SELECT customer_id FROM active_work_orders WHERE id = ?", id).Scan(&customerID); err != nil {
 			log.Printf("工單 #%d 已完工，但讀取通知客戶失敗: %v", id, err)
