@@ -25,7 +25,7 @@ var allowedTransitions = map[string][]string{
 
 // shouldCheckTransition determines if a status transition needs validation.
 func shouldCheckTransition(current, target string) bool {
-	return current != "" && current != target && target != "paid"
+	return current != "" && current != target && WorkOrderStatus(target) != WorkOrderStatusPaid
 }
 
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
