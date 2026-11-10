@@ -503,6 +503,35 @@ func (c *Client) touch() {
 	c.mu.Unlock()
 }
 
+// serverArgs validates the configured model paths and builds llama-server args.
+// It touches no shared state, so it runs before the client mutex is taken —
+// validation failures must never leave c.mu locked.
+func (c *Client) serverArgs() ([]string, error) {
+	port := localPort(c.LocalURL)
+	if c.ModelPath == "" {
+		return []string{"-hf", c.HFModel, "--port", port, "--host", "127.0.0.1"}, nil
+	}
+	// 離線優先：直接吃本地 GGUF，不碰 HuggingFace（防火牆會擋 -hf 的驗證請求）。
+	if filepath.Ext(c.ModelPath) != ".gguf" {
+		return nil, fmt.Errorf("VISION_MODEL_PATH 必須指向 .gguf 檔案")
+	}
+	if _, err := os.Stat(c.ModelPath); err != nil {
+		return nil, fmt.Errorf("VISION_MODEL_PATH 不存在：%w", err)
+	}
+	args := []string{"-m", c.ModelPath, "--port", port, "--host", "127.0.0.1"}
+	if c.MmprojPath != "" {
+		// 視覺模型必須帶投影檔，否則只會當文字模型用（回傳空/錯誤）。
+		if filepath.Ext(c.MmprojPath) != ".gguf" {
+			return nil, fmt.Errorf("VISION_MMPROJ_PATH 必須指向 .gguf 檔案")
+		}
+		if _, err := os.Stat(c.MmprojPath); err != nil {
+			return nil, fmt.Errorf("VISION_MMPROJ_PATH 不存在：%w", err)
+		}
+		args = append(args, "--mmproj", c.MmprojPath)
+	}
+	return args, nil
+}
+
 // ensureServerUp local 模式專用：服務沒開時依 AutoStart 決定行為。
 //   - 已在跑（使用者手動開的或我們起的）→ 直接用，不動它
 //   - 沒開 + AutoStart=false → 回錯誤，提示手動啟動或開啟 AUTOSTART
@@ -516,32 +545,13 @@ func (c *Client) ensureServerUp(ctx context.Context) error {
 		return fmt.Errorf("本地視覺服務未啟動（%s）。請執行 start-qwen-vision.bat，或在 .env 設 VISION_AUTOSTART=true 讓系統自動管理", c.LocalURL)
 	}
 
+	args, err := c.serverArgs()
+	if err != nil {
+		return err
+	}
+
 	c.mu.Lock()
 	if c.cmd == nil {
-		port := localPort(c.LocalURL)
-		var args []string
-		if c.ModelPath != "" {
-			// 離線優先：直接吃本地 GGUF，不碰 HuggingFace（防火牆會擋 -hf 的驗證請求）。
-			if filepath.Ext(c.ModelPath) != ".gguf" {
-				return fmt.Errorf("VISION_MODEL_PATH 必須指向 .gguf 檔案")
-			}
-			if _, err := os.Stat(c.ModelPath); err != nil {
-				return fmt.Errorf("VISION_MODEL_PATH 不存在：%w", err)
-			}
-			args = []string{"-m", c.ModelPath, "--port", port, "--host", "127.0.0.1"}
-			if c.MmprojPath != "" {
-				// 視覺模型必須帶投影檔，否則只會當文字模型用（回傳空/錯誤）。
-				if filepath.Ext(c.MmprojPath) != ".gguf" {
-					return fmt.Errorf("VISION_MMPROJ_PATH 必須指向 .gguf 檔案")
-				}
-				if _, err := os.Stat(c.MmprojPath); err != nil {
-					return fmt.Errorf("VISION_MMPROJ_PATH 不存在：%w", err)
-				}
-				args = append(args, "--mmproj", c.MmprojPath)
-			}
-		} else {
-			args = []string{"-hf", c.HFModel, "--port", port, "--host", "127.0.0.1"}
-		}
 		cmd := exec.Command("llama-server", args...)
 		// Windows：不彈出黑色視窗；離線旗標讓 -hf 模式也只讀快取不下載。
 		if attr, ok := hideWindowAttr().(*syscall.SysProcAttr); ok {
