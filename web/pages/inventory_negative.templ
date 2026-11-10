@@ -1,9 +1,11 @@
 package pages
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -26,38 +28,38 @@ type InventoryMovementRow struct {
 }
 
 templ NegativeStockPage(stats NegativeStockStats, rows []NegativeStockRow, total, page, size int, q, sortBy, hiddenHTML, pagerHTML, perPageHTML, flashHTML string, user model.User) {
-	@components.Layout("負庫存補正", "/inventory", user, AppName) {
+	@components.Layout(i18n.T(ctx, "inventory.negative_title"), "/inventory", user, AppName) {
 		@templ.Raw(flashHTML)
 		<div class="card">
-			<h2>負庫存補正</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">舊系統（CAR35）進貨常未登錄就直接出料，匯入後留下負庫存。負庫存會讓扣料與庫存報表失準，建議從「有在賣的熱門件」開始補正。<br><b>補正會留下紀錄</b>（誰、何時、從多少改成多少），日後可追溯。</p>
+			<h2>{ i18n.T(ctx, "inventory.negative_title") }</h2>
+			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">{ i18n.T(ctx, "inventory.negative_intro") }<br><b>{ i18n.T(ctx, "inventory.negative_audit") }</b>{ i18n.T(ctx, "inventory.negative_audit_suffix") }</p>
 			<div style="margin-bottom:14px">
-				<div class="stat"><b>{ strconv.Itoa(stats.Total) }</b><span>負庫存料號</span></div>
-				<div class="stat"><b>{ strconv.Itoa(stats.TotalAll) }</b><span>全部料號</span></div>
-				<div class="stat"><b style="color:#f87171">{ strconv.Itoa(stats.WorstQty) }</b><span>最負數量</span></div>
-				<div class="stat"><b>{ strconv.Itoa(stats.SumDeficit) }</b><span>缺口總和</span></div>
-				<div class="stat"><b>{ strconv.Itoa(stats.SellableOnly) }</b><span>其中有售價</span></div>
-				<div class="stat"><b>{ strconv.Itoa(stats.WithSupplier) }</b><span>其中有供應商</span></div>
+				<div class="stat"><b>{ strconv.Itoa(stats.Total) }</b><span>{ i18n.T(ctx, "inventory.stat.negative_parts") }</span></div>
+				<div class="stat"><b>{ strconv.Itoa(stats.TotalAll) }</b><span>{ i18n.T(ctx, "inventory.stat.all_parts") }</span></div>
+				<div class="stat"><b style="color:#f87171">{ strconv.Itoa(stats.WorstQty) }</b><span>{ i18n.T(ctx, "inventory.stat.worst_qty") }</span></div>
+				<div class="stat"><b>{ strconv.Itoa(stats.SumDeficit) }</b><span>{ i18n.T(ctx, "inventory.stat.deficit_sum") }</span></div>
+				<div class="stat"><b>{ strconv.Itoa(stats.SellableOnly) }</b><span>{ i18n.T(ctx, "inventory.stat.with_price") }</span></div>
+				<div class="stat"><b>{ strconv.Itoa(stats.WithSupplier) }</b><span>{ i18n.T(ctx, "inventory.stat.with_supplier") }</span></div>
 			</div>
 			<div style="margin-bottom:12px">
-				@negativeSortTab("缺口最大優先", "", sortBy, q)
-				@negativeSortTab("有售價優先", "sellable", sortBy, q)
-				@negativeSortTab("依名稱", "name", sortBy, q)
-				<a class="btn btn-s" href="/inventory">回庫存列表</a>
+				@negativeSortTab(i18n.T(ctx, "inventory.sort.deficit"), "", sortBy, q)
+				@negativeSortTab(i18n.T(ctx, "inventory.sort.sellable"), "sellable", sortBy, q)
+				@negativeSortTab(i18n.T(ctx, "inventory.sort.name"), "name", sortBy, q)
+				<a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.back_list") }</a>
 			</div>
 			<form method="GET" action="/inventory/negative" style="margin-bottom:12px">
-				<input name="q" value={ q } placeholder="搜尋料號 / 名稱 / 庫位" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+				<input name="q" value={ q } placeholder={ i18n.T(ctx, "inventory.negative_search_placeholder") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
 				@templ.Raw(hiddenHTML)
-				<button class="btn btn-p" type="submit">搜尋</button>
-				<a class="btn btn-s" href="/inventory/negative">清除</a>
+				<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button>
+				<a class="btn btn-s" href="/inventory/negative">{ i18n.T(ctx, "inventory.clear") }</a>
 			</form>
-			<h2 style="font-size:15px">符合條件 { strconv.Itoa(total) } 筆</h2>
+			<h2 style="font-size:15px">{ fmt.Sprintf(i18n.T(ctx, "inventory.matching_count"), total) }</h2>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的負庫存料號</div>
+				<div class="empty">{ i18n.T(ctx, "inventory.negative_empty") }</div>
 			} else {
-				<table><tr><th>料號</th><th>名稱</th><th>庫位</th><th>供應商</th><th class="num">售價</th><th class="num">目前庫存</th><th class="num">建議補正</th><th>操作</th></tr>
+				<table><tr><th>{ i18n.T(ctx, "inventory.col.part_number") }</th><th>{ i18n.T(ctx, "inventory.col.name") }</th><th>{ i18n.T(ctx, "inventory.col.bin") }</th><th>{ i18n.T(ctx, "inventory.col.supplier") }</th><th class="num">{ i18n.T(ctx, "inventory.col.selling") }</th><th class="num">{ i18n.T(ctx, "inventory.col.current_stock") }</th><th class="num">{ i18n.T(ctx, "inventory.col.suggested") }</th><th>{ i18n.T(ctx, "inventory.col.actions") }</th></tr>
 					for _, row := range rows {
-						<tr><td><code>{ row.PartNumber }</code></td><td>{ row.Name }</td><td>{ row.BinLocation }</td><td>{ row.SupplierName }</td><td class="num">{ row.SellingPrice }</td><td class="num"><b style="color:#f87171">{ strconv.Itoa(row.StockQuantity) }</b></td><td class="num" style="color:#86efac">+{ strconv.Itoa(row.Suggested) }</td><td><a class="btn btn-p" href={ "/inventory/negative?id=" + strconv.FormatInt(row.ID, 10) }>補正</a></td></tr>
+						<tr><td><code>{ row.PartNumber }</code></td><td>{ row.Name }</td><td>{ row.BinLocation }</td><td>{ row.SupplierName }</td><td class="num">{ row.SellingPrice }</td><td class="num"><b style="color:#f87171">{ strconv.Itoa(row.StockQuantity) }</b></td><td class="num" style="color:#86efac">+{ strconv.Itoa(row.Suggested) }</td><td><a class="btn btn-p" href={ "/inventory/negative?id=" + strconv.FormatInt(row.ID, 10) }>{ i18n.T(ctx, "inventory.fix") }</a></td></tr>
 					}
 				</table>
 			}
@@ -89,30 +91,30 @@ func negativeSortURL(key, q string) string {
 }
 
 templ NegativeStockFixPage(it model.InventoryItem, movements []InventoryMovementRow, user model.User) {
-	@components.Layout("負庫存補正", "/inventory", user, AppName) {
+	@components.Layout(i18n.T(ctx, "inventory.negative_title"), "/inventory", user, AppName) {
 		<div class="card">
-			<h2>負庫存補正 — { it.Name }（{ it.PartNumber }）</h2>
-			<p style="color:#94a3b8;font-size:13.5px">目前庫存：<b style="color:#f87171;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>　安全庫存：{ strconv.Itoa(it.MinSafetyStock) }　售價：{ moneyFmt(it.SellingPrice) }</p>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.negative_fix_title"), it.Name, it.PartNumber) }</h2>
+			<p style="color:#94a3b8;font-size:13.5px">{ i18n.T(ctx, "inventory.current_stock") + "：" }<b style="color:#f87171;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>{ "　" + i18n.T(ctx, "inventory.field.min_safety") + "：" }{ strconv.Itoa(it.MinSafetyStock) }{ "　" + i18n.T(ctx, "inventory.col.selling") + "：" }{ moneyFmt(it.SellingPrice) }</p>
 			<form class="frm" method="POST" action="/inventory/negative/fix">
 				@components.CSRFInput()
 				<input type="hidden" name="item_id" value={ strconv.FormatInt(it.ID, 10) }>
-				<label>補正方式<select name="mode" id="fixMode" onchange="document.getElementById('customRow').style.display=(this.value=='custom')?'block':'none'"><option value="zero">設為 0（歸零，不補貨）</option><option value="safety">設為安全庫存（{ strconv.Itoa(it.MinSafetyStock) }）</option><option value="custom">設為指定數量</option></select></label>
-				<label id="customRow" style="display:none">指定數量<input name="target" type="number" min="0" value="0"></label>
-				<label class="full">補正原因<input name="reason" value="舊系統負庫存補正" placeholder="例：開店盤點實際庫存"></label>
-				<div class="full"><button class="btn btn-p" type="submit">確認補正</button> <a class="btn btn-s" href="/inventory/negative">取消</a></div>
+				<label>{ i18n.T(ctx, "inventory.fix_mode") }<select name="mode" id="fixMode" onchange="document.getElementById('customRow').style.display=(this.value=='custom')?'block':'none'"><option value="zero">{ i18n.T(ctx, "inventory.fix_zero") }</option><option value="safety">{ fmt.Sprintf(i18n.T(ctx, "inventory.fix_safety"), it.MinSafetyStock) }</option><option value="custom">{ i18n.T(ctx, "inventory.fix_custom") }</option></select></label>
+				<label id="customRow" style="display:none">{ i18n.T(ctx, "inventory.fix_custom_label") }<input name="target" type="number" min="0" value="0"></label>
+				<label class="full">{ i18n.T(ctx, "inventory.fix_reason") }<input name="reason" value={ i18n.T(ctx, "inventory.fix_reason_default") } placeholder={ i18n.T(ctx, "inventory.fix_reason_placeholder") }></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "inventory.confirm_fix") }</button> <a class="btn btn-s" href="/inventory/negative">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:12px">補正會寫入庫存異動紀錄（source=legacy_fix），並保留補正前的原值以便回復。</p>
+			<p style="color:#64748b;font-size:12.5px;margin-top:12px">{ i18n.T(ctx, "inventory.fix_hint") }</p>
 		</div>
-		@MovementTable("近期異動", movements, true)
+		@MovementTable(i18n.T(ctx, "inventory.recent_movements"), movements, true)
 	}
 }
 
 templ MovementLogPage(rows []InventoryMovementRow, total, page, size int, q, source, hiddenHTML, pagerHTML, perPageHTML string, user model.User) {
-	@components.Layout("庫存異動紀錄", "/inventory", user, AppName) {
+	@components.Layout(i18n.T(ctx, "inventory.movements_title"), "/inventory", user, AppName) {
 		<div class="card">
-			<h2>庫存異動紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
-			<div style="margin-bottom:12px"><a class={ "btn " + sourceClass("", source) } href={ sourceURL("", q) }>全部</a> <a class={ "btn " + sourceClass("manual", source) } href={ sourceURL("manual", q) }>手動調庫</a> <a class={ "btn " + sourceClass("checkout", source) } href={ sourceURL("checkout", q) }>結帳扣料</a> <a class={ "btn " + sourceClass("legacy_fix", source) } href={ sourceURL("legacy_fix", q) }>舊資料補正</a> <a class="btn btn-s" href="/inventory">回庫存列表</a></div>
-			<form method="GET" action="/inventory/movements" style="margin-bottom:12px"><input name="q" value={ q } placeholder="搜尋料號 / 名稱 / 原因" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">@templ.Raw(hiddenHTML)<button class="btn btn-p" type="submit">搜尋</button> <a class="btn btn-s" href="/inventory/movements">清除</a></form>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.movements_list_title"), total) }</h2>
+			<div style="margin-bottom:12px"><a class={ "btn " + sourceClass("", source) } href={ sourceURL("", q) }>{ i18n.T(ctx, "inventory.source.all") }</a> <a class={ "btn " + sourceClass("manual", source) } href={ sourceURL("manual", q) }>{ i18n.T(ctx, "inventory.source.manual") }</a> <a class={ "btn " + sourceClass("checkout", source) } href={ sourceURL("checkout", q) }>{ i18n.T(ctx, "inventory.source.checkout") }</a> <a class={ "btn " + sourceClass("legacy_fix", source) } href={ sourceURL("legacy_fix", q) }>{ i18n.T(ctx, "inventory.source.legacy_fix") }</a> <a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.back_list") }</a></div>
+			<form method="GET" action="/inventory/movements" style="margin-bottom:12px"><input name="q" value={ q } placeholder={ i18n.T(ctx, "inventory.movements_search_placeholder") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">@templ.Raw(hiddenHTML)<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button> <a class="btn btn-s" href="/inventory/movements">{ i18n.T(ctx, "inventory.clear") }</a></form>
 			@MovementTable("", rows, false)
 			@templ.Raw(pagerHTML)
 			<div style="margin-top:6px">@templ.Raw(perPageHTML)</div>
@@ -140,24 +142,24 @@ templ MovementTable(title string, rows []InventoryMovementRow, recent bool) {
 		if title != "" {
 			<h2>{ title }
 				if recent {
-					（最近 10 筆）
+					{ i18n.T(ctx, "inventory.recent_10") }
 				}
 			</h2>
 		}
 		if len(rows) == 0 {
 			<div class="empty">
 				if recent {
-					此料號沒有異動紀錄
+					{ i18n.T(ctx, "inventory.no_movements_for_item") }
 				} else {
-					沒有符合條件的異動紀錄
+					{ i18n.T(ctx, "inventory.no_matching_movements") }
 				}
 			</div>
 		} else {
-			<table><tr><th>時間</th>
+			<table><tr><th>{ i18n.T(ctx, "inventory.col.time") }</th>
 				if !recent {
-					<th>料號</th><th>名稱</th>
+					<th>{ i18n.T(ctx, "inventory.col.part_number") }</th><th>{ i18n.T(ctx, "inventory.col.name") }</th>
 				}
-				<th class="num">異動</th><th class="num">前</th><th class="num">後</th><th>來源</th><th>原因</th><th>操作人</th></tr>
+				<th class="num">{ i18n.T(ctx, "inventory.col.delta") }</th><th class="num">{ i18n.T(ctx, "inventory.col.before") }</th><th class="num">{ i18n.T(ctx, "inventory.col.after") }</th><th>{ i18n.T(ctx, "inventory.col.source") }</th><th>{ i18n.T(ctx, "inventory.col.reason") }</th><th>{ i18n.T(ctx, "inventory.col.user") }</th></tr>
 				for _, row := range rows {
 					<tr>
 						<td style="font-size:12.5px;color:#94a3b8">{ row.CreatedAt }</td>

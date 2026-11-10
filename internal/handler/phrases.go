@@ -42,7 +42,7 @@ func ListPhrases(w http.ResponseWriter, r *http.Request, user model.User) {
 func CreatePhrase(w http.ResponseWriter, r *http.Request, user model.User) {
 	phrase := strings.TrimSpace(r.FormValue("phrase"))
 	if phrase == "" {
-		fail(w, "片語內容為必填")
+		formError(w, r, "新增片語", "/phrases", "片語內容為必填")
 		return
 	}
 	category := strings.TrimSpace(r.FormValue("category"))
@@ -78,7 +78,7 @@ func UpdatePhrase(w http.ResponseWriter, r *http.Request, user model.User) {
 	id := mustInt(r.PathValue("id"))
 	phrase := strings.TrimSpace(r.FormValue("phrase"))
 	if phrase == "" {
-		fail(w, "片語內容為必填")
+		formError(w, r, "編輯片語", "/phrases/"+strconv.FormatInt(id, 10)+"/edit", "片語內容為必填")
 		return
 	}
 	category := strings.TrimSpace(r.FormValue("category"))
@@ -209,7 +209,7 @@ func SearchEstimateItemsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = components.PartLookupResults(parts).Render(r.Context(), w)
 }
-//
+
 // 只回傳 body 內容（不自造 DOCTYPE/html/head）：版面外壳（含右側導覽）由
 // renderPage 統一提供。少了這層，這頁就不會有右側選單，使用者會覺得「只有
 // 這一頁沒有導覽」。

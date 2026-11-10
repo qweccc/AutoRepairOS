@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -23,61 +25,78 @@ type InventoryRow struct {
 }
 
 // ListInventoryPage 庫存列表頁（HTMX 即時搜尋）。
+// InventoryCreateForm carries create-form state for same-screen error
+// re-rendering (see CustomerCreateForm).
+type InventoryCreateForm struct {
+	ErrMsg    string
+	Part      string
+	Name      string
+	Bin       string
+	Barcode   string
+	Cost      string
+	Selling   string
+	Stock     string
+	MinSafety string
+}
+
 templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, size int,
 	q string, lowOnly bool, showMoney bool, catTabsHTML string, negBannerHTML string,
-	categoryOptionsHTML string, user model.User) {
-	@components.Layout("庫存管理", "/inventory", user, AppName) {
+	categoryOptionsHTML string, form InventoryCreateForm, user model.User) {
+	@components.Layout(i18n.T(ctx, "inventory.page_title"), "/inventory", user, AppName) {
 		if negBannerHTML != "" {
 			@templ.Raw(negBannerHTML)
 		}
 		<div class="card">
-			<h2>新增零件</h2>
+			<h2>{ i18n.T(ctx, "inventory.new") }</h2>
+			if form.ErrMsg != "" {
+				<div class="msg msg-err">{ form.ErrMsg }</div>
+			}
 			<form class="frm" method="POST" action="/inventory">
 				@components.CSRFInput()
-				<label>料號<input name="part_number" required></label>
-				<label>名稱<input name="name" required></label>
-				<label>類別
+				<label>{ i18n.T(ctx, "inventory.field.part_number") }<input name="part_number" required value={ form.Part }></label>
+				<label>{ i18n.T(ctx, "inventory.field.name") }<input name="name" required value={ form.Name }></label>
+				<label>{ i18n.T(ctx, "inventory.field.category") }
 					<select name="category">
-						<option value="">未分類</option>
+						<option value="">{ i18n.T(ctx, "inventory.uncategorized") }</option>
 						@templ.Raw(categoryOptionsHTML)
 					</select>
 				</label>
-				<label>庫位<input name="bin_location" required placeholder="例 A-01-3"></label>
-				<label>條碼<input name="barcode"></label>
-				<label>供應商<select name="supplier_id"><option value="0">無</option>{ children... }</select></label>
+				<label>{ i18n.T(ctx, "inventory.field.bin") }<input name="bin_location" required placeholder={ i18n.T(ctx, "inventory.bin_placeholder") } value={ form.Bin }></label>
+				<label>{ i18n.T(ctx, "inventory.field.barcode") }<input name="barcode" value={ form.Barcode }></label>
+				<label>{ i18n.T(ctx, "inventory.field.supplier") }<select name="supplier_id"><option value="0">{ i18n.T(ctx, "inventory.none") }</option>{ children... }</select></label>
 				if showMoney {
-					<label>成本<input name="cost_price" type="number" min="0" step="1" value="0"></label>
+					<label>{ i18n.T(ctx, "inventory.field.cost") }<input name="cost_price" type="number" min="0" step="1" value={ form.Cost }></label>
 				}
-				<label>售價<input name="selling_price" type="number" min="0" step="1" value="0"></label>
-				<label>庫存數量<input name="stock_quantity" type="number" value="0"></label>
-				<label>安全庫存<input name="min_safety_stock" type="number" min="0" value="5"></label>
-				<div class="full"><button class="btn btn-p" type="submit">新增零件</button></div>
+				<label>{ i18n.T(ctx, "inventory.field.selling") }<input name="selling_price" type="number" min="0" step="1" value={ form.Selling }></label>
+				<label>{ i18n.T(ctx, "inventory.field.stock_quantity") }<input name="stock_quantity" type="number" value={ form.Stock }></label>
+				<label>{ i18n.T(ctx, "inventory.field.min_safety") }<input name="min_safety_stock" type="number" min="0" value={ form.MinSafety }></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "inventory.new") }</button></div>
 			</form>
 		</div>
 		<div class="card">
-			<h2>零件列表（符合條件 { strconv.Itoa(total) } 筆，低庫存 { strconv.Itoa(lowCount) } 種）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.list_title"), total, lowCount) }</h2>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
 				@templ.Raw(catTabsHTML)
 			</div>
 			// HTMX 即時搜尋
 			<div class="search-bar">
 				<input type="search" id="inventorySearch" class="search-input wide" name="q" value={ q }
-					placeholder="搜尋名稱 / 料號 / 條碼 / 庫位"
+					placeholder={ i18n.T(ctx, "inventory.search_placeholder") }
 					hx-get="/api/inventory/search"
 					hx-trigger="keyup changed delay:300ms, search"
 					hx-target="#inventory-rows"
 					hx-swap="innerHTML">
 				@components.BarcodeScanUI("inventoryScanBtn", "inventorySearch", "inventoryScanBox")
-				<a class="btn btn-s" href="/inventory">清除</a>
+				<a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.clear") }</a>
 			</div>
-			<a class="btn btn-s" href="/inventory/movements">異動紀錄</a>
+			<a class="btn btn-s" href="/inventory/movements">{ i18n.T(ctx, "inventory.movements") }</a>
 			<table>
 				<tr>
-					<th>料號</th><th>名稱</th><th>類別</th><th>庫位</th><th>供應商</th>
+					<th>{ i18n.T(ctx, "inventory.col.part_number") }</th><th>{ i18n.T(ctx, "inventory.col.name") }</th><th>{ i18n.T(ctx, "inventory.col.category") }</th><th>{ i18n.T(ctx, "inventory.col.bin") }</th><th>{ i18n.T(ctx, "inventory.col.supplier") }</th>
 					if showMoney {
-						<th class="num">成本</th>
+						<th class="num">{ i18n.T(ctx, "inventory.col.cost") }</th>
 					}
-					<th class="num">售價</th><th class="num">庫存</th><th class="num">安全值</th><th>操作</th>
+					<th class="num">{ i18n.T(ctx, "inventory.col.selling") }</th><th class="num">{ i18n.T(ctx, "inventory.col.stock") }</th><th class="num">{ i18n.T(ctx, "inventory.col.safety") }</th><th>{ i18n.T(ctx, "inventory.col.actions") }</th>
 				</tr>
 				<tbody id="inventory-rows">
 					for _, it := range rows {
@@ -86,7 +105,7 @@ templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, si
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有零件資料</div>
+				<div class="empty">{ i18n.T(ctx, "inventory.empty") }</div>
 			}
 			@components.Pager("/inventory", page, calcPages(total, size), total)
 		</div>
@@ -99,7 +118,7 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 		<td>
 			{ it.Name }
 			if it.ItemKind == "labor" {
-				<span style="color:#94a3b8;font-size:11px">(工資)</span>
+				<span style="color:#94a3b8;font-size:11px">({ i18n.T(ctx, "inventory.labor") })</span>
 			}
 		</td>
 		<td>
@@ -124,11 +143,11 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 		</td>
 		<td class="num">{ strconv.Itoa(it.MinSafety) }</td>
 		<td>
-			<a class="btn btn-s" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/edit" }>編輯</a>
-			<a class="btn btn-o" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/stock" }>調庫</a>
+			<a class="btn btn-s" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
+			<a class="btn btn-o" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/stock" }>{ i18n.T(ctx, "inventory.stock_adjust") }</a>
 			<a class="btn btn-d" href={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/delete" }
 				hx-post={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/delete" }
-				data-confirm="確定刪除此零件？">刪除</a>
+				data-confirm={ i18n.T(ctx, "inventory.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 		</td>
 	</tr>
 }
@@ -136,7 +155,7 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 // InventorySearchRows HTMX 即時搜尋回傳的純列。
 templ InventorySearchRows(rows []InventoryRow, showMoney bool) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無零件</td></tr>
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "inventory.search_empty") }</td></tr>
 	}
 	for _, it := range rows {
 		@InventoryRowContent(it, showMoney)

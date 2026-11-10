@@ -1,6 +1,9 @@
 package pages
 
 import (
+	"fmt"
+
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"strconv"
 
@@ -18,29 +21,29 @@ type ExpenseRow struct {
 
 // ListExpensesPage 零用金支出頁（HTMX 即時搜尋）。
 templ ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn, sumOut float64, user model.User) {
-	@components.Layout("零用金支出", "/expenses", user, AppName) {
+	@components.Layout(i18n.T(ctx, "expense.title"), "/expenses", user, AppName) {
 		<div class="card">
-			<h2>零用金／雜支支出（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "expense.heading"), total) }</h2>
 			<div class="msg msg-err" style="margin-bottom:14px">
-				⚠ 金額沿用舊系統原始值，<b>單位未確認</b>（疑為「分」，即 20000000 = 200,000 元）。依指示先按原樣遷移，尚未換算。
+				{ i18n.T(ctx, "expense.warning_prefix") }<b>{ i18n.T(ctx, "expense.warning_bold") }</b>{ i18n.T(ctx, "expense.warning_suffix") }
 			</div>
 			<div style="margin-bottom:14px">
-				<div class="stat"><b>{ strconv.Itoa(total) }</b><span>筆數</span></div>
-				<div class="stat"><b style="color:#86efac">{ moneyFmt(sumIn) }</b><span>收入合計（原值）</span></div>
-				<div class="stat"><b style="color:#fca5a5">{ moneyFmt(sumOut) }</b><span>支出合計（原值）</span></div>
+				<div class="stat"><b>{ strconv.Itoa(total) }</b><span>{ i18n.T(ctx, "expense.stat_count") }</span></div>
+				<div class="stat"><b style="color:#86efac">{ moneyFmt(sumIn) }</b><span>{ i18n.T(ctx, "expense.stat_in") }</span></div>
+				<div class="stat"><b style="color:#fca5a5">{ moneyFmt(sumOut) }</b><span>{ i18n.T(ctx, "expense.stat_out") }</span></div>
 			</div>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				舊系統「支出明細」表遷移而來，多為零用金、雜支（郵票、菜錢、插座…）。
+				{ i18n.T(ctx, "expense.intro") }
 			</p>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋科目 / 說明"
+				placeholder={ i18n.T(ctx, "expense.search_placeholder") }
 				hx-get="/api/expenses/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#expense-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			<table>
-				<tr><th>日期</th><th>科目／料號</th><th>說明</th><th class="num">收入</th><th class="num">支出</th></tr>
+				<tr><th>{ i18n.T(ctx, "expense.col_date") }</th><th>{ i18n.T(ctx, "expense.col_account") }</th><th>{ i18n.T(ctx, "expense.col_desc") }</th><th class="num">{ i18n.T(ctx, "expense.col_in") }</th><th class="num">{ i18n.T(ctx, "expense.col_out") }</th></tr>
 				<tbody id="expense-rows">
 					for _, e := range rows {
 						@ExpenseRowContent(e)
@@ -48,7 +51,7 @@ templ ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的支出紀錄</div>
+				<div class="empty">{ i18n.T(ctx, "expense.empty") }</div>
 			}
 			@components.Pager("/expenses", page, calcPages(total, size), total)
 		</div>
@@ -82,7 +85,7 @@ templ ExpenseRowContent(e ExpenseRow) {
 // ExpenseSearchRows 支出即時搜尋回傳的純列。
 templ ExpenseSearchRows(rows []ExpenseRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">查無支出紀錄</td></tr>
+		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "expense.no_results") }</td></tr>
 	}
 	for _, e := range rows {
 		@ExpenseRowContent(e)

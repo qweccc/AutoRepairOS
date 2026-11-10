@@ -1,6 +1,11 @@
 package pages
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+
+	"autorepairos/internal/i18n"
+)
 
 type AnalyticsTrendPoint struct {
 	Label        string
@@ -28,18 +33,18 @@ type AnalyticsGroupRow struct {
 
 templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, svgWidth int, showCost bool) {
 	<div class="card">
-		<h2>月營收與毛利趨勢</h2>
-		<p style="color:#94a3b8;font-size:12.5px">依工單建立日期及已結帳工單統計；營收、成本與匯出報表相同。工資成本（技師佣金）以「工時月」歸屬，與其他成本歸工單建立月不同，故跨月工單的毛利可能與該月營收不同軸。</p>
+		<h2>{ i18n.T(ctx, "analytics.trend_title") }</h2>
+		<p style="color:#94a3b8;font-size:12.5px">{ i18n.T(ctx, "analytics.trend_note") }</p>
 		<div style="overflow-x:auto">
-			<svg role="img" aria-label="月營收趨勢圖" viewBox={ "0 0 " + strconv.Itoa(svgWidth) + " 270" } style="display:block;width:100%;min-width:680px;height:auto">
+			<svg role="img" aria-label={ i18n.T(ctx, "analytics.chart_aria") } viewBox={ "0 0 " + strconv.Itoa(svgWidth) + " 270" } style="display:block;width:100%;min-width:680px;height:auto">
 				<line x1="24" y1="210" x2={ strconv.Itoa(svgWidth - 24) } y2="210" stroke="#475569" stroke-width="1"/>
 				for _, point := range points {
 					<rect x={ strconv.Itoa(point.RevenueX) } y={ strconv.Itoa(point.RevenueY) } width="20" height={ strconv.Itoa(point.RevenueSize) } rx="3" fill="#38bdf8">
-						<title>{ point.Label + " 營收 " + point.Revenue }</title>
+						<title>{ fmt.Sprintf(i18n.T(ctx, "analytics.chart_revenue_title"), point.Label, point.Revenue) }</title>
 					</rect>
 					if showCost {
 						<rect x={ strconv.Itoa(point.GrossX) } y={ strconv.Itoa(point.GrossY) } width="20" height={ strconv.Itoa(point.GrossSize) } rx="3" fill="#34d399">
-							<title>{ point.Label + " 毛利 " + point.Gross + "；成本 " + point.Cost }</title>
+							<title>{ fmt.Sprintf(i18n.T(ctx, "analytics.chart_gross_title"), point.Label, point.Gross, point.Cost) }</title>
 						</rect>
 					}
 					<text x={ strconv.Itoa(point.LabelX) } y="238" fill="#cbd5e1" font-size="12" text-anchor="middle">{ point.Label }</text>
@@ -47,19 +52,19 @@ templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, 
 			</svg>
 		</div>
 		<p style="display:flex;gap:16px;color:#cbd5e1;font-size:12px">
-			<span><i style="display:inline-block;width:10px;height:10px;background:#38bdf8;margin-right:5px"></i>營收</span>
+			<span><i style="display:inline-block;width:10px;height:10px;background:#38bdf8;margin-right:5px"></i>{ i18n.T(ctx, "analytics.legend_revenue") }</span>
 			if showCost {
-				<span><i style="display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px"></i>毛利（營收－零件成本－外包成本－工資成本）</span>
+				<span><i style="display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px"></i>{ i18n.T(ctx, "analytics.legend_gross") }</span>
 			}
 		</p>
-		<p style="color:#64748b;font-size:12px">成本欄在完全沒有技師工時紀錄的月份顯示「未記錄」，不以 0 冒充已計算。</p>
+		<p style="color:#64748b;font-size:12px">{ i18n.T(ctx, "analytics.cost_note") }</p>
 		<table>
 			<tr>
-				<th>月份</th>
-				<th class="num">營收</th>
+				<th>{ i18n.T(ctx, "analytics.col_month") }</th>
+				<th class="num">{ i18n.T(ctx, "analytics.col_revenue") }</th>
 				if showCost {
-					<th class="num">成本</th>
-					<th class="num">毛利</th>
+					<th class="num">{ i18n.T(ctx, "analytics.col_cost") }</th>
+					<th class="num">{ i18n.T(ctx, "analytics.col_gross") }</th>
 				}
 			</tr>
 			for _, point := range points {
@@ -75,19 +80,19 @@ templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, 
 		</table>
 	</div>
 	<div class="card">
-		<h2>分組分析</h2>
+		<h2>{ i18n.T(ctx, "analytics.group_title") }</h2>
 		if len(groups) == 0 {
-			<div class="empty">期間沒有可分組的已結帳工單</div>
+			<div class="empty">{ i18n.T(ctx, "analytics.group_empty") }</div>
 		}
 		if len(groups) > 0 {
 			<table>
 				<tr>
-					<th>分組</th>
-					<th class="num">工單數</th>
-					<th class="num">營收</th>
+					<th>{ i18n.T(ctx, "analytics.col_group") }</th>
+					<th class="num">{ i18n.T(ctx, "analytics.col_orders") }</th>
+					<th class="num">{ i18n.T(ctx, "analytics.col_revenue") }</th>
 					if showCost {
-						<th class="num">成本</th>
-						<th class="num">毛利</th>
+						<th class="num">{ i18n.T(ctx, "analytics.col_cost") }</th>
+						<th class="num">{ i18n.T(ctx, "analytics.col_gross") }</th>
 					}
 				</tr>
 				for _, group := range groups {

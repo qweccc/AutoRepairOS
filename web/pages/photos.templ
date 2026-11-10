@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -20,15 +22,15 @@ type PhotoCard struct {
 }
 
 templ WorkOrderPhotosPage(workOrderID int64, photos []PhotoCard, photoDir string, user model.User, flashMessage string) {
-	@components.Layout("工單照片", "/work-orders", user, AppName) {
+	@components.Layout(i18n.T(ctx, "photos.title"), "/work-orders", user, AppName) {
 		@components.FlashMsg(flashMessage)
 		<div class="card">
-			<h2>工單照片（{ strconv.Itoa(len(photos)) } 張）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "photos.list_heading"), len(photos)) }</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-				離線優先：照片存在本機 <code>{ photoDir }</code>，不依賴外部網路。單檔上限 8MB。
+				{ i18n.T(ctx, "photos.offline_prefix") } <code>{ photoDir }</code>{ i18n.T(ctx, "photos.offline_suffix") }
 			</p>
 			if len(photos) == 0 {
-				<div class="empty">尚未上傳任何照片</div>
+				<div class="empty">{ i18n.T(ctx, "photos.empty") }</div>
 			} else {
 				<div class="pgrid">
 					for _, photo := range photos {
@@ -45,7 +47,7 @@ templ WorkOrderPhotosPage(workOrderID int64, photos []PhotoCard, photoDir string
 									action={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) + "/photos/" + strconv.FormatInt(photo.ID, 10) + "/delete" }
 									style="display:inline" onsubmit="return confirm('刪除這張照片？')">
 									@components.CSRFInput()
-									<button class="btn btn-d" type="submit">刪除</button>
+									<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.delete") }</button>
 								</form>
 							</figcaption>
 						</figure>
@@ -54,19 +56,19 @@ templ WorkOrderPhotosPage(workOrderID int64, photos []PhotoCard, photoDir string
 			}
 		</div>
 		<div class="card">
-			<h2>上傳照片</h2>
+			<h2>{ i18n.T(ctx, "photos.upload_title") }</h2>
 			<form class="frm" method="POST" action={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) + "/photos" } enctype="multipart/form-data">
 				@components.CSRFInput()
-				<label class="full">選擇照片<input name="photo" type="file" accept="image/*" required></label>
-				<label>照片類型<select name="photo_type">
-					<option value="damage">車損</option>
-					<option value="repair">維修</option>
-					<option value="part">零件</option>
-					<option value="other">其他</option>
+				<label class="full">{ i18n.T(ctx, "photos.select") }<input name="photo" type="file" accept="image/*" required></label>
+				<label>{ i18n.T(ctx, "photos.type") }<select name="photo_type">
+					<option value="damage">{ i18n.T(ctx, "photos.type_damage") }</option>
+					<option value="repair">{ i18n.T(ctx, "photos.type_repair") }</option>
+					<option value="part">{ i18n.T(ctx, "photos.type_part") }</option>
+					<option value="other">{ i18n.T(ctx, "photos.type_other") }</option>
 				</select></label>
-				<label>備註<input name="note"></label>
-				<div class="full"><button class="btn btn-p" type="submit">上傳</button>
-					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) }>返回工單</a></div>
+				<label>{ i18n.T(ctx, "common.notes") }<input name="note"></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "photos.upload") }</button>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) }>{ i18n.T(ctx, "photos.back") }</a></div>
 			</form>
 		</div>
 		<script src="/static/photo-markup.js"></script>

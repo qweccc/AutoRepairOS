@@ -3,36 +3,37 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
 templ NewLookupItemPage(category, categoryLabel string, user model.User) {
-	@components.Layout("新增代碼", "/lookup", user, AppName) {
+	@components.Layout(i18n.T(ctx, "lookup.new_title"), "/lookup", user, AppName) {
 		<div class="card">
-			<h2>新增代碼（{ categoryLabel }）</h2>
+			<h2>{ i18n.T(ctx, "lookup.new_title") }（{ categoryLabel }）</h2>
 			<form class="frm" method="POST" action="/lookup">
 				@components.CSRFInput()
 				<input type="hidden" name="category" value={ category }>
-				<label>代碼<input name="code" required placeholder="例：07 或 A 或 引擎"></label>
-				<label>名稱<input name="label" required placeholder="例：富邦 或 引擎 或 強制險"></label>
-				<label>排序<input name="sort_order" type="number" value="0"></label>
-				<div class="full"><button class="btn btn-p" type="submit">新增</button> <a class="btn btn-s" href={ "/lookup?category=" + category }>取消</a></div>
+				<label>{ i18n.T(ctx, "lookup.field.code") }<input name="code" required placeholder={ i18n.T(ctx, "lookup.code_ph") }></label>
+				<label>{ i18n.T(ctx, "lookup.field.name") }<input name="label" required placeholder={ i18n.T(ctx, "lookup.label_ph") }></label>
+				<label>{ i18n.T(ctx, "lookup.field.sort") }<input name="sort_order" type="number" value="0"></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.create") }</button> <a class="btn btn-s" href={ "/lookup?category=" + category }>{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}
 }
 
 templ EditLookupItemPage(li model.LookupItem, user model.User) {
-	@components.Layout("編輯代碼", "/lookup", user, AppName) {
+	@components.Layout(i18n.T(ctx, "lookup.edit_title"), "/lookup", user, AppName) {
 		<div class="card">
-			<h2>編輯代碼 { li.Code }</h2>
+			<h2>{ i18n.T(ctx, "lookup.edit_title") } { li.Code }</h2>
 			<form class="frm" method="POST" action={ "/lookup/" + strconv.FormatInt(li.ID, 10) }>
 				@components.CSRFInput()
-				<label>代碼<input name="code" value={ li.Code } required></label>
-				<label>名稱<input name="label" value={ li.Label } required></label>
-				<label>排序<input name="sort_order" type="number" value={ strconv.Itoa(li.SortOrder) }></label>
-				<div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href={ "/lookup?category=" + li.Category }>取消</a></div>
+				<label>{ i18n.T(ctx, "lookup.field.code") }<input name="code" value={ li.Code } required></label>
+				<label>{ i18n.T(ctx, "lookup.field.name") }<input name="label" value={ li.Label } required></label>
+				<label>{ i18n.T(ctx, "lookup.field.sort") }<input name="sort_order" type="number" value={ strconv.Itoa(li.SortOrder) }></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button> <a class="btn btn-s" href={ "/lookup?category=" + li.Category }>{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"autorepairos/internal/model"
+	"autorepairos/internal/i18n"
 	"autorepairos/web/components"
 )
 
@@ -16,51 +17,51 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 	sopRecords []model.SOPRecord, sopTemplateOpts string, attachedTemplates []int64,
 	canCreateApproval bool, pendingApprovals []PendingApproval, user model.User) {
 
-	@components.Layout("工單 #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, AppName) {
+	@components.Layout(i18n.T(ctx, "workorder.detail")+" #"+strconv.FormatInt(wo.ID, 10), "/work-orders", user, AppName) {
 		if flashMsg != "" {
 			<div class="msg msg-ok">{ flashMsg }</div>
 		}
 		<div class="card">
-			<h2>工單 #{ strconv.FormatInt(wo.ID, 10) } — { wo.PlateNumber }</h2>
+			<h2>{ i18n.T(ctx, "workorder.detail") } #{ strconv.FormatInt(wo.ID, 10) } — { wo.PlateNumber }</h2>
 					<table>
 				<tr>
-					<th style="width:130px">車型</th><td>{ wo.BrandModel }</td>
-					<th style="width:130px">進廠里程</th><td>{ strconv.Itoa(wo.CurrentMileage) } km</td>
+					<th style="width:130px">{ i18n.T(ctx, "workorder.col.model") }</th><td>{ wo.BrandModel }</td>
+					<th style="width:130px">{ i18n.T(ctx, "workorder.col.mileage") }</th><td>{ strconv.Itoa(wo.CurrentMileage) } km</td>
 				</tr>
 				<tr>
-					<th>客戶</th><td>{ wo.CustomerName } / { wo.CustomerPhone }</td>
-					<th>技師</th><td>{ wo.TechnicianName }</td>
+					<th>{ i18n.T(ctx, "workorder.col.customer") }</th><td>{ wo.CustomerName } / { wo.CustomerPhone }</td>
+					<th>{ i18n.T(ctx, "workorder.col.technician") }</th><td>{ wo.TechnicianName }</td>
 				</tr>
 				<tr>
-					<th>狀態</th>
+					<th>{ i18n.T(ctx, "workorder.col.status") }</th>
 					<td><span class={ "pill " + statusPill[wo.Status] }>{ statusLabels[wo.Status] }</span></td>
-					<th>核准狀態</th>
+					<th>{ i18n.T(ctx, "workorder.col.approval_status") }</th>
 					<td><span class={ "pill " + approvalPill[wo.ApprovalStatus] }>{ approvalLabels[wo.ApprovalStatus] }</span></td>
 				</tr>
-				<tr><th>客戶反映</th><td colspan="3">{ wo.CustomerComplaint }</td></tr>
+				<tr><th>{ i18n.T(ctx, "workorder.col.complaint") }</th><td colspan="3">{ wo.CustomerComplaint }</td></tr>
 				<tr>
 					<th>SOP</th><td>{ sopStatusText(wo.SOPCompleted, len(sopRecords)) }</td>
-					<th>建立時間</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
+					<th>{ i18n.T(ctx, "workorder.col.created_at") }</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
 				</tr>
 				@InsuranceRow(wo, canEdit)
 			</table>
 			<div style="margin-top:16px">
 				@StatusControls(wo, canEdit)
 				<div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
-					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt" }>🧾 收據列印</a>
-					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/quotation?paper=a4" }>📋 估價單列印</a>
-					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/completion" }>✅ 完工證明</a>
-					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/worklogs" }>⏱ 技師工時</a>
-					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/photos" }>📷 車損照片</a>
+					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt" }>{ i18n.T(ctx, "workorder.action.receipt") }</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/quotation?paper=a4" }>{ i18n.T(ctx, "workorder.action.quotation") }</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/completion" }>{ i18n.T(ctx, "workorder.action.completion") }</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/worklogs" }>{ i18n.T(ctx, "workorder.action.worklogs") }</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/photos" }>{ i18n.T(ctx, "workorder.action.photos") }</a>
 				</div>
 			</div>
 		</div>
 
 		// T2.6：SOP 檢查表
 		<div class="card">
-			<h2>📋 SOP 檢查表</h2>
+			<h2>{ i18n.T(ctx, "workorder.section.sop") }</h2>
 			if len(sopRecords) == 0 {
-				<div class="empty">尚未掛入 SOP 模板</div>
+				<div class="empty">{ i18n.T(ctx, "workorder.sop.empty") }</div>
 			}
 			if len(sopRecords) > 0 {
 				@SOPChecklistTable(wo.ID, sopRecords, canEdit)
@@ -74,14 +75,14 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 							style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 							@templ.Raw(sopTemplateOpts)
 						</select>
-						<button class="btn btn-s" type="submit">掛入 SOP 模板</button>
+						<button class="btn btn-s" type="submit">{ i18n.T(ctx, "workorder.sop.attach") }</button>
 					</form>
 				}
 			}
 		</div>
 
 		<div class="card">
-			<h2>工單項目</h2>
+			<h2>{ i18n.T(ctx, "workorder.section.items") }</h2>
 			<div id="wo-items">
 				@WorkOrderItemsTable(wo.ID, items, techNames, canEdit, itemTotal, user)
 			</div>
@@ -93,23 +94,23 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 		@ApprovalRequestBlock(wo.ID, canCreateApproval, pendingApprovals)
 
 		<div class="card">
-			<h2>舊傷預檢</h2>
-			<p style="color:#64748b;font-size:12.5px">選擇舊傷類型後，點擊車身示意圖記錄位置；既有標記可於下方刪除。</p>
+			<h2>{ i18n.T(ctx, "workorder.section.walkaround") }</h2>
+			<p style="color:#64748b;font-size:12.5px">{ i18n.T(ctx, "workorder.walkaround.hint") }</p>
 			@WalkaroundCanvas(wo.ID, nil)
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
 				@WalkaroundMarkTypeSelect("scratch")
-				<label>備註<input id="walkaround-note" type="text" placeholder="例：左前葉子板凹痕"></label>
+				<label>{ i18n.T(ctx, "workorder.walkaround.note_label") }<input id="walkaround-note" type="text" placeholder={ i18n.T(ctx, "workorder.walkaround.note_ph") }></label>
 			</div>
 			<div id="walkaround-status" role="status" style="margin-top:6px;color:#94a3b8"></div>
 		</div>
 
 				if user.Role == "owner" || user.Role == "counter" {
 			<div class="card">
-				<h2>合計</h2>
+				<h2>{ i18n.T(ctx, "workorder.section.total") }</h2>
 				<table>
-					<tr><th>項目小計</th><td class="num" id="item-total">{ money(itemTotal) }</td></tr>
+					<tr><th>{ i18n.T(ctx, "workorder.total.subtotal") }</th><td class="num" id="item-total">{ money(itemTotal) }</td></tr>
 					<tr>
-						<th>工單總額</th>
+						<th>{ i18n.T(ctx, "workorder.total.grand") }</th>
 						<td class="num" id="wo-total" style="font-size:20px;font-weight:700;color:#38bdf8">{ money(wo.TotalAmount) }</td>
 					</tr>
 				</table>
@@ -122,17 +123,17 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 // WorkOrderItemsTable 工單項目表格（HTMX 局部更新目標）。
 templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[int64]string, canEdit bool, itemTotal float64, user model.User) {
 	if len(items) == 0 {
-		<div class="empty">尚未加入任何工資或零件</div>
+		<div class="empty">{ i18n.T(ctx, "workorder.items.empty") }</div>
 	}
 	if len(items) > 0 {
 	<table>
 		<tr>
-			<th>類型</th><th>描述</th><th class="num">數量</th>
+			<th>{ i18n.T(ctx, "workorder.col.type") }</th><th>{ i18n.T(ctx, "workorder.col.desc") }</th><th class="num">{ i18n.T(ctx, "workorder.col.qty") }</th>
 			{{ showMoney := user.Role == "owner" || user.Role == "counter" }}
 			if showMoney {
-				<th class="num">單價</th><th class="num">小計</th>
+				<th class="num">{ i18n.T(ctx, "workorder.col.unit_price") }</th><th class="num">{ i18n.T(ctx, "workorder.col.subtotal") }</th>
 			}
-			<th>主技師</th><th>助手</th><th>操作</th>
+			<th>{ i18n.T(ctx, "workorder.col.primary_tech") }</th><th>{ i18n.T(ctx, "workorder.col.assistant_tech") }</th><th>{ i18n.T(ctx, "workorder.col.actions") }</th>
 		</tr>
 			for _, it := range items {
 				<tr>
@@ -151,7 +152,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 								hx-post={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) + "/delete" }
 								hx-target="#wo-items"
 								hx-swap="innerHTML"
-								hx-confirm="刪除此項目？">刪除</a>
+								hx-confirm={ i18n.T(ctx, "workorder.items.delete_confirm") }>{ i18n.T(ctx, "workorder.items.delete") }</a>
 							</td>
 							}
 							if canEdit == false {
@@ -171,16 +172,16 @@ templ AddItemForm(woID int64) {
 		hx-swap="innerHTML"
 			hx-on::after-request="if(event.detail.successful && event.detail.elt === event.currentTarget) { document.getElementById('partSearch').value=''; document.getElementById('inventoryItemId').value='0'; document.getElementById('itemDesc').value=''; document.getElementById('phraseSearch').value=''; document.getElementById('phraseResults').innerHTML=''; document.getElementById('partResults').innerHTML=''; document.getElementById('addItemError').textContent=''; } if(!event.detail.successful){ document.getElementById('addItemError').textContent = event.detail.xhr.responseText || '加入失敗'; }">
 			@components.CSRFInput()
-		<label>類型
+		<label>{ i18n.T(ctx, "workorder.col.type") }
 			<select name="item_type" id="itemType" hx-on:change="togglePartSearch(this)">
-				<option value="labor">工資</option>
-				<option value="part">零件</option>
-				<option value="subcontract">外包</option>
+				<option value="labor">{ i18n.T(ctx, "workorder.item_type.labor") }</option>
+				<option value="part">{ i18n.T(ctx, "workorder.item_type.part") }</option>
+				<option value="subcontract">{ i18n.T(ctx, "workorder.item_type.subcontract") }</option>
 			</select>
 		</label>
-		<label class="full" id="partSearchWrap">零件搜尋（輸入零件名稱或料號；點選結果會自動切換為零件）
+		<label class="full" id="partSearchWrap">{ i18n.T(ctx, "workorder.form.part_search") }
 			<div class="search-bar">
-				<input type="search" id="partSearch" name="q" class="search-input" placeholder="例：機油、煞車片、BE071" autocomplete="off"
+				<input type="search" id="partSearch" name="q" class="search-input" placeholder={ i18n.T(ctx, "workorder.form.part_search_ph") } autocomplete="off"
 					hx-get="/api/parts" hx-trigger="keyup changed delay:300ms, search"
 					hx-target="#partResults" hx-swap="innerHTML"
 					hx-on::after-request="if(event.detail.successful) document.getElementById('partResults').style.display='block';">
@@ -189,32 +190,32 @@ templ AddItemForm(woID int64) {
 			<div id="partResults" class="part-results"></div>
 			<input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
 		</label>
-		<label class="full">描述
-			<input name="description" id="itemDesc" placeholder="例：更換煞車油、補胎" required>
+		<label class="full">{ i18n.T(ctx, "workorder.col.desc") }
+			<input name="description" id="itemDesc" placeholder={ i18n.T(ctx, "workorder.form.desc_ph") } required>
 			<div style="margin-top:4px">
-				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">📝 常用片語</button>
+				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">{ i18n.T(ctx, "workorder.form.phrases") }</button>
 				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a">
-					<input type="search" id="phraseSearch" name="phrase" class="search-input" placeholder="搜尋片語..." style="width:100%;margin-bottom:8px"
+					<input type="search" id="phraseSearch" name="phrase" class="search-input" placeholder={ i18n.T(ctx, "workorder.form.phrase_search_ph") } style="width:100%;margin-bottom:8px"
 						hx-get="/api/phrases/search" hx-trigger="keyup changed delay:300ms, search"
 						hx-target="#phraseResults" hx-swap="innerHTML">
 					<div id="phraseResults" style="max-height:150px;overflow-y:auto"></div>
 				</div>
 			</div>
 		</label>
-		<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
-		<label>單價<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
-		<label>主技師
+		<label>{ i18n.T(ctx, "workorder.col.qty") }<input name="quantity" type="number" min="1" value="1" required></label>
+		<label>{ i18n.T(ctx, "workorder.col.unit_price") }<input name="unit_price" type="number" min="0" step="1" value="0" required id="unitPrice"></label>
+		<label>{ i18n.T(ctx, "workorder.col.primary_tech") }
 			<div class="staff-picker">
-				<input class="staff-picker-input" name="q" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
+				<input class="staff-picker-input" name="q" type="search" placeholder={ i18n.T(ctx, "workorder.form.staff_search_ph") } autocomplete="off"
 					hx-get="/api/staff/search?format=picker&kind=employee" hx-trigger="keyup changed delay:250ms, search"
 					hx-target="next .staff-picker-results" hx-swap="innerHTML">
 				<input type="hidden" name="primary_technician_id" value="0">
 				<div class="staff-picker-results"></div>
 			</div>
 		</label>
-		<label>助手
+		<label>{ i18n.T(ctx, "workorder.col.assistant_tech") }
 			<div class="staff-picker">
-				<input class="staff-picker-input" name="q" type="search" placeholder="搜尋姓名或部門" autocomplete="off"
+				<input class="staff-picker-input" name="q" type="search" placeholder={ i18n.T(ctx, "workorder.form.staff_search_ph") } autocomplete="off"
 					hx-get="/api/staff/search?format=picker&kind=employee" hx-trigger="keyup changed delay:250ms, search"
 					hx-target="next .staff-picker-results" hx-swap="innerHTML">
 				<input type="hidden" name="assistant_technician_id" value="0">
@@ -222,7 +223,7 @@ templ AddItemForm(woID int64) {
 			</div>
 		</label>
 				<div id="addItemError" style="color:#f87171;margin-top:6px;font-size:13px"></div>
-				<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "workorder.form.add_item") }</button></div>
 	</form>
 	@PartSearchScript()
 	@PhrasePickerScript()
@@ -238,11 +239,11 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			@components.CSRFInput()
 			<select name="status" onchange="htmx.trigger(this.closest('form'), 'submit')"
 				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-				<option value="pending" selected?={ wo.Status == "pending" }>待處理</option>
-				<option value="in_progress" selected?={ wo.Status == "in_progress" }>進行中</option>
-				<option value="waiting_parts" selected?={ wo.Status == "waiting_parts" }>等零件</option>
-				<option value="completed" selected?={ wo.Status == "completed" }>已完成</option>
-				<option value="paid" selected?={ wo.Status == "paid" }>已結帳</option>
+				<option value="pending" selected?={ wo.Status == "pending" }>{ i18n.T(ctx, "workorder.status.pending") }</option>
+				<option value="in_progress" selected?={ wo.Status == "in_progress" }>{ i18n.T(ctx, "workorder.status.in_progress") }</option>
+				<option value="waiting_parts" selected?={ wo.Status == "waiting_parts" }>{ i18n.T(ctx, "workorder.status.waiting_parts") }</option>
+				<option value="completed" selected?={ wo.Status == "completed" }>{ i18n.T(ctx, "workorder.status.completed") }</option>
+				<option value="paid" selected?={ wo.Status == "paid" }>{ i18n.T(ctx, "workorder.status.paid") }</option>
 			</select>
 		</form>
 		<form hx-post={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/approval" }
@@ -252,9 +253,9 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			@components.CSRFInput()
 			<select name="approval_status" onchange="htmx.trigger(this.closest('form'), 'submit')"
 				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-				<option value="pending" selected?={ wo.ApprovalStatus == "pending" }>待核准</option>
-				<option value="approved" selected?={ wo.ApprovalStatus == "approved" }>已核准</option>
-				<option value="rejected" selected?={ wo.ApprovalStatus == "rejected" }>已駁回</option>
+				<option value="pending" selected?={ wo.ApprovalStatus == "pending" }>{ i18n.T(ctx, "workorder.approval.pending") }</option>
+				<option value="approved" selected?={ wo.ApprovalStatus == "approved" }>{ i18n.T(ctx, "workorder.approval.approved") }</option>
+				<option value="rejected" selected?={ wo.ApprovalStatus == "rejected" }>{ i18n.T(ctx, "workorder.approval.rejected") }</option>
 			</select>
 		</form>
 		<form hx-post={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/sop" }
@@ -270,14 +271,14 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 // InsuranceRow 保險理賠資訊列。
 templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 	if wo.IsInsurance || wo.InsuranceCompanyID > 0 {
-		<tr><th>件別</th><td><span class="pill p-progress">保險理賠</span></td>
-		<th>保險公司</th><td>{ wo.InsuranceName }</td></tr>
-		<tr><th>理賠編號</th><td>{ wo.ClaimNo }</td>
-		<th>事故日期</th><td>{ wo.AccidentDate }</td></tr>
-		<tr><th>自負額</th><td>{ money(wo.DeductibleAmount) }</td><th></th><td></td></tr>
+		<tr><th>{ i18n.T(ctx, "workorder.claim.category") }</th><td><span class="pill p-progress">{ i18n.T(ctx, "workorder.claim.insurance") }</span></td>
+		<th>{ i18n.T(ctx, "workorder.claim.company") }</th><td>{ wo.InsuranceName }</td></tr>
+		<tr><th>{ i18n.T(ctx, "workorder.claim.no") }</th><td>{ wo.ClaimNo }</td>
+		<th>{ i18n.T(ctx, "workorder.claim.accident_date") }</th><td>{ wo.AccidentDate }</td></tr>
+		<tr><th>{ i18n.T(ctx, "workorder.claim.deductible") }</th><td>{ money(wo.DeductibleAmount) }</td><th></th><td></td></tr>
 	}
 	if wo.IsInsurance == false && wo.InsuranceCompanyID == 0 {
-		<tr><th>件別</th><td><span class="pill">自費</span></td>
+		<tr><th>{ i18n.T(ctx, "workorder.claim.category") }</th><td><span class="pill">{ i18n.T(ctx, "workorder.claim.self_pay") }</span></td>
 		<th></th><td></td></tr>
 	}
 	<tr>
@@ -285,15 +286,15 @@ templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 			if canEdit {
 				<form class="frm" method="POST" action={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/claim" }>
 					@components.CSRFInput()
-					<label>理賠日期<input type="date" name="claim_date" value={ wo.ClaimDate }></label>
-					<label>理賠金額<input type="number" name="claim_amount" min="0" step="0.01" value={ strconv.FormatFloat(wo.ClaimAmount, 'f', 2, 64) }></label>
-					<label class="full">理賠備註<textarea name="claim_note">{ wo.ClaimNote }</textarea></label>
-					<div class="full"><button class="btn btn-s" type="submit">儲存理賠資料</button></div>
+					<label>{ i18n.T(ctx, "workorder.claim.date") }<input type="date" name="claim_date" value={ wo.ClaimDate }></label>
+					<label>{ i18n.T(ctx, "workorder.claim.amount") }<input type="number" name="claim_amount" min="0" step="0.01" value={ strconv.FormatFloat(wo.ClaimAmount, 'f', 2, 64) }></label>
+					<label class="full">{ i18n.T(ctx, "workorder.claim.note") }<textarea name="claim_note">{ wo.ClaimNote }</textarea></label>
+					<div class="full"><button class="btn btn-s" type="submit">{ i18n.T(ctx, "workorder.claim.save") }</button></div>
 				</form>
 			}
 			if !canEdit {
-				<b>理賠日期</b> { wo.ClaimDate }
-				<b>理賠金額</b> { money(wo.ClaimAmount) }
+				<b>{ i18n.T(ctx, "workorder.claim.date") }</b> { wo.ClaimDate }
+				<b>{ i18n.T(ctx, "workorder.claim.amount") }</b> { money(wo.ClaimAmount) }
 			}
 			if !canEdit && wo.ClaimNote != "" {
 				<p>{ wo.ClaimNote }</p>
@@ -304,7 +305,7 @@ templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 
 templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
 	<table>
-		<tr><th>檢查項目</th><th>必填</th><th>狀態</th><th>完成者</th><th>完成時間</th></tr>
+		<tr><th>{ i18n.T(ctx, "workorder.sop.col.item") }</th><th>{ i18n.T(ctx, "workorder.sop.col.required") }</th><th>{ i18n.T(ctx, "workorder.sop.col.status") }</th><th>{ i18n.T(ctx, "workorder.sop.col.by") }</th><th>{ i18n.T(ctx, "workorder.sop.col.at") }</th></tr>
 		for _, r := range records {
 			<tr>
 				<td>{ r.Description }</td>
@@ -314,20 +315,20 @@ templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
 						if canEdit {
 							<form method="POST" action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle" }>
 								@components.CSRFInput()
-								<button class="pill p-completed" type="submit">已完成</button>
+								<button class="pill p-completed" type="submit">{ i18n.T(ctx, "workorder.sop.done") }</button>
 							</form>
 						} else {
-							<span class="pill p-completed">已完成</span>
+							<span class="pill p-completed">{ i18n.T(ctx, "workorder.sop.done") }</span>
 						}
 					}
 					if !r.Completed {
 						if canEdit {
 							<form method="POST" action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/sop/records/" + strconv.FormatInt(r.ID, 10) + "/toggle" }>
 								@components.CSRFInput()
-								<button class="pill p-pending" type="submit">未勾選</button>
+								<button class="pill p-pending" type="submit">{ i18n.T(ctx, "workorder.sop.todo") }</button>
 							</form>
 						} else {
-							<span class="pill p-pending">未勾選</span>
+							<span class="pill p-pending">{ i18n.T(ctx, "workorder.sop.todo") }</span>
 						}
 					}
 				</td>

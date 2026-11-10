@@ -13,6 +13,13 @@ import (
 )
 
 func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
+	renderCustomerList(w, r, user, pages.CustomerCreateForm{})
+}
+
+// renderCustomerList queries and renders the customer list page. Shared by
+// ListCustomers and CreateCustomer's error path so a failed POST re-renders
+// the same templ page with the error and the user's input preserved.
+func renderCustomerList(w http.ResponseWriter, r *http.Request, user model.User, form pages.CustomerCreateForm) {
 	qv := r.URL.Query()
 	q := strings.TrimSpace(qv.Get("q"))
 	page := pageNo(r)
@@ -87,7 +94,7 @@ func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	pages.ListCustomersPage(customerRows, total, page, size, q, user).Render(r.Context(), w)
+	pages.ListCustomersPage(customerRows, total, page, size, q, form, user).Render(r.Context(), w)
 }
 
 // SearchCustomersAPI 客戶即時搜尋 API（HTMX 用），回傳純 HTML 列。
@@ -181,8 +188,27 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	phone := r.FormValue("phone")
 
+	// customerFormFromRequest refills the create form after a failed POST.
+	customerFormFromRequest := func(errMsg string) pages.CustomerCreateForm {
+		return pages.CustomerCreateForm{
+			ErrMsg:   errMsg,
+			Name:     strings.TrimSpace(name),
+			Phone:    strings.TrimSpace(phone),
+			Address:  strings.TrimSpace(r.FormValue("address")),
+			Tags:     strings.TrimSpace(r.FormValue("tags")),
+			Campaign: strings.TrimSpace(r.FormValue("campaign_code")),
+			Notes:    strings.TrimSpace(r.FormValue("notes")),
+			Pref:     notifPref(r.FormValue("notification_preference")),
+		}
+	}
+	rejectCustomer := func(errMsg string) {
+		user, _ := currentUser(r)
+		w.WriteHeader(http.StatusBadRequest)
+		renderCustomerList(w, r, user, customerFormFromRequest(errMsg))
+	}
+
 	if strings.TrimSpace(name) == "" || strings.TrimSpace(phone) == "" {
-		fail(w, "姓名與電話為必填")
+		rejectCustomer("姓名與電話為必填")
 		return
 	}
 
@@ -191,7 +217,7 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	// Telegram 可由表單填，但要驗格式與唯一性。
 	telegramID := strings.TrimSpace(r.FormValue("telegram_user_id"))
 	if err := validateTelegramUserID(telegramID); err != nil {
-		fail(w, err.Error())
+		rejectCustomer(err.Error())
 		return
 	}
 	if telegramID != "" {
@@ -203,7 +229,7 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 
 	// FIX: Use POST /customers/new for customer creation via a specific route.
 	// If this handler is reached via /customers/new, it will still work because
-	// r.FormValue doesn't care about the path. However, we need to ensure 
+	// r.FormValue doesn't care about the path. However, we need to ensure
 	// the router is configured correctly.
 	_, err := db.DB.Exec(`INSERT INTO customers
 		(name, phone, telegram_user_id, address, notification_preference, notes, tags, campaign_code, birthday)
@@ -217,7 +243,7 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("建立客戶失敗（phone=%s）: %v", strings.TrimSpace(phone), err)
 		if strings.Contains(err.Error(), "UNIQUE") {
-			fail(w, "電話號碼或 Telegram ID 已存在")
+			rejectCustomer("電話號碼或 Telegram ID 已存在")
 			return
 		}
 		fail(w, "建立客戶失敗")
@@ -263,8 +289,9 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimSpace(r.FormValue("name"))
 	phone := strings.TrimSpace(r.FormValue("phone"))
 
+	editPath := "/customers/" + strconv.FormatInt(id, 10) + "/edit"
 	if name == "" || phone == "" {
-		fail(w, "姓名與電話為必填")
+		formError(w, r, "編輯客戶", editPath, "姓名與電話為必填")
 		return
 	}
 
@@ -272,7 +299,7 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	// 這裡不驗就會讓同一個 chat id 綁兩個客戶 → 通知送錯人。
 	telegramID := strings.TrimSpace(r.FormValue("telegram_user_id"))
 	if err := validateTelegramUserID(telegramID); err != nil {
-		fail(w, err.Error())
+		formError(w, r, "編輯客戶", editPath, err.Error())
 		return
 	}
 	if telegramID != "" {

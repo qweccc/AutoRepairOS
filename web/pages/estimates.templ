@@ -3,6 +3,7 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -51,18 +52,18 @@ type EstimateItemRow struct {
 }
 
 templ EstimateListPage(rows []EstimateListRow, user model.User) {
-	@components.Layout("估價草稿", "/estimates", user, AppName) {
+	@components.Layout(i18n.T(ctx, "estimates.title"), "/estimates", user, AppName) {
 		<div class="card">
-			<h2>估價草稿</h2>
+			<h2>{ i18n.T(ctx, "estimates.title") }</h2>
 			if user.Role == "owner" || user.Role == "counter" {
-				<p><a class="btn btn-p" href="/estimates/new">＋ 建立估價</a></p>
+				<p><a class="btn btn-p" href="/estimates/new">{ i18n.T(ctx, "estimates.new") }</a></p>
 			}
 			if len(rows) == 0 {
-				<div class="empty">尚無估價草稿</div>
+				<div class="empty">{ i18n.T(ctx, "estimates.empty") }</div>
 			}
 			if len(rows) > 0 {
 				<table>
-					<tr><th>估價編號</th><th>車牌 / 車型</th><th>客戶</th><th>狀態</th><th class="num">報價總額</th><th>建立時間</th><th>操作</th></tr>
+					<tr><th>{ i18n.T(ctx, "estimates.field.id") }</th><th>{ i18n.T(ctx, "estimates.field.vehicle") }</th><th>{ i18n.T(ctx, "estimates.field.customer") }</th><th>{ i18n.T(ctx, "estimates.field.status") }</th><th class="num">{ i18n.T(ctx, "estimates.field.total") }</th><th>{ i18n.T(ctx, "estimates.field.created") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th></tr>
 					for _, e := range rows {
 						<tr>
 							<td>#{ strconv.FormatInt(e.ID, 10) }</td>
@@ -70,18 +71,18 @@ templ EstimateListPage(rows []EstimateListRow, user model.User) {
 							<td>{ e.CustomerName }</td>
 							<td>
 								if e.Status == "converted" {
-									<span class="pill p-completed">已轉工單</span>
+									<span class="pill p-completed">{ i18n.T(ctx, "estimates.status_converted") }</span>
 								}
 								if e.Status != "converted" {
-									<span class="pill p-pending">草稿</span>
+									<span class="pill p-pending">{ i18n.T(ctx, "estimates.status_draft") }</span>
 								}
 							</td>
 							<td class="num">{ estimateMoney(e.TotalAmount) }</td>
 							<td>{ e.CreatedAt }</td>
 							<td>
-								<a class="btn btn-s" href={ estimateURL(e.ID) }>查看</a>
+								<a class="btn btn-s" href={ estimateURL(e.ID) }>{ i18n.T(ctx, "estimates.view") }</a>
 								if e.ConvertedWorkOrderID > 0 {
-									<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) }>工單</a>
+									<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) }>{ i18n.T(ctx, "subcontract.field.workorder_th") }</a>
 								}
 							</td>
 						</tr>
@@ -93,32 +94,32 @@ templ EstimateListPage(rows []EstimateListRow, user model.User) {
 }
 
 templ EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string, user model.User) {
-	@components.Layout("建立估價", "/estimates", user, AppName) {
+	@components.Layout(i18n.T(ctx, "estimates.new_layout"), "/estimates", user, AppName) {
 		<div class="card">
-			<h2>建立估價草稿</h2>
+			<h2>{ i18n.T(ctx, "estimates.new_title") }</h2>
 			if len(vehicles) == 0 {
-				<div class="msg msg-err">目前沒有可用車輛，請先建立客戶與車輛資料。</div>
+				<div class="msg msg-err">{ i18n.T(ctx, "estimates.no_vehicles") }</div>
 			}
 			<form class="frm" method="POST" action="/estimates">
 				@components.CSRFInput()
-				<label class="full">車牌（輸入車牌、車型或車主搜尋）
+				<label class="full">{ i18n.T(ctx, "estimates.vehicle_label") }
 					<div class="vsearch" data-vsearch data-options={ vehicleOptionsJSON }>
 						<input type="hidden" name="vehicle_id" id="estimateVehicleID" value="0" required>
-						<input name="plate_number" class="vs-input" id="estimatePlate"
-							placeholder="例：8168-D5" autocomplete="off" required>
+						<input name="plate_number" class="vs-input" id="estimatePlate" autocapitalize="characters" autocomplete="off"
+							placeholder={ i18n.T(ctx, "estimates.plate_ph") } autocomplete="off" required>
 						<div class="vs-list hidden"></div>
 					</div>
-					<span style="color:#94a3b8;font-size:12px">選取車輛後會顯示車型與車主；輸入至少 2 個字元可搜尋全部車輛。</span>
+					<span style="color:#94a3b8;font-size:12px">{ i18n.T(ctx, "estimates.vehicle_hint") }</span>
 				</label>
-				<label>目前里程
-					<input name="current_mileage" type="number" min="0" value="0" placeholder="例：85000">
+				<label>{ i18n.T(ctx, "estimates.mileage") }
+					<input name="current_mileage" type="number" min="0" value="0" placeholder={ i18n.T(ctx, "estimates.mileage_ph") }>
 				</label>
-				<label class="full">客戶反映
-					<textarea name="customer_complaint" placeholder="例：冷氣怠速時不冷，行駛後恢復"></textarea>
+				<label class="full">{ i18n.T(ctx, "estimates.complaint") }
+					<textarea name="customer_complaint" placeholder={ i18n.T(ctx, "estimates.complaint_ph") }></textarea>
 				</label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">建立草稿並加入估價項目</button>
-					<a class="btn btn-s" href="/estimates">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "estimates.create_submit") }</button>
+					<a class="btn btn-s" href="/estimates">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
 		</div>
@@ -128,30 +129,30 @@ templ EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON strin
 }
 
 templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.User, canEdit bool) {
-	@components.Layout("估價 #"+strconv.FormatInt(e.ID, 10), "/estimates", user, AppName) {
+	@components.Layout(i18n.T(ctx, "estimates.detail_layout")+strconv.FormatInt(e.ID, 10), "/estimates", user, AppName) {
 		<div class="card">
-			<h2>估價草稿 #{ strconv.FormatInt(e.ID, 10) }</h2>
+			<h2>{ i18n.T(ctx, "estimates.title") } #{ strconv.FormatInt(e.ID, 10) }</h2>
 			<table>
-				<tr><th>車輛</th><td>{ e.PlateNumber } / { e.BrandModel }</td><th>客戶</th><td>{ e.CustomerName } / { e.CustomerPhone }</td></tr>
-				<tr><th>目前里程</th><td>{ strconv.Itoa(e.CurrentMileage) } km</td><th>建立時間</th><td>{ e.CreatedAt }</td></tr>
-				<tr><th>客戶反映</th><td colspan="3">{ e.CustomerComplaint }</td></tr>
+				<tr><th>{ i18n.T(ctx, "estimates.field.vehicle2") }</th><td>{ e.PlateNumber } / { e.BrandModel }</td><th>{ i18n.T(ctx, "estimates.field.customer") }</th><td>{ e.CustomerName } / { e.CustomerPhone }</td></tr>
+				<tr><th>{ i18n.T(ctx, "estimates.mileage") }</th><td>{ strconv.Itoa(e.CurrentMileage) } km</td><th>{ i18n.T(ctx, "estimates.field.created") }</th><td>{ e.CreatedAt }</td></tr>
+				<tr><th>{ i18n.T(ctx, "estimates.complaint") }</th><td colspan="3">{ e.CustomerComplaint }</td></tr>
 			</table>
 			if e.Status == "converted" {
-				<div class="msg msg-ok">已轉為工單 #{ strconv.FormatInt(e.ConvertedWorkOrderID, 10) }；原始報價金額 { estimateMoney(e.TotalAmount) }。</div>
+				<div class="msg msg-ok">{ i18n.T(ctx, "estimates.converted_prefix") }{ strconv.FormatInt(e.ConvertedWorkOrderID, 10) }{ i18n.T(ctx, "estimates.converted_mid") } { estimateMoney(e.TotalAmount) }{ i18n.T(ctx, "estimates.source_suffix") }</div>
 				<p>
-					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) }>開啟正式工單</a>
-					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) + "/estimate-source" }>查看工單估價來源</a>
+					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) }>{ i18n.T(ctx, "estimates.open_workorder") }</a>
+					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) + "/estimate-source" }>{ i18n.T(ctx, "estimates.view_source") }</a>
 				</p>
 			}
 		</div>
 		<div class="card">
-			<h2>估價項目</h2>
+			<h2>{ i18n.T(ctx, "estimates.items_title") }</h2>
 			if len(items) == 0 {
-				<div class="empty">尚未加入任何工資服務或零件</div>
+				<div class="empty">{ i18n.T(ctx, "estimates.items_empty") }</div>
 			}
 			if len(items) > 0 {
 				<table>
-					<tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th><th>操作</th></tr>
+					<tr><th>{ i18n.T(ctx, "estimates.field.type") }</th><th>{ i18n.T(ctx, "estimates.field.description") }</th><th class="num">{ i18n.T(ctx, "estimates.field.quantity") }</th><th class="num">{ i18n.T(ctx, "estimates.field.unit_price") }</th><th class="num">{ i18n.T(ctx, "estimates.field.subtotal") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th></tr>
 					for _, item := range items {
 						<tr>
 							<td><span class="pill p-progress">{ estimateItemType(item.ItemType) }</span></td>
@@ -161,7 +162,7 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 								if canEdit && e.Status == "draft" {
 									<form method="POST" action={ estimateURL(e.ID) + "/items/" + strconv.FormatInt(item.ID, 10) + "/delete" }>
 										@components.CSRFInput()
-										<button class="btn btn-d" type="submit">刪除</button>
+										<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.delete") }</button>
 									</form>
 								}
 							</td>
@@ -172,30 +173,30 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 			if canEdit && e.Status == "draft" {
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
 					@components.CSRFInput()
-					<label>類型
+					<label>{ i18n.T(ctx, "estimates.field.type") }
 						<select name="item_type" id="estimateItemType">
-								<option value="labor" selected>工資 / 服務</option><option value="part">零件</option><option value="subcontract">外包</option>
+								<option value="labor" selected>{ i18n.T(ctx, "estimates.item_type_labor") }</option><option value="part">{ i18n.T(ctx, "estimates.item_type_part") }</option><option value="subcontract">{ i18n.T(ctx, "estimates.item_type_subcontract") }</option>
 						</select>
 					</label>
-					<label>數量<input name="quantity" type="number" min="1" value="1" required></label>
+					<label>{ i18n.T(ctx, "estimates.field.quantity") }<input name="quantity" type="number" min="1" value="1" required></label>
 				</form>
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/items" }>
 					@components.CSRFInput()
-					<label class="full" id="estimateSearchWrap">服務/工資/零件搜尋
-						<input type="search" id="estimateSearch" name="q" placeholder="輸入關鍵字搜尋服務片語或零件"
+					<label class="full" id="estimateSearchWrap">{ i18n.T(ctx, "estimates.search_label") }
+						<input type="search" id="estimateSearch" name="q" placeholder={ i18n.T(ctx, "estimates.search_ph") }
 							hx-get="/api/estimate-items/search" hx-trigger="keyup delay:300ms"
 							hx-target="#estimateSearchResults" hx-swap="innerHTML" hx-on::after-request="document.getElementById('estimateSearchResults').style.display='block';" autocomplete="off">
 						<div id="estimateSearchResults" class="part-results"></div>
 					</label>
-					<label class="full">描述
-						<input name="description" id="estimateItemDescription" placeholder="例：更換引擎機油與機油芯" required>
+					<label class="full">{ i18n.T(ctx, "estimates.field.description") }
+						<input name="description" id="estimateItemDescription" placeholder={ i18n.T(ctx, "estimates.description_ph") } required>
 					</label>
 					<input type="hidden" name="inventory_item_id" id="estimateInventoryItemID" value="0">
 					<input type="hidden" name="item_type" id="estimateItemTypeHidden" value="labor">
 					<input type="hidden" name="quantity" id="estimateQuantityHidden" value="1">
-					<label>單價<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder="例：1200" required></label>
+					<label>{ i18n.T(ctx, "estimates.field.unit_price") }<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder={ i18n.T(ctx, "estimates.unit_price_ph") } required></label>
 					<div id="estAddErr" style="color:#f87171;margin-top:6px;font-size:13px"></div>
-					<div class="full"><button class="btn btn-p" type="submit">加入項目</button></div>
+					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "estimates.add_item") }</button></div>
 				</form>
 				<script>
 						(function() {
@@ -263,46 +264,46 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 				</script>
 				<form class="frm" method="POST" action={ estimateURL(e.ID) + "/discount" }>
 					@components.CSRFInput()
-					<label>折扣金額<input name="discount_amount" type="number" min="0" max={ strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64) } step="1" value={ strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64) }></label>
-					<div><button class="btn btn-s" type="submit">更新折扣</button></div>
+					<label>{ i18n.T(ctx, "estimates.discount_amount") }<input name="discount_amount" type="number" min="0" max={ strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64) } step="1" value={ strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64) }></label>
+					<div><button class="btn btn-s" type="submit">{ i18n.T(ctx, "estimates.update_discount") }</button></div>
 				</form>
 			}
 		</div>
 		<div class="card">
-			<h2>報價總計</h2>
+			<h2>{ i18n.T(ctx, "estimates.total_title") }</h2>
 			<table>
-				<tr><th>項目小計</th><td class="num">{ estimateMoney(estimateSubtotal(items)) }</td></tr>
-				<tr><th>折扣</th><td class="num">-{ estimateMoney(e.DiscountAmount) }</td></tr>
-				<tr><th>估價總額</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">{ estimateMoney(e.TotalAmount) }</td></tr>
+				<tr><th>{ i18n.T(ctx, "estimates.subtotal") }</th><td class="num">{ estimateMoney(estimateSubtotal(items)) }</td></tr>
+				<tr><th>{ i18n.T(ctx, "estimates.discount") }</th><td class="num">-{ estimateMoney(e.DiscountAmount) }</td></tr>
+				<tr><th>{ i18n.T(ctx, "estimates.grand_total") }</th><td class="num" style="font-size:20px;font-weight:700;color:#38bdf8">{ estimateMoney(e.TotalAmount) }</td></tr>
 			</table>
 			if canEdit && e.Status == "draft" {
 				<form method="POST" action={ estimateURL(e.ID) + "/convert" } style="margin-top:16px">
 					@components.CSRFInput()
-					<button class="btn btn-p" type="submit" data-confirm="將此估價轉為正式工單？轉換後草稿將鎖定。">轉為正式工單</button>
+					<button class="btn btn-p" type="submit" data-confirm={ i18n.T(ctx, "estimates.convert_confirm") }>{ i18n.T(ctx, "estimates.convert") }</button>
 				</form>
 			}
-			<p><a class="btn btn-s" href="/estimates">回估價列表</a></p>
+			<p><a class="btn btn-s" href="/estimates">{ i18n.T(ctx, "estimates.back") }</a></p>
 		</div>
 	}
 }
 
 templ EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID int64, quoteTotal, quoteDiscount float64, user model.User) {
-	@components.Layout("工單估價來源", "/estimates", user, AppName) {
+	@components.Layout(i18n.T(ctx, "estimates.source_title"), "/estimates", user, AppName) {
 		<div class="card">
-			<h2>工單 #{ strconv.FormatInt(workOrderID, 10) } 的估價來源</h2>
-			<p>來源估價 #{ strconv.FormatInt(e.ID, 10) }，車輛 { e.PlateNumber } / { e.BrandModel }，客戶 { e.CustomerName }。</p>
-			<p>原始報價總額：<strong>{ estimateMoney(quoteTotal) }</strong>；原始折扣：{ estimateMoney(quoteDiscount) }</p>
-			<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) }>開啟正式工單</a>
-			<a class="btn btn-s" href={ estimateURL(e.ID) }>查看估價草稿</a>
+			<h2>{ i18n.T(ctx, "estimates.source_prefix") }{ strconv.FormatInt(workOrderID, 10) } { i18n.T(ctx, "estimates.source_heading_suffix") }</h2>
+			<p>{ i18n.T(ctx, "estimates.source_line_prefix") }{ strconv.FormatInt(e.ID, 10) }{ i18n.T(ctx, "estimates.source_vehicle_sep") } { e.PlateNumber } / { e.BrandModel }{ i18n.T(ctx, "estimates.source_customer_sep") } { e.CustomerName }{ i18n.T(ctx, "estimates.source_suffix") }</p>
+			<p>{ i18n.T(ctx, "estimates.source_total_label") }<strong>{ estimateMoney(quoteTotal) }</strong>{ i18n.T(ctx, "estimates.source_discount_label") }{ estimateMoney(quoteDiscount) }</p>
+			<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) }>{ i18n.T(ctx, "estimates.open_workorder") }</a>
+			<a class="btn btn-s" href={ estimateURL(e.ID) }>{ i18n.T(ctx, "estimates.view_draft") }</a>
 		</div>
 		<div class="card">
-			<h2>原始報價項目（轉換時封存）</h2>
+			<h2>{ i18n.T(ctx, "estimates.source_items_title") }</h2>
 			if len(items) == 0 {
-				<div class="empty">原估價沒有項目</div>
+				<div class="empty">{ i18n.T(ctx, "estimates.source_items_empty") }</div>
 			}
 			if len(items) > 0 {
 				<table>
-					<tr><th>類型</th><th>描述</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>
+					<tr><th>{ i18n.T(ctx, "estimates.field.type") }</th><th>{ i18n.T(ctx, "estimates.field.description") }</th><th class="num">{ i18n.T(ctx, "estimates.field.quantity") }</th><th class="num">{ i18n.T(ctx, "estimates.field.unit_price") }</th><th class="num">{ i18n.T(ctx, "estimates.field.subtotal") }</th></tr>
 					for _, item := range items {
 						<tr><td>{ estimateItemType(item.ItemType) }</td><td>{ item.Description }</td>
 							<td class="num">{ strconv.Itoa(item.Quantity) }</td><td class="num">{ estimateMoney(item.UnitPrice) }</td>

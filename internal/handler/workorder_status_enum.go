@@ -4,11 +4,11 @@ package handler
 type WorkOrderStatus string
 
 const (
-	WorkOrderStatusPending       WorkOrderStatus = "pending"
-	WorkOrderStatusInProgress    WorkOrderStatus = "in_progress"
-	WorkOrderStatusWaitingParts  WorkOrderStatus = "waiting_parts"
-	WorkOrderStatusCompleted     WorkOrderStatus = "completed"
-	WorkOrderStatusPaid          WorkOrderStatus = "paid"
+	WorkOrderStatusPending      WorkOrderStatus = "pending"
+	WorkOrderStatusInProgress   WorkOrderStatus = "in_progress"
+	WorkOrderStatusWaitingParts WorkOrderStatus = "waiting_parts"
+	WorkOrderStatusCompleted    WorkOrderStatus = "completed"
+	WorkOrderStatusPaid         WorkOrderStatus = "paid"
 )
 
 // IsMutable reports whether the work order can still be edited.

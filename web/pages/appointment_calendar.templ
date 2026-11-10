@@ -1,35 +1,37 @@
 package pages
 
+import "autorepairos/internal/i18n"
+
 templ AppointmentCalendar(date, view, status string, days []CalendarDay) {
 	<div id="appointment-calendar">
 		<form hx-get="/api/appointments/calendar" hx-trigger="change" hx-target="#appointment-calendar" hx-swap="outerHTML" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-			<label>視圖
+			<label>{ i18n.T(ctx, "appointment.calendar.view") }
 				<select name="view">
-					<option value="day" selected?={ view == "day" }>日</option>
-					<option value="week" selected?={ view == "week" }>週</option>
+					<option value="day" selected?={ view == "day" }>{ i18n.T(ctx, "appointment.calendar.day") }</option>
+					<option value="week" selected?={ view == "week" }>{ i18n.T(ctx, "appointment.calendar.week") }</option>
 				</select>
 			</label>
-			<label>日期<input type="date" name="date" value={ date } /></label>
-			<label>狀態
+			<label>{ i18n.T(ctx, "appointment.calendar.date") }<input type="date" name="date" value={ date } /></label>
+			<label>{ i18n.T(ctx, "appointment.calendar.status") }
 				<select name="status">
-					<option value="" selected?={ status == "" }>全部狀態</option>
-					<option value="booked" selected?={ status == "booked" }>已預約</option>
-					<option value="confirmed" selected?={ status == "confirmed" }>已確認</option>
-					<option value="arrived" selected?={ status == "arrived" }>已進廠</option>
-					<option value="completed" selected?={ status == "completed" }>已完成</option>
-					<option value="cancelled" selected?={ status == "cancelled" }>已取消</option>
+					<option value="" selected?={ status == "" }>{ i18n.T(ctx, "appointment.status_all") }</option>
+					<option value="booked" selected?={ status == "booked" }>{ i18n.T(ctx, "appointment.status.booked") }</option>
+					<option value="confirmed" selected?={ status == "confirmed" }>{ i18n.T(ctx, "appointment.status.confirmed") }</option>
+					<option value="arrived" selected?={ status == "arrived" }>{ i18n.T(ctx, "appointment.status.arrived") }</option>
+					<option value="completed" selected?={ status == "completed" }>{ i18n.T(ctx, "appointment.status.completed") }</option>
+					<option value="cancelled" selected?={ status == "cancelled" }>{ i18n.T(ctx, "appointment.status.cancelled") }</option>
 				</select>
 			</label>
-			<a class="btn btn-s" href={ calendarURL(date, view, status, -1) } hx-get={ calendarURL(date, view, status, -1) } hx-target="#appointment-calendar" hx-swap="outerHTML">上一{ viewLabel(view) }</a>
-			<a class="btn btn-s" href={ calendarURL(date, view, status, 1) } hx-get={ calendarURL(date, view, status, 1) } hx-target="#appointment-calendar" hx-swap="outerHTML">下一{ viewLabel(view) }</a>
+			<a class="btn btn-s" href={ calendarURL(date, view, status, -1) } hx-get={ calendarURL(date, view, status, -1) } hx-target="#appointment-calendar" hx-swap="outerHTML">{ i18n.T(ctx, "appointment.calendar.prev") }{ viewLabel(view) }</a>
+			<a class="btn btn-s" href={ calendarURL(date, view, status, 1) } hx-get={ calendarURL(date, view, status, 1) } hx-target="#appointment-calendar" hx-swap="outerHTML">{ i18n.T(ctx, "appointment.calendar.next") }{ viewLabel(view) }</a>
 		</form>
 		for _, day := range days {
 			<h3 style="margin:12px 0 6px">{ day.Label }</h3>
 			if len(day.Appointments) == 0 {
-				<div class="empty">此日沒有預約</div>
+				<div class="empty">{ i18n.T(ctx, "appointment.calendar.empty") }</div>
 			} else {
 				<table>
-					<tr><th>時段</th><th>車牌／客戶</th><th>工位</th><th>服務內容</th><th>狀態</th></tr>
+					<tr><th>{ i18n.T(ctx, "appointment.calendar.col.time") }</th><th>{ i18n.T(ctx, "appointment.calendar.col.plate_customer") }</th><th>{ i18n.T(ctx, "appointment.calendar.col.bay") }</th><th>{ i18n.T(ctx, "appointment.calendar.col.service") }</th><th>{ i18n.T(ctx, "appointment.calendar.col.status") }</th></tr>
 					for _, appointment := range day.Appointments {
 						<tr>
 							<td>{ appointment.AppointmentTime }</td>

@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"autorepairos/internal/model"
+	"autorepairos/internal/i18n"
 	"autorepairos/web/components"
 )
 
@@ -11,6 +12,8 @@ type NewWorkOrderPageData struct {
 	FlashHTML          string
 	NotFoundHTML       string
 	ApptBannerHTML     string
+	ErrMsg             string
+	Complaint          string
 	PreAppointment     int64
 	PreVehicle         int64
 	VehicleOptionsJSON string
@@ -23,72 +26,75 @@ type NewWorkOrderPageData struct {
 }
 
 templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
-	@components.Layout("開立工單", "/work-orders", user, AppName) {
+	@components.Layout(i18n.T(ctx, "workorder.new"), "/work-orders", user, AppName) {
 		@templ.Raw(data.FlashHTML)
+		if data.ErrMsg != "" {
+			<div class="msg msg-err">{ data.ErrMsg }</div>
+		}
 		@templ.Raw(data.NotFoundHTML)
 		@templ.Raw(data.ApptBannerHTML)
 		<div class="card">
-			<h2>開立工單</h2>
+			<h2>{ i18n.T(ctx, "workorder.new") }</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-				在下方輸入車牌、車型或車主姓名即可即時篩選，點選後確認車主再填里程。
+				{ i18n.T(ctx, "workorder.new_hint") }
 			</p>
 			<form class="frm" method="POST" action="/work-orders" id="woForm">
 				@components.CSRFInput()
 				<input type="hidden" name="appointment_id" value={ strconv.FormatInt(data.PreAppointment, 10) }/>
-				<label class="full">車輛
+				<label class="full">{ i18n.T(ctx, "workorder.form.vehicle") }
 					<div class="vsearch" data-vsearch data-options={ data.VehicleOptionsJSON } if data.PreVehicle > 0 {
 						data-picked="1"
 					}>
 						<input type="hidden" name="vehicle_id" id="vehicle_id" value={ strconv.FormatInt(data.PreVehicle, 10) } required/>
-						<input class="vs-input" id="vsInput" autocomplete="off"
-							placeholder="輸入車牌 / 車型 / 車主 / 電話（例：ABC-1234）"
+						<input class="vs-input" id="vsInput" autocomplete="off" autocapitalize="characters" inputmode="text"
+							placeholder={ i18n.T(ctx, "workorder.form.vehicle_ph") }
 							value={ data.PresetLabel }/>
 						<div class="vs-list hidden"></div>
 					</div>
 					<noscript>
 						<select name="vehicle_id_fallback" required style="margin-top:8px">
-							<option value="">— 請選擇車輛 —</option>
+							<option value="">{ i18n.T(ctx, "workorder.form.vehicle_none") }</option>
 							for _, v := range data.Vehicles {
 								<option value={ strconv.FormatInt(v.ID, 10) } selected?={ v.ID == data.PreVehicle }>
 									{ v.PlateNumber } / { v.BrandModel } / { v.CustomerName }
 								</option>
 							}
 							if len(data.Vehicles) == 0 {
-								<option value="0">— 查無車輛，請先至車輛頁新增 —</option>
+								<option value="0">{ i18n.T(ctx, "workorder.form.vehicle_no_results") }</option>
 							}
 						</select>
 					</noscript>
-					<button type="button" class="btn btn-s" style="margin-top:8px" onclick="openQuickModal()">⚡ 查無車牌？快速建立客戶與車輛</button>
+					<button type="button" class="btn btn-s" style="margin-top:8px" onclick="openQuickModal()">{ i18n.T(ctx, "workorder.form.quick_vehicle") }</button>
 				</label>
-				<label>進廠里程<input name="current_mileage" type="number" min="0" value={ data.Mileage } required/></label>
-				<label>技師<select name="technician_id"><option value="0">未指派</option>@templ.Raw(data.TechnicianOptions)</select></label>
-				<label>需要核准<select name="approval_status">
-					<option value="not_required">不需要</option>
-					<option value="pending">需客戶核准</option>
+				<label>{ i18n.T(ctx, "workorder.col.mileage") }<input name="current_mileage" type="number" min="0" value={ data.Mileage } required/></label>
+				<label>{ i18n.T(ctx, "workorder.col.technician") }<select name="technician_id"><option value="0">{ i18n.T(ctx, "workorder.form.unassigned") }</option>@templ.Raw(data.TechnicianOptions)</select></label>
+				<label>{ i18n.T(ctx, "workorder.form.approval") }<select name="approval_status">
+					<option value="not_required">{ i18n.T(ctx, "workorder.form.approval_none") }</option>
+					<option value="pending">{ i18n.T(ctx, "workorder.form.approval_customer") }</option>
 				</select></label>
-				<label>車主 @templ.Raw(data.CustomerHintHTML)</label>
-				<label class="full">客戶反映問題<textarea name="customer_complaint" placeholder="例：引擎異音、煞車踏板偏軟"></textarea></label>
+				<label>{ i18n.T(ctx, "workorder.form.owner") } @templ.Raw(data.CustomerHintHTML)</label>
+				<label class="full">{ i18n.T(ctx, "workorder.form.complaint") }<textarea name="customer_complaint" placeholder={ i18n.T(ctx, "workorder.form.complaint_ph") }>{ data.Complaint }</textarea></label>
 				<div class="full" style="border-top:1px solid #263449;padding-top:16px;margin-top:4px">
 					<p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
-						保險理賠（選填）：勾選後需指定保險公司，報表才能區分保險件與自費件。
+						{ i18n.T(ctx, "workorder.claim.hint") }
 					</p>
 				</div>
-				<label>件別<select name="is_insurance" id="isInsurance">
-					<option value="0">自費</option>
-					<option value="1">保險理賠</option>
+				<label>{ i18n.T(ctx, "workorder.claim.category") }<select name="is_insurance" id="isInsurance">
+					<option value="0">{ i18n.T(ctx, "workorder.claim.self_pay") }</option>
+					<option value="1">{ i18n.T(ctx, "workorder.claim.insurance") }</option>
 				</select></label>
-				<label>保險公司<select name="insurance_company_id" id="insuranceCompany">@templ.Raw(data.InsuranceOptions)</select>
+				<label>{ i18n.T(ctx, "workorder.claim.company") }<select name="insurance_company_id" id="insuranceCompany">@templ.Raw(data.InsuranceOptions)</select>
 					<input type="hidden" name="insurance_company_id_mirror" id="insuranceCompanyMirror" value=""/>
 				</label>
-				<label>理賠案件編號<input name="claim_no" placeholder="保險公司給的報案號"/></label>
-				<label>事故日期<input name="accident_date" type="date"/></label>
-				<label>自負額<input name="deductible_amount" type="number" min="0" step="1" placeholder="0"/></label>
-				<label>理賠日期<input name="claim_date" type="date"/></label>
-				<label>理賠金額<input name="claim_amount" type="number" min="0" step="0.01" value="0"/></label>
-				<label class="full">理賠備註<textarea name="claim_note"></textarea></label>
+				<label>{ i18n.T(ctx, "workorder.claim.no_label") }<input name="claim_no" placeholder={ i18n.T(ctx, "workorder.claim.no_ph") }/></label>
+				<label>{ i18n.T(ctx, "workorder.claim.accident_date") }<input name="accident_date" type="date"/></label>
+				<label>{ i18n.T(ctx, "workorder.claim.deductible") }<input name="deductible_amount" type="number" min="0" step="1" placeholder="0"/></label>
+				<label>{ i18n.T(ctx, "workorder.claim.date") }<input name="claim_date" type="date"/></label>
+				<label>{ i18n.T(ctx, "workorder.claim.amount") }<input name="claim_amount" type="number" min="0" step="0.01" value="0"/></label>
+				<label class="full">{ i18n.T(ctx, "workorder.claim.note") }<textarea name="claim_note"></textarea></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">建立工單</button>
-					<a class="btn btn-s" href="/work-orders">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "workorder.create") }</button>
+					<a class="btn btn-s" href="/work-orders">{ i18n.T(ctx, "workorder.cancel") }</a>
 				</div>
 			</form>
 		</div>
@@ -124,21 +130,21 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 		<div id="quickModal" class="modal-backdrop hidden">
 			<div class="modal-card">
 				<div class="modal-header">
-					<h3>⚡ 快速建立客戶與車輛</h3>
+					<h3>{ i18n.T(ctx, "workorder.quick.title") }</h3>
 					<button type="button" class="close-btn" onclick="closeQuickModal()">✕</button>
 				</div>
 				<form id="quickForm" hx-post="/api/quick-vehicle" hx-target="#quickVehicleStatus" hx-swap="innerHTML">
 					@components.CSRFInput()
 					<div class="frm">
-						<label>車牌號碼<input name="plate_number" id="quickPlate" required/></label>
-						<label>廠牌車型<input name="brand_model" placeholder="例：Toyota RAV4" required/></label>
-						<label>車主姓名<input name="customer_name" required/></label>
-						<label>聯絡電話<input name="customer_phone" required/></label>
-						<label>目前里程<input name="current_mileage" type="number" min="0" required/></label>
+						<label>{ i18n.T(ctx, "workorder.quick.plate") }<input name="plate_number" id="quickPlate" required/></label>
+						<label>{ i18n.T(ctx, "workorder.quick.model") }<input name="brand_model" placeholder={ i18n.T(ctx, "workorder.quick.model_ph") } required/></label>
+						<label>{ i18n.T(ctx, "workorder.quick.owner") }<input name="customer_name" required/></label>
+						<label>{ i18n.T(ctx, "workorder.quick.phone") }<input name="customer_phone" required/></label>
+						<label>{ i18n.T(ctx, "workorder.quick.mileage") }<input name="current_mileage" type="number" min="0" required/></label>
 					</div>
 					<div class="modal-actions">
-						<button type="submit" class="btn btn-p">建立並帶入工單</button>
-						<button type="button" class="btn btn-s" onclick="closeQuickModal()">取消</button>
+						<button type="submit" class="btn btn-p">{ i18n.T(ctx, "workorder.quick.create") }</button>
+						<button type="button" class="btn btn-s" onclick="closeQuickModal()">{ i18n.T(ctx, "workorder.cancel") }</button>
 					</div>
 					<div id="quickVehicleStatus" role="status"></div>
 				</form>

@@ -1,6 +1,9 @@
 package pages
 
 import (
+	"fmt"
+
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"strconv"
 
@@ -32,32 +35,32 @@ type ReceivableRow struct {
 templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 	q, method, from, to string, showVoided, unpaidOnly bool,
 	sumPay, sumCash, sumCard, sumCheck, sumTransfer float64, user model.User) {
-	@components.Layout("收款紀錄", "/receivables", user, AppName) {
+	@components.Layout(i18n.T(ctx, "receivable.title"), "/receivables", user, AppName) {
 		<div class="card">
-			<h2>收款紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "receivable.heading"), total) }</h2>
 			<div style="margin-bottom:14px">
-				<div class="stat"><b>{ moneyFmt(sumPay) }</b><span>收款合計</span></div>
-				<div class="stat"><b>{ moneyFmt(sumCash) }</b><span>現金</span></div>
-				<div class="stat"><b>{ moneyFmt(sumCard) }</b><span>信用卡</span></div>
-				<div class="stat"><b>{ moneyFmt(sumCheck) }</b><span>票據</span></div>
-				<div class="stat"><b>{ moneyFmt(sumTransfer) }</b><span>轉帳</span></div>
+				<div class="stat"><b>{ moneyFmt(sumPay) }</b><span>{ i18n.T(ctx, "receivable.stat_total") }</span></div>
+				<div class="stat"><b>{ moneyFmt(sumCash) }</b><span>{ i18n.T(ctx, "receivable.cash") }</span></div>
+				<div class="stat"><b>{ moneyFmt(sumCard) }</b><span>{ i18n.T(ctx, "receivable.card") }</span></div>
+				<div class="stat"><b>{ moneyFmt(sumCheck) }</b><span>{ i18n.T(ctx, "receivable.check") }</span></div>
+				<div class="stat"><b>{ moneyFmt(sumTransfer) }</b><span>{ i18n.T(ctx, "receivable.transfer") }</span></div>
 			</div>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				上方合計為目前篩選條件的全部筆數（不受分頁影響）。
+				{ i18n.T(ctx, "receivable.filter_note") }
 			</p>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
-				<a class={ "btn " + btnCls(method == "") } href="/receivables">全部</a>
-				<a class={ "btn " + btnCls(method == "cash") } href="/receivables?method=cash">現金</a>
-				<a class={ "btn " + btnCls(method == "card") } href="/receivables?method=card">信用卡</a>
-				<a class={ "btn " + btnCls(method == "check") } href="/receivables?method=check">票據</a>
-				<a class={ "btn " + btnCls(method == "transfer") } href="/receivables?method=transfer">轉帳</a>
+				<a class={ "btn " + btnCls(method == "") } href="/receivables">{ i18n.T(ctx, "receivable.all") }</a>
+				<a class={ "btn " + btnCls(method == "cash") } href="/receivables?method=cash">{ i18n.T(ctx, "receivable.cash") }</a>
+				<a class={ "btn " + btnCls(method == "card") } href="/receivables?method=card">{ i18n.T(ctx, "receivable.card") }</a>
+				<a class={ "btn " + btnCls(method == "check") } href="/receivables?method=check">{ i18n.T(ctx, "receivable.check") }</a>
+				<a class={ "btn " + btnCls(method == "transfer") } href="/receivables?method=transfer">{ i18n.T(ctx, "receivable.transfer") }</a>
 			</div>
 			<div style="margin-bottom:12px">
-				<a class="btn btn-p" href="/receivables/new">＋ 新增收款</a>
-				<a class="btn btn-s" href="/receivables?unpaid=1">待收款</a>
+				<a class="btn btn-p" href="/receivables/new">＋ { i18n.T(ctx, "receivable.new") }</a>
+				<a class="btn btn-s" href="/receivables?unpaid=1">{ i18n.T(ctx, "receivable.unpaid") }</a>
 			</div>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋單號 / 客戶 / 電話 / 車牌 / 票號 / 轉帳序號"
+				placeholder={ i18n.T(ctx, "receivable.search_placeholder") }
 				hx-get="/api/receivables/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#receivable-rows"
@@ -65,9 +68,9 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			<table>
 				<tr>
-					<th>收款單號</th><th>收款日</th><th>客戶</th><th>車牌</th>
-					<th>方式</th><th class="num">現金</th><th class="num">刷卡</th>
-					<th class="num">票額</th><th class="num">轉帳</th><th class="num">合計</th><th>關聯工單</th><th>已收</th><th>未收</th><th>操作</th>
+					<th>{ i18n.T(ctx, "receivable.col_voucher") }</th><th>{ i18n.T(ctx, "receivable.col_date") }</th><th>{ i18n.T(ctx, "receivable.col_customer") }</th><th>{ i18n.T(ctx, "receivable.col_plate") }</th>
+					<th>{ i18n.T(ctx, "receivable.col_method") }</th><th class="num">{ i18n.T(ctx, "receivable.cash") }</th><th class="num">{ i18n.T(ctx, "receivable.col_card") }</th>
+					<th class="num">{ i18n.T(ctx, "receivable.col_check") }</th><th class="num">{ i18n.T(ctx, "receivable.transfer") }</th><th class="num">{ i18n.T(ctx, "receivable.col_total") }</th><th>{ i18n.T(ctx, "receivable.col_wo") }</th><th>{ i18n.T(ctx, "receivable.col_received") }</th><th>{ i18n.T(ctx, "receivable.col_unpaid") }</th><th>{ i18n.T(ctx, "receivable.col_action") }</th>
 				</tr>
 				<tbody id="receivable-rows">
 					for _, rec := range rows {
@@ -76,7 +79,7 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的收款紀錄</div>
+				<div class="empty">{ i18n.T(ctx, "receivable.empty") }</div>
 			}
 			@components.Pager("/receivables", page, calcPages(total, size), total)
 		</div>
@@ -88,7 +91,7 @@ templ ReceivableRowContent(rec ReceivableRow) {
 		<td>
 			<code style="font-size:12px">{ rec.VoucherNo }</code>
 			if rec.IsLegacy {
-				<span style="color:#64748b;font-size:11px">舊帳</span>
+				<span style="color:#64748b;font-size:11px">{ i18n.T(ctx, "receivable.legacy_old") }</span>
 			}
 		</td>
 		<td style="font-size:12.5px">{ rec.PayDate }</td>
@@ -118,8 +121,8 @@ templ ReceivableRowContent(rec ReceivableRow) {
 			}
 		</td>
 		<td>
-			<a class="btn btn-s" href={ "/receivables/" + strconv.FormatInt(rec.ID, 10) + "/edit" }>編輯</a>
-			<a class="btn btn-s" href={ "/receivables/" + strconv.FormatInt(rec.ID, 10) + "/print" }>明細列印</a>
+			<a class="btn btn-s" href={ "/receivables/" + strconv.FormatInt(rec.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
+			<a class="btn btn-s" href={ "/receivables/" + strconv.FormatInt(rec.ID, 10) + "/print" }>{ i18n.T(ctx, "receivable.print_detail") }</a>
 		</td>
 	</tr>
 }
@@ -127,7 +130,7 @@ templ ReceivableRowContent(rec ReceivableRow) {
 // ReceivableSearchRows HTMX 即時搜尋回傳的純列。
 templ ReceivableSearchRows(rows []ReceivableRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="14" style="color:#64748b;text-align:center;padding:20px">查無收款紀錄</td></tr>
+		<tr><td colspan="14" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "receivable.no_results") }</td></tr>
 	}
 	for _, rec := range rows {
 		@ReceivableRowContent(rec)

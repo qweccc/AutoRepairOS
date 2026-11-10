@@ -76,11 +76,34 @@ func NewVehicleInsuranceForm(w http.ResponseWriter, r *http.Request, user model.
 	renderVehicleInsuranceForm(w, r, user, data)
 }
 
+// insuranceFormDataFromRequest builds form data from a failed POST so the
+// user keeps their input when the form is re-rendered with an error.
+func insuranceFormDataFromRequest(r *http.Request, id int64, title, action, errMsg string) pages.VehicleInsuranceFormData {
+	vehID := mustInt(r.FormValue("vehicle_id"))
+	compID := mustInt(r.FormValue("insurance_company_id"))
+	return pages.VehicleInsuranceFormData{
+		ID: id, Title: title, Action: action, ErrMsg: errMsg,
+		VehicleID: vehID, VehicleOptions: vehicleSelectOptions(vehID),
+		CompanyID: compID, CompanyOptions: insuranceCompanySelectOptions(compID),
+		CompanyNo:    strings.TrimSpace(r.FormValue("company_no")),
+		Class:        strings.TrimSpace(r.FormValue("insurance_class")),
+		ClassName:    strings.TrimSpace(r.FormValue("insurance_class_name")),
+		LicenseDate:  normDateOrEmpty(strings.TrimSpace(r.FormValue("license_date"))),
+		PolicyNumber: strings.TrimSpace(r.FormValue("policy_number")),
+		ExpiryDate:   strings.TrimSpace(r.FormValue("expiry_date")),
+		CardNo:       strings.TrimSpace(r.FormValue("card_no")),
+		AmountRaw:    strings.TrimSpace(r.FormValue("amount_raw")),
+		Notes:        strings.TrimSpace(r.FormValue("notes")),
+	}
+}
+
 // CreateVehicleInsurance 建立投保紀錄。
 func CreateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	vehID := mustInt(r.FormValue("vehicle_id"))
 	if vehID == 0 || countRows("SELECT COUNT(1) FROM active_vehicles WHERE id = ?", vehID) == 0 {
-		fail(w, "請選擇有效的車輛")
+		user, _ := currentUser(r)
+		w.WriteHeader(http.StatusBadRequest)
+		renderVehicleInsuranceForm(w, r, user, insuranceFormDataFromRequest(r, 0, "新增車輛投保紀錄", "/insurances", "請選擇有效的車輛"))
 		return
 	}
 	compID := mustInt(r.FormValue("insurance_company_id"))
@@ -89,7 +112,9 @@ func CreateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	}
 	expiryDate, err := insuranceExpiryDate(r.FormValue("expiry_date"))
 	if err != nil {
-		fail(w, "保單有效期限格式錯誤")
+		user, _ := currentUser(r)
+		w.WriteHeader(http.StatusBadRequest)
+		renderVehicleInsuranceForm(w, r, user, insuranceFormDataFromRequest(r, 0, "新增車輛投保紀錄", "/insurances", "保單有效期限格式錯誤"))
 		return
 	}
 
@@ -144,7 +169,7 @@ func UpdateVehicleInsurance(w http.ResponseWriter, r *http.Request) {
 	}
 	expiryDate, err := insuranceExpiryDate(r.FormValue("expiry_date"))
 	if err != nil {
-		fail(w, "保單有效期限格式錯誤")
+		formError(w, r, "編輯投保紀錄", "/insurances/"+strconv.FormatInt(id, 10)+"/edit", "保單有效期限格式錯誤")
 		return
 	}
 
@@ -229,12 +254,12 @@ func NewVehicleInspectionForm(w http.ResponseWriter, r *http.Request, user model
 func CreateVehicleInspection(w http.ResponseWriter, r *http.Request) {
 	vehID := mustInt(r.FormValue("vehicle_id"))
 	if vehID == 0 || countRows("SELECT COUNT(1) FROM active_vehicles WHERE id = ?", vehID) == 0 {
-		fail(w, "請選擇有效的車輛")
+		formError(w, r, "新增車輛定檢排程", "/inspections", "請選擇有效的車輛")
 		return
 	}
 	orderDate := normDateOrEmpty(r.FormValue("order_date"))
 	if orderDate == "" {
-		fail(w, "排定檢驗日為必填")
+		formError(w, r, "新增車輛定檢排程", "/inspections", "排定檢驗日為必填")
 		return
 	}
 
@@ -272,7 +297,7 @@ func UpdateVehicleInspection(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	orderDate := normDateOrEmpty(r.FormValue("order_date"))
 	if orderDate == "" {
-		fail(w, "排定檢驗日為必填")
+		formError(w, r, "編輯定檢排程", "/inspections/"+strconv.FormatInt(id, 10)+"/edit", "排定檢驗日為必填")
 		return
 	}
 

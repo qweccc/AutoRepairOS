@@ -1,46 +1,48 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
 templ EditInventoryPage(it model.InventoryItem, showMoney bool, categoryOptions, supplierOptions string, user model.User) {
-	@components.Layout("編輯零件", "/inventory", user, AppName) {
+	@components.Layout(i18n.T(ctx, "inventory.edit_title"), "/inventory", user, AppName) {
 		<div class="card">
-			<h2>編輯零件 { it.Name }</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.edit_title_name"), it.Name) }</h2>
 			<form class="frm" method="POST" action={ "/inventory/" + strconv.FormatInt(it.ID, 10) }>
 				@components.CSRFInput()
-				<label>料號<input name="part_number" value={ it.PartNumber } required></label>
-				<label>名稱<input name="name" value={ it.Name } required></label>
-				<label>類別<select name="category"><option value="">未分類</option>@templ.Raw(categoryOptions)</select></label>
-				<label>庫位<input name="bin_location" value={ it.BinLocation } required></label>
-				<label>條碼<input name="barcode" value={ it.Barcode }></label>
-				<label>供應商<select name="supplier_id"><option value="0">無</option>@templ.Raw(supplierOptions)</select></label>
+				<label>{ i18n.T(ctx, "inventory.field.part_number") }<input name="part_number" value={ it.PartNumber } required></label>
+				<label>{ i18n.T(ctx, "inventory.field.name") }<input name="name" value={ it.Name } required></label>
+				<label>{ i18n.T(ctx, "inventory.field.category") }<select name="category"><option value="">{ i18n.T(ctx, "inventory.uncategorized") }</option>@templ.Raw(categoryOptions)</select></label>
+				<label>{ i18n.T(ctx, "inventory.field.bin") }<input name="bin_location" value={ it.BinLocation } required></label>
+				<label>{ i18n.T(ctx, "inventory.field.barcode") }<input name="barcode" value={ it.Barcode }></label>
+				<label>{ i18n.T(ctx, "inventory.field.supplier") }<select name="supplier_id"><option value="0">{ i18n.T(ctx, "inventory.none") }</option>@templ.Raw(supplierOptions)</select></label>
 				if showMoney {
-					<label>成本價<input name="cost_price" type="number" step="1" value={ moneyValue(it.CostPrice) }></label>
+					<label>{ i18n.T(ctx, "inventory.field.cost_price") }<input name="cost_price" type="number" step="1" value={ moneyValue(it.CostPrice) }></label>
 				}
-				<label>售價<input name="selling_price" type="number" step="1" value={ moneyValue(it.SellingPrice) }></label>
-				<label>安全庫存<input name="min_safety_stock" type="number" min="0" value={ strconv.Itoa(it.MinSafetyStock) }></label>
-				<div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/inventory">取消</a></div>
+				<label>{ i18n.T(ctx, "inventory.field.selling") }<input name="selling_price" type="number" step="1" value={ moneyValue(it.SellingPrice) }></label>
+				<label>{ i18n.T(ctx, "inventory.field.min_safety") }<input name="min_safety_stock" type="number" min="0" value={ strconv.Itoa(it.MinSafetyStock) }></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button> <a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:10px">庫存數量請用「調庫」功能變更，以保留進出紀錄。</p>
+			<p style="color:#64748b;font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "inventory.stock_hint") }</p>
 		</div>
 	}
 }
 
 templ StockAdjustPage(it model.InventoryItem, user model.User) {
-	@components.Layout("調庫", "/inventory", user, AppName) {
+	@components.Layout(i18n.T(ctx, "inventory.stock_adjust"), "/inventory", user, AppName) {
 		<div class="card">
-			<h2>調庫 — { it.Name }（{ it.PartNumber }）</h2>
-			<p style="color:#94a3b8;font-size:13.5px">目前庫存：<b style="color:#f8fafc;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>　安全庫存：{ strconv.Itoa(it.MinSafetyStock) }</p>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.stock_title"), it.Name, it.PartNumber) }</h2>
+			<p style="color:#94a3b8;font-size:13.5px">{ i18n.T(ctx, "inventory.current_stock") + "：" }<b style="color:#f8fafc;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>{ "　" + i18n.T(ctx, "inventory.field.min_safety") + "：" }{ strconv.Itoa(it.MinSafetyStock) }</p>
 			<form class="frm" method="POST" action={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/stock" }>
 				@components.CSRFInput()
-				<label>異動數量（正數進貨、負數領用）<input name="delta" type="number" required placeholder="例 10 或 -2"></label>
-				<label>備註<input name="note" placeholder="例：採購進貨 / 工單領用"></label>
-				<div class="full"><button class="btn btn-p" type="submit">確認調庫</button> <a class="btn btn-s" href="/inventory">取消</a></div>
+				<label>{ i18n.T(ctx, "inventory.delta_label") }<input name="delta" type="number" required placeholder={ i18n.T(ctx, "inventory.delta_placeholder") }></label>
+				<label>{ i18n.T(ctx, "inventory.field.note") }<input name="note" placeholder={ i18n.T(ctx, "inventory.note_placeholder") }></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "inventory.confirm_stock") }</button> <a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}

@@ -163,6 +163,7 @@ func ApplyNegativeStockFix(w http.ResponseWriter, r *http.Request, user model.Us
 	db.DB.QueryRow("SELECT COALESCE(min_safety_stock,0) FROM active_inventory_items WHERE id = ?", id).Scan(&minSafe)
 
 	var target int
+	fixPath := "/inventory/negative?id=" + strconv.FormatInt(id, 10)
 	switch mode {
 	case "zero":
 		target = 0
@@ -171,11 +172,11 @@ func ApplyNegativeStockFix(w http.ResponseWriter, r *http.Request, user model.Us
 	case "custom":
 		target = atoiDefault(r.FormValue("target"), -1)
 		if target < 0 {
-			fail(w, "指定數量不可為負數")
+			formError(w, r, "負庫存補正", fixPath, "指定數量不可為負數")
 			return
 		}
 	default:
-		fail(w, "未知的補正方式")
+		formError(w, r, "負庫存補正", fixPath, "未知的補正方式")
 		return
 	}
 

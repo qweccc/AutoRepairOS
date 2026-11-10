@@ -1,7 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
+
+	"autorepairos/internal/i18n"
 
 	"autorepairos/web/components"
 )
@@ -32,16 +35,16 @@ templ ApprovalRequestBlock(woID int64, canCreate bool, pending []PendingApproval
 	// 用紅色 msg-err 而不是低調的卡片說明——櫃檯必須立刻看到。
 	if len(pending) > 0 {
 		<div class="msg msg-err" style="margin-bottom:14px">
-			<strong>⚠ 有 { strconv.Itoa(len(pending)) } 筆追加維修還在等客戶同意</strong>
-			——客戶同意前無法完工與結帳。<br/>
-			若客戶已在電話中同意，請在下方按「客戶電話同意」並填寫備註；若不修了請按「取消」。
+			<strong>{ fmt.Sprintf(i18n.T(ctx, "approval_request.pending_warning"), strconv.Itoa(len(pending))) }</strong>
+			{ i18n.T(ctx, "approval_request.warning_note") }<br/>
+			{ i18n.T(ctx, "approval_request.warning_phone") }
 		</div>
 	}
 	<div class="card">
-		<h2>追加維修授權</h2>
+		<h2>{ i18n.T(ctx, "approval_request.title") }</h2>
 		if len(pending) > 0 {
 			<table>
-				<tr><th>追加項目</th><th>數量</th><th class="num">單價</th><th>連結到期</th><th>處理</th></tr>
+				<tr><th>{ i18n.T(ctx, "approval_request.col_item") }</th><th>{ i18n.T(ctx, "approval_request.col_qty") }</th><th class="num">{ i18n.T(ctx, "approval_request.col_unit") }</th><th>{ i18n.T(ctx, "approval_request.col_expires") }</th><th>{ i18n.T(ctx, "approval_request.col_action") }</th></tr>
 				for _, p := range pending {
 					<tr>
 						<td>{ p.Description }<span style="color:#64748b;font-size:12px">（{ itemTypeLabel(p.ItemType) }）</span></td>
@@ -53,18 +56,18 @@ templ ApprovalRequestBlock(woID int64, canCreate bool, pending []PendingApproval
 								<form method="POST" style="display:inline"
 									action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-requests/" + strconv.FormatInt(p.ID, 10) + "/approve-phone" }>
 									@components.CSRFInput()
-									<input name="note" required placeholder="例：與車主電話確認"
+									<input name="note" required placeholder={ i18n.T(ctx, "approval_request.note_placeholder") }
 										style="width:170px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:12.5px"/>
-									<button class="btn btn-p" type="submit">客戶電話同意</button>
+									<button class="btn btn-p" type="submit">{ i18n.T(ctx, "approval_request.approve_phone") }</button>
 								</form>
 								<form method="POST" style="display:inline"
 									action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-requests/" + strconv.FormatInt(p.ID, 10) + "/cancel" }>
 									@components.CSRFInput()
-									<button class="btn btn-d" type="submit">取消</button>
+									<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.cancel") }</button>
 								</form>
 							}
 							if canCreate == false {
-								<span style="color:#64748b">等待客戶回覆（僅櫃檯可處理）</span>
+								<span style="color:#64748b">{ i18n.T(ctx, "approval_request.waiting") }</span>
 							}
 						</td>
 					</tr>
@@ -72,39 +75,39 @@ templ ApprovalRequestBlock(woID int64, canCreate bool, pending []PendingApproval
 			</table>
 		}
 		if len(pending) == 0 {
-			<div class="empty">目前沒有等待客戶回覆的追加項目</div>
+			<div class="empty">{ i18n.T(ctx, "approval_request.empty_pending") }</div>
 		}
 		if canCreate == false {
-			<div class="empty">僅櫃檯人員與系統管理員可建立追加維修授權</div>
+			<div class="empty">{ i18n.T(ctx, "approval_request.empty_no_perm") }</div>
 		}
 		if canCreate {
 			<p style="color:#94a3b8;font-size:12.5px;line-height:1.7;margin:12px 0">
-				填寫追加項目後按「建立授權並通知客戶」。系統會產生一組 24 小時有效的連結，
-				透過 LINE 推播給已綁定 LINE 的客戶。<br/>
-				客戶同意後，這些項目才會加入工單明細並計入總金額；不同意則不會變更工單。<br/>
-				<strong>客戶若在電話中直接同意</strong>，不必等連結，建立後在下方按「客戶電話同意」即可。
+				{ i18n.T(ctx, "approval_request.help_line1") }
+				{ i18n.T(ctx, "approval_request.help_line2") }<br/>
+				{ i18n.T(ctx, "approval_request.help_line3") }<br/>
+				<strong>{ i18n.T(ctx, "approval_request.help_phone_line") }</strong>{ i18n.T(ctx, "approval_request.help_phone_rest") }
 			</p>
 			<form class="frm" method="POST"
 				action={ "/work-orders/" + strconv.FormatInt(woID, 10) + "/approval-request" }>
 				@components.CSRFInput()
-				<label class="full">品名
-					<input name="description" required placeholder="例：煞車油管老化更換"/>
+				<label class="full">{ i18n.T(ctx, "approval_request.field_name") }
+					<input name="description" required placeholder={ i18n.T(ctx, "approval_request.name_placeholder") }/>
 				</label>
-				<label>數量
+				<label>{ i18n.T(ctx, "approval_request.field_qty") }
 					<input name="quantity" type="number" min="1" value="1" required/>
 				</label>
-				<label>單價
+				<label>{ i18n.T(ctx, "approval_request.field_unit") }
 					<input name="unit_price" type="number" min="0" step="1" value="0" required/>
 				</label>
-				<label>類別
+				<label>{ i18n.T(ctx, "approval_request.field_type") }
 					<select name="item_type">
-						<option value="labor">工資</option>
-						<option value="part">零件</option>
-						<option value="subcontract">外包加工</option>
+						<option value="labor">{ i18n.T(ctx, "approval_request.type_labor") }</option>
+						<option value="part">{ i18n.T(ctx, "approval_request.type_part") }</option>
+						<option value="subcontract">{ i18n.T(ctx, "approval_request.type_sub") }</option>
 					</select>
 				</label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">建立授權並通知客戶</button>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "approval_request.create_action") }</button>
 				</div>
 			</form>
 		}

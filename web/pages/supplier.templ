@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -23,52 +25,52 @@ type SupplierRow struct {
 // ListSuppliersPage 廠商列表頁（HTMX 即時搜尋）。
 templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype string,
 	matCount, venCount int, showAddForm bool, user model.User) {
-	@components.Layout("廠商管理", "/suppliers", user, AppName) {
+	@components.Layout(i18n.T(ctx, "supplier.title"), "/suppliers", user, AppName) {
 		if showAddForm {
 			<div class="card">
-				<h2>新增廠商</h2>
+				<h2>{ i18n.T(ctx, "supplier.new") }</h2>
 				<form class="frm" method="POST" action="/suppliers">
 					@components.CSRFInput()
-					<label>名稱<input name="name" required placeholder="如：○○輪胎行"></label>
-					<label>類型<select name="vendor_type">
-						<option value="material">材料商</option>
-						<option value="vendor">協力廠商</option>
+					<label>{ i18n.T(ctx, "supplier.field.name") }<input name="name" required placeholder={ i18n.T(ctx, "supplier.name_placeholder") }></label>
+					<label>{ i18n.T(ctx, "supplier.field.type") }<select name="vendor_type">
+						<option value="material">{ i18n.T(ctx, "supplier.type.material") }</option>
+						<option value="vendor">{ i18n.T(ctx, "supplier.type.vendor") }</option>
 					</select></label>
-					<label>電話<input name="phone"></label>
-					<label>聯絡人<input name="contact_person"></label>
-					<label>地址<input name="address"></label>
-					<label>付款條件<select name="payment_terms">
-						<option value="cash">現金</option>
-						<option value="monthly">月結</option>
-						<option value="net30">月結30天</option>
-						<option value="net60">月結60天</option>
+					<label>{ i18n.T(ctx, "supplier.field.phone") }<input name="phone" inputmode="tel"></label>
+					<label>{ i18n.T(ctx, "supplier.field.contact_person") }<input name="contact_person"></label>
+					<label>{ i18n.T(ctx, "supplier.field.address") }<input name="address"></label>
+					<label>{ i18n.T(ctx, "supplier.field.payment_terms") }<select name="payment_terms">
+						<option value="cash">{ i18n.T(ctx, "supplier.payment.cash") }</option>
+						<option value="monthly">{ i18n.T(ctx, "supplier.payment.monthly") }</option>
+						<option value="net30">{ i18n.T(ctx, "supplier.payment.net30") }</option>
+						<option value="net60">{ i18n.T(ctx, "supplier.payment.net60") }</option>
 					</select></label>
-					<label class="full">備註<textarea name="notes"></textarea></label>
-					<div class="full"><button class="btn btn-p" type="submit">新增</button></div>
+					<label class="full">{ i18n.T(ctx, "supplier.field.notes") }<textarea name="notes"></textarea></label>
+					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.create") }</button></div>
 				</form>
 			</div>
 		}
 		<div class="card">
-			<h2>廠商（符合條件 { strconv.Itoa(total) } 家）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "supplier.list_title"), total) }</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				舊系統把材料商與外包廠商混在人員表裡，匯入時已分開。
+				{ i18n.T(ctx, "supplier.hint") }
 			</p>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
-				<a class={ "btn " + btnCls(vtype == "") } href="/suppliers">全部 { strconv.Itoa(matCount+venCount) }</a>
-				<a class={ "btn " + btnCls(vtype == "material") } href="/suppliers?type=material">材料商 { strconv.Itoa(matCount) }</a>
-				<a class={ "btn " + btnCls(vtype == "vendor") } href="/suppliers?type=vendor">協力廠商 { strconv.Itoa(venCount) }</a>
+				<a class={ "btn " + btnCls(vtype == "") } href="/suppliers">{ i18n.T(ctx, "supplier.filter_all") } { strconv.Itoa(matCount+venCount) }</a>
+				<a class={ "btn " + btnCls(vtype == "material") } href="/suppliers?type=material">{ i18n.T(ctx, "supplier.type.material") } { strconv.Itoa(matCount) }</a>
+				<a class={ "btn " + btnCls(vtype == "vendor") } href="/suppliers?type=vendor">{ i18n.T(ctx, "supplier.type.vendor") } { strconv.Itoa(venCount) }</a>
 			</div>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋名稱 / 電話 / 聯絡人"
+				placeholder={ i18n.T(ctx, "supplier.search_placeholder") }
 				hx-get="/api/suppliers/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#supplier-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
-			<a class="btn btn-s" href="/suppliers">清除</a>
+			<a class="btn btn-s" href="/suppliers">{ i18n.T(ctx, "supplier.clear") }</a>
 			<table>
 				<tr>
-					<th>名稱</th><th>狀態</th><th>型態</th><th>付款條件</th><th>電話</th><th>聯絡人</th><th>地址</th><th>備註</th><th>操作</th>
+					<th>{ i18n.T(ctx, "supplier.col.name") }</th><th>{ i18n.T(ctx, "supplier.col.status") }</th><th>{ i18n.T(ctx, "supplier.col.type") }</th><th>{ i18n.T(ctx, "supplier.col.payment_terms") }</th><th>{ i18n.T(ctx, "supplier.col.phone") }</th><th>{ i18n.T(ctx, "supplier.col.contact_person") }</th><th>{ i18n.T(ctx, "supplier.col.address") }</th><th>{ i18n.T(ctx, "supplier.col.notes") }</th><th>{ i18n.T(ctx, "supplier.col.actions") }</th>
 				</tr>
 				<tbody id="supplier-rows">
 					for _, s := range rows {
@@ -77,7 +79,7 @@ templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype stri
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的廠商</div>
+				<div class="empty">{ i18n.T(ctx, "supplier.empty") }</div>
 			}
 			@components.Pager("/suppliers", page, calcPages(total, size), total)
 		</div>
@@ -96,10 +98,10 @@ templ SupplierRowContent(s SupplierRow) {
 		<td><b>{ s.Name }</b></td>
 		<td>
 			if s.Active == 0 {
-				<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>
+				<span class="pill" style="background:#7f1d1d;color:#fca5a5">{ i18n.T(ctx, "supplier.status.inactive") }</span>
 			}
 			if s.Active != 0 {
-				<span class="pill" style="background:#14532d;color:#86efac">啟用</span>
+				<span class="pill" style="background:#14532d;color:#86efac">{ i18n.T(ctx, "supplier.status.active") }</span>
 			}
 		</td>
 		<td>
@@ -118,11 +120,11 @@ templ SupplierRowContent(s SupplierRow) {
 		<td>
 			if s.Active == 0 {
 				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }
-					hx-post={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }>復用</a>
+					hx-post={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }>{ i18n.T(ctx, "supplier.action.reactivate") }</a>
 			}
 			if s.Active != 0 {
-				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>
-				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/ap-statement" }>對帳單</a>
+				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
+				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/ap-statement" }>{ i18n.T(ctx, "supplier.action.ap_statement") }</a>
 			}
 		</td>
 	</tr>
@@ -131,7 +133,7 @@ templ SupplierRowContent(s SupplierRow) {
 // SupplierSearchRows HTMX 即時搜尋回傳的純列。
 templ SupplierSearchRows(rows []SupplierRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無廠商</td></tr>
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "supplier.search_empty") }</td></tr>
 	}
 	for _, s := range rows {
 		@SupplierRowContent(s)

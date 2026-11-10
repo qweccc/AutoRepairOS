@@ -3,24 +3,25 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
 templ PhrasesPage(phrases []model.TechnicianPhrase, user model.User, flashMessage string) {
-	@components.Layout("技師片語庫", "/phrases", user, AppName) {
+	@components.Layout(i18n.T(ctx, "phrases.title"), "/phrases", user, AppName) {
 		@components.FlashMsg(flashMessage)
 		<div class="card">
-			<h2>技師常用片語庫</h2>
+			<h2>{ i18n.T(ctx, "phrases.page_title") }</h2>
 			<form method="POST" action="/phrases/new" class="frm">
 				@components.CSRFInput()
-				<label>片語內容<input name="phrase" required placeholder="例：煞車皮剩2mm"></label>
-				<label>分類<input name="category" placeholder="例：煞車、引擎"></label>
-				<label>排序<input name="sort_order" type="number" value="0"></label>
-				<div class="full"><button class="btn btn-p" type="submit">新增片語</button></div>
+				<label>{ i18n.T(ctx, "phrases.field.phrase") }<input name="phrase" required placeholder={ i18n.T(ctx, "phrases.phrase_ph") }></label>
+				<label>{ i18n.T(ctx, "phrases.field.category") }<input name="category" placeholder={ i18n.T(ctx, "phrases.category_ph") }></label>
+				<label>{ i18n.T(ctx, "phrases.field.sort") }<input name="sort_order" type="number" value="0"></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "phrases.new") }</button></div>
 			</form>
 			<table>
-				<tr><th>片語</th><th>分類</th><th>排序</th><th>啟用</th><th>操作</th></tr>
+				<tr><th>{ i18n.T(ctx, "phrases.field.phrase_th") }</th><th>{ i18n.T(ctx, "phrases.field.category") }</th><th>{ i18n.T(ctx, "phrases.field.sort") }</th><th>{ i18n.T(ctx, "phrases.active") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th></tr>
 				for _, p := range phrases {
 					<tr class="phrase-item">
 						<td>{ p.Phrase }</td>
@@ -28,10 +29,10 @@ templ PhrasesPage(phrases []model.TechnicianPhrase, user model.User, flashMessag
 						<td class="num">{ strconv.Itoa(p.SortOrder) }</td>
 						<td>{ phraseActiveLabel(p.Active) }</td>
 						<td>
-							<a class="btn btn-s" href={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/edit" }>編輯</a>
+							<a class="btn btn-s" href={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 							<a class="btn btn-d" href={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/delete" }
 								hx-post={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/delete" }
-								data-confirm="確定刪除此片語？">刪除</a>
+								data-confirm={ i18n.T(ctx, "phrases.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 						</td>
 					</tr>
 				}
@@ -41,23 +42,23 @@ templ PhrasesPage(phrases []model.TechnicianPhrase, user model.User, flashMessag
 }
 
 templ PhraseEditPage(p model.TechnicianPhrase, user model.User, flashMessage string) {
-	@components.Layout("編輯片語", "/phrases", user, AppName) {
+	@components.Layout(i18n.T(ctx, "phrases.edit_title"), "/phrases", user, AppName) {
 		@components.FlashMsg(flashMessage)
 		<div class="card">
-			<h2>編輯片語 #{ strconv.FormatInt(p.ID, 10) }</h2>
+			<h2>{ i18n.T(ctx, "phrases.edit_title") } #{ strconv.FormatInt(p.ID, 10) }</h2>
 			<form method="POST" action={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/update" } class="frm">
 				@components.CSRFInput()
-				<label>片語內容<input name="phrase" value={ p.Phrase } required></label>
-				<label>分類<input name="category" value={ p.Category }></label>
-				<label>排序<input name="sort_order" type="number" value={ strconv.Itoa(p.SortOrder) }></label>
-				<label>啟用
+				<label>{ i18n.T(ctx, "phrases.field.phrase") }<input name="phrase" value={ p.Phrase } required></label>
+				<label>{ i18n.T(ctx, "phrases.field.category") }<input name="category" value={ p.Category }></label>
+				<label>{ i18n.T(ctx, "phrases.field.sort") }<input name="sort_order" type="number" value={ strconv.Itoa(p.SortOrder) }></label>
+				<label>{ i18n.T(ctx, "phrases.active") }
 					<select name="active">
-						<option value="1" selected?={ p.Active == 1 }>啟用</option>
-						<option value="0" selected?={ p.Active == 0 }>停用</option>
+						<option value="1" selected?={ p.Active == 1 }>{ i18n.T(ctx, "phrases.active") }</option>
+						<option value="0" selected?={ p.Active == 0 }>{ i18n.T(ctx, "phrases.inactive") }</option>
 					</select>
 				</label>
-				<div class="full"><button class="btn btn-p" type="submit">更新</button>
-					<a class="btn btn-s" href="/phrases">取消</a></div>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "phrases.update") }</button>
+					<a class="btn btn-s" href="/phrases">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}

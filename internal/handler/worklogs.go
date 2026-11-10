@@ -166,7 +166,7 @@ func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 	techID := mustInt(r.FormValue("technician_id"))
 	if actor.CanPickTechnician() {
 		if techID <= 0 {
-			fail(w, "請選擇技師")
+			formError(w, r, "新增工時紀錄", "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs", "請選擇技師")
 			return
 		}
 	} else {
@@ -181,7 +181,7 @@ func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 
 	// 必須是 technician 角色：否則可以把佣金記到 owner/counter 名下。
 	if countRows("SELECT COUNT(1) FROM users WHERE id = ? AND role = 'technician'", techID) == 0 {
-		fail(w, "指定的使用者不是技師角色")
+		formError(w, r, "新增工時紀錄", "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs", "指定的使用者不是技師角色")
 		return
 	}
 
@@ -202,13 +202,13 @@ func AddTechnicianWorklog(w http.ResponseWriter, r *http.Request, actor Actor) {
 
 	workDate := strings.TrimSpace(r.FormValue("work_date"))
 	if _, err := timeParseDate(workDate); err != nil {
-		fail(w, "工作日期格式錯誤")
+		formError(w, r, "新增工時紀錄", "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs", "工作日期格式錯誤")
 		return
 	}
 
 	hours := atofDefault(r.FormValue("hours"), 0)
 	if hours <= 0 {
-		fail(w, "工時必須大於 0")
+		formError(w, r, "新增工時紀錄", "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs", "工時必須大於 0")
 		return
 	}
 	hourlyRate := atofDefault(r.FormValue("hourly_rate"), 0)
@@ -268,13 +268,13 @@ func UpdateTechnicianWorklog(w http.ResponseWriter, r *http.Request) {
 
 	workDate := strings.TrimSpace(r.FormValue("work_date"))
 	if _, err := timeParseDate(workDate); err != nil {
-		fail(w, "工作日期格式錯誤")
+		formError(w, r, "編輯工時紀錄", "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs/"+strconv.FormatInt(logID, 10)+"/edit", "工作日期格式錯誤")
 		return
 	}
 
 	hours := atofDefault(r.FormValue("hours"), 0)
 	if hours <= 0 {
-		fail(w, "工時必須大於 0")
+		formError(w, r, "編輯工時紀錄", "/work-orders/"+strconv.FormatInt(woID, 10)+"/worklogs/"+strconv.FormatInt(logID, 10)+"/edit", "工時必須大於 0")
 		return
 	}
 	hourlyRate := atofDefault(r.FormValue("hourly_rate"), 0)

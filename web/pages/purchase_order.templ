@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -20,18 +22,18 @@ type PurchaseOrderRow struct {
 
 // ListPurchaseOrdersPage 進貨單列表（HTMX 即時搜尋）。
 templ ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, status string, user model.User) {
-	@components.Layout("進貨單", "/purchase-orders", user, AppName) {
+	@components.Layout(i18n.T(ctx, "po.title"), "/purchase-orders", user, AppName) {
 		<div class="card">
-			<h2>進貨單（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "po.list_heading"), total) }</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				記錄向供應商進貨的品項與金額。開單後加入品項，系統自動算出<b>總共要給廠商多少錢</b>；
-				確認進貨後數量自動加回庫存。
+				{ i18n.T(ctx, "po.intro_prefix") }<b>{ i18n.T(ctx, "po.intro_bold") }</b>；
+				{ i18n.T(ctx, "po.intro_suffix") }
 			</p>
 			<div style="margin-bottom:12px">
-				<a class="btn btn-p" href="/purchase-orders/new">＋ 開立進貨單</a>
+				<a class="btn btn-p" href="/purchase-orders/new">{ i18n.T(ctx, "po.new") }</a>
 			</div>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋供應商 / 備註"
+				placeholder={ i18n.T(ctx, "po.search_ph") }
 				hx-get="/api/purchase-orders/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#po-rows"
@@ -39,8 +41,8 @@ templ ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, 
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			<table>
 				<tr>
-					<th>單號</th><th>供應商</th><th>進貨日</th><th class="num">品項數</th>
-					<th class="num">應付總額</th><th>狀態</th><th>備註</th><th>操作</th>
+					<th>{ i18n.T(ctx, "po.field.id") }</th><th>{ i18n.T(ctx, "po.field.supplier") }</th><th>{ i18n.T(ctx, "po.field.date") }</th><th class="num">{ i18n.T(ctx, "po.field.item_count") }</th>
+					<th class="num">{ i18n.T(ctx, "po.field.payable") }</th><th>{ i18n.T(ctx, "po.field.status") }</th><th>{ i18n.T(ctx, "common.notes") }</th><th>{ i18n.T(ctx, "po.field.actions") }</th>
 				</tr>
 				<tbody id="po-rows">
 					for _, po := range rows {
@@ -49,7 +51,7 @@ templ ListPurchaseOrdersPage(rows []PurchaseOrderRow, total, page, size int, q, 
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">尚無進貨單</div>
+				<div class="empty">{ i18n.T(ctx, "po.empty") }</div>
 			}
 			@components.Pager("/purchase-orders", page, calcPages(total, size), total)
 		</div>
@@ -65,18 +67,18 @@ templ PurchaseOrderRowContent(po PurchaseOrderRow) {
 		<td class="num"><b>{ moneyFmt(po.TotalAmount) }</b></td>
 		<td>
 			if po.Status == "received" {
-				<span class="pill p-completed">已進貨</span>
+				<span class="pill p-completed">{ i18n.T(ctx, "po.status_received") }</span>
 			}
 			if po.Status != "received" {
-				<span class="pill p-pending">草稿</span>
+				<span class="pill p-pending">{ i18n.T(ctx, "po.status_draft") }</span>
 			}
 		</td>
 		<td style="font-size:12.5px;color:#94a3b8">{ orEmpty(po.Notes) }</td>
 		<td>
-			<a class="btn btn-s" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) }>查看</a>
+			<a class="btn btn-s" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) }>{ i18n.T(ctx, "po.view") }</a>
 			if po.Status != "received" {
 				<a class="btn btn-d" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete" }
-					data-confirm="確定刪除此進貨單？">刪除</a>
+					data-confirm={ i18n.T(ctx, "po.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 			}
 		</td>
 	</tr>
@@ -85,7 +87,7 @@ templ PurchaseOrderRowContent(po PurchaseOrderRow) {
 // PurchaseOrderSearchRows 即時搜尋回傳純列。
 templ PurchaseOrderSearchRows(rows []PurchaseOrderRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="8" style="color:#64748b;text-align:center;padding:20px">查無進貨單</td></tr>
+		<tr><td colspan="8" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "po.search_empty") }</td></tr>
 	}
 	for _, po := range rows {
 		@PurchaseOrderRowContent(po)
@@ -94,32 +96,32 @@ templ PurchaseOrderSearchRows(rows []PurchaseOrderRow) {
 
 // NewPurchaseOrderPage 開立進貨單。
 templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string, user model.User) {
-	@components.Layout("開立進貨單", "/purchase-orders", user, AppName) {
+	@components.Layout(i18n.T(ctx, "po.new_title"), "/purchase-orders", user, AppName) {
 		<div class="card">
-			<h2>開立進貨單</h2>
+			<h2>{ i18n.T(ctx, "po.new_title") }</h2>
 			if errMsg != "" {
 				<div class="msg msg-err">{ errMsg }</div>
 			}
 			<form class="frm" id="newPurchaseOrderForm" method="POST" action="/purchase-orders">
 				@components.CSRFInput()
-				<label>供應商（廠商）
+				<label>{ i18n.T(ctx, "po.field.supplier_label") }
 					<select name="supplier_id" required>
-						<option value="">請選擇供應商</option>
+						<option value="">{ i18n.T(ctx, "po.supplier_select") }</option>
 						@templ.Raw(supplierOpts)
 					</select>
 				</label>
-				<label>進貨日期<input type="date" name="order_date" value={ orderDate }></label>
-				<label>關聯工單（選填）<input name="work_order_id" type="number" min="0" placeholder="工單號碼，例：1153001；留空=一般進貨"></label>
-				<label class="full">備註<textarea name="notes" placeholder="例：本月第二批機油進貨"></textarea></label>
+				<label>{ i18n.T(ctx, "po.field.order_date") }<input type="date" name="order_date" value={ orderDate }></label>
+				<label>{ i18n.T(ctx, "po.field.workorder_label") }<input name="work_order_id" type="number" min="0" placeholder={ i18n.T(ctx, "po.workorder_ph") }></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes" placeholder={ i18n.T(ctx, "po.notes_ph") }></textarea></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">建立並加入品項</button>
-					<a class="btn btn-s" href="/purchase-orders">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "po.create_submit") }</button>
+					<a class="btn btn-s" href="/purchase-orders">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 				</form>
 				@components.InvoiceScanUI()
 				<p style="color:#64748b;font-size:12.5px;margin-top:10px">
-				若這批貨是為特定工單特別叫的（客戶指定零件、急件補料），填工單號碼；
-				一般進貨留空即可（僅入庫）。
+				{ i18n.T(ctx, "po.new_hint_prefix") }
+				{ i18n.T(ctx, "po.new_hint_suffix") }
 				</p>
 		</div>
 	}
@@ -130,46 +132,46 @@ templ NewPurchaseOrderPage(orderDate, supplierOpts, errMsg string, user model.Us
 // templ 頁面不像字串拼接頁面有全域 flash(user model.User)，必須由 handler 取值後傳進來顯示。
 templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderItem,
 	total float64, locked bool, supplierOpts string, partCategoryOptions string, flashMsg string, user model.User) {
-	@components.Layout("進貨單 #"+strconv.FormatInt(po.ID, 10), "/purchase-orders", user, AppName) {
+	@components.Layout(i18n.T(ctx, "po.detail_layout")+strconv.FormatInt(po.ID, 10), "/purchase-orders", user, AppName) {
 		if flashMsg != "" {
 			<div class="msg msg-ok">{ flashMsg }</div>
 		}
 		<div class="card">
-			<h2>進貨單 #{ strconv.FormatInt(po.ID, 10) } — { po.SupplierName }</h2>
+			<h2>{ i18n.T(ctx, "po.detail_layout") }{ strconv.FormatInt(po.ID, 10) } — { po.SupplierName }</h2>
 			<table>
 				<tr>
-					<th style="width:120px">供應商</th><td>{ po.SupplierName }</td>
-					<th style="width:120px">進貨日</th><td>{ po.OrderDate }</td>
+					<th style="width:120px">{ i18n.T(ctx, "po.field.supplier") }</th><td>{ po.SupplierName }</td>
+					<th style="width:120px">{ i18n.T(ctx, "po.field.date") }</th><td>{ po.OrderDate }</td>
 				</tr>
 				<tr>
-					<th>關聯工單</th>
+					<th>{ i18n.T(ctx, "po.field.related_wo") }</th>
 					<td>
 						if po.WorkOrderID > 0 {
 							<a href={ "/work-orders/" + strconv.FormatInt(po.WorkOrderID, 10) }>#{ strconv.FormatInt(po.WorkOrderID, 10) }</a>
 						}
 						if po.WorkOrderID == 0 {
-							<span style="color:#64748b">一般進貨（無特定工單）</span>
+							<span style="color:#64748b">{ i18n.T(ctx, "po.general_stockin") }</span>
 						}
 					</td>
-					<th>狀態</th>
+					<th>{ i18n.T(ctx, "po.field.status") }</th>
 					<td>
 						if po.Status == "received" {
-							<span class="pill p-completed">已進貨</span>
+							<span class="pill p-completed">{ i18n.T(ctx, "po.status_received") }</span>
 						}
 						if po.Status != "received" {
-							<span class="pill p-pending">草稿</span>
+							<span class="pill p-pending">{ i18n.T(ctx, "po.status_draft") }</span>
 						}
 					</td>
 				</tr>
 				<tr>
-					<th>建立時間</th><td>{ po.CreatedAt }</td><th></th><td></td>
+					<th>{ i18n.T(ctx, "po.field.created") }</th><td>{ po.CreatedAt }</td><th></th><td></td>
 				</tr>
 				if po.Notes != "" {
-					<tr><th>備註</th><td colspan="3">{ po.Notes }</td></tr>
+					<tr><th>{ i18n.T(ctx, "common.notes") }</th><td colspan="3">{ po.Notes }</td></tr>
 				}
 			</table>
 			<div style="margin-top:16px;padding:14px;background:#0f172a;border:1px solid #334155;border-radius:9px">
-				<div style="color:#94a3b8;font-size:12.5px;margin-bottom:6px">應付總額（總共要給廠商多少錢）</div>
+				<div style="color:#94a3b8;font-size:12.5px;margin-bottom:6px">{ i18n.T(ctx, "po.payable_label") }</div>
 				<div style="font-size:28px;font-weight:700;color:#38bdf8" id="po-total">{ moneyFmt(total) }</div>
 			</div>
 			<div style="margin-top:16px">
@@ -181,23 +183,23 @@ templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderI
 hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
 						style="display:inline">
 						@components.CSRFInput()
-						<button class="btn btn-p" type="submit">＋ 加入品項（於下方表單）</button>
+						<button class="btn btn-p" type="submit">{ i18n.T(ctx, "po.add_items_hint") }</button>
 					</form>
 					<a class="btn btn-o" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive" }
 						hx-post={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/receive" }
-						data-confirm="確認進貨？將把品項數量加回庫存，之後不可修改。">✓ 確認進貨</a>
+						data-confirm={ i18n.T(ctx, "po.receive_confirm") }>{ i18n.T(ctx, "po.receive") }</a>
 				}
-				<a class="btn btn-s" href="/purchase-orders">回列表</a>
+				<a class="btn btn-s" href="/purchase-orders">{ i18n.T(ctx, "po.back") }</a>
 				if !locked {
 					<a class="btn btn-d" href={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete" }
 						hx-post={ "/purchase-orders/" + strconv.FormatInt(po.ID, 10) + "/delete" }
-						data-confirm="確定刪除此進貨單？">刪除</a>
+						data-confirm={ i18n.T(ctx, "po.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 				}
 			</div>
 		</div>
 
 		<div class="card">
-			<h2>進貨品項</h2>
+			<h2>{ i18n.T(ctx, "po.items_title") }</h2>
 			<div id="po-items">
 				@PurchaseOrderItemsTable(po.ID, items, total, locked)
 			</div>
@@ -211,13 +213,13 @@ hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
 // PurchaseOrderItemsTable 品項表格（HTMX 局部更新目標）。
 templ PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, total float64, locked bool) {
 	if len(items) == 0 {
-		<div class="empty">尚未加入品項</div>
+		<div class="empty">{ i18n.T(ctx, "po.items_empty") }</div>
 	}
 	if len(items) > 0 {
 		<table>
 			<tr>
-				<th>品項</th><th>類別</th><th>料號</th><th class="num">數量</th>
-				<th class="num">進貨單價</th><th class="num">小計</th><th>操作</th>
+				<th>{ i18n.T(ctx, "po.field.item") }</th><th>{ i18n.T(ctx, "po.field.category") }</th><th>{ i18n.T(ctx, "po.field.part_number") }</th><th class="num">{ i18n.T(ctx, "po.field.quantity") }</th>
+				<th class="num">{ i18n.T(ctx, "po.field.unit_cost") }</th><th class="num">{ i18n.T(ctx, "po.field.subtotal") }</th><th>{ i18n.T(ctx, "po.field.actions") }</th>
 			</tr>
 			for _, it := range items {
 				<tr>
@@ -233,7 +235,7 @@ templ PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, to
 								hx-delete={ "/purchase-orders/" + strconv.FormatInt(orderID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) }
 								hx-target="#po-items"
 								hx-swap="innerHTML"
-								hx-confirm="刪除此品項？">刪除</a>
+								hx-confirm={ i18n.T(ctx, "po.item_delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 						}
 						if locked {
 							<span style="color:#64748b">—</span>
@@ -242,7 +244,7 @@ templ PurchaseOrderItemsTable(orderID int64, items []model.PurchaseOrderItem, to
 				</tr>
 			}
 			<tr>
-				<td colspan="5" style="text-align:right"><b>應付總額</b></td>
+				<td colspan="5" style="text-align:right"><b>{ i18n.T(ctx, "po.field.payable") }</b></td>
 				<td class="num"><b style="color:#38bdf8;font-size:16px">{ moneyFmt(total) }</b></td>
 				<td></td>
 			</tr>
@@ -263,23 +265,23 @@ templ AddPurchaseItemForm(orderID int64, partCategoryOptions string) {
 hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
 		style="margin-top:18px">
 		@components.CSRFInput()
-		<label class="full">品項名稱
-			<input name="description" required placeholder="例：機油 5W-30 或 掃描/選擇下方零件帶入">
+		<label class="full">{ i18n.T(ctx, "po.field.item_name") }
+			<input name="description" required placeholder={ i18n.T(ctx, "po.item_name_ph") }>
 		</label>
-		<label>數量<input name="quantity" type="number" step="0.01" min="0.01" value="1" required></label>
-		<label>類別
+		<label>{ i18n.T(ctx, "po.field.quantity") }<input name="quantity" type="number" step="0.01" min="0.01" value="1" required></label>
+		<label>{ i18n.T(ctx, "po.field.category") }
 			<select name="category">
-				<option value="">未分類</option>
+				<option value="">{ i18n.T(ctx, "po.uncategorized") }</option>
 				@templ.Raw(partCategoryOptions)
 			</select>
 		</label>
-		<label>進貨單價（給廠商的價）<input name="unit_price_f" id="unitPrice" type="number" min="0" step="1" value="0" required></label>
+		<label>{ i18n.T(ctx, "po.field.unit_price_label") }<input name="unit_price_f" id="unitPrice" type="number" min="0" step="1" value="0" required></label>
 		<input type="hidden" name="unit_cost" id="unitCost" value="0">
 		<input type="hidden" name="quantity_hidden" id="quantityHidden" value="1">
 		<input type="hidden" name="inventory_item_id" id="inventoryItemId" value="0">
 		<input type="hidden" name="part_number" id="partNumber" value="">
 		<div class="full">
-			<button class="btn btn-p" type="submit">加入品項</button>
+			<button class="btn btn-p" type="submit">{ i18n.T(ctx, "po.add_item") }</button>
 		</div>
 		</form>
 	@PurchaseItemLookup(orderID)
@@ -300,7 +302,7 @@ hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
 // PurchaseItemLookup 品項即時搜尋（選庫存零件帶入）。
 templ PurchaseItemLookup(orderID int64) {
 	<input type="search" id="poPartSearch" name="q"
-		placeholder="搜尋庫存零件帶入（例：機油）"
+		placeholder={ i18n.T(ctx, "po.part_search_ph") }
 		hx-get="/api/parts"
 		hx-trigger="keyup changed delay:300ms"
 		hx-target="#po-part-results"

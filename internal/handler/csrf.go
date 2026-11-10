@@ -112,6 +112,10 @@ func csrfExempt(path string) bool {
 	switch path {
 	case "/login", "/webhook/line":
 		return true
+	case "/set-lang", "/set-theme":
+		// 偏好 cookie 寫入：只改變「自己」的語系/主題偏好密文（lang/theme cookie），
+		// 不觸發任何有身分的操作；登入者從頁面切換時 HTMX 不帶 _csrf 亦可運作。
+		return true
 	}
 	// 車主端的授權決定端點（公開、無 session、以 token 為憑證）
 	if strings.HasPrefix(path, "/approval/approve/") || strings.HasPrefix(path, "/approval/reject/") {

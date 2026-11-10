@@ -3,6 +3,7 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -31,8 +32,8 @@ type DashboardIssue struct {
 }
 
 templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []DashboardRecentWorkOrder, user model.User) {
-	@components.Layout("總覽", "/", user, AppName) {
-		@components.Card("總覽") {
+	@components.Layout(i18n.T(ctx, "dashboard.title"), "/", user, AppName) {
+		@components.Card(i18n.T(ctx, "dashboard.title")) {
 			<div>
 				for _, stat := range stats {
 					<a class="stat" href={ templ.SafeURL(stat.Href) }>
@@ -42,12 +43,12 @@ templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []Das
 				}
 			</div>
 		}
-			@components.Card("最近工單") {
+			@components.Card(i18n.T(ctx, "dashboard.recent")) {
 				if len(recent) == 0 {
-					@components.Empty("尚無工單")
+					@components.Empty(i18n.T(ctx, "dashboard.empty_recent"))
 				} else {
 					<table>
-						<tr><th>#</th><th>車牌</th><th>車型</th><th>客戶</th><th>狀態</th></tr>
+						<tr><th>#</th><th>{ i18n.T(ctx, "dashboard.col_plate") }</th><th>{ i18n.T(ctx, "dashboard.col_model") }</th><th>{ i18n.T(ctx, "dashboard.col_customer") }</th><th>{ i18n.T(ctx, "dashboard.col_status") }</th></tr>
 						for _, wo := range recent {
 							<tr>
 								<td><a href={ templ.SafeURL("/work-orders/" + strconv.FormatInt(wo.ID, 10)) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
@@ -60,25 +61,25 @@ templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []Das
 					</table>
 				}
 			}
-			@components.Card("需要編修") {
+			@components.Card(i18n.T(ctx, "dashboard.fix_needed")) {
 				if len(issues) == 0 {
-					@components.Empty("目前沒有發現需要編修的資料")
+					@components.Empty(i18n.T(ctx, "dashboard.empty_issues"))
 				} else {
 					<table>
-						<tr><th>資料</th><th>筆數</th><th>說明</th><th>操作</th></tr>
+						<tr><th>{ i18n.T(ctx, "dashboard.col_data") }</th><th>{ i18n.T(ctx, "dashboard.col_count") }</th><th>{ i18n.T(ctx, "dashboard.col_desc") }</th><th>{ i18n.T(ctx, "dashboard.col_action") }</th></tr>
 						for _, issue := range issues {
 							<tr>
 								<td>{ issue.Label }</td>
 								<td class="num"><b>{ strconv.Itoa(issue.Count) }</b></td>
 								<td>{ issue.Detail }</td>
-								<td><a class="btn btn-s" href={ templ.SafeURL(issue.Href) }>前往編修</a></td>
+								<td><a class="btn btn-s" href={ templ.SafeURL(issue.Href) }>{ i18n.T(ctx, "dashboard.go_fix") }</a></td>
 							</tr>
 						}
 					</table>
 				}
 			}
-		@components.Card("功能模組") {
-			<p style="color:#94a3b8;font-size:13.5px">客戶、車輛、工單、庫存皆可正常使用。</p>
+		@components.Card(i18n.T(ctx, "dashboard.modules")) {
+			<p style="color:#94a3b8;font-size:13.5px">{ i18n.T(ctx, "dashboard.modules_note") }</p>
 		}
 	}
 }

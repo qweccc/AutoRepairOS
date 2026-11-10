@@ -1,8 +1,12 @@
 package nav
 
 import (
+	"context"
+	"os"
 	"strings"
 	"testing"
+
+	"autorepairos/internal/i18n"
 )
 
 // allRoles 三個角色（與 internal/handler/authz.go 的 CHECK 約束一致）。
@@ -28,7 +32,7 @@ func visibleGroups(role string) map[string]bool {
 func TestRenderGroupCount(t *testing.T) {
 	for _, role := range allRoles {
 		want := len(visibleGroups(role))
-		got := strings.Count(Render("", role), `<div class="navgrp">`)
+		got := strings.Count(Render(nil, "", role), `<div class="navgrp">`)
 		if got != want {
 			t.Errorf("role=%s: navgrp 數量 = %d，看得到的 Group 數量 = %d（選單定義可能漏了 Group，或過濾弄壞了分組）",
 				role, got, want)
@@ -39,7 +43,7 @@ func TestRenderGroupCount(t *testing.T) {
 // TestRenderDivBalanced navgrp 的 div 必須開閉平衡，否則整頁版面會崩。
 func TestRenderDivBalanced(t *testing.T) {
 	for _, role := range allRoles {
-		h := Render("", role)
+		h := Render(nil, "", role)
 		if o, c := strings.Count(h, "<div"), strings.Count(h, "</div>"); o != c {
 			t.Errorf("role=%s: div 開=%d 閉=%d 不平衡", role, o, c)
 		}
@@ -53,7 +57,7 @@ func TestRenderActive(t *testing.T) {
 			if !rt.CanSee(role) {
 				continue // 看不到的項目本來就不該出現在輸出裡
 			}
-			h := Render(rt.Path, role)
+			h := Render(nil, rt.Path, role)
 			if n := strings.Count(h, `class="on"`); n != 1 {
 				t.Errorf("role=%s active=%q 應只有 1 個 on，實際 %d", role, rt.Path, n)
 				continue
@@ -68,7 +72,7 @@ func TestRenderActive(t *testing.T) {
 // TestRenderNoActiveWhenUnknown 未知路徑不應亮起任何項目。
 func TestRenderNoActiveWhenUnknown(t *testing.T) {
 	for _, role := range allRoles {
-		if h := Render("/no-such-page", role); strings.Contains(h, `class="on"`) {
+		if h := Render(nil, "/no-such-page", role); strings.Contains(h, `class="on"`) {
 			t.Errorf("role=%s: 未知路徑不應有任何 active 項目", role)
 		}
 	}
@@ -78,7 +82,7 @@ func TestRenderNoActiveWhenUnknown(t *testing.T) {
 // 看不到的角色則必須完全沒有那個連結（連 href 都不該出現）。
 func TestRenderAllRoutesPresent(t *testing.T) {
 	for _, role := range allRoles {
-		h := Render("", role)
+		h := Render(nil, "", role)
 		for _, rt := range Routes {
 			link := `href="` + rt.Path + `"`
 			if rt.CanSee(role) {
@@ -120,7 +124,7 @@ func TestRoutesNoEmptyNameOrGroup(t *testing.T) {
 // 為什麼重要：看得到卻點不進去比看不到更糟——使用者會以為系統壞了，
 // 而不是「我沒有權限」。
 func TestRenderFiltersRoutesByRole(t *testing.T) {
-	tech := Render("", RoleTechnician)
+	tech := Render(nil, "", RoleTechnician)
 	for _, p := range []string{"/analytics", "/ap", "/receivables", "/expenses", "/lookup"} {
 		if strings.Contains(tech, `href="`+p+`"`) {
 			t.Errorf("技師不該看到 %s（該頁為 CounterUpPage）", p)
@@ -143,7 +147,7 @@ func TestRenderFiltersRoutesByRole(t *testing.T) {
 	}
 
 	// 櫃檯以上要看得到全部
-	owner := Render("", RoleOwner)
+	owner := Render(nil, "", RoleOwner)
 	for _, rt := range Routes {
 		if !strings.Contains(owner, `href="`+rt.Path+`"`) {
 			t.Errorf("owner 應該看得到全部選單項目，缺了 %q", rt.Path)
@@ -157,6 +161,39 @@ func TestRenderFiltersRoutesByRole(t *testing.T) {
 // TestCanSeeFailClosed 未知或空字串的角色看不到受限項目。
 //
 // 寧可少顯示一個項目，也不要顯示一個點進去被擋的入口。
+func TestRenderI18n(t *testing.T) {
+	// Without dictionaries loaded, Render falls back to Chinese Names.
+	zh := Render(nil, "/", RoleOwner)
+	if !strings.Contains(zh, "總覽") {
+		t.Fatal("fallback should show Chinese nav")
+	}
+	// With en dictionaries loaded, translated names/groups appear.
+	if err := i18n.Load(testLocales(t)); err != nil {
+		t.Fatal(err)
+	}
+	en := Render(i18n.WithLang(context.Background(), "en"), "/", RoleOwner)
+	if !strings.Contains(en, "Home") || strings.Contains(en, "總覽") {
+		t.Fatalf("en nav not translated: %.200s", en)
+	}
+	if !strings.Contains(en, "Daily Ops") {
+		t.Fatal("group not translated")
+	}
+}
+
+func testLocales(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	zh := `{"nav.home":"總覽","group.daily":"日常作業"}`
+	en := `{"nav.home":"Home","group.daily":"Daily Ops"}`
+	if err := os.WriteFile(dir+"/zh-TW.json", []byte(zh), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/en.json", []byte(en), 0644); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
 func TestCanSeeFailClosed(t *testing.T) {
 	restricted := Route{Path: "/x", Name: "x", Group: "g", Roles: []string{RoleOwner, RoleCounter}}
 	for _, role := range []string{"", "unknown", "admin", "OWNER"} {

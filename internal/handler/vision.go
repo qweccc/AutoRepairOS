@@ -32,18 +32,13 @@ func StopVisionClient() {
 	}
 }
 
-// RecognizePlate 拍照辨識行照/車牌，回傳結構化 JSON 給前端自動填入表單。
-//
-// POST body: {"image": "data:image/jpeg;base64,...."} 或 {"image": "<純base64>"}
-// 回傳: {"ok":true, "reading":{...}} 或 {"error":"..."}
-//
-// 前端用 <input type=file accept=image/* capture=environment> + FileReader
-// 讀成 dataURL 再 POST 到這裡，拿到欄位後直接填進車輛表單。
-func RecognizePlate(w http.ResponseWriter, r *http.Request) {
+// decodeVisionImage 解析 {"image": ...} body 並驗證 base64 大小。
+// visionClient 未啟用或解析/驗證失敗時已寫回錯誤回應，ok=false。
+func decodeVisionImage(w http.ResponseWriter, r *http.Request) (string, bool) {
 	if visionClient == nil {
 		writeJSON(w, http.StatusServiceUnavailable,
 			map[string]interface{}{"ok": false, "error": "視覺辨識未啟用（請在 .env 設定 VISION_API_URL/VISION_API_KEY 或 VISION_LOCAL_URL）"})
-		return
+		return "", false
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxVisionRequest)
@@ -54,21 +49,36 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, new(*http.MaxBytesError)) {
 			writeJSON(w, http.StatusRequestEntityTooLarge,
 				map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限"})
-			return
+			return "", false
 		}
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
-		return
+		return "", false
 	}
 	body.Image = strings.TrimSpace(body.Image)
 	if body.Image == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "缺少圖片"})
-		return
+		return "", false
 	}
 
 	b64 := vision.DecodeDataURL(body.Image)
 	if !validVisionImageBase64(b64) {
 		writeJSON(w, http.StatusRequestEntityTooLarge,
 			map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限或格式錯誤"})
+		return "", false
+	}
+	return b64, true
+}
+
+// RecognizePlate 拍照辨識行照/車牌，回傳結構化 JSON 給前端自動填入表單。
+//
+// POST body: {"image": "data:image/jpeg;base64,...."} 或 {"image": "<純base64>"}
+// 回傳: {"ok":true, "reading":{...}} 或 {"error":"..."}
+//
+// 前端用 <input type=file accept=image/* capture=environment> + FileReader
+// 讀成 dataURL 再 POST 到這裡，拿到欄位後直接填進車輛表單。
+func RecognizePlate(w http.ResponseWriter, r *http.Request) {
+	b64, ok := decodeVisionImage(w, r)
+	if !ok {
 		return
 	}
 	reading, err := visionClient.Recognize(r.Context(), b64)
@@ -87,35 +97,8 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 //
 //	（items 可能為空陣列 = 圖裡讀不到品項，這不是錯誤）
 func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
-	if visionClient == nil {
-		writeJSON(w, http.StatusServiceUnavailable,
-			map[string]interface{}{"ok": false, "error": "視覺辨識未啟用（請在 .env 設定 VISION_API_URL/VISION_API_KEY 或 VISION_LOCAL_URL）"})
-		return
-	}
-
-	r.Body = http.MaxBytesReader(w, r.Body, maxVisionRequest)
-	var body struct {
-		Image string `json:"image"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		if errors.As(err, new(*http.MaxBytesError)) {
-			writeJSON(w, http.StatusRequestEntityTooLarge,
-				map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限"})
-			return
-		}
-		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "請求格式錯誤"})
-		return
-	}
-	body.Image = strings.TrimSpace(body.Image)
-	if body.Image == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]interface{}{"ok": false, "error": "缺少圖片"})
-		return
-	}
-
-	b64 := vision.DecodeDataURL(body.Image)
-	if !validVisionImageBase64(b64) {
-		writeJSON(w, http.StatusRequestEntityTooLarge,
-			map[string]interface{}{"ok": false, "error": "圖片超過 10MB 上限或格式錯誤"})
+	b64, ok := decodeVisionImage(w, r)
+	if !ok {
 		return
 	}
 	doc, err := visionClient.RecognizeInvoice(r.Context(), b64)
@@ -147,7 +130,14 @@ func validVisionImageBase64(value string) bool {
 // 比對成 select 的 value 用。「先拍單據再開單」流程需要它：
 // 辨識回傳的是名稱字串，要轉成下拉選單的 id 才能帶入表單。
 func SupplierOptionsAPI(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.DB.Query("SELECT id, name FROM active_suppliers ORDER BY name LIMIT 300")
+	query := "SELECT id, name FROM active_suppliers"
+	var args []interface{}
+	if q := strings.TrimSpace(r.URL.Query().Get("q")); q != "" {
+		query += " WHERE name LIKE ?"
+		args = append(args, "%"+q+"%")
+	}
+	query += " ORDER BY name LIMIT 300"
+	rows, err := db.DB.Query(query, args...)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]interface{}{"ok": false, "error": "查詢供應商失敗"})
 		return

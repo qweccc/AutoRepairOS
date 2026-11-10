@@ -1,7 +1,11 @@
 package pages
 
 import (
+	"context"
+	"fmt"
 	"strconv"
+
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -29,47 +33,47 @@ type BackupRow struct {
 templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []NotificationRow, backups []BackupRow,
 	pendingText, recentText, linePill, lineStatus string,
 	user model.User) {
-	@components.Layout("排程與備份", "/scheduled-tasks", user, AppName) {
+	@components.Layout(i18n.T(ctx, "scheduled.title"), "/scheduled-tasks", user, AppName) {
 		<div class="card">
-			<h2>排程任務</h2>
+			<h2>{ i18n.T(ctx, "scheduled.tasks_title") }</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
-				排程器每分鐘檢查一次到期任務。單一任務失敗不會中斷其他任務。
+				{ i18n.T(ctx, "scheduled.tasks_note") }
 			</p>
 			if len(tasks) > 0 {
-				<table><tr><th>任務</th><th>識別碼</th><th>頻率</th><th>狀態</th><th>上次執行</th><th>下次執行</th><th>次數</th><th>操作</th></tr>
+				<table><tr><th>{ i18n.T(ctx, "scheduled.col_task") }</th><th>{ i18n.T(ctx, "scheduled.col_key") }</th><th>{ i18n.T(ctx, "scheduled.col_interval") }</th><th>{ i18n.T(ctx, "scheduled.col_status") }</th><th>{ i18n.T(ctx, "scheduled.col_last") }</th><th>{ i18n.T(ctx, "scheduled.col_next") }</th><th>{ i18n.T(ctx, "scheduled.col_count") }</th><th>{ i18n.T(ctx, "scheduled.col_action") }</th></tr>
 					for _, task := range tasks {
 						<tr><td><b>{ task.Name }</b>
 							if task.LastError != "" {
-								<br><span style="color:#fca5a5;font-size:11.5px">錯誤：{ task.LastError }</span>
+								<br><span style="color:#fca5a5;font-size:11.5px">{ fmt.Sprintf(i18n.T(ctx, "scheduled.error_prefix"), task.LastError) }</span>
 							}
 						</td><td><code>{ task.Key }</code></td><td>{ task.Interval }</td>
-						<td>@components.Pill(taskStatusLabel(task.Enabled), taskStatusPill(task.Enabled))</td>
+						<td>@components.Pill(taskStatusLabelCtx(ctx, task.Enabled), taskStatusPill(task.Enabled))</td>
 						<td>{ task.LastRun }</td><td>{ task.NextRun }</td><td class="num">{ strconv.Itoa(task.RunCount) }</td>
 						<td><form method="POST" action={ "/scheduled-tasks/" + task.Key + "/toggle" } style="display:inline">
-							@components.CSRFInput()<button class="btn btn-o" type="submit">{ taskToggleLabel(task.Enabled) }</button>
+							@components.CSRFInput()<button class="btn btn-o" type="submit">{ taskToggleLabelCtx(ctx, task.Enabled) }</button>
 						</form></td></tr>
 					}
 				</table>
 			} else {
-				<div class="empty">尚未註冊任何排程任務</div>
+				<div class="empty">{ i18n.T(ctx, "scheduled.empty_tasks") }</div>
 			}
 			<div style="margin-top:14px">
-				<a class="btn btn-p" href="/scheduled-tasks/backups/run" hx-post="/scheduled-tasks/backups/run">立即執行備份</a>
-				<a class="btn btn-s" href="/scheduled-tasks/notifications/run" hx-post="/scheduled-tasks/notifications/run">立即處理通知佇列</a>
-				<a class="btn btn-s" href="/scheduled-tasks/maintenance-due/run" hx-post="/scheduled-tasks/maintenance-due/run">立即掃描保養到期</a>
+				<a class="btn btn-p" href="/scheduled-tasks/backups/run" hx-post="/scheduled-tasks/backups/run">{ i18n.T(ctx, "scheduled.run_backup") }</a>
+				<a class="btn btn-s" href="/scheduled-tasks/notifications/run" hx-post="/scheduled-tasks/notifications/run">{ i18n.T(ctx, "scheduled.run_notifications") }</a>
+				<a class="btn btn-s" href="/scheduled-tasks/maintenance-due/run" hx-post="/scheduled-tasks/maintenance-due/run">{ i18n.T(ctx, "scheduled.run_maintenance") }</a>
 			</div>
 		</div>
 		<div class="card">
-			<h2>通知紀錄</h2>
+			<h2>{ i18n.T(ctx, "scheduled.notif_title") }</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 6px">
-				待處理 { pendingText } 筆，全部 { recentText } 筆。
+				{ fmt.Sprintf(i18n.T(ctx, "scheduled.notif_summary"), pendingText, recentText) }
 			</p>
 			<p style="font-size:12.5px;margin:0 0 14px">
 				<span class={ "pill " + linePill }>LINE</span>
 				<span style="color:#94a3b8">{ lineStatus }</span>
 			</p>
 			if len(notifications) > 0 {
-				<table><tr><th>#</th><th>類型</th><th>通道</th><th>主旨</th><th>內容</th><th>排定時間</th><th>狀態</th><th>操作</th></tr>
+				<table><tr><th>#</th><th>{ i18n.T(ctx, "scheduled.col_kind") }</th><th>{ i18n.T(ctx, "scheduled.col_channel") }</th><th>{ i18n.T(ctx, "scheduled.col_subject") }</th><th>{ i18n.T(ctx, "scheduled.col_body") }</th><th>{ i18n.T(ctx, "scheduled.col_scheduled") }</th><th>{ i18n.T(ctx, "scheduled.col_status") }</th><th>{ i18n.T(ctx, "scheduled.col_action") }</th></tr>
 					for _, n := range notifications {
 						<tr><td>{ strconv.FormatInt(n.ID, 10) }</td><td>{ n.Kind }</td><td>{ n.Channel }</td><td>{ n.Subject }</td>
 							<td style="max-width:340px">{ n.Body }</td><td>{ n.ScheduledAt }</td>
@@ -81,7 +85,7 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 							<td>
 								if n.Cancelable {
 									<form method="POST" action={ "/notifications/" + strconv.FormatInt(n.ID, 10) + "/cancel" } style="display:inline" onsubmit="return confirm('取消這筆通知？')">
-										@components.CSRFInput()<button class="btn btn-d" type="submit">取消</button>
+										@components.CSRFInput()<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.cancel") }</button>
 									</form>
 								} else {
 									<span style="color:#64748b">—</span>
@@ -91,28 +95,31 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 					}
 				</table>
 			} else {
-				<div class="empty">尚無通知紀錄</div>
+				<div class="empty">{ i18n.T(ctx, "scheduled.empty_notif") }</div>
 			}
 		</div>
 		<div class="card">
-			<h2>備份紀錄</h2>
+			<h2>{ i18n.T(ctx, "scheduled.backup_title") }</h2>
 			if len(backups) > 0 {
-				<table><tr><th>日期</th><th>備份檔</th><th class="num">DB 大小</th><th class="num">照片數</th><th class="num">照片大小</th><th>狀態</th></tr>
+				<table><tr><th>{ i18n.T(ctx, "scheduled.col_date") }</th><th>{ i18n.T(ctx, "scheduled.col_backup_file") }</th><th class="num">{ i18n.T(ctx, "scheduled.col_db_size") }</th><th class="num">{ i18n.T(ctx, "scheduled.col_photo_count") }</th><th class="num">{ i18n.T(ctx, "scheduled.col_photo_size") }</th><th>{ i18n.T(ctx, "scheduled.col_status") }</th></tr>
 					for _, b := range backups {
 						<tr><td>{ b.Date }</td><td style="font-size:11.5px">{ b.Path }</td><td class="num">{ b.DBSize }</td>
 							<td class="num">{ b.PhotoCount }</td><td class="num">{ b.PhotoSize }</td>
-							<td>@components.Pill(backupStatusLabel(b.Success), backupStatusPill(b.Success)){ b.Error }</td></tr>
+							<td>@components.Pill(backupStatusLabelCtx(ctx, b.Success), backupStatusPill(b.Success)){ b.Error }</td></tr>
 					}
 				</table>
 			} else {
-				<div class="empty">尚無備份紀錄</div>
+				<div class="empty">{ i18n.T(ctx, "scheduled.empty_backup") }</div>
 			}
 		</div>
 	}
 }
 
 func taskStatusLabel(enabled bool) string { if enabled { return "啟用" }; return "停用" }
+func taskStatusLabelCtx(ctx context.Context, enabled bool) string { if enabled { return i18n.T(ctx, "scheduled.task_enabled") }; return i18n.T(ctx, "scheduled.task_disabled") }
 func taskStatusPill(enabled bool) string { if enabled { return "p-completed" }; return "p-pending" }
 func taskToggleLabel(enabled bool) string { if enabled { return "停用" }; return "啟用" }
+func taskToggleLabelCtx(ctx context.Context, enabled bool) string { if enabled { return i18n.T(ctx, "scheduled.task_disabled") }; return i18n.T(ctx, "scheduled.task_enabled") }
 func backupStatusLabel(success bool) string { if success { return "成功" }; return "失敗" }
+func backupStatusLabelCtx(ctx context.Context, success bool) string { if success { return i18n.T(ctx, "scheduled.backup_success") }; return i18n.T(ctx, "scheduled.backup_failure") }
 func backupStatusPill(success bool) string { if success { return "p-completed" }; return "p-apprno" }

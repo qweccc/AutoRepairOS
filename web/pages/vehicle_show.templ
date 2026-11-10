@@ -3,6 +3,7 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -14,92 +15,92 @@ templ ShowVehiclePage(v model.Vehicle,
 	dateCell, kmCell string,
 	mileageTable, ordersTable, partsTable string, user model.User) {
 
-	@components.Layout("車輛履歷 "+v.PlateNumber, "/vehicles", user, AppName) {
+	@components.Layout(i18n.T(ctx, "vehicle.history_title")+" "+v.PlateNumber, "/vehicles", user, AppName) {
 		<div class="card">
 			<h2>{ v.PlateNumber } — { v.BrandModel }</h2>
 			<div style="margin-bottom:14px">
-				<div class="stat"><b>{ strconv.Itoa(orderCount) }</b><span>維修次數</span></div>
-				<div class="stat"><b>{ moneyFmt(totalSpent) }</b><span>累計消費</span></div>
-				<div class="stat"><b>{ moneyFmt(unpaid) }</b><span>未結金額</span></div>
-				<div class="stat"><b>{ strconv.Itoa(curKm) }</b><span>最近里程</span></div>
+				<div class="stat"><b>{ strconv.Itoa(orderCount) }</b><span>{ i18n.T(ctx, "vehicle.repair_count") }</span></div>
+				<div class="stat"><b>{ moneyFmt(totalSpent) }</b><span>{ i18n.T(ctx, "vehicle.total_spent") }</span></div>
+				<div class="stat"><b>{ moneyFmt(unpaid) }</b><span>{ i18n.T(ctx, "vehicle.unpaid") }</span></div>
+				<div class="stat"><b>{ strconv.Itoa(curKm) }</b><span>{ i18n.T(ctx, "vehicle.recent_km") }</span></div>
 			</div>
 			<table>
 				<tr>
-					<th>業主</th>
+					<th>{ i18n.T(ctx, "vehicle.col_owner") }</th>
 					<td>
 						{ v.CustomerName }
-						<a href={ "/customers/" + strconv.FormatInt(v.CustomerID, 10) + "/edit" } style="font-size:12.5px">（編輯客戶）</a>
+						<a href={ "/customers/" + strconv.FormatInt(v.CustomerID, 10) + "/edit" } style="font-size:12.5px">{ i18n.T(ctx, "vehicle.edit_customer") }</a>
 					</td>
 				</tr>
 				if v.VehicleTypeLabel != "" {
-					<tr><th>車種類別</th><td>{ v.VehicleTypeLabel }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.vehicle_type") }</th><td>{ v.VehicleTypeLabel }</td></tr>
 				}
 				if v.FuelTypeLabel != "" {
-					<tr><th>燃料種類</th><td>{ v.FuelTypeLabel }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.fuel_type") }</th><td>{ v.FuelTypeLabel }</td></tr>
 				}
 				if v.BodyStyleLabel != "" {
-					<tr><th>車身式樣</th><td>{ v.BodyStyleLabel }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.body_style") }</th><td>{ v.BodyStyleLabel }</td></tr>
 				}
 				if v.OwnerName != "" {
-					<tr><th>行照車主</th><td>{ v.OwnerName }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.owner") }</th><td>{ v.OwnerName }</td></tr>
 				}
 				if v.DriverName != "" {
-					<tr><th>駕駛人</th><td>{ v.DriverName } { v.DriverPhone }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.driver") }</th><td>{ v.DriverName } { v.DriverPhone }</td></tr>
 				}
 				if v.ContactName != "" {
-					<tr><th>車輛聯絡人</th><td>{ v.ContactName } { v.ContactPhone }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.contact") }</th><td>{ v.ContactName } { v.ContactPhone }</td></tr>
 				}
 				if v.Color != "" {
-					<tr><th>顏色</th><td>{ v.Color }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.color") }</th><td>{ v.Color }</td></tr>
 				}
-				<tr><th>出廠年份</th><td>{ intOrBlank(v.ManufactureYear) }</td></tr>
+				<tr><th>{ i18n.T(ctx, "vehicle.manufacture_year") }</th><td>{ intOrBlank(v.ManufactureYear) }</td></tr>
 				if v.ManufactureDate != "" {
-					<tr><th>出廠年月</th><td>{ v.ManufactureDate }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.manufacture_date") }</th><td>{ v.ManufactureDate }</td></tr>
 				}
 				if v.Displacement > 0 {
-					<tr><th>排氣量</th><td>{ strconv.Itoa(v.Displacement) } c.c.</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.displacement") }</th><td>{ strconv.Itoa(v.Displacement) } c.c.</td></tr>
 				}
 				<tr><th>VIN</th><td>{ orEmpty(v.VIN) }</td></tr>
-				<tr><th>引擎號碼</th><td>{ orEmpty(v.EngineNumber) }</td></tr>
+				<tr><th>{ i18n.T(ctx, "vehicle.engine_number") }</th><td>{ orEmpty(v.EngineNumber) }</td></tr>
 				if v.SeatingCapacity > 0 {
-					<tr><th>座位數</th><td>{ strconv.Itoa(v.SeatingCapacity) }</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.seating") }</th><td>{ strconv.Itoa(v.SeatingCapacity) }</td></tr>
 				}
-				<tr><th>檢驗到期日</th><td>{ v.InspectionDueDate }</td></tr>
+				<tr><th>{ i18n.T(ctx, "vehicle.inspection_due") }</th><td>{ v.InspectionDueDate }</td></tr>
 				<tr>
-					<th>最後保養</th>
+					<th>{ i18n.T(ctx, "vehicle.last_maintenance") }</th>
 					<td>{ v.LastMaintenanceDate }</td>
 				</tr>
 				<tr>
-					<th>保養間隔</th>
-					<td>每 { strconv.Itoa(v.MaintIntervalMonths) } 個月 或 { strconv.Itoa(v.MaintIntervalKm) } 公里</td>
+					<th>{ i18n.T(ctx, "vehicle.maint_interval") }</th>
+					<td>{ i18n.T(ctx, "vehicle.every") } { strconv.Itoa(v.MaintIntervalMonths) } { i18n.T(ctx, "vehicle.months_or") } { strconv.Itoa(v.MaintIntervalKm) } { i18n.T(ctx, "vehicle.km_unit") }</td>
 				</tr>
 			</table>
 			<div style="margin-top:14px;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:9px">
 				<div style="color:#94a3b8;font-size:12.5px;margin-bottom:8px">
-					下次保養（兩者先到者為準）
+					{ i18n.T(ctx, "vehicle.next_maint") }
 				</div>
 				<table style="margin:0">
-					<tr><th style="width:110px">依日期</th><td>@templ.Raw(dateCell)</td></tr>
-					<tr><th>依里程</th><td>@templ.Raw(kmCell)</td></tr>
+					<tr><th style="width:110px">{ i18n.T(ctx, "vehicle.by_date") }</th><td>@templ.Raw(dateCell)</td></tr>
+					<tr><th>{ i18n.T(ctx, "vehicle.by_km") }</th><td>@templ.Raw(kmCell)</td></tr>
 				</table>
 			</div>
 			<div style="margin-top:16px">
-				<a class="btn btn-p" href={ "/work-orders/new?vehicle=" + strconv.FormatInt(v.ID, 10) }>＋ 開立工單</a>
-				<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(v.ID, 10) + "/edit" }>編輯車輛</a>
-				<a class="btn btn-s" href="/work-orders">在工單列表查詢</a>
-				<a class="btn btn-p" href={ "/vehicles/" + strconv.FormatInt(v.ID, 10) + "/mileage/new" }>＋ 記錄里程</a>
-				<a class="btn btn-s" href="/vehicles">回車輛列表</a>
+				<a class="btn btn-p" href={ "/work-orders/new?vehicle=" + strconv.FormatInt(v.ID, 10) }>{ i18n.T(ctx, "vehicle.new_workorder") }</a>
+				<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(v.ID, 10) + "/edit" }>{ i18n.T(ctx, "vehicle.edit_vehicle") }</a>
+				<a class="btn btn-s" href="/work-orders">{ i18n.T(ctx, "vehicle.view_in_workorders") }</a>
+				<a class="btn btn-p" href={ "/vehicles/" + strconv.FormatInt(v.ID, 10) + "/mileage/new" }>{ i18n.T(ctx, "vehicle.record_mileage") }</a>
+				<a class="btn btn-s" href="/vehicles">{ i18n.T(ctx, "vehicle.back_to_list") }</a>
 			</div>
 		</div>
 		<div class="card">
-			<h2>里程履歷</h2>
+			<h2>{ i18n.T(ctx, "vehicle.mileage_history") }</h2>
 			<p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
-				進廠工單會自動記錄里程（來源「進廠工單」）；非進廠的更新用「＋ 記錄里程」手動登錄。
+				{ i18n.T(ctx, "vehicle.mileage_note") }
 			</p>
 			@templ.Raw(mileageTable)
 		</div>
 		<div class="card">
-			<h2>維修紀錄（最近 200 筆）</h2>
+			<h2>{ i18n.T(ctx, "vehicle.recent_repairs") }</h2>
 			@templ.Raw(ordersTable)
 		</div>
 		@templ.Raw(partsTable)

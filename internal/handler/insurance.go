@@ -146,7 +146,7 @@ func CreateInsuranceCompany(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimSpace(r.FormValue("name"))
 
 	if code == "" || name == "" {
-		fail(w, "簡稱與公司名稱為必填")
+		formError(w, r, "新增保險公司", "/insurance-companies", "簡稱與公司名稱為必填")
 		return
 	}
 
@@ -195,7 +195,7 @@ func UpdateInsuranceCompany(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimSpace(r.FormValue("code"))
 	name := strings.TrimSpace(r.FormValue("name"))
 	if code == "" || name == "" {
-		fail(w, "簡稱與公司名稱為必填")
+		formError(w, r, "編輯保險公司", "/insurance-companies/"+strconv.FormatInt(id, 10)+"/edit", "簡稱與公司名稱為必填")
 		return
 	}
 

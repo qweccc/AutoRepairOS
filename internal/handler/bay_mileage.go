@@ -332,7 +332,7 @@ func CreateVehicleMileage(w http.ResponseWriter, r *http.Request) {
 	vehicleID := mustInt(r.PathValue("id"))
 	mileage := atoiDefault(r.FormValue("mileage"), -1)
 	if mileage < 0 {
-		fail(w, "請填寫有效里程（不可為負數）")
+		formError(w, r, "記錄里程", "/vehicles/"+strconv.FormatInt(vehicleID, 10)+"/mileage/new", "請填寫有效里程（不可為負數）")
 		return
 	}
 	if countRows("SELECT COUNT(1) FROM active_vehicles WHERE id = ?", vehicleID) == 0 {

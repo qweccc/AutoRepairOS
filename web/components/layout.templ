@@ -1,6 +1,7 @@
 package components
 
 import (
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/internal/nav"
 	"autorepairos/internal/session"
@@ -13,26 +14,45 @@ import (
 // 所以沒人發現）。用 model.User 讓編譯器強制每個呼叫點拿出真正的使用者物件。
 templ Layout(title, active string, user model.User, appName string) {
 	<!DOCTYPE html>
-	<html lang="zh-Hant">
+	<html lang={ i18n.LangOf(ctx) } data-theme={ i18n.ThemeOf(ctx) }>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ title } - { appName }</title>
+			<script>
+				// FOUC prevention: apply the stored theme before first paint.
+				try {
+					var t = localStorage.getItem("theme");
+					if (t !== "light" && t !== "dark") {
+						var m = document.cookie.match(/(?:^|; )theme=([^;]+)/);
+						t = m ? decodeURIComponent(m[1]) : "dark";
+					}
+					document.documentElement.setAttribute("data-theme", t);
+				} catch (e) {}
+			</script>
 			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/htmx.min.js"></script>
-<script>document.body.addEventListener('htmx:responseError',function(e){if(e.detail&&e.detail.xhr){alert(e.detail.xhr.responseText||'操作失敗');}});</script>
+			<script src="/static/prefs.js"></script>
+<script>document.body.addEventListener('htmx:responseError',function(e){if(e.detail&&e.detail.xhr){var form=document.querySelector('main form');var msg=e.detail.xhr.responseText||'操作失敗';if(form){var box=form.querySelector('.msg-err');if(!box){box=document.createElement('div');box.className='msg msg-err';form.insertBefore(box,form.firstChild);}box.textContent=msg;}else{console.error(msg);}}});</script>
 			<script src="/static/html5-qrcode.min.js"></script>
 		</head>
 		<body hx-headers={ `{"X-CSRF-Token":"` + session.CSRFTokenFromContext(ctx) + `"}` }>
 			<header>
 				<h1>🔧 { appName }</h1>
 				<div class="user">
-					登入中：<code>{ user.Username }</code>
+					{ i18n.T(ctx, "layout.logged_in") }：<code>{ user.Username }</code>
 					<span class="badge">{ user.Role }</span>
 					<form method="POST" action="/logout" style="display:inline">
 						@CSRFInput()
-						<button class="logout" type="submit">登出</button>
+						<button class="logout" type="submit">{ i18n.T(ctx, "nav.logout") }</button>
 					</form>
+					<span class="prefs">
+						<select id="langSelect" aria-label={ i18n.T(ctx, "lang.label") } onchange="setLang(this.value)">
+							<option value="zh-TW" selected?={ i18n.LangOf(ctx) == "zh-TW" }>繁體中文</option>
+							<option value="en" selected?={ i18n.LangOf(ctx) == "en" }>English</option>
+						</select>
+						<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="theme">{ i18n.T(ctx, "theme.dark") }</button>
+					</span>
 				</div>
 			</header>
 			<div class="shell">
@@ -57,5 +77,5 @@ templ CSRFInput() {
 // 選單的單一定義來源是 internal/nav（Routes + Render），renderPage（首頁等
 // 字串拼接頁）與這裡都呼叫它，兩邊不會再走音。新增/調整選單只改 internal/nav。
 templ NavItems(active, role string) {
-	@templ.Raw(nav.Render(active, role))
+	@templ.Raw(nav.Render(ctx, active, role))
 }

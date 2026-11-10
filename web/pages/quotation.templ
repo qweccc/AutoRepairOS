@@ -1,5 +1,9 @@
 package pages
 
+import (
+	"autorepairos/internal/i18n"
+)
+
 type QuotationItem struct {
 	Description string
 	Quantity    string
@@ -44,7 +48,7 @@ templ QuotationPage(data QuotationPageData) {
 	<head>
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
-		<title>估價單 #{ data.WorkOrderID } - AutoRepair OS</title>
+		<title>{ i18n.T(ctx, "quotation.title_prefix") }{ data.WorkOrderID } - AutoRepair OS</title>
 		<style>@templ.Raw(data.Style)</style>
 	</head>
 	<body>
@@ -52,25 +56,25 @@ templ QuotationPage(data QuotationPageData) {
 			<div class="q-head">
 				<div>
 					<h1>🔧 { data.AppName }</h1>
-					<p class="q-subtitle">維修估價單
+					<p class="q-subtitle">{ i18n.T(ctx, "quotation.subtitle") }
 						if data.Warranty {
-							<span class="pill p-completed">保固案件</span>
+							<span class="pill p-completed">{ i18n.T(ctx, "quotation.warranty") }</span>
 						}
 					</p>
 				</div>
 				<div class="q-head-meta">
-					<div><span>估價單號</span><b>#{ data.WorkOrderID }</b></div>
-					<div><span>開立日期</span><b>{ data.QuoteDate }</b></div>
-					<div><span>有效期限</span><b>{ data.Expiry }</b></div>
+					<div><span>{ i18n.T(ctx, "quotation.number") }</span><b>#{ data.WorkOrderID }</b></div>
+					<div><span>{ i18n.T(ctx, "quotation.date") }</span><b>{ data.QuoteDate }</b></div>
+					<div><span>{ i18n.T(ctx, "quotation.expiry") }</span><b>{ data.Expiry }</b></div>
 				</div>
 			</div>
 			<div class="q-parties">
-				<div class="q-party"><span class="q-lbl">客戶</span><b>{ data.CustomerName }</b><span class="q-val">{ data.CustomerPhone }</span></div>
-				<div class="q-party"><span class="q-lbl">車輛</span><b>{ data.PlateNumber }</b><span class="q-val">{ data.BrandModel } / { data.Mileage } km</span></div>
+				<div class="q-party"><span class="q-lbl">{ i18n.T(ctx, "quotation.customer") }</span><b>{ data.CustomerName }</b><span class="q-val">{ data.CustomerPhone }</span></div>
+				<div class="q-party"><span class="q-lbl">{ i18n.T(ctx, "quotation.vehicle") }</span><b>{ data.PlateNumber }</b><span class="q-val">{ data.BrandModel } / { data.Mileage } km</span></div>
 			</div>
-			<div class="q-complaint"><span class="q-lbl">客戶反映</span>{ data.Complaint }</div>
+			<div class="q-complaint"><span class="q-lbl">{ i18n.T(ctx, "quotation.complaint") }</span>{ data.Complaint }</div>
 			<div class="q-detail">
-				<h2>維修項目與費用</h2>
+				<h2>{ i18n.T(ctx, "quotation.items_title") }</h2>
 				if data.Paper == "thermal" {
 					<table class="q-thermal">
 						for _, item := range data.ThermalItems {
@@ -83,7 +87,7 @@ templ QuotationPage(data QuotationPageData) {
 							<div class="q-group">
 								<div class="q-group-head"><span>{ group.Label }</span><b>{ group.Subtotal }</b></div>
 								<table class="q-items">
-									<tr><th>項目</th><th class="num">數量</th><th class="num">單價</th><th class="num">小計</th></tr>
+									<tr><th>{ i18n.T(ctx, "quotation.field.item") }</th><th class="num">{ i18n.T(ctx, "quotation.field.qty") }</th><th class="num">{ i18n.T(ctx, "quotation.field.unit_price") }</th><th class="num">{ i18n.T(ctx, "quotation.field.subtotal") }</th></tr>
 									for _, item := range group.Items {
 										<tr><td>{ item.Description }</td><td class="num">{ item.Quantity }</td><td class="num">{ item.UnitPrice }</td><td class="num">{ item.Subtotal }</td></tr>
 									}
@@ -94,24 +98,24 @@ templ QuotationPage(data QuotationPageData) {
 				}
 			</div>
 			<div class="q-total">
-				<div class="q-line"><span>項目小計</span><b>{ data.ItemTotal }</b></div>
+				<div class="q-line"><span>{ i18n.T(ctx, "quotation.subtotal") }</span><b>{ data.ItemTotal }</b></div>
 				if data.Discount != "" {
-					<div class="q-line"><span>折扣</span><b style="color:#b91c1c">-{ data.Discount }</b></div>
+					<div class="q-line"><span>{ i18n.T(ctx, "quotation.discount") }</span><b style="color:#b91c1c">-{ data.Discount }</b></div>
 				}
-				<div class="q-grand"><span>應付總額</span><b>{ data.Total }</b></div>
+				<div class="q-grand"><span>{ i18n.T(ctx, "quotation.total") }</span><b>{ data.Total }</b></div>
 			</div>
-			<div class="q-terms"><b>估價說明與保固條款</b><p>{ data.Terms }</p></div>
+			<div class="q-terms"><b>{ i18n.T(ctx, "quotation.terms_title") }</b><p>{ data.Terms }</p></div>
 			<div class="q-sign">
-				<div class="q-sign-box"><span>客戶簽名（同意上述報價）</span><div class="q-sign-line"></div></div>
-				<div class="q-sign-box"><span>承辦人</span><div class="q-sign-line"></div><span class="q-sign-name">{ data.Username }</span></div>
+				<div class="q-sign-box"><span>{ i18n.T(ctx, "quotation.customer_sign") }</span><div class="q-sign-line"></div></div>
+				<div class="q-sign-box"><span>{ i18n.T(ctx, "quotation.handler") }</span><div class="q-sign-line"></div><span class="q-sign-name">{ data.Username }</span></div>
 			</div>
-			<div class="q-foot"><p class="tiny">列印時間：{ data.PrintTime } / 櫃檯：{ data.Username }</p></div>
+			<div class="q-foot"><p class="tiny">{ i18n.T(ctx, "quotation.print_time") }{ data.PrintTime } { i18n.T(ctx, "quotation.counter_sep") }{ data.Username }</p></div>
 		</div>
 		<div class="no-print">
-			<button class="btn btn-p" onclick="window.print()">🖨 列印</button>
-			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID + "/quotation?paper=a4" }>A4 版</a>
-			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID + "/quotation?paper=thermal" }>熱感紙版</a>
-			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID }>返回工單</a>
+			<button class="btn btn-p" onclick="window.print()">{ i18n.T(ctx, "quotation.print") }</button>
+			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID + "/quotation?paper=a4" }>{ i18n.T(ctx, "quotation.a4") }</a>
+			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID + "/quotation?paper=thermal" }>{ i18n.T(ctx, "quotation.thermal") }</a>
+			<a class="btn btn-s" href={ "/work-orders/" + data.WorkOrderID }>{ i18n.T(ctx, "quotation.back") }</a>
 		</div>
 		<script>window.addEventListener('load', function(){ if (location.hash === '#print') window.print(); });</script>
 	</body>

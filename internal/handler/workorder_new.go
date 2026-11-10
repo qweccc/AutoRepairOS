@@ -68,6 +68,11 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
+	data := buildNewWorkOrderPageData(r, user, preVehicle, prePlate, preCustomer, kw, preAppointment, apptBanner, "", "", "")
+	_ = pages.NewWorkOrderPage(data, user).Render(r.Context(), w)
+}
+
+func buildNewWorkOrderPageData(r *http.Request, user model.User, preVehicle int64, prePlate string, preCustomer int64, kw string, preAppointment int64, apptBanner, errMsg, complaint, mileageOverride string) pages.NewWorkOrderPageData {
 	// 指定了車牌就先查出車輛 id，讓表單預選
 	if preVehicle <= 0 && prePlate != "" {
 		var vid int64
@@ -168,6 +173,10 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
+	if mileageOverride != "" {
+		mileage = mileageOverride
+	}
+
 	notFound := ""
 	if kw != "" && len(vehicleList) == 0 {
 		notFound = `<div class="msg msg-err">查無符合「` + htmlEsc(kw) + `」的車輛。
@@ -181,6 +190,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 表單裡的 appointment_id 由預約開單時帶回，建立工單時一併把預約標記為已進廠。
 	// 之所以留在表單裡而不是只看 URL：櫃檯可能中途改了其他欄位後送出，
 	// 若以重新帶入的參數為準會失去來源。
+
 	data := pages.NewWorkOrderPageData{
 		FlashHTML:          flash(r),
 		NotFoundHTML:       notFound,
@@ -191,11 +201,13 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		Vehicles:           vehicleList,
 		PresetLabel:        presetLabel,
 		Mileage:            mileage,
+		ErrMsg:             errMsg,
+		Complaint:          complaint,
 		TechnicianOptions:  technicianOptions(),
 		InsuranceOptions:   insuranceOptionsSel(0),
 		CustomerHintHTML:   customerHint,
 	}
-	_ = pages.NewWorkOrderPage(data, user).Render(r.Context(), w)
+	return data
 }
 
 // SearchWorkOrderVehiclesAPI 回傳開工單選擇器的車輛選項。

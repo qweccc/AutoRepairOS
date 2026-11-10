@@ -1,7 +1,9 @@
 package pages
 
 import (
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
+	"fmt"
 	"strconv"
 
 	"autorepairos/web/components"
@@ -26,6 +28,7 @@ type VehicleInsuranceFormData struct {
 	ID              int64
 	Title           string
 	Action          string
+	ErrMsg          string
 	VehicleID       int64
 	VehicleOptions  []components.SelectOption
 	CompanyID       int64
@@ -44,37 +47,40 @@ type VehicleInsuranceFormData struct {
 templ VehicleInsuranceForm(data VehicleInsuranceFormData) {
 	<div class="card">
 		<h2>{ data.Title }</h2>
+		if data.ErrMsg != "" {
+			<div class="msg msg-err">{ data.ErrMsg }</div>
+		}
 		<form class="frm" method="POST" action={ data.Action }>
 			@components.CSRFInput()
 			if data.ID == 0 {
-				<label>車輛<select name="vehicle_id" required>
+				<label>{ i18n.T(ctx, "estimates.field.vehicle2") }<select name="vehicle_id" required>
 					for _, opt := range data.VehicleOptions {
 						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
 					}
 				</select></label>
 			}
-			<label>保險公司<select name="insurance_company_id">
-				<option value="0">未指定</option>
+			<label>{ i18n.T(ctx, "insurancelist.field.company") }<select name="insurance_company_id">
+				<option value="0">{ i18n.T(ctx, "common.unspecified") }</option>
 				for _, opt := range data.CompanyOptions {
 					<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
 				}
 			</select></label>
-			<label>舊系統公司編號<input name="company_no" value={ data.CompanyNo }></label>
-			<label>險種代碼<input name="insurance_class" value={ data.Class }></label>
-			<label>險種名稱<input name="insurance_class_name" value={ data.ClassName }></label>
-			<label>發照日<input type="date" name="license_date" value={ data.LicenseDate }></label>
-			<label>保單號碼<input name="policy_number" value={ data.PolicyNumber }></label>
-			<label>有效期限<input type="date" name="expiry_date" value={ data.ExpiryDate }></label>
-			<label>保險卡號<input name="card_no" value={ data.CardNo }></label>
-			<label>保額說明<input name="amount_raw" value={ data.AmountRaw }></label>
-			<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.company_no") }<input name="company_no" value={ data.CompanyNo }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.class") }<input name="insurance_class" value={ data.Class }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.class_name") }<input name="insurance_class_name" value={ data.ClassName }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.license_date") }<input type="date" name="license_date" value={ data.LicenseDate }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.policy_number") }<input name="policy_number" value={ data.PolicyNumber }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.expiry") }<input type="date" name="expiry_date" value={ data.ExpiryDate }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.card_no") }<input name="card_no" value={ data.CardNo }></label>
+			<label>{ i18n.T(ctx, "insurancelist.field.amount") }<input name="amount_raw" value={ data.AmountRaw }></label>
+			<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
 			<div class="full">
 				if data.ID == 0 {
-					<button class="btn btn-p" type="submit">建立</button>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.create") }</button>
 				} else {
-					<button class="btn btn-p" type="submit">儲存</button>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button>
 				}
-				<a class="btn btn-s" href="/insurances">取消</a>
+				<a class="btn btn-s" href="/insurances">{ i18n.T(ctx, "common.cancel") }</a>
 			</div>
 		</form>
 	</div>
@@ -94,29 +100,29 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 		{{ searchURL = "/api/insurances/search?expiring=30" }}
 		{{ pagerURL = "/insurances/expiring" }}
 	}
-	@components.Layout("車輛投保紀錄", "/insurances", user, AppName) {
+	@components.Layout(i18n.T(ctx, "insurancelist.title"), "/insurances", user, AppName) {
 		<div class="card">
-			<h2>車輛投保紀錄（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "insurancelist.list_heading"), total) }</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				舊系統「保險名單」表遷移而來。保險理賠是車行主要收入來源。
+				{ i18n.T(ctx, "insurancelist.intro") }
 			</p>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
 				@templ.Raw(compTabsHTML)
 			</div>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋車牌 / 車主 / 保單號碼 / 保險卡號"
+				placeholder={ i18n.T(ctx, "insurancelist.search_ph") }
 				hx-get={ searchURL }
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#insurance-list-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
-			<a class="btn btn-p" href="/insurances/new">＋ 新增投保</a>
-			<a class="btn btn-s" href="/insurances/expiring">30 日內到期</a>
-			<a class="btn btn-s" href="/inspections">定檢排程</a>
+			<a class="btn btn-p" href="/insurances/new">{ i18n.T(ctx, "insurancelist.new") }</a>
+			<a class="btn btn-s" href="/insurances/expiring">{ i18n.T(ctx, "insurancelist.expiring") }</a>
+			<a class="btn btn-s" href="/inspections">{ i18n.T(ctx, "insurancelist.inspections") }</a>
 			<table>
 				<tr>
-					<th>車牌</th><th>車主</th><th>保險公司</th><th>險種</th>
-					<th>發照日</th><th>保單號碼</th><th>到期日</th><th>保險卡號</th><th>保額／備註</th><th>操作</th>
+					<th>{ i18n.T(ctx, "insurancelist.field.plate") }</th><th>{ i18n.T(ctx, "insurancelist.field.owner") }</th><th>{ i18n.T(ctx, "insurancelist.field.company") }</th><th>{ i18n.T(ctx, "insurancelist.field.class_th") }</th>
+					<th>{ i18n.T(ctx, "insurancelist.field.license_date") }</th><th>{ i18n.T(ctx, "insurancelist.field.policy_number") }</th><th>{ i18n.T(ctx, "insurancelist.field.expiry_th") }</th><th>{ i18n.T(ctx, "insurancelist.field.card_no") }</th><th>{ i18n.T(ctx, "insurancelist.field.amount_th") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th>
 				</tr>
 				<tbody id="insurance-list-rows">
 					for _, r := range rows {
@@ -125,7 +131,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的投保紀錄</div>
+				<div class="empty">{ i18n.T(ctx, "insurancelist.empty") }</div>
 			}
 			@components.Pager(pagerURL, page, calcPages(total, size), total)
 		</div>
@@ -151,10 +157,10 @@ templ VehicleInsuranceRowContent(r VehicleInsuranceRow) {
 		<td><code style="font-size:12px">{ r.CardNo }</code></td>
 		<td style="font-size:12px;color:#94a3b8">{ r.Amount }</td>
 		<td>
-			<a class="btn btn-s" href={ "/insurances/" + strconv.FormatInt(r.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-s" href={ "/insurances/" + strconv.FormatInt(r.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			<a class="btn btn-d" href={ "/insurances/" + strconv.FormatInt(r.ID, 10) + "/delete" }
 				hx-post={ "/insurances/" + strconv.FormatInt(r.ID, 10) + "/delete" }
-				data-confirm="確定刪除這筆投保紀錄？">刪除</a>
+				data-confirm={ i18n.T(ctx, "insurancelist.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 		</td>
 	</tr>
 }
@@ -172,23 +178,23 @@ type InspectionRow struct {
 
 // ListVehicleInspectionsPage 車輛定檢排程頁（HTMX 即時搜尋）。
 templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q string, pendingOnly bool, pendingCount int, user model.User) {
-	@components.Layout("車輛定檢排程", "/inspections", user, AppName) {
+	@components.Layout(i18n.T(ctx, "insurancelist.inspection_title"), "/inspections", user, AppName) {
 		<div class="card">
-			<h2>車輛定檢排程（符合條件 { strconv.Itoa(total) } 筆，未完成 { strconv.Itoa(pendingCount) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "insurancelist.inspection_heading"), total, pendingCount) }</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				舊系統「驗車名單」表遷移而來。實際完成幾乎沒回填，所以「完成日」為空代表尚未檢驗。
+				{ i18n.T(ctx, "insurancelist.inspection_intro") }
 			</p>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋車牌 / 車主"
+				placeholder={ i18n.T(ctx, "insurancelist.inspection_search_ph") }
 				hx-get="/api/inspections/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#inspection-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
-			<a class="btn btn-p" href="/inspections/new">＋ 新增排程</a>
-			<a class="btn btn-s" href="/insurances">投保紀錄</a>
+			<a class="btn btn-p" href="/inspections/new">{ i18n.T(ctx, "insurancelist.inspection_new") }</a>
+			<a class="btn btn-s" href="/insurances">{ i18n.T(ctx, "insurancelist.back_insurances") }</a>
 			<table>
-				<tr><th>車牌</th><th>車主</th><th>排定日</th><th>完成日</th><th>狀態</th><th>操作</th></tr>
+				<tr><th>{ i18n.T(ctx, "insurancelist.field.plate") }</th><th>{ i18n.T(ctx, "insurancelist.field.owner") }</th><th>{ i18n.T(ctx, "insurancelist.field.order_date") }</th><th>{ i18n.T(ctx, "insurancelist.field.check_date") }</th><th>{ i18n.T(ctx, "estimates.field.status") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th></tr>
 				<tbody id="inspection-rows">
 					for _, r := range rows {
 						@VehicleInspectionRowContent(r)
@@ -196,7 +202,7 @@ templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q 
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的定檢排程</div>
+				<div class="empty">{ i18n.T(ctx, "insurancelist.inspection_empty") }</div>
 			}
 			@components.Pager("/inspections", page, calcPages(total, size), total)
 		</div>
@@ -211,10 +217,10 @@ templ VehicleInspectionRowContent(r InspectionRow) {
 		<td style="font-size:12.5px">{ r.CheckDate }</td>
 		<td><span class={ "pill " + r.StatusPill }>{ r.StatusLabel }</span></td>
 		<td>
-			<a class="btn btn-s" href={ "/inspections/" + strconv.FormatInt(r.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-s" href={ "/inspections/" + strconv.FormatInt(r.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			<a class="btn btn-d" href={ "/inspections/" + strconv.FormatInt(r.ID, 10) + "/delete" }
 				hx-post={ "/inspections/" + strconv.FormatInt(r.ID, 10) + "/delete" }
-				data-confirm="確定刪除這筆定檢排程？">刪除</a>
+				data-confirm={ i18n.T(ctx, "insurancelist.inspection_delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 		</td>
 	</tr>
 }
@@ -222,7 +228,7 @@ templ VehicleInspectionRowContent(r InspectionRow) {
 // VehicleInsuranceSearchRows 投保即時搜尋回傳的純列。
 templ VehicleInsuranceSearchRows(rows []VehicleInsuranceRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="10" style="color:#64748b;text-align:center;padding:20px">查無投保紀錄</td></tr>
+		<tr><td colspan="10" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "insurancelist.search_empty") }</td></tr>
 	}
 	for _, r := range rows {
 		@VehicleInsuranceRowContent(r)
@@ -232,7 +238,7 @@ templ VehicleInsuranceSearchRows(rows []VehicleInsuranceRow) {
 // VehicleInspectionSearchRows 定檢即時搜尋回傳的純列。
 templ VehicleInspectionSearchRows(rows []InspectionRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="6" style="color:#64748b;text-align:center;padding:20px">查無定檢排程</td></tr>
+		<tr><td colspan="6" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "insurancelist.inspection_search_empty") }</td></tr>
 	}
 	for _, r := range rows {
 		@VehicleInspectionRowContent(r)

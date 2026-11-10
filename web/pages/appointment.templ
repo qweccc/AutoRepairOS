@@ -1,9 +1,11 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -38,75 +40,75 @@ type BaySummary struct {
 templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 	date, status, calendarDate, calendarView string, calendarDays []CalendarDay,
 	bayOpts templ.Component, baySummary []BaySummary, bayDate string, user model.User) {
-	@components.Layout("預約排程", "/appointments", user, AppName) {
+	@components.Layout(i18n.T(ctx, "appointment.title"), "/appointments", user, AppName) {
 		// 建立預約僅限櫃檯以上（POST /appointments 是 CounterUp）。
 		// 技師看到表單卻送不出去（被擋），只會以為系統壞了。
 		if user.Role == "owner" || user.Role == "counter" {
 			<div class="card">
-				<h2>新增預約</h2>
+				<h2>{ i18n.T(ctx, "appointment.new") }</h2>
 				<form class="frm" method="POST" action="/appointments">
 					@components.CSRFInput()
-					<label>客戶（輸入姓名或電話搜尋）
+					<label>{ i18n.T(ctx, "appointment.field.customer") }
 						<div class="vsearch" data-csearch data-search-url="/api/customers/picker" data-linked-vehicle>
 							<input type="hidden" name="customer_id" value="" required>
-							<input class="vs-input" placeholder="搜尋客戶姓名 / 電話" autocomplete="off" required>
+							<input class="vs-input" placeholder={ i18n.T(ctx, "appointment.customer_search_ph") } autocomplete="off" required>
 							<div class="vs-list hidden"></div>
 						</div>
 					</label>
-					<label>車輛（輸入車牌、車型或客戶搜尋）
+					<label>{ i18n.T(ctx, "appointment.field.vehicle") }
 						<div class="vsearch" data-vsearch data-search-url="/api/work-orders/vehicles" data-linked-customer>
 							<input type="hidden" name="vehicle_id" value="" required>
-							<input class="vs-input" placeholder="搜尋車牌 / 車型 / 客戶" autocomplete="off" required>
+							<input class="vs-input" placeholder={ i18n.T(ctx, "appointment.vehicle_search_ph") } autocomplete="off" required>
 							<div class="vs-list hidden"></div>
 						</div>
 					</label>
-					<label>預約日期<input type="date" name="appointment_date" value={ calendarDate } min={ time.Now().Format("2006-01-02") } required style="min-height:40px"></label>
-					<label>時段<input type="time" step="1800" name="appointment_time" value="08:00" placeholder="例：08:00" style="min-height:40px">
+					<label>{ i18n.T(ctx, "appointment.field.date") }<input type="date" name="appointment_date" value={ calendarDate } min={ time.Now().Format("2006-01-02") } required style="min-height:40px"></label>
+					<label>{ i18n.T(ctx, "appointment.field.time") }<input type="time" step="1800" name="appointment_time" value="08:00" placeholder={ i18n.T(ctx, "appointment.time_ph") } style="min-height:40px">
 						<span style="display:inline-flex;gap:4px;margin-left:6px">
 							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='08:00'">08:00</button>
 							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='10:00'">10:00</button>
 							<button type="button" class="btn btn-s" onclick="this.parentElement.previousElementSibling.value='13:30'">13:30</button>
 						</span>
 					</label>
-					<label>工位<select name="bay">@bayOpts</select></label>
-					<label>服務內容<input name="service_type" placeholder="例：定期保養"></label>
-					<label class="full">備註<textarea name="notes"></textarea></label>
-					<div class="full"><button class="btn btn-p" type="submit">建立預約</button></div>
+					<label>{ i18n.T(ctx, "appointment.field.bay") }<select name="bay">@bayOpts</select></label>
+					<label>{ i18n.T(ctx, "appointment.field.service") }<input name="service_type" placeholder={ i18n.T(ctx, "appointment.service_ph") }></label>
+					<label class="full">{ i18n.T(ctx, "appointment.field.notes") }<textarea name="notes"></textarea></label>
+					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "appointment.create") }</button></div>
 				</form>
 			</div>
 		}
 		<div class="card">
-			<h2>預約行事曆</h2>
+			<h2>{ i18n.T(ctx, "appointment.calendar_title") }</h2>
 			@AppointmentCalendar(calendarDate, calendarView, status, calendarDays)
 		</div>
 		<div class="card">
-			<h2>預約列表（共 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "appointment.list_title"), total) }</h2>
 			<form method="GET" action="/appointments" style="margin-bottom:12px">
 				<input type="date" name="date" value={ date } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 				<select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-					<option value="">全部狀態</option>
-					<option value="booked" selected?={ status == "booked" }>已預約</option>
-					<option value="confirmed" selected?={ status == "confirmed" }>已確認</option>
-					<option value="arrived" selected?={ status == "arrived" }>已進廠</option>
-					<option value="completed" selected?={ status == "completed" }>已完成</option>
-					<option value="cancelled" selected?={ status == "cancelled" }>已取消</option>
+					<option value="">{ i18n.T(ctx, "appointment.status_all") }</option>
+					<option value="booked" selected?={ status == "booked" }>{ i18n.T(ctx, "appointment.status.booked") }</option>
+					<option value="confirmed" selected?={ status == "confirmed" }>{ i18n.T(ctx, "appointment.status.confirmed") }</option>
+					<option value="arrived" selected?={ status == "arrived" }>{ i18n.T(ctx, "appointment.status.arrived") }</option>
+					<option value="completed" selected?={ status == "completed" }>{ i18n.T(ctx, "appointment.status.completed") }</option>
+					<option value="cancelled" selected?={ status == "cancelled" }>{ i18n.T(ctx, "appointment.status.cancelled") }</option>
 				</select>
-				<button class="btn btn-p" type="submit">篩選</button>
-				<a class="btn btn-s" href="/appointments">清除</a>
+				<button class="btn btn-p" type="submit">{ i18n.T(ctx, "appointment.filter") }</button>
+				<a class="btn btn-s" href="/appointments">{ i18n.T(ctx, "appointment.clear") }</a>
 			</form>
 			<input type="search" name="q"
-				placeholder="搜尋車牌 / 客戶 / 服務內容"
+				placeholder={ i18n.T(ctx, "appointment.search_ph") }
 				hx-get="/api/appointments/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#appointment-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			if len(baySummary) > 0 {
-				<div class="card"><h2>工位占用（{ bayDate }）</h2><table><tr><th>工位</th><th>當日占用</th></tr>
+				<div class="card"><h2>{ fmt.Sprintf(i18n.T(ctx, "appointment.bay_summary"), bayDate) }</h2><table><tr><th>{ i18n.T(ctx, "appointment.col.bay") }</th><th>{ i18n.T(ctx, "appointment.col.day_usage") }</th></tr>
 					for _, bay := range baySummary {
 						<tr><td>{ bay.Label }</td><td style="font-size:12.5px">
 							if len(bay.Slots) == 0 {
-								<span style="color:#86efac">空缺</span>
+								<span style="color:#86efac">{ i18n.T(ctx, "appointment.bay_empty") }</span>
 							} else {
 								for i, slot := range bay.Slots {
 									if i > 0 {
@@ -121,7 +123,7 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 			}
 			<table>
 				<tr>
-					<th>ID</th><th>日期</th><th>時段</th><th>工位</th><th>車牌</th><th>客戶</th><th>服務內容</th><th>狀態</th><th>操作</th>
+					<th>ID</th><th>{ i18n.T(ctx, "appointment.col.date") }</th><th>{ i18n.T(ctx, "appointment.col.time") }</th><th>{ i18n.T(ctx, "appointment.col.bay") }</th><th>{ i18n.T(ctx, "appointment.col.plate") }</th><th>{ i18n.T(ctx, "appointment.col.customer") }</th><th>{ i18n.T(ctx, "appointment.col.service") }</th><th>{ i18n.T(ctx, "appointment.col.status") }</th><th>{ i18n.T(ctx, "appointment.col.actions") }</th>
 				</tr>
 				<tbody id="appointment-rows">
 					for _, a := range rows {
@@ -130,7 +132,7 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的預約</div>
+				<div class="empty">{ i18n.T(ctx, "appointment.empty") }</div>
 			}
 			@components.Pager("/appointments", page, calcPages(total, size), total)
 		</div>
@@ -161,15 +163,15 @@ templ AppointmentRowContent(a AppointmentRow) {
 			// 已進廠／已預約／已確認且尚未開單 → 提供直接開單（帶入預約 id，
 			// 客戶與車輛自動帶出，並在建立工單時把預約標記為已進廠）
 			if a.HasWorkOrder == false && a.Status != "cancelled" && a.Status != "completed" {
-				<a class="btn btn-p" href={ "/work-orders/new?appointment_id=" + strconv.FormatInt(a.ID, 10) }>→ 開工單</a>
+				<a class="btn btn-p" href={ "/work-orders/new?appointment_id=" + strconv.FormatInt(a.ID, 10) }>{ i18n.T(ctx, "appointment.action.new_workorder") }</a>
 			}
 			if a.HasWorkOrder {
-				<span class="pill p-completed" title="這筆預約已經有工單">已開單</span>
+				<span class="pill p-completed" title={ i18n.T(ctx, "appointment.workorder_created_title") }>{ i18n.T(ctx, "appointment.workorder_created") }</span>
 			}
-			<a class="btn btn-s" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-s" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			<a class="btn btn-d" href={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }
 				hx-post={ "/appointments/" + strconv.FormatInt(a.ID, 10) + "/delete" }
-				data-confirm="確定刪除這筆預約？">刪除</a>
+				data-confirm={ i18n.T(ctx, "appointment.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 		</td>
 	</tr>
 }
@@ -177,7 +179,7 @@ templ AppointmentRowContent(a AppointmentRow) {
 // AppointmentSearchRows HTMX 即時搜尋回傳的純列。
 templ AppointmentSearchRows(rows []AppointmentRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無預約</td></tr>
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "appointment.search_empty") }</td></tr>
 	}
 	for _, a := range rows {
 		@AppointmentRowContent(a)

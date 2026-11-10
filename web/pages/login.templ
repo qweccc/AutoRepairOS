@@ -1,5 +1,9 @@
 package pages
 
+import (
+	"autorepairos/internal/i18n"
+)
+
 // LoginPage 登入頁。
 // 獨立版面（無 nav），置中表單。與全站共用 /static/app.css 深色主題。
 templ LoginPage(appName, errMsg, returnTo string) {
@@ -8,7 +12,7 @@ templ LoginPage(appName, errMsg, returnTo string) {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>登入 - { appName }</title>
+			<title>{ i18n.T(ctx, "login.title") } - { appName }</title>
 			<link rel="stylesheet" href="/static/app.css"/>
 			<style>
 				.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -30,13 +34,13 @@ templ LoginPage(appName, errMsg, returnTo string) {
 					if errMsg != "" {
 						<div class="login-err">{ errMsg }</div>
 					}
-					<label style="font-size:13px;color:#94a3b8">帳號
+					<label style="font-size:13px;color:#94a3b8">{ i18n.T(ctx, "login.username") }
 						<input type="text" name="username" required autofocus autocomplete="username"/>
 					</label>
-					<label style="font-size:13px;color:#94a3b8">密碼
+					<label style="font-size:13px;color:#94a3b8">{ i18n.T(ctx, "login.password") }
 						<input type="password" name="password" required autocomplete="current-password"/>
 					</label>
-					<button type="submit">登入</button>
+					<button type="submit">{ i18n.T(ctx, "login.title") }</button>
 					<input type="hidden" name="return_to" value={ returnTo }/>
 				</form>
 			</div>

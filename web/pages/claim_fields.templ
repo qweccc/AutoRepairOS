@@ -3,6 +3,7 @@ package pages
 import (
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -12,17 +13,17 @@ templ WorkOrderClaimFields(wo model.WorkOrder, canEdit bool) {
 		if canEdit {
 			<form class="frm" method="POST" action={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/claim" }>
 				@components.CSRFInput()
-				<label>理賠日期<input type="date" name="claim_date" value={ wo.ClaimDate }></label>
-				<label>理賠金額<input type="number" name="claim_amount" min="0" step="0.01" value={ strconv.FormatFloat(wo.ClaimAmount, 'f', 2, 64) }></label>
-				<label class="full">理賠備註<textarea name="claim_note">{ wo.ClaimNote }</textarea></label>
-				<div class="full"><button class="btn btn-s" type="submit">儲存理賠資料</button></div>
+				<label>{ i18n.T(ctx, "claim.claim_date") }<input type="date" name="claim_date" value={ wo.ClaimDate }></label>
+				<label>{ i18n.T(ctx, "claim.claim_amount") }<input type="number" name="claim_amount" min="0" step="0.01" value={ strconv.FormatFloat(wo.ClaimAmount, 'f', 2, 64) }></label>
+				<label class="full">{ i18n.T(ctx, "claim.claim_note") }<textarea name="claim_note">{ wo.ClaimNote }</textarea></label>
+				<div class="full"><button class="btn btn-s" type="submit">{ i18n.T(ctx, "claim.save") }</button></div>
 			</form>
 		}
 		if canEdit == false {
-			<b>理賠日期</b>
+			<b>{ i18n.T(ctx, "claim.claim_date") }</b>
 			<span>{ wo.ClaimDate }</span>
 			<span>&#12288;</span>
-			<b>理賠金額</b>
+			<b>{ i18n.T(ctx, "claim.claim_amount") }</b>
 			<span>{ money(wo.ClaimAmount) }</span>
 			if wo.ClaimNote != "" {
 				<p>{ wo.ClaimNote }</p>

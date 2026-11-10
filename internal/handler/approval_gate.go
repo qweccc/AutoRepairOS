@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
+	"autorepairos/internal/service"
 	"autorepairos/web/pages"
 )
 
@@ -154,7 +156,7 @@ func applyApprovalItems(tx *sql.Tx, req *model.ApprovalRequest) error {
 			return fmt.Errorf("加入工單項目失敗: %w", err)
 		}
 	}
-	if err := recalcWorkOrderTotal(tx, req.WorkOrderID); err != nil {
+	if err := service.RecalculateWorkOrderTotal(context.Background(), tx, req.WorkOrderID); err != nil {
 		return fmt.Errorf("重算工單金額失敗: %w", err)
 	}
 	return nil

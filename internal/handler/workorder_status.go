@@ -1,20 +1,19 @@
 package handler
 
 import (
-"errors"
-"log"
-"net/http"
-"strconv"
-"strings"
+	"errors"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
 
-"autorepairos/internal/cron"
-"autorepairos/internal/db"
-"autorepairos/internal/model"
-"autorepairos/internal/service"
+	"autorepairos/internal/cron"
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+	"autorepairos/internal/service"
 )
 
 // allowedTransitions moved to service layer.
-
 
 // shouldCheckTransition determines if a status transition needs validation.
 func shouldCheckTransition(current, target string) bool {
@@ -25,7 +24,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	status := r.FormValue("status")
 	if _, ok := workOrderStatusLabel[status]; !ok {
-		fail(w, "無效狀態")
+		formError(w, r, "更新工單狀態", "/work-orders/"+strconv.FormatInt(id, 10), "無效狀態")
 		return
 	}
 
@@ -83,37 +82,30 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	previousStatus := countStatus(id)
-	// 一般狀態轉換仍以條件更新避免覆寫已結帳工單。
-	tx, err := db.DB.Begin()
-	if err != nil {
-		fail(w, "資料庫忙碌")
-		return
-	}
-	defer tx.Rollback()
-
-	cas, err := tx.Exec(`UPDATE work_orders SET status=?, updated_at=CURRENT_TIMESTAMP
-		WHERE id=? AND status != 'paid'`, status, id)
-	if err != nil {
-		fail(w, "更新狀態失敗")
-		return
-	}
-	if n, _ := cas.RowsAffected(); n == 0 {
-		if WorkOrderStatus(countStatus(id)) == WorkOrderStatusPaid {
+	// 一般狀態轉換的交易部分已抽至 service.TransitionWorkOrderStatus。
+	if err := service.New(db.DB).TransitionWorkOrderStatus(r.Context(), id, status, actorID); err != nil {
+		if errors.Is(err, service.ErrAlreadyPaid) {
 			redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10),
 				"此工單已是「已結帳」，未重複計算")
 			return
 		}
-		http.NotFound(w, r)
+		if errors.Is(err, service.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if strings.Contains(err.Error(), "commit") {
+			fail(w, "提交失敗")
+			return
+		}
+		if strings.Contains(err.Error(), "begin") || strings.Contains(err.Error(), "configure") {
+			fail(w, "資料庫忙碌")
+			return
+		}
+		fail(w, "更新狀態失敗")
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
-		fail(w, "提交失敗")
-		return
-	}
-
-	if WorkOrderStatus(status) == WorkOrderStatusCompleted && previousStatus != string(WorkOrderStatusCompleted) {
+	if WorkOrderStatus(status) == WorkOrderStatusCompleted && WorkOrderStatus(currentStatus) != WorkOrderStatusCompleted {
 		var customerID int64
 		if err := db.DB.QueryRow("SELECT customer_id FROM active_work_orders WHERE id = ?", id).Scan(&customerID); err != nil {
 			log.Printf("工單 #%d 已完工，但讀取通知客戶失敗: %v", id, err)
@@ -131,7 +123,7 @@ func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	approval := r.FormValue("approval_status")
 	if _, ok := approvalLabel[approval]; !ok {
-		fail(w, "無效核准狀態")
+		formError(w, r, "更新核准狀態", "/work-orders/"+strconv.FormatInt(id, 10), "無效核准狀態")
 		return
 	}
 	if err := requireOrderMutable(id); err != nil {
@@ -151,7 +143,6 @@ func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "核准狀態已更新為「"+approvalLabel[approval]+"」")
 }
-
 
 func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
@@ -174,7 +165,6 @@ func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "SOP 狀態已切換")
 }
 
-
 func statusOptions(current string) string {
 	var b strings.Builder
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
@@ -182,7 +172,6 @@ func statusOptions(current string) string {
 	}
 	return b.String()
 }
-
 
 func approvalOptions(current string) string {
 	var b strings.Builder
@@ -230,12 +219,9 @@ func statusControls(wo model.WorkOrder, canEdit bool) string {
         </form>`
 }
 
-
 func sopToggleLabel(done bool) string {
 	if done {
 		return "取消 SOP 完成"
 	}
 	return "標記 SOP 完成"
 }
-
-

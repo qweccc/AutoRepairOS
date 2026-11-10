@@ -1,49 +1,51 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
 
 templ EditAppointmentPage(a model.Appointment, bayOptions string, user model.User) {
-	@components.Layout("編輯預約", "/appointments", user, AppName) {
+	@components.Layout(i18n.T(ctx, "appt.edit_title"), "/appointments", user, AppName) {
 		<div class="card">
-			<h2>編輯預約 # { strconv.FormatInt(a.ID, 10) }</h2>
+			<h2>{ i18n.T(ctx, "appt.edit_heading_prefix") } { strconv.FormatInt(a.ID, 10) }</h2>
 			<form class="frm" method="POST" action={ "/appointments/" + strconv.FormatInt(a.ID, 10) }>
 				@components.CSRFInput()
-				<label>客戶（輸入姓名或電話搜尋）
+				<label>{ i18n.T(ctx, "appt.customer_label") }
 					<div class="vsearch" data-csearch data-search-url="/api/customers/picker" data-linked-vehicle
 						data-initial-value={ strconv.FormatInt(a.CustomerID, 10) }>
 						<input type="hidden" name="customer_id" value={ strconv.FormatInt(a.CustomerID, 10) } required>
-						<input class="vs-input" placeholder="搜尋客戶姓名 / 電話" autocomplete="off" required>
+						<input class="vs-input" placeholder={ i18n.T(ctx, "appt.customer_ph") } autocomplete="off" required>
 						<div class="vs-list hidden"></div>
 					</div>
 				</label>
-				<label>車輛（輸入車牌、車型或客戶搜尋）
+				<label>{ i18n.T(ctx, "appt.vehicle_label") }
 					<div class="vsearch" data-vsearch data-search-url="/api/work-orders/vehicles" data-linked-customer
 						data-initial-value={ strconv.FormatInt(a.VehicleID, 10) }>
 						<input type="hidden" name="vehicle_id" value={ strconv.FormatInt(a.VehicleID, 10) } required>
-						<input class="vs-input" placeholder="搜尋車牌 / 車型 / 客戶" autocomplete="off" required>
+						<input class="vs-input" placeholder={ i18n.T(ctx, "appt.vehicle_ph") } autocomplete="off" required>
 						<div class="vs-list hidden"></div>
 					</div>
 				</label>
-				<label>預約日期<input type="date" name="appointment_date" value={ a.AppointmentDate } required></label>
-				<label>時段<input type="time" step="1800" name="appointment_time" value={ a.AppointmentTime }></label>
-				<label>工位<select name="bay">@templ.Raw(bayOptions)</select></label>
-				<label>服務內容<input name="service_type" value={ a.ServiceType }></label>
-				<label>狀態
+				<label>{ i18n.T(ctx, "appt.field.date") }<input type="date" name="appointment_date" value={ a.AppointmentDate } required></label>
+				<label>{ i18n.T(ctx, "appt.field.time") }<input type="time" step="1800" name="appointment_time" value={ a.AppointmentTime }></label>
+				<label>{ i18n.T(ctx, "appt.field.bay") }<select name="bay">@templ.Raw(bayOptions)</select></label>
+				<label>{ i18n.T(ctx, "appt.field.service") }<input name="service_type" value={ a.ServiceType }></label>
+				<label>{ i18n.T(ctx, "equipment.field.status") }
 					<select name="status">
-						<option value="booked" selected?={ a.Status == "booked" }>已預約</option>
-						<option value="confirmed" selected?={ a.Status == "confirmed" }>已確認</option>
-						<option value="arrived" selected?={ a.Status == "arrived" }>已進廠</option>
-						<option value="completed" selected?={ a.Status == "completed" }>已完成</option>
-						<option value="cancelled" selected?={ a.Status == "cancelled" }>已取消</option>
+						<option value="booked" selected?={ a.Status == "booked" }>{ i18n.T(ctx, "appt.status_booked") }</option>
+						<option value="confirmed" selected?={ a.Status == "confirmed" }>{ i18n.T(ctx, "appt.status_confirmed") }</option>
+						<option value="arrived" selected?={ a.Status == "arrived" }>{ i18n.T(ctx, "appt.status_arrived") }</option>
+						<option value="completed" selected?={ a.Status == "completed" }>{ i18n.T(ctx, "appt.status_completed") }</option>
+						<option value="cancelled" selected?={ a.Status == "cancelled" }>{ i18n.T(ctx, "appt.status_cancelled") }</option>
 					</select>
 				</label>
-				<label class="full">備註<textarea name="notes">{ a.Notes }</textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/appointments">取消</a></div>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ a.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button> <a class="btn btn-s" href="/appointments">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 		<link rel="stylesheet" href="/static/vehicle-search.css"/>
@@ -53,54 +55,52 @@ templ EditAppointmentPage(a model.Appointment, bayOptions string, user model.Use
 }
 
 templ AddVehicleMileagePage(vehicleID int64, plate, brand string, last int, hasLast bool, user model.User) {
-	@components.Layout("新增里程", "/vehicles", user, AppName) {
+	@components.Layout(i18n.T(ctx, "mileage.title"), "/vehicles", user, AppName) {
 		<div class="card">
-			<h2>新增里程紀錄 — { plate }</h2>
+			<h2>{ i18n.T(ctx, "mileage.heading_prefix") } { plate }</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
 				{ brand }
 				if hasLast {
-					<span style="color:#64748b;font-size:12.5px">（最後一筆：{ strconv.Itoa(last) } km）</span>
+					<span style="color:#64748b;font-size:12.5px">{ i18n.T(ctx, "mileage.last_prefix") }{ strconv.Itoa(last) } { i18n.T(ctx, "mileage.last_suffix") }</span>
 				}
 			</p>
 			<form class="frm" method="POST" action={ "/vehicles/" + strconv.FormatInt(vehicleID, 10) + "/mileage" }>
 				@components.CSRFInput()
-				<label>里程（km）<input name="mileage" type="number" min="0" step="1" required></label>
-				<label class="full">備註<textarea name="notes" placeholder="例：客戶來電告知已跑 8 萬公里"></textarea></label>
+				<label>{ i18n.T(ctx, "mileage.field") }<input name="mileage" type="number" min="0" step="1" required></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes" placeholder={ i18n.T(ctx, "mileage.notes_ph") }></textarea></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">記錄</button>
-					<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(vehicleID, 10) }>取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "mileage.record") }</button>
+					<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(vehicleID, 10) }>{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
 			<p style="color:#64748b;font-size:12.5px;margin-top:10px">
-				進廠工單會自動帶入里程（來源標示「進廠工單」），這裡是給非進廠時
-				的更新使用。若新里程比上一筆小，系統仍會記錄但標示「回退」，
-				請在備註說明原因（如更換碼表）。
+				{ i18n.T(ctx, "mileage.intro") }
 			</p>
 		</div>
 	}
 }
 
 templ EditEquipmentPage(e model.Equipment, user model.User) {
-	@components.Layout("編輯設備", "/equipment", user, AppName) {
+	@components.Layout(i18n.T(ctx, "equipedit.title"), "/equipment", user, AppName) {
 		<div class="card">
-			<h2>編輯設備 { e.Name }</h2>
+			<h2>{ i18n.T(ctx, "equipedit.title") } { e.Name }</h2>
 			<form class="frm" method="POST" action={ "/equipment/" + strconv.FormatInt(e.ID, 10) }>
 				@components.CSRFInput()
-				<label>設備名稱<input name="name" value={ e.Name } required></label>
-				<label>型號<input name="model" value={ e.Model }></label>
-				<label>序號<input name="serial_number" value={ e.SerialNumber }></label>
-				<label>位置<input name="location" value={ e.Location }></label>
-				<label>購買日期<input type="date" name="purchase_date" value={ e.PurchaseDate }></label>
-				<label>保固到期<input type="date" name="warranty_expiry" value={ e.WarrantyExpiry }></label>
-				<label>狀態
+				<label>{ i18n.T(ctx, "equipment.field.name") }<input name="name" value={ e.Name } required></label>
+				<label>{ i18n.T(ctx, "equipment.field.model") }<input name="model" value={ e.Model }></label>
+				<label>{ i18n.T(ctx, "equipment.field.serial") }<input name="serial_number" value={ e.SerialNumber }></label>
+				<label>{ i18n.T(ctx, "equipment.field.location") }<input name="location" value={ e.Location }></label>
+				<label>{ i18n.T(ctx, "equipment.field.purchase_date") }<input type="date" name="purchase_date" value={ e.PurchaseDate }></label>
+				<label>{ i18n.T(ctx, "equipment.field.warranty_expiry") }<input type="date" name="warranty_expiry" value={ e.WarrantyExpiry }></label>
+				<label>{ i18n.T(ctx, "equipment.field.status") }
 					<select name="status">
-						<option value="active" selected?={ e.Status == "active" }>啟用</option>
-						<option value="maintenance" selected?={ e.Status == "maintenance" }>維修中</option>
-						<option value="retired" selected?={ e.Status == "retired" }>報廢</option>
+						<option value="active" selected?={ e.Status == "active" }>{ i18n.T(ctx, "lookup.active") }</option>
+						<option value="maintenance" selected?={ e.Status == "maintenance" }>{ i18n.T(ctx, "equipment.status_maintenance") }</option>
+						<option value="retired" selected?={ e.Status == "retired" }>{ i18n.T(ctx, "equipment.status_retired") }</option>
 					</select>
 				</label>
-				<label class="full">備註<textarea name="notes">{ e.Notes }</textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">儲存</button> <a class="btn btn-s" href="/equipment">取消</a></div>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ e.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button> <a class="btn btn-s" href="/equipment">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}
@@ -113,33 +113,33 @@ type EquipmentMaintenanceRow struct {
 }
 
 templ EquipmentMaintenancePage(equipID int64, equipName, technicianOptions string, rows []EquipmentMaintenanceRow, flashHTML string, user model.User) {
-	@components.Layout("設備保養", "/equipment", user, AppName) {
+	@components.Layout(i18n.T(ctx, "equipmaint.title"), "/equipment", user, AppName) {
 		@templ.Raw(flashHTML)
 		<div class="card">
-			<h2>新增保養紀錄 - { equipName }</h2>
+			<h2>{ i18n.T(ctx, "equipmaint.heading_prefix") } { equipName }</h2>
 			<form class="frm" method="POST" action={ "/equipment/" + strconv.FormatInt(equipID, 10) + "/maintenance" }>
 				@components.CSRFInput()
-				<label>保養日期<input type="date" name="maintenance_date" required></label>
-				<label>保養類型<input name="maintenance_type" placeholder="例：日常保養"></label>
-				<label class="full">保養內容<textarea name="description"></textarea></label>
-				<label>費用<input type="number" step="0.01" name="cost" value="0"></label>
-				<label>下次保養日期<input type="date" name="next_maintenance_date"></label>
-				<label>執行人員<select name="technician_id"><option value="">（未指定）</option>@templ.Raw(technicianOptions)</select></label>
-				<label class="full">備註<textarea name="notes"></textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">新增保養</button></div>
+				<label>{ i18n.T(ctx, "equipmaint.field.date") }<input type="date" name="maintenance_date" required></label>
+				<label>{ i18n.T(ctx, "equipmaint.field.type") }<input name="maintenance_type" placeholder={ i18n.T(ctx, "equipmaint.type_ph") }></label>
+				<label class="full">{ i18n.T(ctx, "equipmaint.field.content") }<textarea name="description"></textarea></label>
+				<label>{ i18n.T(ctx, "equipmaint.field.cost") }<input type="number" step="0.01" name="cost" value="0"></label>
+				<label>{ i18n.T(ctx, "equipmaint.field.next") }<input type="date" name="next_maintenance_date"></label>
+				<label>{ i18n.T(ctx, "equipmaint.field.tech") }<select name="technician_id"><option value="">{ i18n.T(ctx, "common.unspecified") }</option>@templ.Raw(technicianOptions)</select></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "equipmaint.create") }</button></div>
 			</form>
 		</div>
 		<div class="card">
-			<h2>保養紀錄（共 { strconv.Itoa(len(rows)) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "equipmaint.list_heading"), len(rows)) }</h2>
 			if len(rows) == 0 {
-				<div class="empty">尚無保養紀錄</div>
+				<div class="empty">{ i18n.T(ctx, "equipmaint.empty") }</div>
 			} else {
-				<table><tr><th>ID</th><th>保養日期</th><th>類型</th><th>內容</th><th class="num">費用</th><th>下次保養</th><th>執行人員</th><th>操作</th></tr>
+				<table><tr><th>ID</th><th>{ i18n.T(ctx, "equipmaint.field.date") }</th><th>{ i18n.T(ctx, "equipmaint.field.type_th") }</th><th>{ i18n.T(ctx, "equipmaint.field.content_th") }</th><th class="num">{ i18n.T(ctx, "equipmaint.field.cost") }</th><th>{ i18n.T(ctx, "equipmaint.field.next_th") }</th><th>{ i18n.T(ctx, "equipmaint.field.tech") }</th><th>{ i18n.T(ctx, "equipmaint.field.actions") }</th></tr>
 					for _, row := range rows {
 						<tr>
 							<td>{ strconv.FormatInt(row.ID, 10) }</td><td>{ row.Date }</td><td>{ row.Type }</td><td>{ row.Description }</td>
 							<td class="num">{ row.Cost }</td><td>{ row.NextDate }</td><td>{ row.Technician }</td>
-							<td><a class="btn btn-d" href={ "/equipment/" + strconv.FormatInt(equipID, 10) + "/maintenance/" + strconv.FormatInt(row.ID, 10) + "/delete" } onclick="return confirm('確定刪除這筆保養紀錄？')">刪除</a></td>
+							<td><a class="btn btn-d" href={ "/equipment/" + strconv.FormatInt(equipID, 10) + "/maintenance/" + strconv.FormatInt(row.ID, 10) + "/delete" } onclick="return confirm('確定刪除這筆保養紀錄？')">{ i18n.T(ctx, "common.delete") }</a></td>
 						</tr>
 					}
 				</table>

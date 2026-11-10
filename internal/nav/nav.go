@@ -11,8 +11,11 @@
 package nav
 
 import (
+	"context"
 	"html"
 	"strings"
+
+	"autorepairos/internal/i18n"
 )
 
 // Route 是選單上的一個項目。Group 相同且連續的項目會被包成同一個 navgrp，
@@ -21,6 +24,10 @@ type Route struct {
 	Path  string
 	Name  string
 	Group string
+	// NameKey/GroupKey 是 i18n 字典 key；Render 會用 T(ctx, key) 翻譯，
+	// 字典缺 key 時 fallback 回 Name/Group（保持中文為預設）。
+	NameKey  string
+	GroupKey string
 	// Roles 限制可見角色；空 slice 表示所有角色都看得到。
 	//
 	// 必須與 main.go 的權限包裝器一致：CounterUpPage 的頁面只能列
@@ -60,35 +67,35 @@ var (
 // Path 必須與 main.go 註冊的路徑一致，否則 active 判斷會失效（該項目永遠不會亮起）。
 // Roles 必須與 main.go 的權限包裝器一致（見 Route.Roles 的說明）。
 var Routes = []Route{
-	{"/", "總覽", "日常作業", nil},
-	{"/customers", "客戶", "日常作業", nil},
-	{"/vehicles", "車輛", "日常作業", nil},
-	{"/work-orders", "工單", "日常作業", nil},
-	{"/estimates", "估價草稿", "日常作業", nil},
-	{"/appointments", "預約", "日常作業", nil},
-	{"/receivables", "收款", "日常作業", counterUp},
-	{"/inspections", "定檢", "日常作業", nil},
-	{"/purchase-orders", "進貨單", "進貨庫存", nil},
-	{"/suppliers", "廠商", "進貨庫存", nil},
-	{"/inventory", "庫存", "進貨庫存", nil},
-	{"/maintenance-templates", "保養套餐", "保養保險", nil},
-	{"/sop-templates", "SOP 模板", "保養保險", nil},
-	{"/insurances", "投保", "保養保險", nil},
-	{"/insurance-companies", "保險公司", "保養保險", nil},
-	{"/staff", "員工", "帳務人事", nil},
-	{"/technicians/commissions", "技師佣金", "帳務人事", nil},
-	{"/expenses", "支出", "帳務人事", counterUp},
+	{Path: "/", Name: "總覽", Group: "日常作業", NameKey: "nav.home", GroupKey: "group.daily", Roles: nil},
+	{Path: "/customers", Name: "客戶", Group: "日常作業", NameKey: "nav.customers", GroupKey: "group.daily", Roles: nil},
+	{Path: "/vehicles", Name: "車輛", Group: "日常作業", NameKey: "nav.vehicles", GroupKey: "group.daily", Roles: nil},
+	{Path: "/work-orders", Name: "工單", Group: "日常作業", NameKey: "nav.workorders", GroupKey: "group.daily", Roles: nil},
+	{Path: "/estimates", Name: "估價草稿", Group: "日常作業", NameKey: "nav.estimates", GroupKey: "group.daily", Roles: nil},
+	{Path: "/appointments", Name: "預約", Group: "日常作業", NameKey: "nav.appointments", GroupKey: "group.daily", Roles: nil},
+	{Path: "/receivables", Name: "收款", Group: "日常作業", NameKey: "nav.receivables", GroupKey: "group.daily", Roles: counterUp},
+	{Path: "/inspections", Name: "定檢", Group: "日常作業", NameKey: "nav.inspections", GroupKey: "group.daily", Roles: nil},
+	{Path: "/purchase-orders", Name: "進貨單", Group: "進貨庫存", NameKey: "nav.purchaseOrders", GroupKey: "group.stock", Roles: nil},
+	{Path: "/suppliers", Name: "廠商", Group: "進貨庫存", NameKey: "nav.suppliers", GroupKey: "group.stock", Roles: nil},
+	{Path: "/inventory", Name: "庫存", Group: "進貨庫存", NameKey: "nav.inventory", GroupKey: "group.stock", Roles: nil},
+	{Path: "/maintenance-templates", Name: "保養套餐", Group: "保養保險", NameKey: "nav.maintenanceTemplates", GroupKey: "group.care", Roles: nil},
+	{Path: "/sop-templates", Name: "SOP 模板", Group: "保養保險", NameKey: "nav.sopTemplates", GroupKey: "group.care", Roles: nil},
+	{Path: "/insurances", Name: "投保", Group: "保養保險", NameKey: "nav.insurances", GroupKey: "group.care", Roles: nil},
+	{Path: "/insurance-companies", Name: "保險公司", Group: "保養保險", NameKey: "nav.insuranceCompanies", GroupKey: "group.care", Roles: nil},
+	{Path: "/staff", Name: "員工", Group: "帳務人事", NameKey: "nav.staff", GroupKey: "group.account", Roles: nil},
+	{Path: "/technicians/commissions", Name: "技師佣金", Group: "帳務人事", NameKey: "nav.commissions", GroupKey: "group.account", Roles: nil},
+	{Path: "/expenses", Name: "支出", Group: "帳務人事", NameKey: "nav.expenses", GroupKey: "group.account", Roles: counterUp},
 	// /reports 在 main.go 註冊為 AllStaff，但 ReportsHome 開頭即 canSeeMoney(user)
 	// → 技師會拿到 403（財務數字屬店內機密）。導覽要反映「實際能不能進去」，
 	// 不是包裝器怎麼寫，否則技師看到報表連結卻點不進去。
-	{"/reports", "報表", "帳務人事", counterUp},
-	{"/analytics", "經營分析", "帳務人事", counterUp},
-	{"/ap", "應付帳款", "帳務人事", counterUp},
-	{"/lookup", "代碼對照", "後台設定", counterUp},
-	{"/scheduled-tasks", "排程", "後台設定", nil},
-	{"/subcontracts", "外包", "後台設定", nil},
-	{"/equipment", "設備", "後台設定", nil},
-	{"/phrases", "技師片語", "後台設定", nil},
+	{Path: "/reports", Name: "報表", Group: "帳務人事", NameKey: "nav.reports", GroupKey: "group.account", Roles: counterUp},
+	{Path: "/analytics", Name: "經營分析", Group: "帳務人事", NameKey: "nav.analytics", GroupKey: "group.account", Roles: counterUp},
+	{Path: "/ap", Name: "應付帳款", Group: "帳務人事", NameKey: "nav.ap", GroupKey: "group.account", Roles: counterUp},
+	{Path: "/lookup", Name: "代碼對照", Group: "後台設定", NameKey: "nav.lookup", GroupKey: "group.admin", Roles: counterUp},
+	{Path: "/scheduled-tasks", Name: "排程", Group: "後台設定", NameKey: "nav.scheduled", GroupKey: "group.admin", Roles: nil},
+	{Path: "/subcontracts", Name: "外包", Group: "後台設定", NameKey: "nav.subcontracts", GroupKey: "group.admin", Roles: nil},
+	{Path: "/equipment", Name: "設備", Group: "後台設定", NameKey: "nav.equipment", GroupKey: "group.admin", Roles: nil},
+	{Path: "/phrases", Name: "技師片語", Group: "後台設定", NameKey: "nav.phrases", GroupKey: "group.admin", Roles: nil},
 }
 
 // CanSee 回報 role 是否看得到這個選單項目。Roles 為空表示不限制。
@@ -113,7 +120,7 @@ func (rt Route) CanSee(role string) bool {
 //
 // 回傳值已做 HTML escape（Group 與 Name 都是程式內字面值，但保持慣例避免
 // 日後有人把使用者可控的字串放進來）。
-func Render(active, role string) string {
+func Render(ctx context.Context, active, role string) string {
 	var b strings.Builder
 	curGroup := ""
 	openDiv := false
@@ -128,16 +135,28 @@ func Render(active, role string) string {
 			curGroup = rt.Group
 			openDiv = rt.Group != ""
 			if openDiv {
+				groupLabel := rt.Group
+				if rt.GroupKey != "" {
+					if t := i18n.T(ctx, rt.GroupKey); t != rt.GroupKey {
+						groupLabel = t
+					}
+				}
 				b.WriteString(`<div class="navgrp"><span class="navlbl">` +
-					html.EscapeString(rt.Group) + `</span>`)
+					html.EscapeString(groupLabel) + `</span>`)
 			}
 		}
 		cls := ""
 		if rt.Path == active {
 			cls = ` class="on"`
 		}
+		name := rt.Name
+		if rt.NameKey != "" {
+			if t := i18n.T(ctx, rt.NameKey); t != rt.NameKey {
+				name = t
+			}
+		}
 		b.WriteString(`<a href="` + rt.Path + `"` + cls + `>` +
-			html.EscapeString(rt.Name) + `</a>`)
+			html.EscapeString(name) + `</a>`)
 	}
 	if openDiv {
 		b.WriteString(`</div>`)

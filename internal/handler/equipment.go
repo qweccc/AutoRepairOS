@@ -135,7 +135,7 @@ func SearchEquipmentAPI(w http.ResponseWriter, r *http.Request) {
 func CreateEquipment(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {
-		fail(w, "設備名稱為必填")
+		formError(w, r, "新增設備", "/equipment", "設備名稱為必填")
 		return
 	}
 	_, err := db.DB.Exec(`INSERT INTO equipment
@@ -172,7 +172,7 @@ func UpdateEquipment(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {
-		fail(w, "設備名稱為必填")
+		formError(w, r, "編輯設備", "/equipment", "設備名稱為必填")
 		return
 	}
 	res, err := db.DB.Exec(`UPDATE equipment SET name=?, model=?, serial_number=?,
@@ -260,7 +260,7 @@ func CreateEquipmentMaintenance(w http.ResponseWriter, r *http.Request) {
 	equipID := mustInt(r.PathValue("id"))
 	maintenanceDate := strings.TrimSpace(r.FormValue("maintenance_date"))
 	if maintenanceDate == "" {
-		fail(w, "保養日期為必填")
+		formError(w, r, "新增保養紀錄", "/equipment/"+strconv.FormatInt(equipID, 10)+"/maintenance", "保養日期為必填")
 		return
 	}
 	_, err := db.DB.Exec(`INSERT INTO equipment_maintenance

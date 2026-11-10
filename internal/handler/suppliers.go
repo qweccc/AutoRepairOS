@@ -197,7 +197,7 @@ func SearchSuppliersAPI(w http.ResponseWriter, r *http.Request) {
 func CreateSupplier(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {
-		fail(w, "名稱為必填")
+		formError(w, r, "新增供應商", "/suppliers", "名稱為必填")
 		return
 	}
 	vtype := strings.TrimSpace(r.FormValue("vendor_type"))
@@ -324,7 +324,7 @@ func UpdateSupplier(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {
-		fail(w, "名稱為必填")
+		formError(w, r, "編輯供應商", "/suppliers/"+strconv.FormatInt(id, 10)+"/edit", "名稱為必填")
 		return
 	}
 	vtype := strings.TrimSpace(r.FormValue("vendor_type"))

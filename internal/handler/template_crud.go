@@ -37,7 +37,7 @@ func CreateMaintenanceTemplate(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimSpace(r.FormValue("code"))
 	name := strings.TrimSpace(r.FormValue("name"))
 	if code == "" || name == "" {
-		fail(w, "代碼與名稱為必填")
+		formError(w, r, "新增保養套餐", "/maintenance-templates/new", "代碼與名稱為必填")
 		return
 	}
 
@@ -103,7 +103,7 @@ func UpdateMaintenanceTemplate(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	name := strings.TrimSpace(r.FormValue("name"))
 	if name == "" {
-		fail(w, "套餐名稱為必填")
+		formError(w, r, "編輯保養套餐", "/maintenance-templates/"+strconv.FormatInt(id, 10)+"/edit", "套餐名稱為必填")
 		return
 	}
 	res, err := db.DB.Exec(`UPDATE maintenance_templates SET name=?, notes=? WHERE id=?`,
@@ -136,7 +136,7 @@ func ReplaceMaintenanceTemplateItems(w http.ResponseWriter, r *http.Request) {
 	// 用 r.FormValue() 會隱含解析，但直接取 r.Form[...] 不會——
 	// 少了這行會拿到 0 個欄位，所有項目被靜默丟棄（回傳「已儲存（0 項）」）。
 	if err := r.ParseForm(); err != nil {
-		fail(w, "表單解析失敗")
+		formError(w, r, "編輯保養套餐", "/maintenance-templates/"+strconv.FormatInt(id, 10)+"/edit", "表單解析失敗")
 		return
 	}
 

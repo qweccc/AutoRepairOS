@@ -3,6 +3,9 @@ package pages
 import (
 	"strconv"
 
+	"fmt"
+
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 )
 
@@ -23,7 +26,7 @@ templ ApprovalPage(data ApprovalPageData) {
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<title>追加維修授權</title>
+		<title>{ i18n.T(ctx, "approval.title") }</title>
 		<style>
 			body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
 			.container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
@@ -41,38 +44,38 @@ templ ApprovalPage(data ApprovalPageData) {
 	</head>
 	<body>
 		<div class="container">
-			<h1>🔧 追加維修授權</h1>
+			<h1>🔧 { i18n.T(ctx, "approval.title") }</h1>
 			if data.ErrorMsg != "" {
 				<div class="error">{ data.ErrorMsg }</div>
 			} else if data.IsExpired {
-				<div class="error">授權已過期，請連絡車廠</div>
+				<div class="error">{ i18n.T(ctx, "approval.expired") }</div>
 			} else if data.IsDecided {
-				<div class="success">此授權{ data.DecidedText }（{ data.Request.DecidedAt }）</div>
+				<div class="success">{ fmt.Sprintf(i18n.T(ctx, "approval.decided"), data.DecidedText, data.Request.DecidedAt) }</div>
 			} else if data.Request != nil && data.WorkOrder != nil {
 				<div class="info">
-					<strong>工單編號：</strong>#{ strconv.FormatInt(data.WorkOrder.ID, 10) }<br/>
-					<strong>客戶：</strong>{ data.Customer.Name }<br/>
-					<strong>車牌：</strong>{ data.WorkOrder.PlateNumber }<br/>
-					<strong>過期時間：</strong>{ data.Request.ExpiresAt }
+					<strong>{ i18n.T(ctx, "approval.wo_no") }</strong>#{ strconv.FormatInt(data.WorkOrder.ID, 10) }<br/>
+					<strong>{ i18n.T(ctx, "approval.customer") }</strong>{ data.Customer.Name }<br/>
+					<strong>{ i18n.T(ctx, "approval.plate") }</strong>{ data.WorkOrder.PlateNumber }<br/>
+					<strong>{ i18n.T(ctx, "approval.expires") }</strong>{ data.Request.ExpiresAt }
 				</div>
 				if data.Request.ItemSummary != "" {
 					<div class="info">
-						<strong>追加項目：</strong><br/>
+						<strong>{ i18n.T(ctx, "approval.add_items") }</strong><br/>
 						{ data.Request.ItemSummary }
 					</div>
 				}
 				if len(data.Items) > 0 {
-					<div class="info"><strong>工單項目：</strong><br/>
+					<div class="info"><strong>{ i18n.T(ctx, "approval.wo_items") }</strong><br/>
 						for _, item := range data.Items {
 							<div class="item">{ item.Description } x{ strconv.Itoa(item.Quantity) } - ${ strconv.FormatFloat(item.Subtotal, 'f', 0, 64) }</div>
 						}
 					</div>
 				}
 				<form method="POST" action={ "/approval/approve/" + data.Request.Token }>
-					<button type="submit" class="btn btn-approve">✅ 同意</button>
+					<button type="submit" class="btn btn-approve">✅ { i18n.T(ctx, "approval.approve") }</button>
 				</form>
 				<form method="POST" action={ "/approval/reject/" + data.Request.Token }>
-					<button type="submit" class="btn btn-reject">❌ 拒絕</button>
+					<button type="submit" class="btn btn-reject">❌ { i18n.T(ctx, "approval.reject") }</button>
 				</form>
 			}
 		</div>
@@ -93,7 +96,7 @@ templ ApprovalResult(status, message string) {
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<title>授權結果</title>
+		<title>{ i18n.T(ctx, "approval.result_title") }</title>
 		<style>
 			body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
 			.container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
@@ -106,9 +109,9 @@ templ ApprovalResult(status, message string) {
 	</head>
 	<body>
 		<div class="container">
-			<h1>🔧 授權結果</h1>
+			<h1>🔧 { i18n.T(ctx, "approval.result_heading") }</h1>
 			<div class={ cssClass }>{ message }</div>
-			<p>您可以關閉此頁面。</p>
+			<p>{ i18n.T(ctx, "approval.close_hint") }</p>
 		</div>
 	</body>
 	</html>

@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -18,25 +20,25 @@ type LookupRow struct {
 // ListLookupPage 代碼對照表頁（HTMX 即時搜尋）。
 templ ListLookupPage(rows []LookupRow, category, categoryLabel string, total int,
 	catTabsHTML string, user model.User) {
-	@components.Layout("代碼對照表", "/lookup", user, AppName) {
+	@components.Layout(i18n.T(ctx, "lookup.title"), "/lookup", user, AppName) {
 		<div class="card">
-			<h2>代碼對照表（{ categoryLabel }，共 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "lookup.list_heading"), categoryLabel, total) }</h2>
 			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
-				統一維護系統內所有代碼與名稱的對應關係。修改後即時生效，不需重新編譯。
+				{ i18n.T(ctx, "lookup.intro") }
 			</p>
 			<div style="margin-bottom:12px">@templ.Raw(catTabsHTML)</div>
 			<div style="margin-bottom:12px">
-				<a class="btn btn-p" href={ "/lookup/new?category=" + category }>＋ 新增代碼</a>
+				<a class="btn btn-p" href={ "/lookup/new?category=" + category }>{ i18n.T(ctx, "lookup.new") }</a>
 			</div>
 			<input type="search" name="q"
-				placeholder="搜尋代碼 / 名稱"
+				placeholder={ i18n.T(ctx, "lookup.search_ph") }
 				hx-get={ "/api/lookup/search?category=" + category }
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#lookup-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
 			<table>
-				<tr><th>代碼</th><th>名稱</th><th>排序</th><th>狀態</th><th>操作</th></tr>
+				<tr><th>{ i18n.T(ctx, "lookup.field.code") }</th><th>{ i18n.T(ctx, "lookup.field.name") }</th><th>{ i18n.T(ctx, "lookup.field.sort") }</th><th>{ i18n.T(ctx, "lookup.field.status") }</th><th>{ i18n.T(ctx, "lookup.field.actions") }</th></tr>
 				<tbody id="lookup-rows">
 					for _, li := range rows {
 						@LookupRowContent(li)
@@ -44,7 +46,7 @@ templ ListLookupPage(rows []LookupRow, category, categoryLabel string, total int
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">尚無代碼對照資料</div>
+				<div class="empty">{ i18n.T(ctx, "lookup.empty") }</div>
 			}
 		</div>
 	}
@@ -57,19 +59,19 @@ templ LookupRowContent(li LookupRow) {
 		<td class="num">{ strconv.Itoa(li.SortOrder) }</td>
 		<td>
 			if li.Active == 0 {
-				<span class="pill" style="background:#7f1d1d;color:#fca5a5">停用</span>
+				<span class="pill" style="background:#7f1d1d;color:#fca5a5">{ i18n.T(ctx, "lookup.inactive") }</span>
 			}
 			if li.Active != 0 {
-				<span class="pill" style="background:#14532d;color:#86efac">啟用</span>
+				<span class="pill" style="background:#14532d;color:#86efac">{ i18n.T(ctx, "lookup.active") }</span>
 			}
 		</td>
 		<td>
 			if li.Active == 0 {
 				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }
-					hx-post={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }>復用</a>
+					hx-post={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/reactivate" }>{ i18n.T(ctx, "lookup.reactivate") }</a>
 			}
 			if li.Active != 0 {
-				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/edit" }>編輯</a>
+				<a class="btn btn-s" href={ "/lookup/" + strconv.FormatInt(li.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			}
 		</td>
 	</tr>
@@ -78,7 +80,7 @@ templ LookupRowContent(li LookupRow) {
 // LookupSearchRows HTMX 即時搜尋回傳的純列。
 templ LookupSearchRows(rows []LookupRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">查無代碼</td></tr>
+		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "lookup.search_empty") }</td></tr>
 	}
 	for _, li := range rows {
 		@LookupRowContent(li)

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -31,7 +32,7 @@ func AddPhotoAnnotation(w http.ResponseWriter, r *http.Request, user model.User)
 		return
 	}
 	if req.Type == "" {
-		fail(w, "標記類型為必填")
+		formError(w, r, "新增照片標記", "/work-orders", "標記類型為必填")
 		return
 	}
 
@@ -174,7 +175,7 @@ func AddWalkaroundMark(w http.ResponseWriter, r *http.Request, user model.User) 
 		return
 	}
 	if req.MarkType == "" {
-		fail(w, "舊傷類型為必填")
+		formError(w, r, "新增舊傷標記", "/work-orders/"+strconv.FormatInt(woID, 10), "舊傷類型為必填")
 		return
 	}
 

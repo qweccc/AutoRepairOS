@@ -1,9 +1,11 @@
 package pages
 
 import (
+	"fmt"
 	"html"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -21,55 +23,69 @@ type CustomerRow struct {
 	UnpaidAmount    float64
 }
 
+// CustomerCreateForm carries create-form state for same-screen error
+// re-rendering: ErrMsg shown under the form title, remaining fields refill
+// the user's input after a failed POST.
+type CustomerCreateForm struct {
+	ErrMsg    string
+	Name      string
+	Phone     string
+	Address   string
+	Tags      string
+	Campaign  string
+	Notes     string
+	Pref      string
+}
+
 // ListCustomersPage 客戶列表頁（HTMX 即時搜尋）。
-templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, user model.User) {
-	@components.Layout("客戶管理", "/customers", user, AppName) {
+templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, form CustomerCreateForm, user model.User) {
+	@components.Layout(i18n.T(ctx, "customer.title"), "/customers", user, AppName) {
 		<div class="card">
-			<h2>新增客戶</h2>
+			<h2>{ i18n.T(ctx, "customer.new") }</h2>
+			if form.ErrMsg != "" {
+				<div class="msg msg-err">{ form.ErrMsg }</div>
+			}
 			<form class="frm" method="POST" action="/customers">
 				@components.CSRFInput()
-				<label>姓名<input name="name" required placeholder="例：王小明"></label>
-				<label>電話<input name="phone" type="tel" required placeholder="例：0912-345-678"></label>
-				<label>通知偏好
+				<label>{ i18n.T(ctx, "customer.field.name") }<input name="name" required placeholder={ i18n.T(ctx, "customer.name_placeholder") } value={ form.Name }></label>
+				<label>{ i18n.T(ctx, "customer.field.phone") }<input name="phone" type="tel" required placeholder={ i18n.T(ctx, "customer.phone_placeholder") } value={ form.Phone }></label>
+				<label>{ i18n.T(ctx, "customer.notification_preference") }
 					<select name="notification_preference">
-						<option value="none" selected>不通知</option>
+						<option value="none" selected>{ i18n.T(ctx, "customer.notify_none") }</option>
 						<option value="line">LINE</option>
 						<option value="telegram">Telegram</option>
 						<option value="sms">SMS</option>
 					</select>
 				</label>
-				<label class="full">地址<input name="address"></label>
-				<label class="full">標籤<input name="tags" placeholder="以逗號分隔，例：VIP,奧客警示"></label>
-				<label class="full">行銷活動代碼<input name="campaign_code" placeholder="例：2026Q4-煞車促銷"></label>
-				<label class="full">備註<textarea name="notes"></textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">建立客戶</button></div>
+				<label class="full">{ i18n.T(ctx, "customer.field.address") }<input name="address" value={ form.Address }></label>
+				<label class="full">{ i18n.T(ctx, "customer.field.tags") }<input name="tags" placeholder={ i18n.T(ctx, "customer.tags_placeholder") } value={ form.Tags }></label>
+				<label class="full">{ i18n.T(ctx, "customer.campaign_code") }<input name="campaign_code" placeholder={ i18n.T(ctx, "customer.campaign_placeholder") } value={ form.Campaign }></label>
+				<label class="full">{ i18n.T(ctx, "customer.notes") }<textarea name="notes">{ form.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "customer.create") }</button></div>
 			</form>
 			<p style="color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6">
-				建立後要綁定 LINE，請到該客戶的編輯頁使用「LINE 綁定」區塊產生綁定碼。
-				這裡刻意不放 LINE User ID 欄位：客戶看不到自己的 LINE User ID，
-				手打容易錯，而填錯不會有任何錯誤訊息——通知會靜默送不到。
-				Telegram 因為客戶可用 Telegram 的 userinfobot 查到自己的 ID，可直接在上方填寫。
+				{ i18n.T(ctx, "customer.line_binding_hint") }
 			</p>
 		</div>
 		<div class="card">
-			<h2>客戶列表（符合條件 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "customer.list_title"), total) }</h2>
 			// HTMX 即時搜尋：輸入後 300ms 自動查詢，無需按送出
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋姓名 / 電話 / 地址"
+				placeholder={ i18n.T(ctx, "customer.search_placeholder") }
 				hx-get="/api/customers/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#customer-rows"
 				hx-swap="innerHTML"
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
-			<a class="btn btn-s" href="/customers">清除</a>
+			<a class="btn btn-s" href="/customers">{ i18n.T(ctx, "customer.clear") }</a>
 			<table>
 				<tr>
-										<th>ID</th><th>姓名</th><th>電話</th><th>標籤</th><th>地址</th><th>通知</th>
+										<th>ID</th><th>{ i18n.T(ctx, "customer.field.name") }</th><th>{ i18n.T(ctx, "customer.field.phone") }</th><th>{ i18n.T(ctx, "customer.field.tags") }</th><th>{ i18n.T(ctx, "customer.field.address") }</th><th>{ i18n.T(ctx, "customer.column.notification") }</th>
 										<th>LINE ID</th><th>Telegram ID</th>
 										if user.Role == "owner" || user.Role == "counter" {
-											<th class="num">累計消費</th><th class="num">未付</th>
+											<th class="num">{ i18n.T(ctx, "customer.column.total_spent") }</th><th class="num">{ i18n.T(ctx, "customer.column.unpaid") }</th>
 										}
-										<th>操作</th>
+										<th>{ i18n.T(ctx, "customer.column.actions") }</th>
 				</tr>
 				<tbody id="customer-rows">
 					for _, c := range rows {
@@ -87,20 +103,20 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, use
 															<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
 														}
 														<td>
-								<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>開工單</a>
-								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>編輯</a>
-								<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
-								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>催款單</a>
+								<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>{ i18n.T(ctx, "customer.action.new_workorder") }</a>
+								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
+								<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>{ i18n.T(ctx, "nav.vehicles") }</a>
+								<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>{ i18n.T(ctx, "customer.action.ar_statement") }</a>
 								<a class="btn btn-d" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
 									hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
-									data-confirm="確定刪除這位客戶？">刪除</a>
+									data-confirm={ i18n.T(ctx, "customer.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 							</td>
 						</tr>
 					}
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的客戶</div>
+				<div class="empty">{ i18n.T(ctx, "customer.empty_no_match") }</div>
 			}
 			@components.Pager("/customers", page, calcPages(total, size), total)
 		</div>
@@ -110,7 +126,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, use
 // CustomerSearchRows HTMX 即時搜尋回傳的純列（無 Layout）。
 templ CustomerSearchRows(rows []CustomerRow, user model.User) {
 	if len(rows) == 0 {
-		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">查無客戶</td></tr>
+		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "customer.search_empty") }</td></tr>
 	}
 	for _, c := range rows {
 		<tr>
@@ -127,13 +143,13 @@ templ CustomerSearchRows(rows []CustomerRow, user model.User) {
 				<td class="num">{ moneyFmt(c.UnpaidAmount) }</td>
 			}
 			<td>
-				<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>開工單</a>
-				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>編輯</a>
-				<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>車輛</a>
-				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>催款單</a>
+				<a class="btn btn-p" href={ "/work-orders/new?customer=" + strconv.FormatInt(c.ID, 10) }>{ i18n.T(ctx, "customer.action.new_workorder") }</a>
+				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
+				<a class="btn btn-o" href={ "/vehicles?customer=" + strconv.FormatInt(c.ID, 10) }>{ i18n.T(ctx, "nav.vehicles") }</a>
+				<a class="btn btn-s" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/ar-statement" }>{ i18n.T(ctx, "customer.action.ar_statement") }</a>
 				<a class="btn btn-d" href={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
 					hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/delete" }
-					data-confirm="確定刪除這位客戶？">刪除</a>
+					data-confirm={ i18n.T(ctx, "customer.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 			</td>
 		</tr>
 	}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -156,16 +157,16 @@ func SearchSubcontractsAPI(w http.ResponseWriter, r *http.Request) {
 func CreateSubcontract(w http.ResponseWriter, r *http.Request) {
 	workOrderID := mustInt(r.FormValue("work_order_id"))
 	if workOrderID == 0 {
-		fail(w, "工單 ID 為必填")
+		formError(w, r, "新增外包", "/subcontracts", "工單 ID 為必填")
 		return
 	}
 	if countRows("SELECT COUNT(1) FROM active_work_orders WHERE id = ?", workOrderID) == 0 {
-		fail(w, "工單不存在")
+		formError(w, r, "新增外包", "/subcontracts", "工單不存在")
 		return
 	}
 	description := strings.TrimSpace(r.FormValue("description"))
 	if description == "" {
-		fail(w, "加工內容為必填")
+		formError(w, r, "新增外包", "/subcontracts", "加工內容為必填")
 		return
 	}
 
@@ -237,7 +238,7 @@ func UpdateSubcontract(w http.ResponseWriter, r *http.Request) {
 	workOrderID := mustInt(r.FormValue("work_order_id"))
 	description := strings.TrimSpace(r.FormValue("description"))
 	if workOrderID == 0 || description == "" {
-		fail(w, "工單 ID 與加工內容為必填")
+		formError(w, r, "編輯外包", "/subcontracts/"+strconv.FormatInt(id, 10)+"/edit", "工單 ID 與加工內容為必填")
 		return
 	}
 	status := subcontractStatusArg(r.FormValue("status"))

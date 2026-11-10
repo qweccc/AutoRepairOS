@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
@@ -191,7 +192,7 @@ func CreateLookupItem(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimSpace(r.FormValue("code"))
 	label := strings.TrimSpace(r.FormValue("label"))
 	if category == "" || code == "" || label == "" {
-		fail(w, "分類、代碼、名稱為必填")
+		formError(w, r, "新增代碼對照", "/lookup", "分類、代碼、名稱為必填")
 		return
 	}
 	_, err := db.DB.Exec(`INSERT INTO lookup_items (category, code, label, sort_order) VALUES (?,?,?,?)`,
@@ -222,7 +223,7 @@ func UpdateLookupItem(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimSpace(r.FormValue("code"))
 	label := strings.TrimSpace(r.FormValue("label"))
 	if code == "" || label == "" {
-		fail(w, "代碼、名稱為必填")
+		formError(w, r, "編輯代碼對照", "/lookup/"+strconv.FormatInt(id, 10)+"/edit", "代碼、名稱為必填")
 		return
 	}
 	var category string

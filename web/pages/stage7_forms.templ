@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -22,28 +24,28 @@ type SupplierEditData struct {
 
 templ EditSupplierPage(data SupplierEditData) {
 	{{ user := data.User }}
-	@components.Layout("編輯供應商", "/suppliers", user, AppName) {
+	@components.Layout(i18n.T(ctx, "supplier.edit_title"), "/suppliers", user, AppName) {
 		<div class="card">
-			<h2>編輯供應商 { data.Name }</h2>
+			<h2>{ i18n.T(ctx, "supplier.edit_title") } { data.Name }</h2>
 			<form class="frm" method="POST" action={ "/suppliers/" + strconv.FormatInt(data.ID, 10) }>
 				@components.CSRFInput()
-				<label>名稱<input name="name" value={ data.Name } required></label>
-				<label>電話<input name="phone" value={ data.Phone }></label>
-				<label>聯絡人<input name="contact_person" value={ data.Contact }></label>
-				<label>地址<input name="address" value={ data.Address }></label>
-				<label>類型<select name="vendor_type">
-					<option value="material" selected?={ data.VendorType == "material" }>材料商</option>
-					<option value="vendor" selected?={ data.VendorType == "vendor" }>協力廠商</option>
+				<label>{ i18n.T(ctx, "mainttpl.field.item_name") }<input name="name" value={ data.Name } required></label>
+				<label>{ i18n.T(ctx, "supplier.field.phone") }<input name="phone" inputmode="tel" value={ data.Phone }></label>
+				<label>{ i18n.T(ctx, "insurance.field.contact") }<input name="contact_person" value={ data.Contact }></label>
+				<label>{ i18n.T(ctx, "common.address") }<input name="address" value={ data.Address }></label>
+				<label>{ i18n.T(ctx, "staff.field.history_type") }<select name="vendor_type">
+					<option value="material" selected?={ data.VendorType == "material" }>{ i18n.T(ctx, "supplier.type.material") }</option>
+					<option value="vendor" selected?={ data.VendorType == "vendor" }>{ i18n.T(ctx, "supplier.type.vendor") }</option>
 				</select></label>
-				<label>付款條件<select name="payment_terms">
+				<label>{ i18n.T(ctx, "supplier.field.payment_terms") }<select name="payment_terms">
 					for _, opt := range data.PaymentOpts {
 						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
 					}
 				</select></label>
-				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">儲存</button>
-					<a class="btn btn-s" href="/suppliers">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button>
+					<a class="btn btn-s" href="/suppliers">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
 		</div>
@@ -66,32 +68,32 @@ type SubcontractEditData struct {
 
 templ EditSubcontractPage(data SubcontractEditData) {
 	{{ user := data.User }}
-	@components.Layout("編輯外包", "/subcontracts", user, AppName) {
+	@components.Layout(i18n.T(ctx, "subcontract.edit_title"), "/subcontracts", user, AppName) {
 		<div class="card">
-			<h2>編輯外包 #{ strconv.FormatInt(data.ID, 10) }</h2>
+			<h2>{ i18n.T(ctx, "subcontract.edit_title") } #{ strconv.FormatInt(data.ID, 10) }</h2>
 			<form class="frm" method="POST" action={ "/subcontracts/" + strconv.FormatInt(data.ID, 10) }>
 				@components.CSRFInput()
-				<label>工單 ID<input type="number" name="work_order_id" value={ strconv.FormatInt(data.WorkOrderID, 10) } required></label>
-				<label>協力廠商<select name="supplier_id">
-					<option value="0" selected?={ data.SupplierID == 0 }>（未指定）</option>
+				<label>{ i18n.T(ctx, "subcontract.field.workorder") }<input type="number" name="work_order_id" value={ strconv.FormatInt(data.WorkOrderID, 10) } required></label>
+				<label>{ i18n.T(ctx, "supplier.type.vendor") }<select name="supplier_id">
+					<option value="0" selected?={ data.SupplierID == 0 }>{ i18n.T(ctx, "subcontract.unspecified") }</option>
 					for _, opt := range data.SupplierOpts {
 						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
 					}
 				</select></label>
-				<label class="full">加工內容<input name="description" value={ data.Description } required></label>
-				<label>成本金額<input type="number" step="0.01" name="cost_amount" value={ data.CostAmount }></label>
-				<label>收費金額<input type="number" step="0.01" name="charge_amount" value={ data.ChargeAmount }></label>
-				<label>預計完成日<input type="date" name="expected_date" value={ data.ExpectedDate }></label>
-				<label>狀態<select name="status">
-					<option value="pending" selected?={ data.Status == "pending" }>待處理</option>
-					<option value="in_progress" selected?={ data.Status == "in_progress" }>進行中</option>
-					<option value="completed" selected?={ data.Status == "completed" }>已完成</option>
-					<option value="cancelled" selected?={ data.Status == "cancelled" }>已取消</option>
+				<label class="full">{ i18n.T(ctx, "subcontract.field.description") }<input name="description" value={ data.Description } required></label>
+				<label>{ i18n.T(ctx, "subcontract.field.cost") }<input type="number" step="0.01" name="cost_amount" value={ data.CostAmount }></label>
+				<label>{ i18n.T(ctx, "subcontract.field.charge") }<input type="number" step="0.01" name="charge_amount" value={ data.ChargeAmount }></label>
+				<label>{ i18n.T(ctx, "subcontract.field.expected") }<input type="date" name="expected_date" value={ data.ExpectedDate }></label>
+				<label>{ i18n.T(ctx, "subcontract.field.status") }<select name="status">
+					<option value="pending" selected?={ data.Status == "pending" }>{ i18n.T(ctx, "subcontract.status_pending") }</option>
+					<option value="in_progress" selected?={ data.Status == "in_progress" }>{ i18n.T(ctx, "subcontract.status_in_progress") }</option>
+					<option value="completed" selected?={ data.Status == "completed" }>{ i18n.T(ctx, "subcontract.status_completed") }</option>
+					<option value="cancelled" selected?={ data.Status == "cancelled" }>{ i18n.T(ctx, "subcontract.status_cancelled") }</option>
 				</select></label>
-				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">儲存</button>
-					<a class="btn btn-s" href="/subcontracts">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button>
+					<a class="btn btn-s" href="/subcontracts">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
 		</div>
@@ -123,42 +125,42 @@ type StaffEditData struct {
 
 templ EditStaffPage(data StaffEditData) {
 	{{ user := data.User }}
-	@components.Layout("編輯員工", "/staff", user, AppName) {
+	@components.Layout(i18n.T(ctx, "staff.edit_title"), "/staff", user, AppName) {
 		<div class="card">
-			<h2>編輯員工 { data.Name }</h2>
+			<h2>{ i18n.T(ctx, "staff.edit_title") } { data.Name }</h2>
 			if data.Error != "" {
 				<div class="msg msg-err" style="margin-bottom:14px">{ data.Error }</div>
 			}
 			<form class="frm" method="POST" action={ "/staff/" + strconv.FormatInt(data.ID, 10) }>
 				@components.CSRFInput()
-				<label>姓名<input value={ data.Name } disabled style="opacity:0.6"></label>
-								<label>帳號<input value={ data.Username } disabled style="opacity:0.6"></label>
-								<label>新密碼<input name="password" type="password" placeholder="留空則不修改"></label>
-				<label>狀態<select name="active">
-					<option value="1" selected?={ data.Active == 1 }>在職</option>
-					<option value="0" selected?={ data.Active == 0 }>離職</option>
+				<label>{ i18n.T(ctx, "staff.field.name") }<input value={ data.Name } disabled style="opacity:0.6"></label>
+								<label>{ i18n.T(ctx, "staff.field.username") }<input value={ data.Username } disabled style="opacity:0.6"></label>
+								<label>{ i18n.T(ctx, "staff.field.new_password") }<input name="password" type="password" placeholder={ i18n.T(ctx, "staff.new_password_ph") }></label>
+				<label>{ i18n.T(ctx, "subcontract.field.status") }<select name="active">
+					<option value="1" selected?={ data.Active == 1 }>{ i18n.T(ctx, "staff.active") }</option>
+					<option value="0" selected?={ data.Active == 0 }>{ i18n.T(ctx, "staff.inactive") }</option>
 				</select></label>
-				<label>身分<select name="staff_kind">
-					<option value="employee" selected?={ data.Kind == "employee" }>員工</option>
-					<option value="dependent" selected?={ data.Kind == "dependent" || data.Kind == "family" }>健保眷屬</option>
+				<label>{ i18n.T(ctx, "staff.field.kind") }<select name="staff_kind">
+					<option value="employee" selected?={ data.Kind == "employee" }>{ i18n.T(ctx, "staff.kind_employee") }</option>
+					<option value="dependent" selected?={ data.Kind == "dependent" || data.Kind == "family" }>{ i18n.T(ctx, "staff.kind_dependent") }</option>
 				</select></label>
-				<label>部門<select name="staff_branch">
+				<label>{ i18n.T(ctx, "staff.field.branch") }<select name="staff_branch">
 					for _, opt := range data.BranchOpts {
 						<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
 					}
 				</select></label>
-				<label>身分證號<input name="national_id" value={ data.NationalID }></label>
-				<label>生日<input name="birthday" type="date" value={ data.Birthday }></label>
-				<label>加保日<input name="insurance_start" type="date" value={ data.InsuranceStart }></label>
-				<label>退保日<input name="insurance_end" type="date" value={ data.InsuranceEnd }></label>
+				<label>{ i18n.T(ctx, "staff.field.national_id") }<input name="national_id" value={ data.NationalID }></label>
+				<label>{ i18n.T(ctx, "staff.field.birthday") }<input name="birthday" type="date" value={ data.Birthday }></label>
+				<label>{ i18n.T(ctx, "staff.field.ins_start") }<input name="insurance_start" type="date" value={ data.InsuranceStart }></label>
+				<label>{ i18n.T(ctx, "staff.field.ins_end") }<input name="insurance_end" type="date" value={ data.InsuranceEnd }></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">儲存</button>
-					<a class="btn btn-s" href="/staff">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button>
+					<a class="btn btn-s" href="/staff">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 				</form>
-				<h3 style="margin:16px 0 8px">健保異動紀錄</h3>
+				<h3 style="margin:16px 0 8px">{ i18n.T(ctx, "staff.insurance_history") }</h3>
 				<table>
-				<tr><th>日期</th><th>類型</th><th>備註</th></tr>
+				<tr><th>{ i18n.T(ctx, "staff.field.history_date") }</th><th>{ i18n.T(ctx, "staff.field.history_type") }</th><th>{ i18n.T(ctx, "common.notes") }</th></tr>
 				for _, h := range data.InsuranceHistory {
 					<tr><td>{ h.EventDate }</td><td>{ h.EventType }</td><td>{ h.Note }</td></tr>
 				}
@@ -177,35 +179,35 @@ type CustomerEditData struct {
 
 templ EditCustomerPage(data CustomerEditData) {
 	{{ user := data.User }}
-	@components.Layout("編輯客戶", "/customers", user, AppName) {
+	@components.Layout(i18n.T(ctx, "customer.edit_title"), "/customers", user, AppName) {
 		@components.FlashMsg(data.Flash)
 		@components.FlashErr(data.FlashErr)
 		<div class="card">
-			<h2>編輯客戶 #{ strconv.FormatInt(data.Customer.ID, 10) }</h2>
+			<h2>{ i18n.T(ctx, "customer.edit_title") } #{ strconv.FormatInt(data.Customer.ID, 10) }</h2>
 			<form class="frm" method="POST" action={ "/customers/" + strconv.FormatInt(data.Customer.ID, 10) }>
 				@components.CSRFInput()
-				<label>姓名<input name="name" value={ data.Customer.Name } required></label>
-				<label>電話<input name="phone" value={ data.Customer.Phone } required></label>
-				<label>通知偏好<select name="notification_preference">
-					<option value="none" selected?={ data.Customer.NotificationPref == "none" }>不通知</option>
+				<label>{ i18n.T(ctx, "staff.field.name") }<input name="name" value={ data.Customer.Name } required></label>
+				<label>{ i18n.T(ctx, "supplier.field.phone") }<input name="phone" inputmode="tel" value={ data.Customer.Phone } required></label>
+				<label>{ i18n.T(ctx, "customer.notification_preference") }<select name="notification_preference">
+					<option value="none" selected?={ data.Customer.NotificationPref == "none" }>{ i18n.T(ctx, "customer.notify_none") }</option>
 					<option value="line" selected?={ data.Customer.NotificationPref == "line" }>LINE</option>
 					<option value="telegram" selected?={ data.Customer.NotificationPref == "telegram" }>Telegram</option>
 				</select></label>
 				if data.SMSWarning {
-					<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">⚠️ 原本偏好 SMS，請重新選擇 LINE 或 Telegram 通知通道</div>
+					<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">{ i18n.T(ctx, "customer.sms_warning") }</div>
 				}
-				<label>生日<input name="birthday" type="date" value={ data.Customer.Birthday } placeholder="例：1990-05-20"></label>
-				<label class="full">地址<input name="address" value={ data.Customer.Address }></label>
-				<label class="full">標籤<input name="tags" value={ data.Customer.Tags } placeholder="以逗號分隔，例：VIP,奧客警示"></label>
-				<label class="full">行銷活動代碼<input name="campaign_code" value={ data.Customer.CampaignCode } placeholder="例：2026Q4-煞車促銷"></label>
-				<label class="full">備註<textarea name="notes">{ data.Customer.Notes }</textarea></label>
+				<label>{ i18n.T(ctx, "staff.field.birthday") }<input name="birthday" type="date" value={ data.Customer.Birthday } placeholder={ i18n.T(ctx, "customer.birthday_ph") }></label>
+				<label class="full">{ i18n.T(ctx, "common.address") }<input name="address" value={ data.Customer.Address }></label>
+				<label class="full">{ i18n.T(ctx, "customer.field.tags") }<input name="tags" value={ data.Customer.Tags } placeholder={ i18n.T(ctx, "customer.tags_ph2") }></label>
+				<label class="full">{ i18n.T(ctx, "customer.campaign_code") }<input name="campaign_code" value={ data.Customer.CampaignCode } placeholder={ i18n.T(ctx, "customer.campaign_ph") }></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Customer.Notes }</textarea></label>
 				<div class="full">
-					<button class="btn btn-p" type="submit">儲存</button>
-					<a class="btn btn-s" href="/customers">取消</a>
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button>
+					<a class="btn btn-s" href="/customers">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
 			<p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
-				LINE 綁定不在這張表單裡——綁定有唯一性規則（一個 LINE 帳號只能對應一位客戶），走下面的綁定區塊處理。
+				{ i18n.T(ctx, "customer.line_hint") }
 			</p>
 		</div>
 		@CustomerLineBinding(data.Customer)
@@ -215,29 +217,29 @@ templ EditCustomerPage(data CustomerEditData) {
 
 templ CustomerLineBinding(c model.Customer) {
 	<div class="card">
-		<h2>LINE 綁定</h2>
+		<h2>{ i18n.T(ctx, "customer.line_binding") }</h2>
 		if c.LineUserID != "" {
-			<p style="margin:0 0 10px"><span class="pill p-done">已綁定</span><code style="margin-left:8px">{ c.LineUserID }</code></p>
+			<p style="margin:0 0 10px"><span class="pill p-done">{ i18n.T(ctx, "customer.bound") }</span><code style="margin-left:8px">{ c.LineUserID }</code></p>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/line-unbind" } onsubmit="return confirm('確定取消綁定？取消後這位客戶將無法在 LINE 查到自己的維修紀錄。')">
 				@components.CSRFInput()
-				<button class="btn btn-d" type="submit">取消綁定</button>
+				<button class="btn btn-d" type="submit">{ i18n.T(ctx, "customer.unbind") }</button>
 			</form>
 		} else {
-			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
+			<p style="margin:0 0 10px"><span class="pill">{ i18n.T(ctx, "customer.unbound") }</span></p>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/generate-binding-code?platform=line" } hx-post={ "/customers/" + strconv.FormatInt(c.ID,10) + "/generate-binding-code?platform=line" } hx-target="#line-bind-result" hx-swap="innerHTML" style="margin:8px 0">
 				@components.CSRFInput()
-				<button class="btn btn-s" type="submit">產生 LINE 綁定碼</button>
+				<button class="btn btn-s" type="submit">{ i18n.T(ctx, "customer.generate_line_code") }</button>
 			</form>
 			<div id="line-bind-result"></div>
-			<p style="color:#94a3b8;font-size:12px;margin:4px 0 0">將綁定碼交給客戶，請在 LINE 輸入即可完成綁定。</p>
+			<p style="color:#94a3b8;font-size:12px;margin:4px 0 0">{ i18n.T(ctx, "customer.line_code_hint") }</p>
 			<details style="margin-top:6px">
-				<summary style="cursor:pointer;color:#93c5fd;font-size:13px">手動綁定</summary>
+				<summary style="cursor:pointer;color:#93c5fd;font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
 				<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 					@components.CSRFInput()
 					<input name="line_user_id" placeholder="U1234567890abcdef" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 					<button class="btn btn-p" type="submit">{ lineBindLabel(c) }</button>
 				</form>
-				<p style="color:#64748b;font-size:12px;margin:8px 0 0">同一個 LINE 帳號不能綁兩個客戶。</p>
+				<p style="color:#64748b;font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.line_unique_hint") }</p>
 			</details>
 			}
 	</div>
@@ -246,31 +248,31 @@ templ CustomerLineBinding(c model.Customer) {
 
 templ CustomerTelegramBinding(c model.Customer) {
 	<div class="card">
-		<h2>Telegram 綁定</h2>
+		<h2>{ i18n.T(ctx, "customer.telegram_binding") }</h2>
 		if c.TelegramUserID != "" {
-			<p style="margin:0 0 10px"><span class="pill p-done">已綁定</span><code style="margin-left:8px">{ c.TelegramUserID }</code></p>
-			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">此客戶已可在 Telegram 傳訊息查詢維修服務。</p>
+			<p style="margin:0 0 10px"><span class="pill p-done">{ i18n.T(ctx, "customer.bound") }</span><code style="margin-left:8px">{ c.TelegramUserID }</code></p>
+			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">{ i18n.T(ctx, "customer.telegram_bound_hint") }</p>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-unbind" } onsubmit="return confirm('確定取消 Telegram 綁定？')">
 				@components.CSRFInput()
-				<button class="btn btn-d" type="submit">取消綁定</button>
+				<button class="btn btn-d" type="submit">{ i18n.T(ctx, "customer.unbind") }</button>
 			</form>
 		} else {
-			<p style="margin:0 0 10px"><span class="pill">未綁定</span></p>
+			<p style="margin:0 0 10px"><span class="pill">{ i18n.T(ctx, "customer.unbound") }</span></p>
 		}
-		<p style="color:#94a3b8;font-size:12.5px;margin:12px 0">建議讓客戶自己綁：由櫃台產生綁定碼後交給客戶，請客戶在 Telegram 輸入「綁定 &lt;綁定碼&gt;」即可完成綁定。</p>
+		<p style="color:#94a3b8;font-size:12.5px;margin:12px 0">{ i18n.T(ctx, "customer.telegram_hint") }</p>
 		<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=telegram" } hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=telegram" } hx-target="#telegram-bind-result" hx-swap="innerHTML" style="margin:8px 0">
 			@components.CSRFInput()
-			<button class="btn btn-s" type="submit">產生 Telegram 綁定碼</button>
+			<button class="btn btn-s" type="submit">{ i18n.T(ctx, "customer.generate_telegram_code") }</button>
 		</form>
 		<div id="telegram-bind-result"></div>
 		<details style="margin-top:6px">
-			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">手動綁定</summary>
+			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 				@components.CSRFInput()
 				<input name="telegram_user_id" placeholder="123456789" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
 				<button class="btn btn-p" type="submit">{ telegramBindLabel(c) }</button>
 			</form>
-			<p style="color:#64748b;font-size:12px;margin:8px 0 0">請客戶在 Telegram 搜尋 &#64;userinfobot 查詢 chat ID。同一個 Telegram 帳號不能綁兩個客戶。</p>
+			<p style="color:#64748b;font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.telegram_chat_hint") }</p>
 		</details>
 	</div>
 }
@@ -293,21 +295,21 @@ type InsuranceCompanyEditData struct {
 
 templ EditInsuranceCompanyPage(data InsuranceCompanyEditData) {
 	{{ user := data.User }}
-	@components.Layout("編輯保險公司", "/insurance-companies", user, AppName) {
+	@components.Layout(i18n.T(ctx, "insurance.edit_title"), "/insurance-companies", user, AppName) {
 		<div class="card">
-			<h2>編輯保險公司 { data.Code }</h2>
+			<h2>{ i18n.T(ctx, "insurance.edit_title") } { data.Code }</h2>
 			<form class="frm" method="POST" action={ "/insurance-companies/" + strconv.FormatInt(data.ID, 10) }>
 				@components.CSRFInput()
-				<label>簡稱<input name="code" value={ data.Code } required></label>
-				<label>公司名稱<input name="name" value={ data.Name } required></label>
-				<label>統一編號<input name="tax_id" value={ data.TaxID }></label>
-				<label>客服電話<input name="claim_phone" value={ data.ClaimPhone }></label>
-				<label>一般電話<input name="phone" value={ data.Phone }></label>
-				<label>聯絡人<input name="contact_person" value={ data.ContactPerson }></label>
-				<label>郵遞區號<input name="postal_code" value={ data.PostalCode }></label>
-				<label>地址<input name="address" value={ data.Address }></label>
-				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">儲存</button><a class="btn btn-s" href="/insurance-companies">取消</a></div>
+				<label>{ i18n.T(ctx, "insurance.field.code") }<input name="code" value={ data.Code } required></label>
+				<label>{ i18n.T(ctx, "insurance.field.name") }<input name="name" value={ data.Name } required></label>
+				<label>{ i18n.T(ctx, "insurance.field.tax_id") }<input name="tax_id" value={ data.TaxID }></label>
+				<label>{ i18n.T(ctx, "insurance.field.claim_phone") }<input name="claim_phone" value={ data.ClaimPhone }></label>
+				<label>{ i18n.T(ctx, "insurance.field.phone") }<input name="phone" inputmode="tel" value={ data.Phone }></label>
+				<label>{ i18n.T(ctx, "insurance.field.contact") }<input name="contact_person" value={ data.ContactPerson }></label>
+				<label>{ i18n.T(ctx, "insurance.field.postal") }<input name="postal_code" value={ data.PostalCode }></label>
+				<label>{ i18n.T(ctx, "common.address") }<input name="address" value={ data.Address }></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button><a class="btn btn-s" href="/insurance-companies">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}
@@ -330,27 +332,27 @@ templ VehicleInspectionFormPage(data InspectionFormData) {
 			<form class="frm" method="POST" action={ data.Action }>
 				@components.CSRFInput()
 				if data.New {
-					<label>車輛<select name="vehicle_id" required>
+					<label>{ i18n.T(ctx, "inspection.field.vehicle") }<select name="vehicle_id" required>
 						for _, opt := range data.VehicleOpts {
 							<option value={ opt.Value } selected?={ opt.Selected }>{ opt.Label }</option>
 						}
 					</select></label>
 				}
-				<label>排定檢驗日<input type="date" name="order_date" value={ data.OrderDate } required></label>
-				<label>實際完成日<input type="date" name="check_date" value={ data.CheckDate }></label>
-				<label>代檢廠編號<input name="firm_no" value={ data.FirmNo }></label>
-				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+				<label>{ i18n.T(ctx, "inspection.field.order_date") }<input type="date" name="order_date" value={ data.OrderDate } required></label>
+				<label>{ i18n.T(ctx, "inspection.field.check_date") }<input type="date" name="check_date" value={ data.CheckDate }></label>
+				<label>{ i18n.T(ctx, "inspection.field.firm_no") }<input name="firm_no" value={ data.FirmNo }></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
 				<div class="full">
 					if data.New {
-						<button class="btn btn-p" type="submit">建立</button>
+						<button class="btn btn-p" type="submit">{ i18n.T(ctx, "inspection.create") }</button>
 					} else {
-						<button class="btn btn-p" type="submit">儲存</button>
+						<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button>
 					}
-					<a class="btn btn-s" href="/inspections">取消</a>
+					<a class="btn btn-s" href="/inspections">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
 			if data.New {
-				<p style="color:#64748b;font-size:12.5px;margin-top:10px">完成日留空代表「已排定但未驗」；填上完成日即視為已結案。</p>
+				<p style="color:#64748b;font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "inspection.hint") }</p>
 			}
 		</div>
 	}
@@ -369,30 +371,30 @@ templ ReceivableFormPage(data ReceivableFormData) {
 	@components.Layout(data.Title, "/receivables", user, AppName) {
 		@components.FlashErr(data.Error)
 		<div class="card">
-			<h2>收款紀錄</h2>
+			<h2>{ i18n.T(ctx, "receivable.form_title") }</h2>
 			<form class="frm" method="POST" action={ data.Action }>
 				@components.CSRFInput()
-				<label>收款單號<input name="voucher_no" value={ data.VoucherNo } placeholder="系統預先產生，可修改" required></label>
-				<label>收款日期<input name="pay_date" type="date" value={ data.PayDate } required></label>
-				<label>客戶<input name="customer_q" value={ data.CustomerName } placeholder="姓名 / 電話 / 車牌" required><input type="hidden" name="customer_id" value={ data.CustomerID }></label>
-				<label>關聯工單<input name="work_order_id" value={ data.WorkOrderID } placeholder="工單編號，可留空"></label>
-				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">付款方式可並存（例如現金 3,000 + 刷卡 2,000）。金額請填實收金額。</p></div>
-				<label>現金<input name="cash" type="number" min="0" step="1" value={ data.Cash }></label>
-				<label>信用卡<input name="card" type="number" min="0" step="1" value={ data.Card }></label>
-				<label>卡號<input name="card_no" value={ data.CardNo }></label>
-				<label>票據金額<input name="check_amount" type="number" min="0" step="1" value={ data.CheckAmount }></label>
-				<label>票號<input name="check_no" value={ data.CheckNo }></label>
-				<label>票據到期日<input name="check_date" type="date" value={ data.CheckDate }></label>
-				<label>行庫<input name="bank" value={ data.Bank }></label>
-				<label>轉帳金額<input name="transfer_amount" type="number" min="0" step="1" value={ data.TransferAmount }></label>
-				<label>轉帳末五碼／交易序號<input name="transfer_reference" value={ data.TransferReference }></label>
-				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">金額拆分（選填）。收款合計 = 現金 + 信用卡 + 票據 + 轉帳；若留空會自動加總。</p></div>
-				<label>明細合計<input name="detail_total" type="number" min="0" step="1" value={ data.DetailTotal }></label>
-				<label>折扣<input name="discount" type="number" min="0" step="1" value={ data.Discount }></label>
-				<label>稅額<input name="tax" type="number" min="0" step="1" value={ data.Tax }></label>
-				<label>本次應收<input name="pay_total" type="number" min="0" step="1" value={ data.PayTotal }></label>
-				<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">儲存</button><a class="btn btn-s" href="/receivables">取消</a></div>
+				<label>{ i18n.T(ctx, "receivable.field.voucher") }<input name="voucher_no" value={ data.VoucherNo } placeholder={ i18n.T(ctx, "receivable.voucher_ph") } required></label>
+				<label>{ i18n.T(ctx, "receivable.field.pay_date") }<input name="pay_date" type="date" value={ data.PayDate } required></label>
+				<label>{ i18n.T(ctx, "receivable.field.customer") }<input name="customer_q" value={ data.CustomerName } placeholder={ i18n.T(ctx, "receivable.customer_ph") } required><input type="hidden" name="customer_id" value={ data.CustomerID }></label>
+				<label>{ i18n.T(ctx, "receivable.field.workorder") }<input name="work_order_id" value={ data.WorkOrderID } placeholder={ i18n.T(ctx, "receivable.workorder_ph") }></label>
+				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.methods_hint") }</p></div>
+				<label>{ i18n.T(ctx, "receivable.field.cash") }<input name="cash" type="number" min="0" step="1" value={ data.Cash }></label>
+				<label>{ i18n.T(ctx, "receivable.field.card") }<input name="card" type="number" min="0" step="1" value={ data.Card }></label>
+				<label>{ i18n.T(ctx, "receivable.field.card_no") }<input name="card_no" value={ data.CardNo }></label>
+				<label>{ i18n.T(ctx, "receivable.field.check_amount") }<input name="check_amount" type="number" min="0" step="1" value={ data.CheckAmount }></label>
+				<label>{ i18n.T(ctx, "receivable.field.check_no") }<input name="check_no" value={ data.CheckNo }></label>
+				<label>{ i18n.T(ctx, "receivable.field.check_date") }<input name="check_date" type="date" value={ data.CheckDate }></label>
+				<label>{ i18n.T(ctx, "receivable.field.bank") }<input name="bank" value={ data.Bank }></label>
+				<label>{ i18n.T(ctx, "receivable.field.transfer_amount") }<input name="transfer_amount" type="number" min="0" step="1" value={ data.TransferAmount }></label>
+				<label>{ i18n.T(ctx, "receivable.field.transfer_ref") }<input name="transfer_reference" value={ data.TransferReference }></label>
+				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.split_hint") }</p></div>
+				<label>{ i18n.T(ctx, "receivable.field.detail_total") }<input name="detail_total" type="number" min="0" step="1" value={ data.DetailTotal }></label>
+				<label>{ i18n.T(ctx, "receivable.field.discount") }<input name="discount" type="number" min="0" step="1" value={ data.Discount }></label>
+				<label>{ i18n.T(ctx, "receivable.field.tax") }<input name="tax" type="number" min="0" step="1" value={ data.Tax }></label>
+				<label>{ i18n.T(ctx, "receivable.field.pay_total") }<input name="pay_total" type="number" min="0" step="1" value={ data.PayTotal }></label>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button><a class="btn btn-s" href="/receivables">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
 		</div>
 	}
@@ -437,30 +439,30 @@ type MaintenanceTemplateListData struct {
 
 templ ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) {
 		{{ user := data.User }}
-		@components.Layout("保養套餐", "/maintenance-templates", user, AppName) {
+		@components.Layout(i18n.T(ctx, "mainttpl.title"), "/maintenance-templates", user, AppName) {
 			@components.FlashMsg(data.Flash)
 			<div class="card">
-				<h2>保養套餐範本（{ strconv.Itoa(len(data.Rows)) } 個）</h2>
-				<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">舊系統「保養紀錄」表遷移而來。開工單時可依里程級距套用標準項目，不必每次手動加。項目內容為舊系統定義，單價多為 0（當時未填）。</p>
+				<h2>{ fmt.Sprintf(i18n.T(ctx, "mainttpl.list_heading"), len(data.Rows)) }</h2>
+				<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">{ i18n.T(ctx, "mainttpl.intro") }</p>
 				<form method="GET" action="/maintenance-templates" style="margin-bottom:12px">
-					<input name="q" value={ data.Query } placeholder="搜尋代碼 / 名稱" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
-					<button class="btn btn-p" type="submit">搜尋</button>
-					<a class="btn btn-s" href="/maintenance-templates">清除</a>
-					<a class="btn btn-p" href="/maintenance-templates/new">＋ 新增套餐</a>
+					<input name="q" value={ data.Query } placeholder={ i18n.T(ctx, "mainttpl.search_ph") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button>
+					<a class="btn btn-s" href="/maintenance-templates">{ i18n.T(ctx, "common.clear") }</a>
+					<a class="btn btn-p" href="/maintenance-templates/new">{ i18n.T(ctx, "mainttpl.new") }</a>
 				</form>
 				if len(data.Rows) == 0 {
-					<div class="empty">沒有保養套餐</div>
+					<div class="empty">{ i18n.T(ctx, "mainttpl.empty") }</div>
 				} else {
-					<table><tr><th>代碼</th><th>套餐名稱</th><th class="num">項目數</th><th>操作</th></tr>
+					<table><tr><th>{ i18n.T(ctx, "mainttpl.field.code") }</th><th>{ i18n.T(ctx, "mainttpl.field.name") }</th><th class="num">{ i18n.T(ctx, "mainttpl.field.item_count") }</th><th>{ i18n.T(ctx, "mainttpl.field.actions") }</th></tr>
 						for _, row := range data.Rows {
 							<tr>
 								<td><code>{ row.Code }</code></td><td><b>{ row.Name }</b></td><td class="num">{ strconv.Itoa(row.ItemCount) }</td>
 								<td>
-									<a class="btn btn-s" href={ "/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10) }>查看項目</a>
-									<a class="btn btn-p" href={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit" }>編輯</a>
+									<a class="btn btn-s" href={ "/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10) }>{ i18n.T(ctx, "mainttpl.view_items") }</a>
+									<a class="btn btn-p" href={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 									<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
 										@components.CSRFInput()
-										<button class="btn btn-d" type="submit">刪除</button>
+										<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.delete") }</button>
 									</form>
 								</td>
 							</tr>
@@ -470,11 +472,11 @@ templ ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) {
 			</div>
 			if data.Detail != nil {
 				<div class="card">
-					<h2>{ data.Detail.Code } { data.Detail.Name }（{ strconv.Itoa(len(data.Detail.Items)) } 項）</h2>
+					<h2>{ data.Detail.Code } { data.Detail.Name }（{ strconv.Itoa(len(data.Detail.Items)) } { i18n.T(ctx, "mainttpl.detail_items_suffix") }）</h2>
 					if len(data.Detail.Items) == 0 {
-						<div class="empty">此套餐沒有項目</div>
+						<div class="empty">{ i18n.T(ctx, "mainttpl.detail_empty") }</div>
 					} else {
-						<table><tr><th class="num">項次</th><th>料號</th><th>名稱</th><th class="num">數量</th><th class="num">單價</th></tr>
+						<table><tr><th class="num">{ i18n.T(ctx, "mainttpl.field.index") }</th><th>{ i18n.T(ctx, "mainttpl.field.part_number") }</th><th>{ i18n.T(ctx, "mainttpl.field.item_name") }</th><th class="num">{ i18n.T(ctx, "mainttpl.field.quantity") }</th><th class="num">{ i18n.T(ctx, "mainttpl.field.unit_price") }</th></tr>
 							for i, item := range data.Detail.Items {
 								<tr><td class="num">{ strconv.Itoa(i + 1) }</td><td><code>{ item.PartNumber }</code></td><td>{ item.Description }</td><td class="num">{ item.Quantity }</td><td class="num">{ item.Price }</td></tr>
 							}
@@ -486,60 +488,60 @@ templ ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) {
 	}
 
 templ NewMaintenanceTemplatePage(user model.User) {
-		@components.Layout("新增保養套餐", "/maintenance-templates", user, AppName) {
+		@components.Layout(i18n.T(ctx, "mainttpl.new_title"), "/maintenance-templates", user, AppName) {
 			<div class="card">
-				<h2>新增保養套餐</h2>
+				<h2>{ i18n.T(ctx, "mainttpl.new_title") }</h2>
 				<form class="frm" method="POST" action="/maintenance-templates">
 					@components.CSRFInput()
-					<label>代碼<input name="code" required placeholder="例：LOCAL-5K（建立後不可修改）"></label>
-					<label>套餐名稱<input name="name" required placeholder="例：5千公里定期保養"></label>
-					<label class="full">備註<textarea name="notes" placeholder="適用車款、注意事項"></textarea></label>
-					<div class="full"><button class="btn btn-p" type="submit">建立</button><a class="btn btn-s" href="/maintenance-templates">取消</a></div>
+					<label>{ i18n.T(ctx, "mainttpl.field.code") }<input name="code" required placeholder={ i18n.T(ctx, "mainttpl.code_ph") }></label>
+					<label>{ i18n.T(ctx, "mainttpl.field.name") }<input name="name" required placeholder={ i18n.T(ctx, "mainttpl.name_ph") }></label>
+					<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes" placeholder={ i18n.T(ctx, "mainttpl.notes_ph") }></textarea></label>
+					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "inspection.create") }</button><a class="btn btn-s" href="/maintenance-templates">{ i18n.T(ctx, "common.cancel") }</a></div>
 				</form>
-				<p style="color:#64748b;font-size:12.5px;margin-top:10px">建立後可在編輯頁加入標準項目（料號、名稱、數量、單價）。代碼建立後不可修改，因為舊工單可能參照同一組編號。</p>
+				<p style="color:#64748b;font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "mainttpl.new_hint") }</p>
 			</div>
 		}
 	}
 
 templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
 		{{ user := data.User }}
-		@components.Layout("編輯保養套餐", "/maintenance-templates", user, AppName) {
+		@components.Layout(i18n.T(ctx, "mainttpl.edit_title"), "/maintenance-templates", user, AppName) {
 			<div class="card">
-				<h2>編輯保養套餐 { data.Code }</h2>
+				<h2>{ i18n.T(ctx, "mainttpl.edit_title") } { data.Code }</h2>
 				<form class="frm" method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) }>
 					@components.CSRFInput()
-					<label>代碼<input value={ data.Code } disabled style="opacity:0.6"></label>
-					<label>套餐名稱<input name="name" value={ data.Name } required></label>
-					<label class="full">備註<textarea name="notes">{ data.Notes }</textarea></label>
+					<label>{ i18n.T(ctx, "mainttpl.field.code") }<input value={ data.Code } disabled style="opacity:0.6"></label>
+					<label>{ i18n.T(ctx, "mainttpl.field.name") }<input name="name" value={ data.Name } required></label>
+					<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
 				</form>
-				<h3 style="margin:20px 0 8px;font-size:14px">標準項目</h3>
-				<p style="color:#64748b;font-size:12.5px;margin:0 0 10px">儲存時會以這裡的內容整批取代原有項目。空白列會被忽略；全刪光即代表此套餐無標準項目。</p>
+				<h3 style="margin:20px 0 8px;font-size:14px">{ i18n.T(ctx, "mainttpl.standard_items") }</h3>
+				<p style="color:#64748b;font-size:12.5px;margin:0 0 10px">{ i18n.T(ctx, "mainttpl.items_hint") }</p>
 				<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/items" }>
 					@components.CSRFInput()
 					<table style="width:100%">
-						<tr><th>料號</th><th>名稱</th><th>數量</th><th>單價</th><th></th></tr>
+						<tr><th>{ i18n.T(ctx, "mainttpl.field.part_number") }</th><th>{ i18n.T(ctx, "mainttpl.field.item_name") }</th><th>{ i18n.T(ctx, "mainttpl.field.quantity") }</th><th>{ i18n.T(ctx, "mainttpl.field.unit_price") }</th><th></th></tr>
 						<tbody id="tplItems">
 							for _, item := range data.Items {
 								<tr class="tpl-item">
-									<td><input name="part_number" value={ item.PartNumber } placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
+									<td><input name="part_number" value={ item.PartNumber } placeholder={ i18n.T(ctx, "mainttpl.part_number_ph") } style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
 									<td><input name="item_desc" value={ item.Description } required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
 									<td><input name="item_qty" type="number" min="0" step="0.1" value={ item.Quantity } style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
 									<td><input name="item_price" type="number" min="0" step="1" value={ item.Price } style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-									<td><button type="button" class="btn btn-d" onclick="this.closest('tr').remove()">移除</button></td>
+									<td><button type="button" class="btn btn-d" onclick="this.closest('tr').remove()">{ i18n.T(ctx, "mainttpl.remove") }</button></td>
 								</tr>
 							}
 						</tbody>
 					</table>
 					<div style="margin-top:10px;display:flex;gap:9px">
-						<button type="button" class="btn btn-s" onclick="addTplRow()">＋ 加入一列</button>
-						<button type="submit" class="btn btn-p">儲存項目</button>
+						<button type="button" class="btn btn-s" onclick="addTplRow()">{ i18n.T(ctx, "mainttpl.add_row") }</button>
+						<button type="submit" class="btn btn-p">{ i18n.T(ctx, "mainttpl.save_items") }</button>
 					</div>
 				</form>
 				<div style="margin-top:18px;padding-top:14px;border-top:1px solid #334155">
-					<a class="btn btn-p" href="/maintenance-templates">返回列表</a>
+					<a class="btn btn-p" href="/maintenance-templates">{ i18n.T(ctx, "mainttpl.back") }</a>
 					<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
 						@components.CSRFInput()
-						<button class="btn btn-d" type="submit">刪除套餐</button>
+						<button class="btn btn-d" type="submit">{ i18n.T(ctx, "mainttpl.delete_plan") }</button>
 					</form>
 				</div>
 			</div>

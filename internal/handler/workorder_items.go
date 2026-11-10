@@ -1,17 +1,15 @@
 package handler
 
 import (
-"database/sql"
-"net/http"
-"strconv"
-"strings"
+	"net/http"
+	"strconv"
+	"strings"
 
-"autorepairos/internal/db"
-"autorepairos/internal/model"
-"autorepairos/web/pages"
+	"autorepairos/internal/db"
+	"autorepairos/internal/model"
+	"autorepairos/internal/service"
+	"autorepairos/web/pages"
 )
-
-
 
 func AddWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 	woID := mustInt(r.PathValue("id"))
@@ -23,7 +21,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	qty := atoiDefault(r.FormValue("quantity"), 0)
 	if qty < 1 {
-		fail(w, "數量必須大於 0")
+		formError(w, r, "新增工單項目", "/work-orders/"+strconv.FormatInt(woID, 10), "數量必須大於 0")
 		return
 	}
 
@@ -54,7 +52,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	if desc == "" {
-		fail(w, "描述為必填")
+		formError(w, r, "新增工單項目", "/work-orders/"+strconv.FormatInt(woID, 10), "描述為必填")
 		return
 	}
 
@@ -110,7 +108,7 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
-	if err := recalcWorkOrderTotal(tx, woID); err != nil {
+	if err := service.RecalculateWorkOrderTotal(r.Context(), tx, woID); err != nil {
 		fail(w, "重算金額失敗")
 		return
 	}
@@ -138,7 +136,6 @@ func AddWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已加入項目")
 }
-
 
 func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User) {
 	woID := mustInt(r.PathValue("id"))
@@ -186,7 +183,7 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User
 			WHERE id = ?`, qty, invID)
 	}
 
-	if err := recalcWorkOrderTotal(tx, woID); err != nil {
+	if err := service.RecalculateWorkOrderTotal(r.Context(), tx, woID); err != nil {
 		fail(w, "重算金額失敗")
 		return
 	}
@@ -202,7 +199,6 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User
 
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(woID, 10), "已刪除項目")
 }
-
 
 func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID int64, user model.User) bool {
 	if r.Header.Get("HX-Request") != "true" {
@@ -224,7 +220,6 @@ func renderWorkOrderItemsFragment(w http.ResponseWriter, r *http.Request, woID i
 	}
 	return true
 }
-
 
 func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
 	rows, err := db.DB.Query(`SELECT i.id, i.work_order_id, i.item_type, COALESCE(i.inventory_item_id,0),
@@ -259,15 +254,6 @@ func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
 	return list, total
 }
 
-
-func recalcWorkOrderTotal(tx *sql.Tx, woID int64) error {
-	_, err := tx.Exec(`UPDATE work_orders SET total_amount =
-		COALESCE((SELECT SUM(COALESCE(subtotal, COALESCE(quantity,0)*COALESCE(unit_price,0))) FROM work_order_items WHERE work_order_id = ?), 0),
-		updated_at = CURRENT_TIMESTAMP WHERE id = ?`, woID, woID)
-	return err
-}
-
-
 func technicianOptions() string {
 	rows, err := db.DB.Query(`SELECT u.id, u.name, u.username, COALESCE(u.staff_branch,'')
 		FROM users u
@@ -299,4 +285,3 @@ func technicianOptions() string {
 
 // branchLabel CAR35 部門代碼 → 中文（查 lookup_items 表，category='branch'）。
 // 找不到時回傳空字串（由呼叫端決定降級顯示）。
-

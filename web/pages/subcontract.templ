@@ -1,8 +1,10 @@
 package pages
 
 import (
+	"fmt"
 	"strconv"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 )
@@ -22,37 +24,37 @@ type SubcontractRow struct {
 // ListSubcontractsPage 外包加工列表頁（HTMX 即時搜尋）。
 templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, status string,
 	supplierOpts string, user model.User) {
-	@components.Layout("外包加工", "/subcontracts", user, AppName) {
+	@components.Layout(i18n.T(ctx, "subcontract.title"), "/subcontracts", user, AppName) {
 		<div class="card">
-			<h2>新增外包工項</h2>
+			<h2>{ i18n.T(ctx, "subcontract.new") }</h2>
 			<form class="frm" method="POST" action="/subcontracts">
 				@components.CSRFInput()
-				<label>工單 ID<input type="number" name="work_order_id" required></label>
-				<label>協力廠商
+				<label>{ i18n.T(ctx, "subcontract.field.workorder") }<input type="number" name="work_order_id" required></label>
+				<label>{ i18n.T(ctx, "subcontract.field.supplier") }
 					<select name="supplier_id">
-						<option value="">（未指定）</option>
+						<option value="">{ i18n.T(ctx, "subcontract.unspecified") }</option>
 						@templ.Raw(supplierOpts)
 					</select>
 				</label>
-				<label class="full">加工內容<input name="description" required></label>
-				<label>成本金額<input type="number" step="0.01" name="cost_amount" value="0"></label>
-				<label>收費金額<input type="number" step="0.01" name="charge_amount" value="0"></label>
-				<label>預計完成日<input type="date" name="expected_date"></label>
-				<label>狀態
+				<label class="full">{ i18n.T(ctx, "subcontract.field.description") }<input name="description" required></label>
+				<label>{ i18n.T(ctx, "subcontract.field.cost") }<input type="number" step="0.01" name="cost_amount" value="0"></label>
+				<label>{ i18n.T(ctx, "subcontract.field.charge") }<input type="number" step="0.01" name="charge_amount" value="0"></label>
+				<label>{ i18n.T(ctx, "subcontract.field.expected") }<input type="date" name="expected_date"></label>
+				<label>{ i18n.T(ctx, "estimates.field.status") }
 					<select name="status">
-						<option value="pending">待處理</option>
-						<option value="in_progress">進行中</option>
-						<option value="completed">已完成</option>
+						<option value="pending">{ i18n.T(ctx, "subcontract.status_pending") }</option>
+						<option value="in_progress">{ i18n.T(ctx, "subcontract.status_in_progress") }</option>
+						<option value="completed">{ i18n.T(ctx, "subcontract.status_completed") }</option>
 					</select>
 				</label>
-				<label class="full">備註<textarea name="notes"></textarea></label>
-				<div class="full"><button class="btn btn-p" type="submit">新增外包</button></div>
+				<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes"></textarea></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "subcontract.create") }</button></div>
 			</form>
 		</div>
 		<div class="card">
-			<h2>外包清單（共 { strconv.Itoa(total) } 筆）</h2>
+			<h2>{ fmt.Sprintf(i18n.T(ctx, "subcontract.list_heading"), total) }</h2>
 			<input type="search" name="q" value={ q }
-				placeholder="搜尋內容 / 廠商"
+				placeholder={ i18n.T(ctx, "subcontract.search_ph") }
 				hx-get="/api/subcontracts/search"
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#subcontract-rows"
@@ -60,8 +62,8 @@ templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, stat
 				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px;margin-bottom:12px">
 			<table>
 				<tr>
-					<th>ID</th><th>工單</th><th>外包廠商</th><th>內容</th><th class="num">成本</th>
-					<th class="num">收費</th><th class="num">毛利</th><th>狀態</th><th>操作</th>
+					<th>ID</th><th>{ i18n.T(ctx, "subcontract.field.workorder_th") }</th><th>{ i18n.T(ctx, "subcontract.field.vendor_th") }</th><th>{ i18n.T(ctx, "subcontract.field.content_th") }</th><th class="num">{ i18n.T(ctx, "subcontract.field.cost_th") }</th>
+					<th class="num">{ i18n.T(ctx, "subcontract.field.charge_th") }</th><th class="num">{ i18n.T(ctx, "subcontract.field.margin_th") }</th><th>{ i18n.T(ctx, "estimates.field.status") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th>
 				</tr>
 				<tbody id="subcontract-rows">
 					for _, s := range rows {
@@ -70,7 +72,7 @@ templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, stat
 				</tbody>
 			</table>
 			if len(rows) == 0 {
-				<div class="empty">沒有符合條件的外包工項</div>
+				<div class="empty">{ i18n.T(ctx, "subcontract.empty") }</div>
 			}
 			@components.Pager("/subcontracts", page, calcPages(total, size), total)
 		</div>
@@ -89,10 +91,10 @@ templ SubcontractRowContent(s SubcontractRow) {
 		<td class="num">{ moneyFmt(margin) }</td>
 		<td><span class={ "pill " + s.StatusPill }>{ s.StatusLabel }</span></td>
 		<td>
-			<a class="btn btn-s" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/edit" }>編輯</a>
+			<a class="btn btn-s" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			<a class="btn btn-d" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/delete" }
 				hx-post={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/delete" }
-				data-confirm="確定刪除這筆外包？">刪除</a>
+				data-confirm={ i18n.T(ctx, "subcontract.delete_confirm") }>{ i18n.T(ctx, "common.delete") }</a>
 		</td>
 	</tr>
 }
@@ -100,7 +102,7 @@ templ SubcontractRowContent(s SubcontractRow) {
 // SubcontractSearchRows HTMX 即時搜尋回傳的純列。
 templ SubcontractSearchRows(rows []SubcontractRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">查無外包</td></tr>
+		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "subcontract.search_empty") }</td></tr>
 	}
 	for _, s := range rows {
 		@SubcontractRowContent(s)

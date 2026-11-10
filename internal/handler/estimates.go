@@ -167,7 +167,7 @@ func SetEstimateDiscount(w http.ResponseWriter, r *http.Request) {
 	estimateID := mustInt(r.PathValue("id"))
 	discount, err := strconv.ParseFloat(strings.TrimSpace(r.FormValue("discount_amount")), 64)
 	if err != nil {
-		fail(w, "折扣金額格式錯誤")
+		formError(w, r, "估價折扣", "/estimates/"+strconv.FormatInt(estimateID, 10), "折扣金額格式錯誤")
 		return
 	}
 	if err := service.New(db.DB).SetEstimateDiscount(r.Context(), estimateID, discount); err != nil {
