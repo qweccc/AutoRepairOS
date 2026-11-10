@@ -65,7 +65,7 @@ func EditAppointmentForm(w http.ResponseWriter, r *http.Request, user model.User
 
 	var a model.Appointment
 	err := db.DB.QueryRow(`SELECT a.id, a.customer_id, COALESCE(c.name,''), a.vehicle_id,
-	COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
+	COALESCE(v.plate_number,''), CAST(a.appointment_date AS TEXT), COALESCE(a.appointment_time,''),
 		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,'')
 		FROM active_appointments a
 		JOIN active_customers c ON c.id = a.customer_id

@@ -34,7 +34,7 @@ func NewWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 		var apptVehicle, apptCustomer int64
 		var apptService, apptStatus, apptDate, apptTime string
 		err := db.DB.QueryRow(`SELECT vehicle_id, customer_id, COALESCE(service_type,''),
-				status, COALESCE(appointment_date,''), COALESCE(appointment_time,'')
+				status, COALESCE(CAST(appointment_date AS TEXT),''), COALESCE(appointment_time,'')
 			FROM appointments WHERE id = ?`, preAppointment).
 			Scan(&apptVehicle, &apptCustomer, &apptService, &apptStatus, &apptDate, &apptTime)
 		switch {

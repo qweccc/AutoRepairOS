@@ -220,8 +220,8 @@ func ListEquipmentMaintenance(w http.ResponseWriter, r *http.Request, user model
 	}
 
 	rows, err := db.DB.Query(`SELECT em.id, em.equipment_id, COALESCE(e.name,''),
-		em.maintenance_date, COALESCE(em.maintenance_type,''), COALESCE(em.description,''),
-		COALESCE(em.cost,0), COALESCE(em.next_maintenance_date,''), COALESCE(em.technician_id,0),
+		CAST(em.maintenance_date AS TEXT), COALESCE(em.maintenance_type,''), COALESCE(em.description,''),
+		COALESCE(em.cost,0), COALESCE(CAST(em.next_maintenance_date AS TEXT),''), COALESCE(em.technician_id,0),
 		COALESCE(u.name,''), COALESCE(em.notes,''), em.created_at
 		FROM active_equipment_maintenance em
 		JOIN active_equipment e ON e.id = em.equipment_id

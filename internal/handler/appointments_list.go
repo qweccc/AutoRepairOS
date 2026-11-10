@@ -41,7 +41,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 	total := countRows(`SELECT COUNT(1) FROM active_appointments a`+where, args...)
 
 	query := `SELECT a.id, a.customer_id, COALESCE(c.name,''), a.vehicle_id,
-		COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
+		COALESCE(v.plate_number,''), CAST(a.appointment_date AS TEXT), COALESCE(a.appointment_time,''),
 		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,''),
 		a.created_at, a.updated_at
 		FROM active_appointments a
@@ -184,7 +184,7 @@ func appointmentCalendar(date, view, status string) ([]pages.CalendarDay, error)
 		args = append(args, status)
 	}
 	knownBays := bayList()
-	rows, err := db.DB.Query(`SELECT a.id, a.appointment_date,
+	rows, err := db.DB.Query(`SELECT a.id, CAST(a.appointment_date AS TEXT),
 		COALESCE(a.appointment_time,''), UPPER(COALESCE(a.bay,'')),
 		COALESCE(v.plate_number,''), COALESCE(c.name,''),
 		COALESCE(a.service_type,''), a.status
@@ -243,7 +243,7 @@ func SearchAppointmentsAPI(w http.ResponseWriter, r *http.Request) {
 		args = append(args, like, like, like)
 	}
 	rows, err := db.DB.Query(`SELECT a.id, a.customer_id, COALESCE(c.name,''), a.vehicle_id,
-		COALESCE(v.plate_number,''), a.appointment_date, COALESCE(a.appointment_time,''),
+		COALESCE(v.plate_number,''), CAST(a.appointment_date AS TEXT), COALESCE(a.appointment_time,''),
 		COALESCE(a.service_type,''), COALESCE(a.bay,''), a.status, COALESCE(a.notes,''),
 		a.created_at, a.updated_at
 		FROM active_appointments a
