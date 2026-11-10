@@ -15,6 +15,9 @@ type Deps struct{}
 // New 建立應用路由，外層需加上 middleware（如 CSRFProtection）。
 func New(d Deps) *chi.Mux {
 	r := chi.NewRouter()
+	// i18n / 主題偏好：不需登入也能切換。
+	r.Post("/set-lang", handler.SetLang)
+	r.Post("/set-theme", handler.SetTheme)
 	// Phase 2：客戶/車輛 CRUD（唯讀/建立/更新）
 	r.Get("/customers", handler.AllStaff(handler.ListCustomers))
 	r.Post("/customers", handler.CounterUp(handler.CreateCustomer))

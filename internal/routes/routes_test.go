@@ -16,10 +16,10 @@ func TestNewRegistersPhase1Routes(t *testing.T) {
 	})
 	want := map[string]bool{
 		"GET /api/parts":              true,
-		"GET /api/customers/search":    true,
-		"GET /api/inventory/search":    true,
-		"GET /api/work-orders/search":  true,
-		"GET /api/vehicles/search":     true,
+		"GET /api/customers/search":   true,
+		"GET /api/inventory/search":   true,
+		"GET /api/work-orders/search": true,
+		"GET /api/vehicles/search":    true,
 	}
 	for _, p := range paths {
 		delete(want, p)

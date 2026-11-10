@@ -15,6 +15,7 @@ import (
 	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
 	"autorepairos/internal/handler"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/integration/vision"
 	"autorepairos/internal/routes"
 	"autorepairos/internal/seed"
@@ -51,6 +52,10 @@ func main() {
 	cfg := config.Load()
 	if cfg.AppName != "" {
 		pages.AppName = cfg.AppName
+	}
+	// i18n：啟動載入 dictionaries（locales/ 在專案根目錄）；失敗只 log 不中斷。
+	if err := i18n.Load("locales"); err != nil {
+		log.Printf("i18n 字典載入失敗（將使用預設語系）：%v", err)
 	}
 	log.Printf("AutoRepairOS 啟動：%s", versionText())
 
@@ -148,7 +153,7 @@ func main() {
 	}()
 
 	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
-	if err := http.ListenAndServe(":"+port, handler.CSRFProtection(r)); err != nil {
+	if err := http.ListenAndServe(":"+port, handler.CSRFProtection(i18n.Middleware(r))); err != nil {
 		log.Printf("HTTP 服務結束: %v", err)
 		shutdown()
 		os.Exit(1)
