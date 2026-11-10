@@ -51,7 +51,10 @@ templ Layout(title, active string, user model.User, appName string) {
 							<option value="zh-TW" selected?={ i18n.LangOf(ctx) == "zh-TW" }>繁體中文</option>
 							<option value="en" selected?={ i18n.LangOf(ctx) == "en" }>English</option>
 						</select>
-						<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="theme">{ i18n.T(ctx, "theme.dark") }</button>
+						<select id="themeSelect" aria-label={ i18n.T(ctx, "theme.label") } onchange="setTheme(this.value)">
+							<option value="dark" selected?={ i18n.ThemeOf(ctx) == "dark" }>{ i18n.T(ctx, "theme.dark") }</option>
+							<option value="light" selected?={ i18n.ThemeOf(ctx) == "light" }>{ i18n.T(ctx, "theme.light") }</option>
+						</select>
 					</span>
 				</div>
 			</header>

@@ -47,9 +47,17 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 New-Item -ItemType Directory -Force -Path $webOutput | Out-Null
-if ($webSource -ne $webOutput) {
-    Copy-Item -Path (Join-Path $webSource "*") -Destination $webOutput -Recurse -Force
-}
+# 單機版（exe）只需要一個磁碟檔：web/index.html（main.go 用
+# template.ParseFiles 讀它注入 APP_NAME，start.ps1 也會檢查它存在）。
+# 其他前端全部編進 binary：靜態資源走 go:embed，頁面/元件是 *_templ.go。
+# 不要 Copy-Item web/* —— 那會把 pages/、components/（含 _test.go）一起
+# 帶進 release/web/，讓 `go test ./...` 把 release 內的殘留當成另一個
+# package 跑，跑出與正式程式無關的失敗。
+Copy-Item -LiteralPath (Join-Path $webSource "index.html") -Destination (Join-Path $webOutput "index.html") -Force
+# 清掉過往 Copy-Item web/* 留下的殘留。
+Remove-Item -Path (Join-Path $webOutput "pages") -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path (Join-Path $webOutput "components") -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path (Join-Path $webOutput "static") -Recurse -Force -ErrorAction SilentlyContinue
 
 $launcherScript = Join-Path $releaseDir "start.ps1"
 $launcherCommand = Join-Path $releaseDir "start.cmd"

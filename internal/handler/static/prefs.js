@@ -21,9 +21,19 @@
   window.toggleTheme = function () {
     var root = document.documentElement;
     var next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-    root.setAttribute("data-theme", next);
-    try { localStorage.setItem("theme", next); } catch (e) {}
-    postForm("/set-theme", { theme: next });
+    setTheme(next);
+  };
+
+  // setTheme(theme): apply immediately (no reload — the dropdown already
+  // shows the choice), persist to localStorage so the FOUC script restores it
+  // before first paint, and POST /set-theme so SSR renders the same theme
+  // on the next full page load.
+  window.setTheme = function (theme) {
+    if (theme !== "light" && theme !== "dark") return;
+    var root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    try { localStorage.setItem("theme", theme); } catch (e) {}
+    postForm("/set-theme", { theme: theme });
   };
 
   // Error focus (H2): after a failed POST re-renders with .msg-err, or an

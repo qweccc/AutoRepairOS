@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"testing/fstest"
 )
 
 func loadTestDicts(t *testing.T) {
@@ -23,6 +24,27 @@ func loadTestDicts(t *testing.T) {
 	if err := Load(dir); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestLoadEmbedded(t *testing.T) {
+	fsys := fstest.MapFS{
+		"zh-TW.json": &fstest.MapFile{Data: []byte(`{"theme.dark":"深色"}`)},
+		"en.json":    &fstest.MapFile{Data: []byte(`{"theme.dark":"Dark"}`)},
+	}
+	if err := LoadEmbedded(fsys); err != nil {
+		t.Fatalf("LoadEmbedded: %v", err)
+	}
+	if got := T(WithLang(context.Background(), "zh-TW"), "theme.dark"); got != "深色" {
+		t.Fatalf("zh-TW theme.dark = %q", got)
+	}
+	if got := T(WithLang(context.Background(), "en"), "theme.dark"); got != "Dark" {
+		t.Fatalf("en theme.dark = %q", got)
+	}
+	// no JSON files -> error, not a silent empty dictionary
+	if err := LoadEmbedded(fstest.MapFS{"README": &fstest.MapFile{Data: []byte("x")}}); err == nil {
+		t.Fatal("LoadEmbedded with no dictionaries should fail")
+	}
+	loadTestDicts(t) // restore for the other tests
 }
 
 func TestTByLocale(t *testing.T) {
@@ -71,17 +93,13 @@ func TestFromRequestCookieAndHeader(t *testing.T) {
 	if got := FromRequest(r); got != "en" {
 		t.Fatalf("cookie = %q", got)
 	}
-	// header used when cookie missing
+	// header is deliberately ignored: this is a single-language shop system
+	// and auto-switching on Accept-Language surprised users with English
+	// titles. The header selector is the only control.
 	r = httptest.NewRequest("GET", "/", nil)
 	r.Header.Set("Accept-Language", "en-US,en;q=0.9,zh-TW;q=0.8")
-	if got := FromRequest(r); got != "en" {
-		t.Fatalf("header = %q", got)
-	}
-	// unsupported everything -> default
-	r = httptest.NewRequest("GET", "/", nil)
-	r.Header.Set("Accept-Language", "fr-FR")
 	if got := FromRequest(r); got != DefaultLang {
-		t.Fatalf("default = %q", got)
+		t.Fatalf("accept-language must be ignored, got %q want %q", got, DefaultLang)
 	}
 	if got := FromRequest(nil); got != DefaultLang {
 		t.Fatalf("nil req = %q", got)

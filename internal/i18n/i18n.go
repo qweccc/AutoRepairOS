@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -34,29 +35,65 @@ type prefs struct {
 // Load reads every *.json file in dir (file basename = locale code, e.g.
 // zh-TW.json -> "zh-TW") into memory. Missing files for a locale mean that
 // locale falls back to the default dictionary at lookup time.
+//
+// This is the development path: `go run .` from the repository root has a
+// locales/ directory next to it, so edits show up on the next restart.
 func Load(dir string) error {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("read locales dir %s: %w", dir, err)
 	}
-	loaded := map[string]map[string]string{}
+	names := make([]string, 0, len(entries))
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
-			continue
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".json") {
+			names = append(names, e.Name())
 		}
-		lang := strings.TrimSuffix(e.Name(), ".json")
-		data, err := os.ReadFile(filepath.Join(dir, e.Name()))
+	}
+	return loadDicts(dir, names, func(name string) ([]byte, error) {
+		return os.ReadFile(filepath.Join(dir, name))
+	})
+}
+
+// LoadEmbedded loads the dictionaries that were compiled into the binary.
+//
+// The Windows exe runs from release/ and the Docker image runs from /app;
+// neither ships a locales/ folder next to the working directory, so the disk
+// copy is unavailable there and every i18n.T call would return its raw key
+// (symptom: page titles render as "dashboard.title"). Embedding makes the
+// translations part of the binary, so both deployments work with no extra
+// files to copy. main.go calls this as a fallback when Load fails.
+func LoadEmbedded(fsys fs.FS) error {
+	entries, err := fs.ReadDir(fsys, ".")
+	if err != nil {
+		return fmt.Errorf("read embedded locales: %w", err)
+	}
+	names := make([]string, 0, len(entries))
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".json") {
+			names = append(names, e.Name())
+		}
+	}
+	return loadDicts("embedded", names, func(name string) ([]byte, error) {
+		return fs.ReadFile(fsys, name)
+	})
+}
+
+func loadDicts(src string, names []string, read func(string) ([]byte, error)) error {
+	loaded := map[string]map[string]string{}
+	for _, name := range names {
+		lang := strings.TrimSuffix(name, ".json")
+		data, err := read(name)
 		if err != nil {
-			return fmt.Errorf("read %s: %w", e.Name(), err)
+			return fmt.Errorf("read %s: %w", name, err)
 		}
 		m := map[string]string{}
 		if err := json.Unmarshal(data, &m); err != nil {
-			return fmt.Errorf("parse %s: %w", e.Name(), err)
+			return fmt.Errorf("parse %s: %w", name, err)
 		}
 		loaded[lang] = m
 	}
 	if len(loaded) == 0 {
-		return fmt.Errorf("no locale files in %s", dir)
+		return fmt.Errorf("no locale files in %s", src)
 	}
 	mu.Lock()
 	dicts = loaded
@@ -143,20 +180,20 @@ func WithTheme(ctx context.Context, theme string) context.Context {
 	return context.WithValue(ctx, ctxKey{}, p)
 }
 
-// FromRequest resolves the locale for r: "lang" cookie, then
-// Accept-Language, then DefaultLang.
+// FromRequest resolves the locale for r: the "lang" cookie, else
+// DefaultLang (繁體中文).
+//
+// Accept-Language is deliberately NOT consulted. This is a single-language
+// shop system: auto-switching to English because the browser asks for it
+// surprised users with English titles on a Traditional Chinese system, and
+// the language selector in the header is the explicit, discoverable control.
+// The cookie is set only by that selector (POST /set-lang).
 func FromRequest(r *http.Request) string {
 	if r == nil {
 		return DefaultLang
 	}
 	if c, err := r.Cookie(CookieName); err == nil {
 		if lang := Normalize(c.Value); lang != "" {
-			return lang
-		}
-	}
-	for _, part := range strings.Split(r.Header.Get("Accept-Language"), ",") {
-		tag := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
-		if lang := Normalize(tag); lang != "" {
 			return lang
 		}
 	}

@@ -132,7 +132,7 @@
 
 ### 雙語（i18n）
 
-- `internal/i18n` + `locales/zh-TW.json`／`en.json`（各 1336 key，完全對齊）；`main.go` 啟動載入字典，`POST /set-lang`、`POST /set-theme` 偏好端點，`static/prefs.js` 前端切換。
+- `internal/i18n` + `locales/zh-TW.json`／`en.json`（各 1337 key，完全對齊）；字典以 `//go:embed` 編進 binary，exe（cwd=release/）與 docker image（cwd=/app）不再依賴工作目錄下的 `locales/`（舊版兩邊都載入失敗，介面上直接出現 `dashboard.title` 這種 raw key）。`POST /set-lang`、`POST /set-theme` 偏好端點，`static/prefs.js` 前端切換；語系與主題皆改為下拉選單。預設語系固定為繁體中文，不再依 Accept-Language 自動切換。
 - `web/pages`、`web/components` 全數靜態字串改為 `i18n.T(ctx, ...)`，`*_templ.go` 重新產生。
 
 ### Templ 覆蓋手法

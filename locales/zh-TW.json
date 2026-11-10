@@ -9,6 +9,7 @@
   "nav.suppliers": "供應商",
   "nav.staff": "員工",
   "nav.logout": "登出",
+  "theme.label": "主題",
   "theme.light": "淺色",
   "theme.dark": "深色",
   "lang.label": "語言",
@@ -1335,4 +1336,4 @@
   "lookup.field.status": "狀態",
   "reports.status_suffix": "工單狀態",
   "worklog.field.actions": "操作"
-}
+}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -21,6 +23,13 @@ import (
 	"autorepairos/internal/seed"
 	"autorepairos/web/pages"
 )
+
+// localeFiles 把字典編進 binary。exe（cwd=release/）與 docker image
+// （cwd=/app）的工作目錄都沒有 locales/，只靠磁碟那份會載入失敗，
+// 介面上就看到 "dashboard.title" 這種 raw key。
+//
+//go:embed locales/*.json
+var localeFiles embed.FS
 
 // 建置資訊，由 build-release.ps1 以 -ldflags -X 注入。
 // 本地 go run / go build 沒有注入時保持空字串，頁面顯示「開發版」。
@@ -53,9 +62,18 @@ func main() {
 	if cfg.AppName != "" {
 		pages.AppName = cfg.AppName
 	}
-	// i18n：啟動載入 dictionaries（locales/ 在專案根目錄）；失敗只 log 不中斷。
+	// i18n：優先讀專案根目錄的 locales/（開發時改版立即生效）；exe 與
+	// docker 的工作目錄沒有這個資料夾，就改用編進 binary 的內嵌字典。
+	// 兩者都失敗才真的沒有字典（介面會顯示 raw key），所以只 log 不中斷。
 	if err := i18n.Load("locales"); err != nil {
-		log.Printf("i18n 字典載入失敗（將使用預設語系）：%v", err)
+		log.Printf("i18n 字典載入失敗（改讀內嵌字典）：%v", err)
+		// embed 的 FS 裡檔案在 locales/ 子目錄下，要先切到那一層。
+		sub, subErr := fs.Sub(localeFiles, "locales")
+		if subErr != nil {
+			log.Printf("i18n 內嵌字典定位失敗：%v", subErr)
+		} else if err := i18n.LoadEmbedded(sub); err != nil {
+			log.Printf("i18n 內嵌字典也載入失敗（介面將顯示原始 key）：%v", err)
+		}
 	}
 	log.Printf("AutoRepairOS 啟動：%s", versionText())
 

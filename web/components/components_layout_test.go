@@ -20,7 +20,7 @@ func TestLayoutLangAndTheme(t *testing.T) {
 	if !strings.Contains(s, `lang="zh-TW"`) || !strings.Contains(s, `data-theme="dark"`) {
 		t.Fatalf("default html attrs missing: %.200s", s)
 	}
-	if !strings.Contains(s, `id="langSelect"`) || !strings.Contains(s, "theme-toggle") || !strings.Contains(s, "/static/prefs.js") {
+	if !strings.Contains(s, `id="langSelect"`) || !strings.Contains(s, `id="themeSelect"`) || !strings.Contains(s, "/static/prefs.js") {
 		t.Fatal("switcher UI missing")
 	}
 	// en + light via ctx
@@ -32,5 +32,9 @@ func TestLayoutLangAndTheme(t *testing.T) {
 	s = b.String()
 	if !strings.Contains(s, `lang="en"`) || !strings.Contains(s, `data-theme="light"`) {
 		t.Fatalf("en/light html attrs missing: %.200s", s)
+	}
+	// the theme dropdown must show the current theme as selected
+	if !strings.Contains(s, `value="light" selected`) {
+		t.Fatalf("theme dropdown should mark light selected: %.300s", s)
 	}
 }
