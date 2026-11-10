@@ -56,6 +56,13 @@ repro_*.db
 *_run.txt
 detail*.html
 me_body.json
+
+# go test -coverprofile 產物（coverage profiles）
+*.out
+
+# Hermes agent 的計畫/暫存目錄
+.hermes/
+
 cookies.txt
 
 # 瀏覽器除錯殘留
