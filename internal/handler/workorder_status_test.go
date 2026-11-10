@@ -102,6 +102,27 @@ func TestUpdateWorkOrderStatus_SOPFailure(t *testing.T) {
 	assert.NotEqual(t, http.StatusOK, w.Code)
 }
 
+func TestUpdateWorkOrderStatus_RepeatedCompletedDoesNotRequeueNotification(t *testing.T) {
+	newMigratedTestDB(t)
+
+	// WO is already completed with no completion notification queued yet.
+	// Posting completed again must not queue a notification (handler gate:
+	// previous != completed), regardless of queue-level idempotency.
+	id := insertTestWorkOrder(t, "completed")
+	w, _ := routeRequest(t, id, "completed")
+	assert.Equal(t, http.StatusFound, w.Code)
+
+	var status string
+	err := db.DB.QueryRow("SELECT status FROM work_orders WHERE id = ?", id).Scan(&status)
+	require.NoError(t, err)
+	assert.Equal(t, "completed", status)
+
+	var count int
+	err = db.DB.QueryRow(`SELECT COUNT(*) FROM notifications WHERE work_order_id = ? AND kind = 'work_order_completed'`, id).Scan(&count)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "repeated completed->completed must not queue a completion notification")
+}
+
 func TestUpdateWorkOrderStatus_PaidCheckoutSuccess(t *testing.T) {
 	newMigratedTestDB(t)
 
@@ -110,8 +131,8 @@ func TestUpdateWorkOrderStatus_PaidCheckoutSuccess(t *testing.T) {
 	id := insertTestWorkOrder(t, "pending")
 
 	// 2. Insert a work order item to satisfy checkoutTx inventory requirements
-	// We need an inventory_item_id > 0 and quantity > 0. 
-	// Since we can't easily know IDs, we'll try to insert a dummy item record 
+	// We need an inventory_item_id > 0 and quantity > 0.
+	// Since we can't easily know IDs, we'll try to insert a dummy item record
 	// or assume item 1 exists.
 	_, err := db.DB.Exec(`INSERT INTO work_order_items (work_order_id, inventory_item_id, quantity, unit_price, subtotal, item_type, description)
 		VALUES (?, 1, 1, 100, 100, 'labor', 'Dummy labor item')`, id)

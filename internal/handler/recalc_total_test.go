@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"testing"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/service"
 )
 
 func TestRecalcWorkOrderTotal(t *testing.T) {
@@ -31,7 +33,7 @@ func TestRecalcWorkOrderTotal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := recalcWorkOrderTotal(tx, 1); err != nil {
+	if err := service.RecalculateWorkOrderTotal(context.Background(), tx, 1); err != nil {
 		t.Fatal(err)
 	}
 	if err := tx.Commit(); err != nil {

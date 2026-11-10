@@ -49,7 +49,6 @@ func TestHiddenStatus(t *testing.T) {
 	}
 }
 
-
 func TestPartDisplayLabel(t *testing.T) {
 	if got := partDisplayLabel("P001", "煞車皮"); got != "煞車皮 (P001)" {
 		t.Errorf("got %s", got)

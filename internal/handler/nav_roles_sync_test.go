@@ -62,25 +62,25 @@ func TestNavRolesMatchMainGoPermissions(t *testing.T) {
 		t.Fatalf("只從 main.go 解析到 %d 條 GET 路由，明顯偏少——解析方式可能已失效，測試等於沒在檢查", len(routes))
 	}
 
-	// nav.go: {"/path", "名稱", "群組", rolesExpr}
-	navRe := regexp.MustCompile(`\{"(/[^"]*)",\s*"([^"]*)",\s*"([^"]*)",\s*([A-Za-z]+)\}`)
+	// nav.go: {Path: "/path", Name: "名稱", Group: "群組", ..., Roles: rolesExpr}
+	navRe := regexp.MustCompile(`\{Path:\s*"([^"]+)",\s*Name:\s*"[^"]+",\s*Group:\s*"[^"]+",\s*NameKey:\s*"[^"]+",\s*GroupKey:\s*"[^"]+",\s*Roles:\s*([A-Za-z]+)\}`)
 	entries := navRe.FindAllStringSubmatch(navSrc, -1)
 	if len(entries) < 20 {
 		t.Fatalf("只從 nav.go 解析到 %d 個選單項目，明顯偏少——格式可能已變，測試等於沒在檢查", len(entries))
 	}
 
 	for _, e := range entries {
-		path, name, rolesExpr := e[1], e[2], e[4]
+		path, rolesExpr := e[1], e[2]
 
 		wantRoles, ok := navRoleVars[rolesExpr]
 		if !ok {
-			t.Errorf("選單 %q（%s）的 Roles 運算式 %q 不認得，請更新 navRoleVars", path, name, rolesExpr)
+			t.Errorf("選單 %q 的 Roles 運算式 %q 不認得，請更新 navRoleVars", path, rolesExpr)
 			continue
 		}
 
 		wrapper, ok := routes[path]
 		if !ok {
-			t.Errorf("選單項目 %q（%s）在 main.go 找不到對應的 GET 路由——這個選單項會 404", path, name)
+			t.Errorf("選單項目 %q 在 main.go 找不到對應的 GET 路由——這個選單項會 404", path)
 			continue
 		}
 		gotRoles, ok := wrapperRoles[wrapper]
@@ -94,9 +94,9 @@ func TestNavRolesMatchMainGoPermissions(t *testing.T) {
 		}
 
 		if !sameRoleSet(wantRoles, gotRoles) {
-			t.Errorf("選單 %q（%s）的可見角色與實際權限不一致：\n  nav.Routes 寫 %v\n  實際可進入的角色 %v（包裝器 %s%s）\n"+
+			t.Errorf("選單 %q 的可見角色與實際權限不一致：\n  nav.Routes 寫 %v\n  實際可進入的角色 %v（包裝器 %s%s）\n"+
 				"（使用者會看到點進去被擋的入口，或該看的頁面消失）",
-				path, name, wantRoles, gotRoles, wrapper,
+				path, wantRoles, gotRoles, wrapper,
 				func() string {
 					if _, ok := effectiveRoleOverrides[path]; ok {
 						return "，但 handler 內部另有更嚴的檢查"
@@ -134,7 +134,7 @@ func TestManualRoleVisibilityMatchesNav(t *testing.T) {
 	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
 	manual := readRepoFile(t, filepath.Join("docs", "USER_GUIDE_zh-TW.md"))
 
-	entries := regexp.MustCompile(`\{"(/[^"]*)",\s*"([^"]*)",\s*"([^"]*)",\s*([A-Za-z]+)\}`).
+	entries := regexp.MustCompile(`\{Path:\s*"([^"]+)",\s*Name:\s*"([^"]+)",\s*Group:\s*"[^"]+",\s*NameKey:\s*"[^"]+",\s*GroupKey:\s*"[^"]+",\s*Roles:\s*([A-Za-z]+)\}`).
 		FindAllStringSubmatch(navSrc, -1)
 	if len(entries) < 20 {
 		t.Fatalf("只從 nav.go 解析到 %d 個選單項目，解析方式可能已失效", len(entries))
@@ -142,7 +142,7 @@ func TestManualRoleVisibilityMatchesNav(t *testing.T) {
 
 	var hidden, visible []string
 	for _, e := range entries {
-		if e[4] != "nil" {
+		if e[3] != "nil" {
 			hidden = append(hidden, e[2])
 		} else {
 			visible = append(visible, e[2])

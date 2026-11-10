@@ -6,7 +6,6 @@ import (
 	"autorepairos/internal/model"
 )
 
-
 func TestCanExportReportCosts(t *testing.T) {
 	if !canExportReportCosts(model.User{Role: "owner"}) {
 		t.Error("owner should export")
