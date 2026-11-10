@@ -79,20 +79,65 @@
 - 涉及檔案：internal/handler/vision.go
 - 驗收：超過限制回 413
 
-### [ ] T2.3 SupplierOptions 搜尋過濾
+### [x] T2.3 SupplierOptions 搜尋過濾（2026-11-09）
 - 加入 search 參數，避免每次都撈 300 筆
 - 涉及檔案：internal/handler/vision.go, web/pages/*.templ
-- 驗收：關鍵字過濾正常
+- 驗收：關鍵字過濾正常 → `SupplierOptionsAPI` 支援 `?q=`（JSON + HX fragment 皆過濾），測試 `TestBatchISupplierOptionsSearch` 驗證
 
-### [ ] T2.4 共用錯誤處理封裝
+### [x] T2.4 共用錯誤處理封裝（2026-11-09）
 - 封裝「解析圖片 → 呼叫辨識 → 回傳結果」Helper
 - 涉及檔案：internal/handler/vision.go
-- 驗收：減少重複程式碼
+- 驗收：減少重複程式碼 → 抽 `decodeVisionImage`（解析/驗證/503·400·413 共用），RecognizePlate/RecognizeInvoice 各縮短約 30 行
 
 ### [ ] T2.5 辨識進度回報（未來）
 - 考慮 WebSocket 或 polling
 - 涉及檔案：web/static/*.js
 - 驗收：使用者感知進度
+
+## DATE 欄位 Scan 回歸（2026-11-10，提高 handler 覆蓋率時發現）
+
+`appointments.appointment_date`、`equipment_maintenance.maintenance_date`／`next_maintenance_date` 在 migration 宣告為 `DATE`（NUMERIC affinity）。modernc.org/sqlite 把這種欄位 Scan 進 Go `string` 時會轉成 RFC3339Nano（實測 `2026-11-10` → `2026-11-10T00:00:00Z`），造成：
+
+- 預約日曆（`appointmentCalendar`）用 `2006-01-02` 當 map key → 永遠 miss → 每一天都顯示「此日沒有預約」（真實功能失效）
+- 預約列表／編輯頁／即時搜尋、設備保養紀錄的日期顯示全錯
+
+修法：SELECT 改成 `CAST(col AS TEXT)`，讓 Scan 拿到原始儲存字串。涉及 5 個預約讀取點（`appointments.go` 編輯表單、`appointments_list.go` 列表／日曆／搜尋 API、`workorder_new.go` 預約帶入）與 `equipment.go` 保養紀錄 2 欄。
+
+迴歸測試：`internal/handler/appointments_calendar_date_test.go`（用真實 migration schema）。舊日曆測試的 fixture 自行宣告成 TEXT schema，所以沒抓到這個 bug；實測把 CAST 拿掉，該測試即 FAIL。
+
+## 2026-11-10 品質精進輪：成果
+
+### 覆蓋率（`go test ./... -cover` 實測）
+
+| Package | 起點 | 結果 |
+|---|---|---|
+| internal/handler | 75.5% | **83.4%** |
+| web/pages | 70.6% | **82.4%** |
+| web/components | 77.3% | **91.2%** |
+| internal/service | 74.4% | 95.2% |
+| internal/db | 65.7% | 97.8% |
+| internal/session | 7.8% | 95.3% |
+| internal/cron | — | 96.1% |
+| internal/config | — | 98.3% |
+| internal/i18n | — | 96.5% |
+| internal/seed | — | 98.1% |
+| internal/integration/* | — | 95.4–100% |
+
+全 17 package PASS、`go build ./...` 乾淨。
+
+### handler 拆分與表單錯誤體驗
+
+- 過大的 handler 依職責拆成單一目的檔案：`appointments_list.go`、`inventory_list.go`、`photos_list.go`、`receivables_list.go`、`staff_list.go`、`vehicles_list.go`、`workorder_list.go`、`workorder_show.go`、`ap_list.go`、`analytics_home.go`／`analytics_export.go`、`print_statements.go`／`print_workorder.go`、`sop_templates.go`／`sop_records.go`、`purchase_orders_items.go`、`layout_format.go`／`layout_helpers.go`、`line_binding.go`（`workorder_crud.go` 1132 行变更、淨刪 7160 行）。
+- 輸入驗證失敗改走 `formError()`：HTMX 請求回傳 `msg-err` fragment 原地顯示，全頁請求回傳帶「返回表單重填」連結的頁面殼（`internal/handler/layout_helpers.go`）。DB／權限／商業規則錯誤仍保留 `fail()`。
+
+### 雙語（i18n）
+
+- `internal/i18n` + `locales/zh-TW.json`／`en.json`（各 1336 key，完全對齊）；`main.go` 啟動載入字典，`POST /set-lang`、`POST /set-theme` 偏好端點，`static/prefs.js` 前端切換。
+- `web/pages`、`web/components` 全數靜態字串改為 `i18n.T(ctx, ...)`，`*_templ.go` 重新產生。
+
+### Templ 覆蓋手法
+
+templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後一次 flush 才觸發，所以 per-write error 分支涵蓋不到。做法：在測試的 `init()` 把 `templruntime.DefaultBufferSize` 設為 1，每次 write 都 flush（`web/pages/pages_writer_sweep_test.go`，函式列表由 `tools/gen_writer_sweep.py` 從 `*_templ.go` 簽名產生）。components 77.3%→91.2% 由此而來。
 
 ## Access 匯入工具修正（外部 review，2026-10-29 已逐條對程式碼驗證）
 

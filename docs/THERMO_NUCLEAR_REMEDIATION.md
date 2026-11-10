@@ -11,8 +11,8 @@
 | T5 | session 測試覆蓋率提升至 50%+ | ⬜ |
 | T6 | 清理 TODO — insurance revenue deduction | ⬜ |
 | T7 | 清理 TODO — approval flow completion | ⬜ |
-| T8 | 業務邏輯從 handler 移至 service 層 | ⬜ |
-| T9 | workorders.go spaghetti 條件重構 | ⬜ |
+| T8 | 業務邏輯從 handler 移至 service 層 | ✅ |
+| T9 | workorders.go spaghetti 條件重構 | ✅ |
 
 ---
 
@@ -171,8 +171,8 @@
 | T5 | ⏸️ (session 7.8%，需大量測試補充) | |
 | T6 | ✅ (採用定義 A，不扣免額) | 5a82693 |
 | T7 | ✅ (已實作 applyApprovalItems) | |
-| T8 | ⏸️ (長期重構) | |
-| T9 | 🔄 (WorkOrderStatus enum + allowedTransitions map) | |
+| T8 | ✅ (inventory 調整/總額重算/狀態轉換交易已移 service；handler 只留解析與回應) | |
+| T9 | ✅ (crud 816→309 行拆三檔；enum 轉換盤點完成；countStatus 合併為單次) | |
 
 ---
 
