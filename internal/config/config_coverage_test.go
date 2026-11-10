@@ -332,8 +332,14 @@ func TestVisionMmprojInDirBranches(t *testing.T) {
 	// Case-insensitive name match; ReadDir order -> first match wins.
 	writeSized("z-MMProj-upper.gguf", 10)
 	writeSized("a-mmproj-first.gguf", 10)
+	// A broken symlink that sorts first must be skipped: Stat follows the link
+	// and fails, so the real projection file is returned instead. Without this
+	// the broken link wins and llama-server gets a --mmproj path that is missing.
+	if err := os.Symlink(filepath.Join(dir, "missing-target.gguf"), filepath.Join(dir, "a-mmproj-broken.gguf")); err != nil {
+		t.Skipf("symlink unavailable: %v", err)
+	}
 	if got := visionMmprojInDir(dir); got != filepath.Join(dir, "a-mmproj-first.gguf") {
-		t.Fatalf("mmproj pick got %q want a-mmproj-first", got)
+		t.Fatalf("mmproj broken symlink pick got %q want a-mmproj-first", got)
 	}
 }
 

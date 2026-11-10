@@ -82,7 +82,10 @@ func visionPickInDir(dir, excludePrefix string) string {
 		if excludePrefix != "" && strings.HasPrefix(strings.ToLower(e.Name()), excludePrefix) {
 			continue
 		}
-		info, err := e.Info()
+		// os.Stat 而非 e.Info()：Info() 是 lstat 語意，broken symlink 也回成功
+		// （size 是連結目標字串的長度），會被當成最大的 "模型" 選中，
+		// 接著 llama-server 就找不到檔案。Stat 會跟著連結，目標不存在就回錯。
+		info, err := os.Stat(filepath.Join(dir, e.Name()))
 		if err != nil {
 			continue
 		}
@@ -112,7 +115,13 @@ func visionMmprojInDir(dir string) string {
 			continue
 		}
 		if strings.Contains(strings.ToLower(e.Name()), "mmproj") {
-			return filepath.Join(dir, e.Name())
+			// 同上：用 Stat 確認連結目標真的存在，broken symlink 不能回傳
+			// （否則 llama-server 拿到不存在的 --mmproj 路徑直接失敗）。
+			p := filepath.Join(dir, e.Name())
+			if _, err := os.Stat(p); err != nil {
+				continue
+			}
+			return p
 		}
 	}
 	return ""
