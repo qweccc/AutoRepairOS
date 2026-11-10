@@ -55,7 +55,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.no_results"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 26, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 26, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -74,7 +74,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(row.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 30, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 30, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -87,7 +87,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(row.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 31, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 31, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -100,7 +100,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(row.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 32, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 32, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -118,7 +118,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(row.VehicleTypeLabel)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 35, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 35, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -141,7 +141,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(intOrBlank(row.ManufactureYear))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 40, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 40, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -154,7 +154,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(row.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 41, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 41, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -183,7 +183,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 45, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 45, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
@@ -196,7 +196,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.open_workorder"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 45, Col: 133}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 45, Col: 133}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -209,7 +209,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/vehicles/" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 46, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 46, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -222,7 +222,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.history"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 46, Col: 111}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 46, Col: 111}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -235,7 +235,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 47, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 47, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -248,7 +248,7 @@ func VehicleSearchRows(rows []VehicleRow) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.edit"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 47, Col: 118}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 47, Col: 118}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -306,7 +306,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.new_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 63, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 63, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -331,7 +331,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.customer"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 67, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 67, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -344,7 +344,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.customer_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 67, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 67, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -357,7 +357,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.plate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 68, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 68, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -370,7 +370,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.brand_model"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 69, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 69, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
@@ -391,7 +391,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.other_model"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 74, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 74, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -404,7 +404,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.other_model_ph_example")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 75, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 75, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -417,7 +417,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.vehicle_type"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 77, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 77, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -438,7 +438,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.fuel_type"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 78, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 78, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -459,7 +459,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.body_style"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 79, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 79, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -480,7 +480,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.driver"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 80, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 80, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -493,7 +493,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.driver_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 80, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 80, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 			if templ_7745c5c3_Err != nil {
@@ -506,7 +506,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.driver_phone"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 81, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 81, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -519,7 +519,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.driver_phone_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 81, Col: 128}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 81, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -532,7 +532,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.contact"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 82, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 82, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -545,7 +545,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.contact_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 82, Col: 118}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 82, Col: 118}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 			if templ_7745c5c3_Err != nil {
@@ -558,7 +558,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.contact_phone"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 83, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 83, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -571,7 +571,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.contact_phone_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 83, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 83, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -584,7 +584,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.owner"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 84, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 84, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -597,7 +597,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.owner_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 84, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 84, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -610,7 +610,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.owner_address"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 85, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 85, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -623,7 +623,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.owner_address_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 85, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 85, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 			if templ_7745c5c3_Err != nil {
@@ -636,7 +636,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.owner_id"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 86, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 86, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
@@ -649,7 +649,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.owner_id_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 86, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 86, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 			if templ_7745c5c3_Err != nil {
@@ -662,7 +662,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.license_expiry"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 87, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 87, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -675,7 +675,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.color"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 88, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 88, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -688,7 +688,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.color_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 88, Col: 107}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 88, Col: 107}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {
@@ -701,7 +701,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.door_count"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 89, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 89, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -714,7 +714,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.door_count_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 89, Col: 153}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 89, Col: 153}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
@@ -727,7 +727,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.manufacture_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 90, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 90, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -740,7 +740,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.manufacture_date_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 90, Col: 140}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 90, Col: 140}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
@@ -753,7 +753,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.license_issue_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 91, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 91, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -766,7 +766,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.license_issue_date_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 91, Col: 146}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 91, Col: 146}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
@@ -779,7 +779,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.manufacture_year"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 92, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 92, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -792,7 +792,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.manufacture_year_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 92, Col: 173}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 92, Col: 173}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -805,7 +805,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.displacement"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 93, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 93, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
@@ -818,7 +818,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.seating"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 94, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 94, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -831,7 +831,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.seating_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 94, Col: 153}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 94, Col: 153}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
@@ -844,7 +844,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.curb_weight"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 95, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 95, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 			if templ_7745c5c3_Err != nil {
@@ -857,7 +857,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.gross_weight"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 96, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 96, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
@@ -870,7 +870,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.tire_size"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 97, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 97, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -883,7 +883,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.tire_size_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 97, Col: 119}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 97, Col: 119}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 			if templ_7745c5c3_Err != nil {
@@ -896,7 +896,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.wheelbase"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 98, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 98, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -909,7 +909,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.vin"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 99, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 99, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -922,7 +922,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.vin_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 99, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 99, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 			if templ_7745c5c3_Err != nil {
@@ -935,7 +935,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.engine_number"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 100, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 100, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 			if templ_7745c5c3_Err != nil {
@@ -948,7 +948,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.inspection_due"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 101, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 101, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {
@@ -961,7 +961,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.maint_interval_months"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 102, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 102, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -974,7 +974,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.maint_interval_km"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 103, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 103, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 			if templ_7745c5c3_Err != nil {
@@ -987,7 +987,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.create"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 104, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 104, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 			if templ_7745c5c3_Err != nil {
@@ -1000,7 +1000,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.model_note"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 107, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 107, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 			if templ_7745c5c3_Err != nil {
@@ -1013,7 +1013,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.list_heading") + " " + strconv.Itoa(total) + " " + i18n.T(ctx, "vehicle.list_unit"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 129, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 129, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 			if templ_7745c5c3_Err != nil {
@@ -1026,7 +1026,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templruntime.NewAttributeExpression(q).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 131, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 131, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 			if templ_7745c5c3_Err != nil {
@@ -1039,7 +1039,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.search_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 132, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 132, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 			if templ_7745c5c3_Err != nil {
@@ -1052,7 +1052,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.search"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 138, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 138, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
@@ -1065,7 +1065,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 			var templ_7745c5c3_Var72 string
 			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.clear"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 139, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 139, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 			if templ_7745c5c3_Err != nil {
@@ -1083,7 +1083,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var73 string
 				templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 142, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 142, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 				if templ_7745c5c3_Err != nil {
@@ -1102,7 +1102,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var74 string
 				templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_plate"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 147, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 147, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 				if templ_7745c5c3_Err != nil {
@@ -1115,7 +1115,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var75 string
 				templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_model"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 147, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 147, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 				if templ_7745c5c3_Err != nil {
@@ -1128,7 +1128,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var76 string
 				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_type"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 147, Col: 144}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 147, Col: 144}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 				if templ_7745c5c3_Err != nil {
@@ -1141,7 +1141,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_year"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 147, Col: 188}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 147, Col: 188}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 				if templ_7745c5c3_Err != nil {
@@ -1154,7 +1154,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_owner"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 147, Col: 233}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 147, Col: 233}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1167,7 +1167,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_next_date"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 148, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 148, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 				if templ_7745c5c3_Err != nil {
@@ -1180,7 +1180,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var80 string
 				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_next_km"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 148, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 148, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 				if templ_7745c5c3_Err != nil {
@@ -1193,7 +1193,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				var templ_7745c5c3_Var81 string
 				templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.col_actions"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 148, Col: 142}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 148, Col: 142}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 				if templ_7745c5c3_Err != nil {
@@ -1211,7 +1211,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var82 string
 					templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(row.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 153, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 153, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 					if templ_7745c5c3_Err != nil {
@@ -1224,7 +1224,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var83 string
 					templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(row.PlateNumber)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 154, Col: 32}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 154, Col: 32}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 					if templ_7745c5c3_Err != nil {
@@ -1237,7 +1237,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var84 string
 					templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(row.BrandModel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 155, Col: 28}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 155, Col: 28}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 					if templ_7745c5c3_Err != nil {
@@ -1255,7 +1255,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 						var templ_7745c5c3_Var85 string
 						templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(row.VehicleTypeLabel)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 158, Col: 92}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 158, Col: 92}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 						if templ_7745c5c3_Err != nil {
@@ -1279,7 +1279,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var86 string
 					templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(intOrBlank(row.ManufactureYear))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 164, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 164, Col: 45}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 					if templ_7745c5c3_Err != nil {
@@ -1292,7 +1292,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var87 string
 					templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs(row.CustomerName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 165, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 165, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
 					if templ_7745c5c3_Err != nil {
@@ -1321,7 +1321,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var88 string
 					templ_7745c5c3_Var88, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/new?vehicle=" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 169, Col: 96}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 169, Col: 96}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var88)
 					if templ_7745c5c3_Err != nil {
@@ -1334,7 +1334,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var89 string
 					templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.open_workorder"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 169, Col: 138}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 169, Col: 138}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 					if templ_7745c5c3_Err != nil {
@@ -1347,7 +1347,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var90 string
 					templ_7745c5c3_Var90, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/vehicles/" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 170, Col: 81}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 170, Col: 81}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var90)
 					if templ_7745c5c3_Err != nil {
@@ -1360,7 +1360,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var91 string
 					templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.history"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 170, Col: 116}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 170, Col: 116}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 					if templ_7745c5c3_Err != nil {
@@ -1373,7 +1373,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var92 string
 					templ_7745c5c3_Var92, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/edit").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 171, Col: 91}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 171, Col: 91}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var92)
 					if templ_7745c5c3_Err != nil {
@@ -1386,7 +1386,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var93 string
 					templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.edit"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 171, Col: 123}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 171, Col: 123}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var93))
 					if templ_7745c5c3_Err != nil {
@@ -1399,7 +1399,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var94 string
 					templ_7745c5c3_Var94, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 172, Col: 93}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 172, Col: 93}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var94)
 					if templ_7745c5c3_Err != nil {
@@ -1412,7 +1412,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var95 string
 					templ_7745c5c3_Var95, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/vehicles/" + strconv.FormatInt(row.ID, 10) + "/delete").Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 173, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 173, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var95)
 					if templ_7745c5c3_Err != nil {
@@ -1425,7 +1425,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var96 string
 					templ_7745c5c3_Var96, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "vehicle.delete_confirm")).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 174, Col: 61}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 174, Col: 61}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var96)
 					if templ_7745c5c3_Err != nil {
@@ -1438,7 +1438,7 @@ func ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					var templ_7745c5c3_Var97 string
 					templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "vehicle.delete"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/vehicle_list.templ`, Line: 174, Col: 94}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/vehicle_list.templ`, Line: 174, Col: 94}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 					if templ_7745c5c3_Err != nil {

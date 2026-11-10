@@ -161,7 +161,7 @@ func Phase5Tables(sections []Phase5Table) templ.Component {
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(h)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 75, Col: 13}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 75, Col: 13}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
@@ -184,7 +184,7 @@ func Phase5Tables(sections []Phase5Table) templ.Component {
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(len(section.Headers))).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 79, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 79, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 					if templ_7745c5c3_Err != nil {
@@ -197,7 +197,7 @@ func Phase5Tables(sections []Phase5Table) templ.Component {
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(section.Empty)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 79, Col: 75}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 79, Col: 75}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -230,7 +230,7 @@ func Phase5Tables(sections []Phase5Table) templ.Component {
 							var templ_7745c5c3_Var8 string
 							templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var7).String()).Resolve(ctx)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 							if templ_7745c5c3_Err != nil {
@@ -257,7 +257,7 @@ func Phase5Tables(sections []Phase5Table) templ.Component {
 						var templ_7745c5c3_Var9 string
 						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(cell.Value)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 84, Col: 44}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 84, Col: 44}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 						if templ_7745c5c3_Err != nil {
@@ -308,7 +308,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.campaign_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 95, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 95, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -327,7 +327,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.campaign"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 98, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 98, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -340,7 +340,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 98, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 98, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -353,7 +353,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.revenue_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 98, Col: 178}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 98, Col: 178}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -371,7 +371,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.cost"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 100, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 100, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -384,7 +384,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.gross"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 100, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 100, Col: 114}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -407,7 +407,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(row.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 104, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 104, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -420,7 +420,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(row.OrderCount)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 104, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 104, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -433,7 +433,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(row.Revenue)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 104, Col: 110}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 104, Col: 110}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -452,7 +452,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 						var templ_7745c5c3_Var20 string
 						templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(row.Cost)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 107, Col: 33}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 107, Col: 33}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 						if templ_7745c5c3_Err != nil {
@@ -465,7 +465,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 						var templ_7745c5c3_Var21 string
 						templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(row.Gross)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 107, Col: 67}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 107, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 						if templ_7745c5c3_Err != nil {
@@ -488,7 +488,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 						var templ_7745c5c3_Var22 string
 						templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.not_recorded"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 110, Col: 60}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 110, Col: 60}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 						if templ_7745c5c3_Err != nil {
@@ -501,7 +501,7 @@ func CampaignAnalysisTable(rows []Phase5CampaignRow, showCost bool) templ.Compon
 						var templ_7745c5c3_Var23 string
 						templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.not_recorded"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 110, Col: 120}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 110, Col: 120}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 						if templ_7745c5c3_Err != nil {
@@ -552,7 +552,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.tech_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 121, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 121, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -571,7 +571,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 124, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 124, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -584,7 +584,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.completed"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 124, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 124, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -597,7 +597,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 124, Col: 174}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 124, Col: 174}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -610,7 +610,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.hourly"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 124, Col: 234}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 124, Col: 234}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -628,7 +628,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.commission"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 126, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 126, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -641,7 +641,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.margin_per_hour"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 126, Col: 130}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 126, Col: 130}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -664,7 +664,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 130, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 130, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -677,7 +677,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(row.OrderCount)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 130, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 130, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
@@ -690,7 +690,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(row.Hours)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 130, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 130, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -703,7 +703,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(row.HourlyPrice)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 130, Col: 135}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 130, Col: 135}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -722,7 +722,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 						var templ_7745c5c3_Var36 string
 						templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(row.Commission)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 133, Col: 39}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 133, Col: 39}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 						if templ_7745c5c3_Err != nil {
@@ -735,7 +735,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 						var templ_7745c5c3_Var37 string
 						templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(row.Margin)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 133, Col: 74}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 133, Col: 74}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 						if templ_7745c5c3_Err != nil {
@@ -758,7 +758,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 						var templ_7745c5c3_Var38 string
 						templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.not_recorded"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 136, Col: 60}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 136, Col: 60}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 						if templ_7745c5c3_Err != nil {
@@ -771,7 +771,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 						var templ_7745c5c3_Var39 string
 						templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.not_recorded"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 136, Col: 120}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 136, Col: 120}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 						if templ_7745c5c3_Err != nil {
@@ -800,7 +800,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.unlogged_prefix"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 143, Col: 98}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 143, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -813,7 +813,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(unlogged)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 143, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 143, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -826,7 +826,7 @@ func TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost b
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.unlogged_suffix"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 143, Col: 154}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 143, Col: 154}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -864,7 +864,7 @@ func ReportStatusTable(label string, rows []Phase5ReportStatusRow) templ.Compone
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 147, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 147, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -873,7 +873,7 @@ func ReportStatusTable(label string, rows []Phase5ReportStatusRow) templ.Compone
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.status_suffix"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 147, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 147, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -886,7 +886,7 @@ func ReportStatusTable(label string, rows []Phase5ReportStatusRow) templ.Compone
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.quantity"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 147, Col: 125}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 147, Col: 125}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -917,7 +917,7 @@ func ReportStatusTable(label string, rows []Phase5ReportStatusRow) templ.Compone
 				var templ_7745c5c3_Var48 string
 				templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var47).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 				if templ_7745c5c3_Err != nil {
@@ -944,7 +944,7 @@ func ReportStatusTable(label string, rows []Phase5ReportStatusRow) templ.Compone
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 149, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 149, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
@@ -957,7 +957,7 @@ func ReportStatusTable(label string, rows []Phase5ReportStatusRow) templ.Compone
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(row.Count)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 149, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 149, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -1001,7 +1001,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.empty_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 155, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 155, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
@@ -1010,7 +1010,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 155, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 155, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -1019,7 +1019,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.items_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 155, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 155, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 			if templ_7745c5c3_Err != nil {
@@ -1038,7 +1038,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var55 string
 			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 158, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 158, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 			if templ_7745c5c3_Err != nil {
@@ -1047,7 +1047,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.hot_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 158, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 158, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
@@ -1060,7 +1060,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.quantity"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 158, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 158, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1073,7 +1073,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.revenue_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 158, Col: 185}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 158, Col: 185}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
@@ -1091,7 +1091,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 				var templ_7745c5c3_Var59 string
 				templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(row.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 160, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 160, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 				if templ_7745c5c3_Err != nil {
@@ -1104,7 +1104,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(row.Quantity)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 160, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 160, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 				if templ_7745c5c3_Err != nil {
@@ -1117,7 +1117,7 @@ func ReportItemsTable(label string, rows []Phase5ReportItemRow) templ.Component 
 				var templ_7745c5c3_Var61 string
 				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(row.Revenue)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 160, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 160, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 				if templ_7745c5c3_Err != nil {
@@ -1162,7 +1162,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.tech_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 167, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 167, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {
@@ -1181,7 +1181,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 170, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 170, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1194,7 +1194,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 170, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 170, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 			if templ_7745c5c3_Err != nil {
@@ -1207,7 +1207,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 170, Col: 177}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 170, Col: 177}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 			if templ_7745c5c3_Err != nil {
@@ -1220,7 +1220,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_commission"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 170, Col: 247}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 170, Col: 247}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 			if templ_7745c5c3_Err != nil {
@@ -1238,7 +1238,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 				var templ_7745c5c3_Var68 string
 				templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 172, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 172, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 				if templ_7745c5c3_Err != nil {
@@ -1251,7 +1251,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 				var templ_7745c5c3_Var69 string
 				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(row.Orders)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 172, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 172, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 				if templ_7745c5c3_Err != nil {
@@ -1264,7 +1264,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 				var templ_7745c5c3_Var70 string
 				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(row.Hours)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 172, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 172, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 				if templ_7745c5c3_Err != nil {
@@ -1277,7 +1277,7 @@ func ReportTechTable(rows []Phase5ReportTechRow) templ.Component {
 				var templ_7745c5c3_Var71 string
 				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(row.Commission)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 172, Col: 130}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 172, Col: 130}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 				if templ_7745c5c3_Err != nil {
@@ -1322,7 +1322,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.low_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 179, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 179, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 			if templ_7745c5c3_Err != nil {
@@ -1341,7 +1341,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.part_number"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 182, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 182, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 			if templ_7745c5c3_Err != nil {
@@ -1354,7 +1354,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.name"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 182, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 182, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 			if templ_7745c5c3_Err != nil {
@@ -1367,7 +1367,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.stock"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 182, Col: 164}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 182, Col: 164}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 			if templ_7745c5c3_Err != nil {
@@ -1380,7 +1380,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 			var templ_7745c5c3_Var77 string
 			templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.min_stock"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 182, Col: 227}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 182, Col: 227}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 			if templ_7745c5c3_Err != nil {
@@ -1398,7 +1398,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(row.Part)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 184, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 184, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1411,7 +1411,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 184, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 184, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 				if templ_7745c5c3_Err != nil {
@@ -1437,7 +1437,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 					var templ_7745c5c3_Var81 string
 					templ_7745c5c3_Var81, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var80).String()).Resolve(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var81)
 					if templ_7745c5c3_Err != nil {
@@ -1464,7 +1464,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 				var templ_7745c5c3_Var82 string
 				templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(row.Stock)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 184, Col: 125}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 184, Col: 125}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 				if templ_7745c5c3_Err != nil {
@@ -1477,7 +1477,7 @@ func ReportLowTable(rows []Phase5ReportLowRow) templ.Component {
 				var templ_7745c5c3_Var83 string
 				templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(row.MinStock)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 184, Col: 169}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 184, Col: 169}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 				if templ_7745c5c3_Err != nil {
@@ -1533,7 +1533,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var86 string
 			templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.overview"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 			if templ_7745c5c3_Err != nil {
@@ -1546,7 +1546,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var87 string
 			templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.from"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 137}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 137}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
 			if templ_7745c5c3_Err != nil {
@@ -1559,7 +1559,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var88 string
 			templ_7745c5c3_Var88, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.From).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 183}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 183}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var88)
 			if templ_7745c5c3_Err != nil {
@@ -1572,7 +1572,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.to"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 221}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 221}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 			if templ_7745c5c3_Err != nil {
@@ -1585,7 +1585,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var90 string
 			templ_7745c5c3_Var90, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.To).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 263}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 263}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var90)
 			if templ_7745c5c3_Err != nil {
@@ -1598,7 +1598,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var91 string
 			templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.query"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 337}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 337}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 			if templ_7745c5c3_Err != nil {
@@ -1611,7 +1611,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var92 string
 			templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.daily"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 421}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 421}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 			if templ_7745c5c3_Err != nil {
@@ -1624,7 +1624,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var93 string
 			templ_7745c5c3_Var93, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/reports/export?from=" + data.From + "&amp;to=" + data.To).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 513}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 513}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 			if templ_7745c5c3_Err != nil {
@@ -1637,7 +1637,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var94 string
 			templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.export_detail"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 192, Col: 554}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 192, Col: 554}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 			if templ_7745c5c3_Err != nil {
@@ -1655,7 +1655,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 				var templ_7745c5c3_Var95 string
 				templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.analytics"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 194, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 194, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 				if templ_7745c5c3_Err != nil {
@@ -1673,7 +1673,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var96 string
 			templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalRevenue)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 			if templ_7745c5c3_Err != nil {
@@ -1686,7 +1686,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var97 string
 			templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.total_revenue"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 			if templ_7745c5c3_Err != nil {
@@ -1699,7 +1699,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var98 string
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsRevenue)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 151}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 151}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 			if templ_7745c5c3_Err != nil {
@@ -1712,7 +1712,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var99 string
 			templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 178}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 178}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 			if templ_7745c5c3_Err != nil {
@@ -1721,7 +1721,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var100 string
 			templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.revenue_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 219}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 219}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
 			if templ_7745c5c3_Err != nil {
@@ -1734,7 +1734,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(data.SelfRevenue)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 273}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 273}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 			if templ_7745c5c3_Err != nil {
@@ -1747,7 +1747,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var102 string
 			templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(data.SelfLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 301}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 301}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 			if templ_7745c5c3_Err != nil {
@@ -1756,7 +1756,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var103 string
 			templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.revenue_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 342}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 342}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 			if templ_7745c5c3_Err != nil {
@@ -1769,7 +1769,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var104 string
 			templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalCount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 395}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 395}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 			if templ_7745c5c3_Err != nil {
@@ -1782,7 +1782,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var105 string
 			templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.completed_orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 448}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 448}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 			if templ_7745c5c3_Err != nil {
@@ -1795,7 +1795,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var106 string
 			templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsCount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 499}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 499}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
 			if templ_7745c5c3_Err != nil {
@@ -1808,7 +1808,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var107 string
 			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 526}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 526}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 			if templ_7745c5c3_Err != nil {
@@ -1817,7 +1817,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.pieces_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 566}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 566}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 			if templ_7745c5c3_Err != nil {
@@ -1830,7 +1830,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var109 string
 			templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.JoinStringErrs(data.SelfCount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 618}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 618}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var109))
 			if templ_7745c5c3_Err != nil {
@@ -1843,7 +1843,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var110 string
 			templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.JoinStringErrs(data.SelfLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 646}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 646}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var110))
 			if templ_7745c5c3_Err != nil {
@@ -1852,7 +1852,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var111 string
 			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.pieces_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 686}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 686}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 			if templ_7745c5c3_Err != nil {
@@ -1865,7 +1865,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var112 string
 			templ_7745c5c3_Var112, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.revenue_note_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 754}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 754}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var112))
 			if templ_7745c5c3_Err != nil {
@@ -1878,7 +1878,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var113 string
 			templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsurancePct)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 776}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 776}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var113))
 			if templ_7745c5c3_Err != nil {
@@ -1887,7 +1887,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var114 string
 			templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.note_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 814}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 814}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var114))
 			if templ_7745c5c3_Err != nil {
@@ -1900,7 +1900,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var115 string
 			templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.period_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 861}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 861}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 			if templ_7745c5c3_Err != nil {
@@ -1909,7 +1909,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var116 string
 			templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 874}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 874}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 			if templ_7745c5c3_Err != nil {
@@ -1922,7 +1922,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var117 string
 			templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 197, Col: 888}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 197, Col: 888}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var117))
 			if templ_7745c5c3_Err != nil {
@@ -1935,7 +1935,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var118 string
 			templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.status_dist_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 199, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 199, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var118))
 			if templ_7745c5c3_Err != nil {
@@ -1944,7 +1944,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var119 string
 			templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 199, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 199, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var119))
 			if templ_7745c5c3_Err != nil {
@@ -1957,7 +1957,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var120 string
 			templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.JoinStringErrs(data.SelfLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 199, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 199, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var120))
 			if templ_7745c5c3_Err != nil {
@@ -1986,7 +1986,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var121 string
 			templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.top10"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 200, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 200, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var121))
 			if templ_7745c5c3_Err != nil {
@@ -2015,7 +2015,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var122 string
 			templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.tech_perf"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 201, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 201, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var122))
 			if templ_7745c5c3_Err != nil {
@@ -2036,7 +2036,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var123 string
 			templ_7745c5c3_Var123, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.ar_aging"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 202, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 202, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var123))
 			if templ_7745c5c3_Err != nil {
@@ -2049,7 +2049,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var124 string
 			templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.aging_bucket"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 202, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 202, Col: 122}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var124))
 			if templ_7745c5c3_Err != nil {
@@ -2062,7 +2062,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var125 string
 			templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 202, Col: 182}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 202, Col: 182}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var125))
 			if templ_7745c5c3_Err != nil {
@@ -2075,7 +2075,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var126 string
 			templ_7745c5c3_Var126, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.ar_amount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 202, Col: 245}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 202, Col: 245}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var126))
 			if templ_7745c5c3_Err != nil {
@@ -2093,7 +2093,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 				var templ_7745c5c3_Var127 string
 				templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 204, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 204, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var127))
 				if templ_7745c5c3_Err != nil {
@@ -2106,7 +2106,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 				var templ_7745c5c3_Var128 string
 				templ_7745c5c3_Var128, templ_7745c5c3_Err = templ.JoinStringErrs(row.Count)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 204, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 204, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var128))
 				if templ_7745c5c3_Err != nil {
@@ -2119,7 +2119,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 				var templ_7745c5c3_Var129 string
 				templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(row.Amount)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 204, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 204, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 				if templ_7745c5c3_Err != nil {
@@ -2137,7 +2137,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var130 string
 			templ_7745c5c3_Var130, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.total"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 206, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 206, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var130))
 			if templ_7745c5c3_Err != nil {
@@ -2150,7 +2150,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var131 string
 			templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.JoinStringErrs(data.AgingTotalCount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 206, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 206, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var131))
 			if templ_7745c5c3_Err != nil {
@@ -2163,7 +2163,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var132 string
 			templ_7745c5c3_Var132, templ_7745c5c3_Err = templ.JoinStringErrs(data.AgingTotalAmount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 206, Col: 132}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 206, Col: 132}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var132))
 			if templ_7745c5c3_Err != nil {
@@ -2176,7 +2176,7 @@ func ReportsPage(data Phase5ReportData, user model.User) templ.Component {
 			var templ_7745c5c3_Var133 string
 			templ_7745c5c3_Var133, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.low_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 207, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 207, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var133))
 			if templ_7745c5c3_Err != nil {
@@ -2229,7 +2229,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 			var templ_7745c5c3_Var135 string
 			templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.worklog_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 213, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 213, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var135))
 			if templ_7745c5c3_Err != nil {
@@ -2248,7 +2248,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 			var templ_7745c5c3_Var136 string
 			templ_7745c5c3_Var136, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 216, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 216, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var136))
 			if templ_7745c5c3_Err != nil {
@@ -2261,7 +2261,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 			var templ_7745c5c3_Var137 string
 			templ_7745c5c3_Var137, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 216, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 216, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var137))
 			if templ_7745c5c3_Err != nil {
@@ -2274,7 +2274,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 			var templ_7745c5c3_Var138 string
 			templ_7745c5c3_Var138, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_commission"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 216, Col: 164}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 216, Col: 164}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var138))
 			if templ_7745c5c3_Err != nil {
@@ -2292,7 +2292,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 				var templ_7745c5c3_Var139 string
 				templ_7745c5c3_Var139, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 218, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 218, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var139))
 				if templ_7745c5c3_Err != nil {
@@ -2305,7 +2305,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 				var templ_7745c5c3_Var140 string
 				templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.JoinStringErrs(row.Hours)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 218, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 218, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var140))
 				if templ_7745c5c3_Err != nil {
@@ -2318,7 +2318,7 @@ func WorklogSummaries(rows []Phase5WorklogSummaryRow) templ.Component {
 				var templ_7745c5c3_Var141 string
 				templ_7745c5c3_Var141, templ_7745c5c3_Err = templ.JoinStringErrs(row.Commission)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 218, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 218, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var141))
 				if templ_7745c5c3_Err != nil {
@@ -2363,7 +2363,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var143 string
 			templ_7745c5c3_Var143, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.commission_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 225, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 225, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var143))
 			if templ_7745c5c3_Err != nil {
@@ -2382,7 +2382,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var144 string
 			templ_7745c5c3_Var144, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var144))
 			if templ_7745c5c3_Err != nil {
@@ -2395,7 +2395,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var145 string
 			templ_7745c5c3_Var145, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.username"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var145))
 			if templ_7745c5c3_Err != nil {
@@ -2408,7 +2408,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var146 string
 			templ_7745c5c3_Var146, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.branch"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 151}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 151}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var146))
 			if templ_7745c5c3_Err != nil {
@@ -2421,7 +2421,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var147 string
 			templ_7745c5c3_Var147, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 199}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 199}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var147))
 			if templ_7745c5c3_Err != nil {
@@ -2434,7 +2434,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var148 string
 			templ_7745c5c3_Var148, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 252}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 252}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var148))
 			if templ_7745c5c3_Err != nil {
@@ -2447,7 +2447,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var149 string
 			templ_7745c5c3_Var149, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_labor"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 305}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 305}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var149))
 			if templ_7745c5c3_Err != nil {
@@ -2460,7 +2460,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 			var templ_7745c5c3_Var150 string
 			templ_7745c5c3_Var150, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_commission"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 228, Col: 363}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 228, Col: 363}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var150))
 			if templ_7745c5c3_Err != nil {
@@ -2478,7 +2478,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var151 string
 				templ_7745c5c3_Var151, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var151))
 				if templ_7745c5c3_Err != nil {
@@ -2491,7 +2491,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var152 string
 				templ_7745c5c3_Var152, templ_7745c5c3_Err = templ.JoinStringErrs(row.Username)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var152))
 				if templ_7745c5c3_Err != nil {
@@ -2504,7 +2504,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var153 string
 				templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(row.Branch)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var153))
 				if templ_7745c5c3_Err != nil {
@@ -2517,7 +2517,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var154 string
 				templ_7745c5c3_Var154, templ_7745c5c3_Err = templ.JoinStringErrs(row.Orders)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var154))
 				if templ_7745c5c3_Err != nil {
@@ -2530,7 +2530,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var155 string
 				templ_7745c5c3_Var155, templ_7745c5c3_Err = templ.JoinStringErrs(row.Hours)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 116}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 116}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var155))
 				if templ_7745c5c3_Err != nil {
@@ -2543,7 +2543,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var156 string
 				templ_7745c5c3_Var156, templ_7745c5c3_Err = templ.JoinStringErrs(row.Labor)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 138}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 138}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var156))
 				if templ_7745c5c3_Err != nil {
@@ -2556,7 +2556,7 @@ func CommissionRows(rows []Phase5CommissionRow) templ.Component {
 				var templ_7745c5c3_Var157 string
 				templ_7745c5c3_Var157, templ_7745c5c3_Err = templ.JoinStringErrs(row.Commission)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 230, Col: 165}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 230, Col: 165}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var157))
 				if templ_7745c5c3_Err != nil {
@@ -2616,7 +2616,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var160 string
 			templ_7745c5c3_Var160, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.heading"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var160))
 			if templ_7745c5c3_Err != nil {
@@ -2629,7 +2629,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var161 string
 			templ_7745c5c3_Var161, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.status"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var161))
 			if templ_7745c5c3_Err != nil {
@@ -2655,7 +2655,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var163 string
 				templ_7745c5c3_Var163, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var162).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var163)
 				if templ_7745c5c3_Err != nil {
@@ -2682,7 +2682,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var164 string
 			templ_7745c5c3_Var164, templ_7745c5c3_Err = templ.JoinStringErrs(data.StatusLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 186}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 186}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var164))
 			if templ_7745c5c3_Err != nil {
@@ -2695,7 +2695,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var165 string
 			templ_7745c5c3_Var165, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.insurance"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 244}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 244}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var165))
 			if templ_7745c5c3_Err != nil {
@@ -2708,7 +2708,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var166 string
 			templ_7745c5c3_Var166, templ_7745c5c3_Err = templ.JoinStringErrs(data.InsuranceLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 276}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 276}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var166))
 			if templ_7745c5c3_Err != nil {
@@ -2721,7 +2721,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var167 string
 			templ_7745c5c3_Var167, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.wo_total"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 335}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 335}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var167))
 			if templ_7745c5c3_Err != nil {
@@ -2734,7 +2734,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var168 string
 			templ_7745c5c3_Var168, templ_7745c5c3_Err = templ.JoinStringErrs(data.WOAmount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 361}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 361}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var168))
 			if templ_7745c5c3_Err != nil {
@@ -2747,7 +2747,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var169 string
 			templ_7745c5c3_Var169, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 414}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 414}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var169))
 			if templ_7745c5c3_Err != nil {
@@ -2760,7 +2760,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var170 string
 			templ_7745c5c3_Var170, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalHours)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 442}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 442}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var170))
 			if templ_7745c5c3_Err != nil {
@@ -2773,7 +2773,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var171 string
 			templ_7745c5c3_Var171, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.hours_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 482}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 482}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var171))
 			if templ_7745c5c3_Err != nil {
@@ -2786,7 +2786,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var172 string
 			templ_7745c5c3_Var172, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_labor"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 544}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 544}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var172))
 			if templ_7745c5c3_Err != nil {
@@ -2799,7 +2799,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var173 string
 			templ_7745c5c3_Var173, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalLabor)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 572}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 572}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var173))
 			if templ_7745c5c3_Err != nil {
@@ -2812,7 +2812,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var174 string
 			templ_7745c5c3_Var174, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_commission"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 630}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 630}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var174))
 			if templ_7745c5c3_Err != nil {
@@ -2825,7 +2825,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var175 string
 			templ_7745c5c3_Var175, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalCommission)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 663}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 663}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var175))
 			if templ_7745c5c3_Err != nil {
@@ -2838,7 +2838,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var176 string
 			templ_7745c5c3_Var176, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.count"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 719}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 719}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var176))
 			if templ_7745c5c3_Err != nil {
@@ -2851,7 +2851,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var177 string
 			templ_7745c5c3_Var177, templ_7745c5c3_Err = templ.JoinStringErrs(data.Count)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 239, Col: 742}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 239, Col: 742}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var177))
 			if templ_7745c5c3_Err != nil {
@@ -2864,7 +2864,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var178 string
 			templ_7745c5c3_Var178, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.detail_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 240, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 240, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var178))
 			if templ_7745c5c3_Err != nil {
@@ -2882,7 +2882,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var179 string
 				templ_7745c5c3_Var179, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 242, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 242, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var179))
 				if templ_7745c5c3_Err != nil {
@@ -2901,7 +2901,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var180 string
 				templ_7745c5c3_Var180, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.date"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var180))
 				if templ_7745c5c3_Err != nil {
@@ -2914,7 +2914,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var181 string
 				templ_7745c5c3_Var181, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var181))
 				if templ_7745c5c3_Err != nil {
@@ -2927,7 +2927,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var182 string
 				templ_7745c5c3_Var182, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.hours"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 159}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 159}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var182))
 				if templ_7745c5c3_Err != nil {
@@ -2940,7 +2940,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var183 string
 				templ_7745c5c3_Var183, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.rate"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 217}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 217}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var183))
 				if templ_7745c5c3_Err != nil {
@@ -2953,7 +2953,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var184 string
 				templ_7745c5c3_Var184, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.labor"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 276}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 276}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var184))
 				if templ_7745c5c3_Err != nil {
@@ -2966,7 +2966,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var185 string
 				templ_7745c5c3_Var185, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.commission_rate"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 345}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 345}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var185))
 				if templ_7745c5c3_Err != nil {
@@ -2979,7 +2979,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var186 string
 				templ_7745c5c3_Var186, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.commission"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 409}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 409}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var186))
 				if templ_7745c5c3_Err != nil {
@@ -2992,7 +2992,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var187 string
 				templ_7745c5c3_Var187, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 449}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 449}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var187))
 				if templ_7745c5c3_Err != nil {
@@ -3005,7 +3005,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var188 string
 				templ_7745c5c3_Var188, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.actions"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 245, Col: 498}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 245, Col: 498}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var188))
 				if templ_7745c5c3_Err != nil {
@@ -3023,7 +3023,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var189 string
 					templ_7745c5c3_Var189, templ_7745c5c3_Err = templ.JoinStringErrs(row.Date)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var189))
 					if templ_7745c5c3_Err != nil {
@@ -3036,7 +3036,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var190 string
 					templ_7745c5c3_Var190, templ_7745c5c3_Err = templ.JoinStringErrs(row.Technician)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 51}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 51}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var190))
 					if templ_7745c5c3_Err != nil {
@@ -3049,7 +3049,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var191 string
 					templ_7745c5c3_Var191, templ_7745c5c3_Err = templ.JoinStringErrs(row.Hours)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 85}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 85}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var191))
 					if templ_7745c5c3_Err != nil {
@@ -3062,7 +3062,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var192 string
 					templ_7745c5c3_Var192, templ_7745c5c3_Err = templ.JoinStringErrs(row.Rate)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 118}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 118}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var192))
 					if templ_7745c5c3_Err != nil {
@@ -3075,7 +3075,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var193 string
 					templ_7745c5c3_Var193, templ_7745c5c3_Err = templ.JoinStringErrs(row.Labor)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 152}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 152}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var193))
 					if templ_7745c5c3_Err != nil {
@@ -3088,7 +3088,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var194 string
 					templ_7745c5c3_Var194, templ_7745c5c3_Err = templ.JoinStringErrs(row.CommissionRate)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 195}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 195}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var194))
 					if templ_7745c5c3_Err != nil {
@@ -3101,7 +3101,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var195 string
 					templ_7745c5c3_Var195, templ_7745c5c3_Err = templ.JoinStringErrs(row.Commission)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 235}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 235}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var195))
 					if templ_7745c5c3_Err != nil {
@@ -3114,7 +3114,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var196 string
 					templ_7745c5c3_Var196, templ_7745c5c3_Err = templ.JoinStringErrs(row.Notes)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 257}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 257}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var196))
 					if templ_7745c5c3_Err != nil {
@@ -3127,7 +3127,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var197 string
 					templ_7745c5c3_Var197, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + data.WOID + "/worklogs/" + row.ID + "/edit").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 357}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 357}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var197)
 					if templ_7745c5c3_Err != nil {
@@ -3140,7 +3140,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var198 string
 					templ_7745c5c3_Var198, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.edit"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 388}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 388}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var198))
 					if templ_7745c5c3_Err != nil {
@@ -3153,7 +3153,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var199 string
 					templ_7745c5c3_Var199, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + data.WOID + "/worklogs/" + row.ID + "/delete").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 487}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 487}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var199)
 					if templ_7745c5c3_Err != nil {
@@ -3166,7 +3166,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 					var templ_7745c5c3_Var200 string
 					templ_7745c5c3_Var200, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.delete"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 247, Col: 583}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 247, Col: 583}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var200))
 					if templ_7745c5c3_Err != nil {
@@ -3189,7 +3189,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var201 string
 			templ_7745c5c3_Var201, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + data.WOID + "/worklogs").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 251, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 251, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var201)
 			if templ_7745c5c3_Err != nil {
@@ -3202,7 +3202,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var202 string
 			templ_7745c5c3_Var202, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 251, Col: 118}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 251, Col: 118}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var202))
 			if templ_7745c5c3_Err != nil {
@@ -3220,7 +3220,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var203 string
 				templ_7745c5c3_Var203, templ_7745c5c3_Err = templruntime.NewAttributeExpression(o.Value).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 253, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 253, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var203)
 				if templ_7745c5c3_Err != nil {
@@ -3233,7 +3233,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 				var templ_7745c5c3_Var204 string
 				templ_7745c5c3_Var204, templ_7745c5c3_Err = templ.JoinStringErrs(o.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 253, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 253, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var204))
 				if templ_7745c5c3_Err != nil {
@@ -3251,7 +3251,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var205 string
 			templ_7745c5c3_Var205, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.work_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var205))
 			if templ_7745c5c3_Err != nil {
@@ -3264,7 +3264,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var206 string
 			templ_7745c5c3_Var206, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.WODateDefault).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var206)
 			if templ_7745c5c3_Err != nil {
@@ -3277,7 +3277,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var207 string
 			templ_7745c5c3_Var207, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 186}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 186}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var207))
 			if templ_7745c5c3_Err != nil {
@@ -3290,7 +3290,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var208 string
 			templ_7745c5c3_Var208, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.rate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 269}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 269}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var208))
 			if templ_7745c5c3_Err != nil {
@@ -3303,7 +3303,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var209 string
 			templ_7745c5c3_Var209, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.commission_rate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 369}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 369}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var209))
 			if templ_7745c5c3_Err != nil {
@@ -3316,7 +3316,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var210 string
 			templ_7745c5c3_Var210, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 456}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 456}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var210))
 			if templ_7745c5c3_Err != nil {
@@ -3329,7 +3329,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var211 string
 			templ_7745c5c3_Var211, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.new"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 255, Col: 555}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 255, Col: 555}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var211))
 			if templ_7745c5c3_Err != nil {
@@ -3342,7 +3342,7 @@ func WorklogsPage(data Phase5WorklogData, user model.User) templ.Component {
 			var templ_7745c5c3_Var212 string
 			templ_7745c5c3_Var212, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.summary_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 257, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 257, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var212))
 			if templ_7745c5c3_Err != nil {
@@ -3406,7 +3406,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var215 string
 			templ_7745c5c3_Var215, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.edit_heading"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 147}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 147}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var215))
 			if templ_7745c5c3_Err != nil {
@@ -3419,7 +3419,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var216 string
 			templ_7745c5c3_Var216, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + data.WOID + "/worklogs/" + data.LogID).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 238}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 238}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var216)
 			if templ_7745c5c3_Err != nil {
@@ -3432,7 +3432,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var217 string
 			templ_7745c5c3_Var217, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.tech"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 283}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 283}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var217))
 			if templ_7745c5c3_Err != nil {
@@ -3445,7 +3445,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var218 string
 			templ_7745c5c3_Var218, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Technician).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 315}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 315}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var218)
 			if templ_7745c5c3_Err != nil {
@@ -3458,7 +3458,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var219 string
 			templ_7745c5c3_Var219, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.work_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 383}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 383}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var219))
 			if templ_7745c5c3_Err != nil {
@@ -3471,7 +3471,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var220 string
 			templ_7745c5c3_Var220, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Date).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 438}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 438}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var220)
 			if templ_7745c5c3_Err != nil {
@@ -3484,7 +3484,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var221 string
 			templ_7745c5c3_Var221, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 493}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 493}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var221))
 			if templ_7745c5c3_Err != nil {
@@ -3497,7 +3497,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var222 string
 			templ_7745c5c3_Var222, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Hours).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 533}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 533}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var222)
 			if templ_7745c5c3_Err != nil {
@@ -3510,7 +3510,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var223 string
 			templ_7745c5c3_Var223, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.rate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 587}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 587}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var223))
 			if templ_7745c5c3_Err != nil {
@@ -3523,7 +3523,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var224 string
 			templ_7745c5c3_Var224, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Rate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 632}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 632}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var224)
 			if templ_7745c5c3_Err != nil {
@@ -3536,7 +3536,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var225 string
 			templ_7745c5c3_Var225, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "worklog.field.commission_rate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 697}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 697}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var225))
 			if templ_7745c5c3_Err != nil {
@@ -3549,7 +3549,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var226 string
 			templ_7745c5c3_Var226, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CommissionRate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 756}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 756}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var226)
 			if templ_7745c5c3_Err != nil {
@@ -3562,7 +3562,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var227 string
 			templ_7745c5c3_Var227, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 804}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 804}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var227))
 			if templ_7745c5c3_Err != nil {
@@ -3575,7 +3575,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var228 string
 			templ_7745c5c3_Var228, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Notes).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 844}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 844}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var228)
 			if templ_7745c5c3_Err != nil {
@@ -3588,7 +3588,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var229 string
 			templ_7745c5c3_Var229, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.save"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 924}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 924}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var229))
 			if templ_7745c5c3_Err != nil {
@@ -3601,7 +3601,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var230 string
 			templ_7745c5c3_Var230, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + data.WOID + "/worklogs").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 1004}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 1004}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var230)
 			if templ_7745c5c3_Err != nil {
@@ -3614,7 +3614,7 @@ func EditWorklogPage(data Phase5EditWorklogData, user model.User) templ.Componen
 			var templ_7745c5c3_Var231 string
 			templ_7745c5c3_Var231, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.cancel"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 262, Col: 1037}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 262, Col: 1037}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var231))
 			if templ_7745c5c3_Err != nil {
@@ -3674,7 +3674,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var234 string
 			templ_7745c5c3_Var234, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "commissions.heading_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var234))
 			if templ_7745c5c3_Err != nil {
@@ -3687,7 +3687,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var235 string
 			templ_7745c5c3_Var235, templ_7745c5c3_Err = templ.JoinStringErrs(data.Month)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var235))
 			if templ_7745c5c3_Err != nil {
@@ -3700,7 +3700,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var236 string
 			templ_7745c5c3_Var236, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Month).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 180}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 180}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var236)
 			if templ_7745c5c3_Err != nil {
@@ -3713,7 +3713,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var237 string
 			templ_7745c5c3_Var237, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.query"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 254}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 254}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var237))
 			if templ_7745c5c3_Err != nil {
@@ -3726,7 +3726,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var238 string
 			templ_7745c5c3_Var238, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "commissions.field.orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 328}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 328}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var238))
 			if templ_7745c5c3_Err != nil {
@@ -3739,7 +3739,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var239 string
 			templ_7745c5c3_Var239, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalOrders)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 357}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 357}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var239))
 			if templ_7745c5c3_Err != nil {
@@ -3752,7 +3752,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var240 string
 			templ_7745c5c3_Var240, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_hours"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 410}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 410}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var240))
 			if templ_7745c5c3_Err != nil {
@@ -3765,7 +3765,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var241 string
 			templ_7745c5c3_Var241, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalHours)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 438}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 438}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var241))
 			if templ_7745c5c3_Err != nil {
@@ -3778,7 +3778,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var242 string
 			templ_7745c5c3_Var242, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_labor"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 500}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 500}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var242))
 			if templ_7745c5c3_Err != nil {
@@ -3791,7 +3791,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var243 string
 			templ_7745c5c3_Var243, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalLabor)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 528}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 528}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var243))
 			if templ_7745c5c3_Err != nil {
@@ -3804,7 +3804,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var244 string
 			templ_7745c5c3_Var244, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.field.total_commission"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 586}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 586}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var244))
 			if templ_7745c5c3_Err != nil {
@@ -3817,7 +3817,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var245 string
 			templ_7745c5c3_Var245, templ_7745c5c3_Err = templ.JoinStringErrs(data.TotalCommission)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 267, Col: 619}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 267, Col: 619}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var245))
 			if templ_7745c5c3_Err != nil {
@@ -3830,7 +3830,7 @@ func CommissionsPage(data Phase5CommissionsData, user model.User) templ.Componen
 			var templ_7745c5c3_Var246 string
 			templ_7745c5c3_Var246, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "commissions.detail_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 268, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 268, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var246))
 			if templ_7745c5c3_Err != nil {
@@ -3898,7 +3898,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var249 string
 			templ_7745c5c3_Var249, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.analytics"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 275, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 275, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var249))
 			if templ_7745c5c3_Err != nil {
@@ -3924,7 +3924,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var251 string
 				templ_7745c5c3_Var251, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var250).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var251)
 				if templ_7745c5c3_Err != nil {
@@ -3937,7 +3937,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var252 string
 				templ_7745c5c3_Var252, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/analytics?gran=day&amp;group=" + data.GroupBy).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 276, Col: 106}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 276, Col: 106}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var252)
 				if templ_7745c5c3_Err != nil {
@@ -3964,7 +3964,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var253 string
 			templ_7745c5c3_Var253, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.today"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 276, Col: 141}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 276, Col: 141}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var253))
 			if templ_7745c5c3_Err != nil {
@@ -3990,7 +3990,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var255 string
 				templ_7745c5c3_Var255, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var254).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var255)
 				if templ_7745c5c3_Err != nil {
@@ -4003,7 +4003,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var256 string
 				templ_7745c5c3_Var256, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/analytics?gran=week&amp;group=" + data.GroupBy).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 277, Col: 108}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 277, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var256)
 				if templ_7745c5c3_Err != nil {
@@ -4030,7 +4030,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var257 string
 			templ_7745c5c3_Var257, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.week"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 277, Col: 142}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 277, Col: 142}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var257))
 			if templ_7745c5c3_Err != nil {
@@ -4056,7 +4056,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var259 string
 				templ_7745c5c3_Var259, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var258).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var259)
 				if templ_7745c5c3_Err != nil {
@@ -4069,7 +4069,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var260 string
 				templ_7745c5c3_Var260, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/analytics?gran=month&amp;group=" + data.GroupBy).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 278, Col: 110}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 278, Col: 110}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var260)
 				if templ_7745c5c3_Err != nil {
@@ -4096,7 +4096,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var261 string
 			templ_7745c5c3_Var261, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.month"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 278, Col: 145}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 278, Col: 145}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var261))
 			if templ_7745c5c3_Err != nil {
@@ -4122,7 +4122,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var263 string
 				templ_7745c5c3_Var263, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var262).String()).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var263)
 				if templ_7745c5c3_Err != nil {
@@ -4135,7 +4135,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var264 string
 				templ_7745c5c3_Var264, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/analytics?gran=year&amp;group=" + data.GroupBy).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 279, Col: 108}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 279, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var264)
 				if templ_7745c5c3_Err != nil {
@@ -4162,7 +4162,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var265 string
 			templ_7745c5c3_Var265, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.year"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 279, Col: 142}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 279, Col: 142}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var265))
 			if templ_7745c5c3_Err != nil {
@@ -4175,7 +4175,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var266 string
 			templ_7745c5c3_Var266, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.GroupBy).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 145}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 145}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var266)
 			if templ_7745c5c3_Err != nil {
@@ -4188,7 +4188,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var267 string
 			templ_7745c5c3_Var267, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.From).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 185}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 185}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var267)
 			if templ_7745c5c3_Err != nil {
@@ -4201,7 +4201,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var268 string
 			templ_7745c5c3_Var268, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.To).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 221}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 221}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var268)
 			if templ_7745c5c3_Err != nil {
@@ -4214,7 +4214,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var269 string
 			templ_7745c5c3_Var269, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.group_kind"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 304}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 304}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var269))
 			if templ_7745c5c3_Err != nil {
@@ -4227,7 +4227,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var270 string
 			templ_7745c5c3_Var270, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.group_customer"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 381}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 381}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var270))
 			if templ_7745c5c3_Err != nil {
@@ -4240,7 +4240,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var271 string
 			templ_7745c5c3_Var271, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.group_vehicle"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 456}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 456}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var271))
 			if templ_7745c5c3_Err != nil {
@@ -4253,7 +4253,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var272 string
 			templ_7745c5c3_Var272, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.query"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 546}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 546}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var272))
 			if templ_7745c5c3_Err != nil {
@@ -4266,7 +4266,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var273 string
 			templ_7745c5c3_Var273, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/reports/export?from=" + data.From + "&amp;to=" + data.To).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 643}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 643}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var273)
 			if templ_7745c5c3_Err != nil {
@@ -4279,7 +4279,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var274 string
 			templ_7745c5c3_Var274, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.export_orders"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 280, Col: 686}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 280, Col: 686}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var274))
 			if templ_7745c5c3_Err != nil {
@@ -4297,7 +4297,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var275 string
 				templ_7745c5c3_Var275, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/analytics/export?from=" + data.From + "&amp;to=" + data.To).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 282, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 282, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var275)
 				if templ_7745c5c3_Err != nil {
@@ -4310,7 +4310,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var276 string
 				templ_7745c5c3_Var276, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.export_summary"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 282, Col: 137}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 282, Col: 137}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var276))
 				if templ_7745c5c3_Err != nil {
@@ -4328,7 +4328,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var277 string
 			templ_7745c5c3_Var277, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "reports.period_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 285, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 285, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var277))
 			if templ_7745c5c3_Err != nil {
@@ -4337,7 +4337,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var278 string
 			templ_7745c5c3_Var278, templ_7745c5c3_Err = templ.JoinStringErrs(data.From)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 285, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 285, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var278))
 			if templ_7745c5c3_Err != nil {
@@ -4350,7 +4350,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var279 string
 			templ_7745c5c3_Var279, templ_7745c5c3_Err = templ.JoinStringErrs(data.To)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 285, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 285, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var279))
 			if templ_7745c5c3_Err != nil {
@@ -4363,7 +4363,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var280 string
 			templ_7745c5c3_Var280, templ_7745c5c3_Err = templ.JoinStringErrs(data.ARO)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 286, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 286, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var280))
 			if templ_7745c5c3_Err != nil {
@@ -4376,7 +4376,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var281 string
 			templ_7745c5c3_Var281, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.aro"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 286, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 286, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var281))
 			if templ_7745c5c3_Err != nil {
@@ -4389,7 +4389,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var282 string
 			templ_7745c5c3_Var282, templ_7745c5c3_Err = templ.JoinStringErrs(data.OrderCount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 286, Col: 134}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 286, Col: 134}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var282))
 			if templ_7745c5c3_Err != nil {
@@ -4402,7 +4402,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var283 string
 			templ_7745c5c3_Var283, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.visits"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 286, Col: 179}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 286, Col: 179}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var283))
 			if templ_7745c5c3_Err != nil {
@@ -4420,7 +4420,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var284 string
 				templ_7745c5c3_Var284, templ_7745c5c3_Err = templ.JoinStringErrs(data.GrossStat)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 288, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 288, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var284))
 				if templ_7745c5c3_Err != nil {
@@ -4433,7 +4433,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var285 string
 				templ_7745c5c3_Var285, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.gross_margin"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 288, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 288, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var285))
 				if templ_7745c5c3_Err != nil {
@@ -4451,7 +4451,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var286 string
 			templ_7745c5c3_Var286, templ_7745c5c3_Err = templ.JoinStringErrs(data.RepeatRate)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 290, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 290, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var286))
 			if templ_7745c5c3_Err != nil {
@@ -4464,7 +4464,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var287 string
 			templ_7745c5c3_Var287, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.repeat_rate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 290, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 290, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var287))
 			if templ_7745c5c3_Err != nil {
@@ -4477,7 +4477,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var288 string
 			templ_7745c5c3_Var288, templ_7745c5c3_Err = templ.JoinStringErrs(data.GrossNote)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 291, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 291, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var288))
 			if templ_7745c5c3_Err != nil {
@@ -4498,7 +4498,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var289 string
 			templ_7745c5c3_Var289, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.profit_loss"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 294, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 294, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var289))
 			if templ_7745c5c3_Err != nil {
@@ -4519,7 +4519,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var290 string
 			templ_7745c5c3_Var290, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.tech_efficiency"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 295, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 295, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var290))
 			if templ_7745c5c3_Err != nil {
@@ -4540,7 +4540,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var291 string
 			templ_7745c5c3_Var291, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.retention"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var291))
 			if templ_7745c5c3_Err != nil {
@@ -4553,7 +4553,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var292 string
 			templ_7745c5c3_Var292, templ_7745c5c3_Err = templ.JoinStringErrs(data.ActiveCust)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 105}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var292))
 			if templ_7745c5c3_Err != nil {
@@ -4566,7 +4566,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var293 string
 			templ_7745c5c3_Var293, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.active_customers"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 160}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 160}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var293))
 			if templ_7745c5c3_Err != nil {
@@ -4579,7 +4579,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var294 string
 			templ_7745c5c3_Var294, templ_7745c5c3_Err = templ.JoinStringErrs(data.NewCust)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 210}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 210}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var294))
 			if templ_7745c5c3_Err != nil {
@@ -4592,7 +4592,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var295 string
 			templ_7745c5c3_Var295, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.new_customers"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 262}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 262}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var295))
 			if templ_7745c5c3_Err != nil {
@@ -4605,7 +4605,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var296 string
 			templ_7745c5c3_Var296, templ_7745c5c3_Err = templ.JoinStringErrs(data.OldCust)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 312}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 312}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var296))
 			if templ_7745c5c3_Err != nil {
@@ -4618,7 +4618,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var297 string
 			templ_7745c5c3_Var297, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.old_customers"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 364}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 364}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var297))
 			if templ_7745c5c3_Err != nil {
@@ -4631,7 +4631,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var298 string
 			templ_7745c5c3_Var298, templ_7745c5c3_Err = templ.JoinStringErrs(data.RepeatCust)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 417}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 417}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var298))
 			if templ_7745c5c3_Err != nil {
@@ -4644,7 +4644,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var299 string
 			templ_7745c5c3_Var299, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.repeat_customers"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 472}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 472}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var299))
 			if templ_7745c5c3_Err != nil {
@@ -4657,7 +4657,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var300 string
 			templ_7745c5c3_Var300, templ_7745c5c3_Err = templ.JoinStringErrs(data.AvgPerCust)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 525}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 525}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var300))
 			if templ_7745c5c3_Err != nil {
@@ -4670,7 +4670,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var301 string
 			templ_7745c5c3_Var301, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.avg_per_customer"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 296, Col: 580}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 296, Col: 580}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var301))
 			if templ_7745c5c3_Err != nil {
@@ -4683,7 +4683,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var302 string
 			templ_7745c5c3_Var302, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.campaign"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 297, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 297, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var302))
 			if templ_7745c5c3_Err != nil {
@@ -4704,7 +4704,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var303 string
 			templ_7745c5c3_Var303, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.hot_vehicles"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 297, Col: 147}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 297, Col: 147}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var303))
 			if templ_7745c5c3_Err != nil {
@@ -4725,7 +4725,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var304 string
 			templ_7745c5c3_Var304, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.hot_parts"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 297, Col: 242}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 297, Col: 242}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var304))
 			if templ_7745c5c3_Err != nil {
@@ -4746,7 +4746,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var305 string
 			templ_7745c5c3_Var305, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.discount_warranty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var305))
 			if templ_7745c5c3_Err != nil {
@@ -4759,7 +4759,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var306 string
 			templ_7745c5c3_Var306, templ_7745c5c3_Err = templ.JoinStringErrs(data.DiscountTotal)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var306))
 			if templ_7745c5c3_Err != nil {
@@ -4772,7 +4772,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var307 string
 			templ_7745c5c3_Var307, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.discount_total"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 169}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 169}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var307))
 			if templ_7745c5c3_Err != nil {
@@ -4785,7 +4785,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var308 string
 			templ_7745c5c3_Var308, templ_7745c5c3_Err = templ.JoinStringErrs(data.WarrantyCount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 225}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 225}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var308))
 			if templ_7745c5c3_Err != nil {
@@ -4798,7 +4798,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var309 string
 			templ_7745c5c3_Var309, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.warranty_count"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 278}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 278}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var309))
 			if templ_7745c5c3_Err != nil {
@@ -4811,7 +4811,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var310 string
 			templ_7745c5c3_Var310, templ_7745c5c3_Err = templ.JoinStringErrs(data.WarrantyRevenue)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 336}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 336}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var310))
 			if templ_7745c5c3_Err != nil {
@@ -4824,7 +4824,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var311 string
 			templ_7745c5c3_Var311, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.warranty_revenue"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 391}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 391}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var311))
 			if templ_7745c5c3_Err != nil {
@@ -4837,7 +4837,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var312 string
 			templ_7745c5c3_Var312, templ_7745c5c3_Err = templ.JoinStringErrs(data.WarrantyDiscount)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 450}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 450}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var312))
 			if templ_7745c5c3_Err != nil {
@@ -4850,7 +4850,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 			var templ_7745c5c3_Var313 string
 			templ_7745c5c3_Var313, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.warranty_discount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 298, Col: 506}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 298, Col: 506}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var313))
 			if templ_7745c5c3_Err != nil {
@@ -4869,7 +4869,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 					var templ_7745c5c3_Var314 string
 					templ_7745c5c3_Var314, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.warranty_cost_prefix"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 301, Col: 55}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 301, Col: 55}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var314))
 					if templ_7745c5c3_Err != nil {
@@ -4878,7 +4878,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 					var templ_7745c5c3_Var315 string
 					templ_7745c5c3_Var315, templ_7745c5c3_Err = templ.JoinStringErrs(data.WarrantyCostTotal)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 301, Col: 81}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 301, Col: 81}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var315))
 					if templ_7745c5c3_Err != nil {
@@ -4887,7 +4887,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 					var templ_7745c5c3_Var316 string
 					templ_7745c5c3_Var316, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.warranty_gross_prefix"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 301, Col: 131}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 301, Col: 131}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var316))
 					if templ_7745c5c3_Err != nil {
@@ -4900,7 +4900,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 					var templ_7745c5c3_Var317 string
 					templ_7745c5c3_Var317, templ_7745c5c3_Err = templ.JoinStringErrs(data.WarrantyGross)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 301, Col: 154}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 301, Col: 154}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var317))
 					if templ_7745c5c3_Err != nil {
@@ -4923,7 +4923,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 					var templ_7745c5c3_Var318 string
 					templ_7745c5c3_Var318, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.warranty_not_recorded"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 304, Col: 56}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 304, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var318))
 					if templ_7745c5c3_Err != nil {
@@ -4947,7 +4947,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var319 string
 				templ_7745c5c3_Var319, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.dead_stock"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 309, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 309, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var319))
 				if templ_7745c5c3_Err != nil {
@@ -4960,7 +4960,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var320 string
 				templ_7745c5c3_Var320, templ_7745c5c3_Err = templ.JoinStringErrs(data.DeadCostTotal)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 309, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 309, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var320))
 				if templ_7745c5c3_Err != nil {
@@ -4969,7 +4969,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var321 string
 				templ_7745c5c3_Var321, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.dead_count_sep"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 309, Col: 135}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 309, Col: 135}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var321))
 				if templ_7745c5c3_Err != nil {
@@ -4982,7 +4982,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var322 string
 				templ_7745c5c3_Var322, templ_7745c5c3_Err = templ.JoinStringErrs(data.DeadCount)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 309, Col: 154}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 309, Col: 154}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var322))
 				if templ_7745c5c3_Err != nil {
@@ -4995,7 +4995,7 @@ func AnalyticsPage(data Phase5AnalyticsData, user model.User) templ.Component {
 				var templ_7745c5c3_Var323 string
 				templ_7745c5c3_Var323, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "analytics.dead_items_suffix"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/phase5.templ`, Line: 309, Col: 201}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/phase5.templ`, Line: 309, Col: 201}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var323))
 				if templ_7745c5c3_Err != nil {

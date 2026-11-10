@@ -96,7 +96,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 57, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 57, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -114,7 +114,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.new"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 59, Col: 80}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 59, Col: 80}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -133,7 +133,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 62, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 62, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -152,7 +152,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.id"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -165,7 +165,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.vehicle"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 99}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 99}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -178,7 +178,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.customer"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 151}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 151}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -191,7 +191,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.status"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 201}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 201}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -204,7 +204,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var10 string
 				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.total"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 262}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 262}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -217,7 +217,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.created"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 313}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 313}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -230,7 +230,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "insurancelist.field.actions"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 66, Col: 368}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 66, Col: 368}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -248,7 +248,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var13 string
 					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 69, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 69, Col: 41}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {
@@ -261,7 +261,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var14 string
 					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 70, Col: 26}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 70, Col: 26}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 					if templ_7745c5c3_Err != nil {
@@ -274,7 +274,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var15 string
 					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 70, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 70, Col: 45}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {
@@ -287,7 +287,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 71, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 71, Col: 27}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -305,7 +305,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 						var templ_7745c5c3_Var17 string
 						templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.status_converted"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 74, Col: 83}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 74, Col: 83}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 						if templ_7745c5c3_Err != nil {
@@ -324,7 +324,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 						var templ_7745c5c3_Var18 string
 						templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.status_draft"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 77, Col: 77}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 77, Col: 77}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 						if templ_7745c5c3_Err != nil {
@@ -342,7 +342,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 80, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 80, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
@@ -355,7 +355,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(e.CreatedAt)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 81, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 81, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -368,7 +368,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var21 string
 					templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID)).ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 83, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 83, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 					if templ_7745c5c3_Err != nil {
@@ -381,7 +381,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.view"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 83, Col: 87}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 83, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -399,7 +399,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 						var templ_7745c5c3_Var23 string
 						templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10)).ResolveURL(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 85, Col: 100}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 85, Col: 100}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 						if templ_7745c5c3_Err != nil {
@@ -412,7 +412,7 @@ func EstimateListPage(rows []EstimateListRow, user model.User) templ.Component {
 						var templ_7745c5c3_Var24 string
 						templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "subcontract.field.workorder_th"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 85, Col: 150}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 85, Col: 150}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 						if templ_7745c5c3_Err != nil {
@@ -483,7 +483,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.new_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 99, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 99, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -501,7 +501,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.no_vehicles"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 101, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 101, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -527,7 +527,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.vehicle_label"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 105, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 105, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -540,7 +540,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templruntime.NewAttributeExpression(vehicleOptionsJSON).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 106, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 106, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -553,7 +553,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.plate_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 109, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 109, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 			if templ_7745c5c3_Err != nil {
@@ -566,7 +566,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.vehicle_hint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 112, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 112, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -579,7 +579,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.mileage"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 114, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 114, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -592,7 +592,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.mileage_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 115, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 115, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -605,7 +605,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.complaint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 117, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 117, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -618,7 +618,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.complaint_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 118, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 118, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -631,7 +631,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.create_submit"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 121, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 121, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -644,7 +644,7 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.cancel"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 122, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 122, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -700,7 +700,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 134, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 134, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -713,7 +713,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 134, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 134, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -726,7 +726,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.vehicle2"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
@@ -739,7 +739,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 79}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 79}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -752,7 +752,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -765,7 +765,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.customer"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 150}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 150}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -778,7 +778,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 177}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 177}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -791,7 +791,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerPhone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 136, Col: 199}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 136, Col: 199}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -804,7 +804,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.mileage"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 137, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 137, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
@@ -817,7 +817,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(e.CurrentMileage))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 137, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 137, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -830,7 +830,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.created"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 137, Col: 143}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 137, Col: 143}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -843,7 +843,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(e.CreatedAt)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 137, Col: 167}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 137, Col: 167}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
@@ -856,7 +856,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.complaint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 138, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 138, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -869,7 +869,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerComplaint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 138, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 138, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 			if templ_7745c5c3_Err != nil {
@@ -887,7 +887,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.converted_prefix"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 141, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 141, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 				if templ_7745c5c3_Err != nil {
@@ -896,7 +896,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ConvertedWorkOrderID, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 141, Col: 120}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 141, Col: 120}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
@@ -905,7 +905,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var57 string
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.converted_mid"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 141, Col: 162}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 141, Col: 162}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {
@@ -918,7 +918,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var58 string
 				templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 141, Col: 195}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 141, Col: 195}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 				if templ_7745c5c3_Err != nil {
@@ -927,7 +927,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var59 string
 				templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_suffix"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 141, Col: 237}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 141, Col: 237}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 				if templ_7745c5c3_Err != nil {
@@ -940,7 +940,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10)).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 143, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 143, Col: 96}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 				if templ_7745c5c3_Err != nil {
@@ -953,7 +953,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var61 string
 				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.open_workorder"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 143, Col: 140}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 143, Col: 140}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 				if templ_7745c5c3_Err != nil {
@@ -966,7 +966,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var62 string
 				templ_7745c5c3_Var62, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(e.ConvertedWorkOrderID, 10) + "/estimate-source").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 144, Col: 117}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 144, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 				if templ_7745c5c3_Err != nil {
@@ -979,7 +979,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var63 string
 				templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.view_source"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 144, Col: 158}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 144, Col: 158}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 				if templ_7745c5c3_Err != nil {
@@ -997,7 +997,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.items_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 149, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 149, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1015,7 +1015,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var65 string
 				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.items_empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 151, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 151, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {
@@ -1034,7 +1034,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var66 string
 				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.type"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 155, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 155, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 				if templ_7745c5c3_Err != nil {
@@ -1047,7 +1047,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var67 string
 				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.description"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 155, Col: 105}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 155, Col: 105}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 				if templ_7745c5c3_Err != nil {
@@ -1060,7 +1060,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var68 string
 				templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.quantity"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 155, Col: 169}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 155, Col: 169}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 				if templ_7745c5c3_Err != nil {
@@ -1073,7 +1073,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var69 string
 				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.unit_price"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 155, Col: 235}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 155, Col: 235}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 				if templ_7745c5c3_Err != nil {
@@ -1086,7 +1086,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var70 string
 				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.subtotal"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 155, Col: 299}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 155, Col: 299}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 				if templ_7745c5c3_Err != nil {
@@ -1099,7 +1099,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var71 string
 				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "insurancelist.field.actions"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 155, Col: 354}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 155, Col: 354}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 				if templ_7745c5c3_Err != nil {
@@ -1117,7 +1117,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var72 string
 					templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(estimateItemType(item.ItemType))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 158, Col: 74}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 158, Col: 74}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 					if templ_7745c5c3_Err != nil {
@@ -1130,7 +1130,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var73 string
 					templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 159, Col: 29}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 159, Col: 29}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 					if templ_7745c5c3_Err != nil {
@@ -1143,7 +1143,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var74 string
 					templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 159, Col: 81}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 159, Col: 81}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 					if templ_7745c5c3_Err != nil {
@@ -1156,7 +1156,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var75 string
 					templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.UnitPrice))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 160, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 160, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 					if templ_7745c5c3_Err != nil {
@@ -1169,7 +1169,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 					var templ_7745c5c3_Var76 string
 					templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.Subtotal))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 160, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 160, Col: 107}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 					if templ_7745c5c3_Err != nil {
@@ -1187,7 +1187,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 						var templ_7745c5c3_Var77 string
 						templ_7745c5c3_Var77, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/items/" + strconv.FormatInt(item.ID, 10) + "/delete").ResolveURL(ctx)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 163, Col: 112}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 163, Col: 112}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 						if templ_7745c5c3_Err != nil {
@@ -1208,7 +1208,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 						var templ_7745c5c3_Var78 string
 						templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.delete"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 165, Col: 80}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 165, Col: 80}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 						if templ_7745c5c3_Err != nil {
@@ -1237,7 +1237,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/items").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 174, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 174, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var79)
 				if templ_7745c5c3_Err != nil {
@@ -1258,7 +1258,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var80 string
 				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.type"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 176, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 176, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 				if templ_7745c5c3_Err != nil {
@@ -1271,7 +1271,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var81 string
 				templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.item_type_labor"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 178, Col: 81}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 178, Col: 81}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 				if templ_7745c5c3_Err != nil {
@@ -1284,7 +1284,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var82 string
 				templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.item_type_part"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 178, Col: 154}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 178, Col: 154}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 				if templ_7745c5c3_Err != nil {
@@ -1297,7 +1297,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var83 string
 				templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.item_type_subcontract"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 178, Col: 241}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 178, Col: 241}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 				if templ_7745c5c3_Err != nil {
@@ -1310,7 +1310,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var84 string
 				templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.quantity"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 181, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 181, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 				if templ_7745c5c3_Err != nil {
@@ -1323,7 +1323,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var85 string
 				templ_7745c5c3_Var85, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/items").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 183, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 183, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var85)
 				if templ_7745c5c3_Err != nil {
@@ -1344,7 +1344,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var86 string
 				templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.search_label"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 185, Col: 88}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 185, Col: 88}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 				if templ_7745c5c3_Err != nil {
@@ -1357,7 +1357,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var87 string
 				templ_7745c5c3_Var87, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.search_ph")).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 186, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 186, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var87)
 				if templ_7745c5c3_Err != nil {
@@ -1370,7 +1370,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var88 string
 				templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.description"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 191, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 191, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 				if templ_7745c5c3_Err != nil {
@@ -1383,7 +1383,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var89 string
 				templ_7745c5c3_Var89, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.description_ph")).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 192, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 192, Col: 114}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var89)
 				if templ_7745c5c3_Err != nil {
@@ -1396,7 +1396,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var90 string
 				templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.unit_price"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 197, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 197, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 				if templ_7745c5c3_Err != nil {
@@ -1409,7 +1409,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var91 string
 				templ_7745c5c3_Var91, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.unit_price_ph")).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 197, Col: 198}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 197, Col: 198}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var91)
 				if templ_7745c5c3_Err != nil {
@@ -1422,7 +1422,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var92 string
 				templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.add_item"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 199, Col: 98}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 199, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 				if templ_7745c5c3_Err != nil {
@@ -1435,7 +1435,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var93 string
 				templ_7745c5c3_Var93, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/discount").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 265, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 265, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 				if templ_7745c5c3_Err != nil {
@@ -1456,7 +1456,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var94 string
 				templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.discount_amount"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 267, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 267, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 				if templ_7745c5c3_Err != nil {
@@ -1469,7 +1469,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var95 string
 				templ_7745c5c3_Var95, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(estimateSubtotal(items), 'f', 2, 64)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 267, Col: 170}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 267, Col: 170}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var95)
 				if templ_7745c5c3_Err != nil {
@@ -1482,7 +1482,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var96 string
 				templ_7745c5c3_Var96, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(e.DiscountAmount, 'f', 0, 64)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 267, Col: 239}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 267, Col: 239}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var96)
 				if templ_7745c5c3_Err != nil {
@@ -1495,7 +1495,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var97 string
 				templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.update_discount"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 268, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 268, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 				if templ_7745c5c3_Err != nil {
@@ -1513,7 +1513,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var98 string
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.total_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 273, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 273, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 			if templ_7745c5c3_Err != nil {
@@ -1526,7 +1526,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var99 string
 			templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.subtotal"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 275, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 275, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 			if templ_7745c5c3_Err != nil {
@@ -1539,7 +1539,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var100 string
 			templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(estimateSubtotal(items)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 275, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 275, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
 			if templ_7745c5c3_Err != nil {
@@ -1552,7 +1552,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var101 string
 			templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.discount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 276, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 276, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 			if templ_7745c5c3_Err != nil {
@@ -1565,7 +1565,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var102 string
 			templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.DiscountAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 276, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 276, Col: 104}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 			if templ_7745c5c3_Err != nil {
@@ -1578,7 +1578,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var103 string
 			templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.grand_total"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 277, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 277, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 			if templ_7745c5c3_Err != nil {
@@ -1591,7 +1591,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var104 string
 			templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(e.TotalAmount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 277, Col: 156}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 277, Col: 156}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 			if templ_7745c5c3_Err != nil {
@@ -1609,7 +1609,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var105 string
 				templ_7745c5c3_Var105, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID) + "/convert").ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 280, Col: 63}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 280, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var105)
 				if templ_7745c5c3_Err != nil {
@@ -1630,7 +1630,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var106 string
 				templ_7745c5c3_Var106, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "estimates.convert_confirm")).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 282, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 282, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var106)
 				if templ_7745c5c3_Err != nil {
@@ -1643,7 +1643,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				var templ_7745c5c3_Var107 string
 				templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.convert"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 282, Col: 137}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 282, Col: 137}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 				if templ_7745c5c3_Err != nil {
@@ -1661,7 +1661,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.back"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 285, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 285, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 			if templ_7745c5c3_Err != nil {
@@ -1717,7 +1717,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var111 string
 			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 293, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 293, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 			if templ_7745c5c3_Err != nil {
@@ -1726,7 +1726,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var112 string
 			templ_7745c5c3_Var112, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(workOrderID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 293, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 293, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var112))
 			if templ_7745c5c3_Err != nil {
@@ -1739,7 +1739,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var113 string
 			templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_heading_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 293, Col: 136}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 293, Col: 136}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var113))
 			if templ_7745c5c3_Err != nil {
@@ -1752,7 +1752,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var114 string
 			templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_line_prefix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var114))
 			if templ_7745c5c3_Err != nil {
@@ -1761,7 +1761,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var115 string
 			templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(e.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 			if templ_7745c5c3_Err != nil {
@@ -1770,7 +1770,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var116 string
 			templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_vehicle_sep"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 129}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 129}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 			if templ_7745c5c3_Err != nil {
@@ -1783,7 +1783,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var117 string
 			templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.JoinStringErrs(e.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 147}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 147}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var117))
 			if templ_7745c5c3_Err != nil {
@@ -1796,7 +1796,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var118 string
 			templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.JoinStringErrs(e.BrandModel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 166}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 166}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var118))
 			if templ_7745c5c3_Err != nil {
@@ -1805,7 +1805,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var119 string
 			templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_customer_sep"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 214}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 214}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var119))
 			if templ_7745c5c3_Err != nil {
@@ -1818,7 +1818,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var120 string
 			templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.JoinStringErrs(e.CustomerName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 233}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 233}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var120))
 			if templ_7745c5c3_Err != nil {
@@ -1827,7 +1827,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var121 string
 			templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_suffix"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 294, Col: 275}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 294, Col: 275}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var121))
 			if templ_7745c5c3_Err != nil {
@@ -1840,7 +1840,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var122 string
 			templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_total_label"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 295, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var122))
 			if templ_7745c5c3_Err != nil {
@@ -1853,7 +1853,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var123 string
 			templ_7745c5c3_Var123, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteTotal))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 295, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var123))
 			if templ_7745c5c3_Err != nil {
@@ -1866,7 +1866,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var124 string
 			templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_discount_label"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 147}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 295, Col: 147}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var124))
 			if templ_7745c5c3_Err != nil {
@@ -1875,7 +1875,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var125 string
 			templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(quoteDiscount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 295, Col: 179}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 295, Col: 179}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var125))
 			if templ_7745c5c3_Err != nil {
@@ -1888,7 +1888,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var126 string
 			templ_7745c5c3_Var126, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/work-orders/" + strconv.FormatInt(workOrderID, 10)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 296, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 296, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var126)
 			if templ_7745c5c3_Err != nil {
@@ -1901,7 +1901,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var127 string
 			templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.open_workorder"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 296, Col: 127}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 296, Col: 127}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var127))
 			if templ_7745c5c3_Err != nil {
@@ -1914,7 +1914,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var128 string
 			templ_7745c5c3_Var128, templ_7745c5c3_Err = templruntime.NewAttributeExpression(estimateURL(e.ID)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 297, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 297, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var128)
 			if templ_7745c5c3_Err != nil {
@@ -1927,7 +1927,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var129 string
 			templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.view_draft"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 297, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 297, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 			if templ_7745c5c3_Err != nil {
@@ -1940,7 +1940,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 			var templ_7745c5c3_Var130 string
 			templ_7745c5c3_Var130, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_items_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 300, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 300, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var130))
 			if templ_7745c5c3_Err != nil {
@@ -1958,7 +1958,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				var templ_7745c5c3_Var131 string
 				templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.source_items_empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 302, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 302, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var131))
 				if templ_7745c5c3_Err != nil {
@@ -1977,7 +1977,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				var templ_7745c5c3_Var132 string
 				templ_7745c5c3_Var132, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.type"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 306, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var132))
 				if templ_7745c5c3_Err != nil {
@@ -1990,7 +1990,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				var templ_7745c5c3_Var133 string
 				templ_7745c5c3_Var133, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.description"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 306, Col: 105}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 105}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var133))
 				if templ_7745c5c3_Err != nil {
@@ -2003,7 +2003,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				var templ_7745c5c3_Var134 string
 				templ_7745c5c3_Var134, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.quantity"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 306, Col: 169}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 169}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var134))
 				if templ_7745c5c3_Err != nil {
@@ -2016,7 +2016,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				var templ_7745c5c3_Var135 string
 				templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.unit_price"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 306, Col: 235}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 235}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var135))
 				if templ_7745c5c3_Err != nil {
@@ -2029,7 +2029,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 				var templ_7745c5c3_Var136 string
 				templ_7745c5c3_Var136, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.field.subtotal"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 306, Col: 299}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 306, Col: 299}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var136))
 				if templ_7745c5c3_Err != nil {
@@ -2047,7 +2047,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var137 string
 					templ_7745c5c3_Var137, templ_7745c5c3_Err = templ.JoinStringErrs(estimateItemType(item.ItemType))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 308, Col: 47}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 308, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var137))
 					if templ_7745c5c3_Err != nil {
@@ -2060,7 +2060,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var138 string
 					templ_7745c5c3_Var138, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 308, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 308, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var138))
 					if templ_7745c5c3_Err != nil {
@@ -2073,7 +2073,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var139 string
 					templ_7745c5c3_Var139, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 309, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 309, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var139))
 					if templ_7745c5c3_Err != nil {
@@ -2086,7 +2086,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var140 string
 					templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.UnitPrice))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 309, Col: 106}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 309, Col: 106}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var140))
 					if templ_7745c5c3_Err != nil {
@@ -2099,7 +2099,7 @@ func EstimateSourcePage(e EstimateDetail, items []EstimateItemRow, workOrderID i
 					var templ_7745c5c3_Var141 string
 					templ_7745c5c3_Var141, templ_7745c5c3_Err = templ.JoinStringErrs(estimateMoney(item.Subtotal))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/estimates.templ`, Line: 310, Col: 53}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 310, Col: 53}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var141))
 					if templ_7745c5c3_Err != nil {

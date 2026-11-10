@@ -89,7 +89,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.heading"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 50, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 50, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -102,7 +102,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.intro"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 51, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 51, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -115,7 +115,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.filter_supplier"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 53, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 53, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -128,7 +128,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.all_suppliers"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 55, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 55, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -146,7 +146,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(supplier.ID, 10)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 57, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 57, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 				if templ_7745c5c3_Err != nil {
@@ -169,7 +169,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(supplier.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 57, Col: 115}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 57, Col: 115}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -187,7 +187,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.filter_status"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 61, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 61, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -210,7 +210,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.status_open_balance"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 63, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 63, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.status_all"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 64, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 64, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -256,7 +256,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.status_open"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 65, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 65, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -279,7 +279,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.status_partial"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 66, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 66, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -302,7 +302,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.status_paid"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 67, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 67, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -325,7 +325,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.status_void"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 68, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 68, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -338,7 +338,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.filter_action"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 72, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 72, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -351,7 +351,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.statement_link"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 73, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 73, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -364,7 +364,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "ap.aging_title"), today))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 78, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 78, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -377,7 +377,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.aging_note"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 79, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 79, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(bucket.Total))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 81, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 81, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -408,7 +408,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "ap.aging_bucket"), bucket.Name, strconv.Itoa(bucket.Count)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 81, Col: 147}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 81, Col: 147}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -426,7 +426,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.detail_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 85, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 85, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -444,7 +444,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 87, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 87, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -463,7 +463,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_created_source"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -476,7 +476,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_supplier"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 101}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 101}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -489,7 +489,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_payable"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 155}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 155}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -502,7 +502,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_paid"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 206}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 206}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -515,7 +515,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_balance"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 260}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 260}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -528,7 +528,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_due"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 298}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 298}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -541,7 +541,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_aging"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 338}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 338}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -554,7 +554,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_status"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 379}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 379}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -567,7 +567,7 @@ func APHomePage(rows []APPayableRow, aging []APAgingSummary, suppliers []APSuppl
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_payment"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 91, Col: 421}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 91, Col: 421}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -626,7 +626,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(row.CreatedAt)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 105, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 105, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -639,7 +639,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(row.SourceLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 105, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 105, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
@@ -652,7 +652,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(row.SupplierName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 106, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 106, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {
@@ -665,7 +665,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(row.Amount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 107, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 107, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -678,7 +678,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(row.PaidAmount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 108, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 108, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -691,7 +691,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(row.Balance))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 109, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 109, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -704,7 +704,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(row.DueDate)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 110, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 110, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -718,7 +718,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "ap.aging_days"), row.Aging, strconv.Itoa(row.AgeDays)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 113, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 113, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -745,7 +745,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var42).String()).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 			if templ_7745c5c3_Err != nil {
@@ -772,7 +772,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(row.StatusLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 116, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 116, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -790,7 +790,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/ap/" + strconv.FormatInt(row.ID, 10) + "/payments").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 119, Col: 97}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 119, Col: 97}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
@@ -811,7 +811,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.pay_now"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 121, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 121, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -824,7 +824,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatFloat(row.Balance, 'f', 2, 64)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 122, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 122, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
@@ -837,7 +837,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.pay_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 124, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 124, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -850,7 +850,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(today).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 124, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 124, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
@@ -863,7 +863,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.pay_submit"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 125, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 125, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 			if templ_7745c5c3_Err != nil {
@@ -882,7 +882,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/ap/" + strconv.FormatInt(row.ID, 10) + "/void").ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 129, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 129, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -895,7 +895,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "ap.void_confirm")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 129, Col: 129}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 129, Col: 129}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -916,7 +916,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.void_action"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 131, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 131, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -935,7 +935,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 			var templ_7745c5c3_Var54 string
 			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "ap.payments_summary"), strconv.Itoa(len(row.Payments))))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 136, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 136, Col: 96}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 			if templ_7745c5c3_Err != nil {
@@ -953,7 +953,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(payment.PaidAt)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 138, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 138, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 				if templ_7745c5c3_Err != nil {
@@ -966,7 +966,7 @@ func APPayableRowContent(row APPayableRow, today, role string) templ.Component {
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(payment.Amount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 138, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 138, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
@@ -1027,7 +1027,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.statement_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 157, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 157, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1040,7 +1040,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.filter_supplier"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 159, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 159, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1053,7 +1053,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.select_supplier"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 161, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 161, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 			if templ_7745c5c3_Err != nil {
@@ -1071,7 +1071,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var62 string
 				templ_7745c5c3_Var62, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.FormatInt(supplier.ID, 10)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 163, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 163, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 				if templ_7745c5c3_Err != nil {
@@ -1094,7 +1094,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var63 string
 				templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(supplier.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 163, Col: 115}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 163, Col: 115}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 				if templ_7745c5c3_Err != nil {
@@ -1112,7 +1112,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.period_from"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 167, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 167, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 			if templ_7745c5c3_Err != nil {
@@ -1125,7 +1125,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templruntime.NewAttributeExpression(from).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 167, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 167, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1138,7 +1138,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.period_to"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 168, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 168, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 			if templ_7745c5c3_Err != nil {
@@ -1151,7 +1151,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templruntime.NewAttributeExpression(to).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 168, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 168, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 			if templ_7745c5c3_Err != nil {
@@ -1164,7 +1164,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.query"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 170, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 170, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 			if templ_7745c5c3_Err != nil {
@@ -1177,7 +1177,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.back_to_ap"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 171, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 171, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 			if templ_7745c5c3_Err != nil {
@@ -1195,7 +1195,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var70 string
 				templ_7745c5c3_Var70, templ_7745c5c3_Err = templruntime.NewAttributeExpression(csvURL).ResolveURL(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 173, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 173, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 				if templ_7745c5c3_Err != nil {
@@ -1208,7 +1208,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var71 string
 				templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.export_csv"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 173, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 173, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 				if templ_7745c5c3_Err != nil {
@@ -1221,7 +1221,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var72 string
 				templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.print_pdf"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 174, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 174, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 				if templ_7745c5c3_Err != nil {
@@ -1244,7 +1244,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var73 string
 				templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "ap.statement_heading"), supplierName))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 181, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 181, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 				if templ_7745c5c3_Err != nil {
@@ -1257,7 +1257,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var74 string
 				templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "ap.period_line"), from, to))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 182, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 182, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 				if templ_7745c5c3_Err != nil {
@@ -1270,7 +1270,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var75 string
 				templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(amount))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 183, Col: 43}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 183, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 				if templ_7745c5c3_Err != nil {
@@ -1283,7 +1283,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var76 string
 				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.stat_amount_total"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 183, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 183, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 				if templ_7745c5c3_Err != nil {
@@ -1296,7 +1296,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(paid))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 184, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 184, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 				if templ_7745c5c3_Err != nil {
@@ -1309,7 +1309,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.stat_paid_in_period"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 184, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 184, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1322,7 +1322,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(balance))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 185, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 185, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 				if templ_7745c5c3_Err != nil {
@@ -1335,7 +1335,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var80 string
 				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.stat_balance_total"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 185, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 185, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 				if templ_7745c5c3_Err != nil {
@@ -1353,7 +1353,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var81 string
 					templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.statement_empty"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 187, Col: 59}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 187, Col: 59}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 					if templ_7745c5c3_Err != nil {
@@ -1372,7 +1372,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var82 string
 					templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_created"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 					if templ_7745c5c3_Err != nil {
@@ -1385,7 +1385,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var83 string
 					templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_source_doc"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 97}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 97}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 					if templ_7745c5c3_Err != nil {
@@ -1398,7 +1398,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var84 string
 					templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_due"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 135}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 135}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 					if templ_7745c5c3_Err != nil {
@@ -1411,7 +1411,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var85 string
 					templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_amount"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 188}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 188}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 					if templ_7745c5c3_Err != nil {
@@ -1424,7 +1424,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var86 string
 					templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_paid_amount"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 246}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 246}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 					if templ_7745c5c3_Err != nil {
@@ -1437,7 +1437,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var87 string
 					templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_balance_amount"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 307}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 307}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
 					if templ_7745c5c3_Err != nil {
@@ -1450,7 +1450,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var88 string
 					templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.col_status"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 191, Col: 348}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 191, Col: 348}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 					if templ_7745c5c3_Err != nil {
@@ -1468,7 +1468,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var89 string
 						templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(row.CreatedAt)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 195, Col: 28}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 195, Col: 28}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 						if templ_7745c5c3_Err != nil {
@@ -1481,7 +1481,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var90 string
 						templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(row.SourceLabel)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 195, Col: 56}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 195, Col: 56}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 						if templ_7745c5c3_Err != nil {
@@ -1494,7 +1494,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var91 string
 						templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.JoinStringErrs(row.DueDate)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 195, Col: 80}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 195, Col: 80}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 						if templ_7745c5c3_Err != nil {
@@ -1507,7 +1507,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var92 string
 						templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(row.Amount))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 196, Col: 47}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 196, Col: 47}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 						if templ_7745c5c3_Err != nil {
@@ -1520,7 +1520,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var93 string
 						templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(row.PaidAmount))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 196, Col: 96}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 196, Col: 96}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var93))
 						if templ_7745c5c3_Err != nil {
@@ -1533,7 +1533,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var94 string
 						templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(row.Balance))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 197, Col: 48}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 197, Col: 48}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 						if templ_7745c5c3_Err != nil {
@@ -1559,7 +1559,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 							var templ_7745c5c3_Var96 string
 							templ_7745c5c3_Var96, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var95).String()).Resolve(ctx)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 1, Col: 0}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 1, Col: 0}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var96)
 							if templ_7745c5c3_Err != nil {
@@ -1586,7 +1586,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 						var templ_7745c5c3_Var97 string
 						templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(row.StatusLabel)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 198, Col: 71}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 198, Col: 71}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 						if templ_7745c5c3_Err != nil {
@@ -1604,7 +1604,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var98 string
 					templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.total"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 202, Col: 58}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 202, Col: 58}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 					if templ_7745c5c3_Err != nil {
@@ -1617,7 +1617,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var99 string
 					templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(amount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 202, Col: 99}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 202, Col: 99}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 					if templ_7745c5c3_Err != nil {
@@ -1630,7 +1630,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var100 string
 					templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(paid))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 202, Col: 138}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 202, Col: 138}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
 					if templ_7745c5c3_Err != nil {
@@ -1643,7 +1643,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 					var templ_7745c5c3_Var101 string
 					templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(moneyFmt(balance))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 202, Col: 180}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 202, Col: 180}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 					if templ_7745c5c3_Err != nil {
@@ -1661,7 +1661,7 @@ func APStatementPage(rows []APPayableRow, supplierName, from, to string, amount,
 				var templ_7745c5c3_Var102 string
 				templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "ap.print_note"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/ap.templ`, Line: 205, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/ap.templ`, Line: 205, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 				if templ_7745c5c3_Err != nil {
