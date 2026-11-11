@@ -207,9 +207,9 @@ func ApprovalRequestBlock(woID int64, canCreate bool, pending []PendingApproval)
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(itemTypeLabel(p.ItemType))
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(itemTypeLabel(ctx, p.ItemType))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval_request.templ`, Line: 50, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval_request.templ`, Line: 50, Col: 105}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {

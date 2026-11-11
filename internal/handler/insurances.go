@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -270,12 +271,12 @@ func ListVehicleInspections(w http.ResponseWriter, r *http.Request, user model.U
 		if err := rows.Scan(&id, &vid, &plate, &orderDate, &checkDate, &firmNo, &notes, &custName); err != nil {
 			continue
 		}
-		statusPill, statusLabel := "p-completed", "已完成"
+		statusPill, statusLabel := "p-completed", i18n.T(r.Context(), "insurancelist.inspection.done")
 		if checkDate == "" {
 			if od := normDate(orderDate); od != "" && od < today {
-				statusPill, statusLabel = "p-apprno", "已逾期"
+				statusPill, statusLabel = "p-apprno", i18n.T(r.Context(), "insurancelist.inspection.overdue")
 			} else {
-				statusPill, statusLabel = "p-waitparts", "待檢驗"
+				statusPill, statusLabel = "p-waitparts", i18n.T(r.Context(), "insurancelist.inspection.pending")
 			}
 		}
 		inspRows = append(inspRows, pages.InspectionRow{
@@ -326,12 +327,12 @@ func SearchInspectionsAPI(w http.ResponseWriter, r *http.Request) {
 		if err := rows.Scan(&id, &vid, &plate, &orderDate, &checkDate, &firmNo, &notes, &custName); err != nil {
 			continue
 		}
-		statusPill, statusLabel := "p-completed", "已完成"
+		statusPill, statusLabel := "p-completed", i18n.T(r.Context(), "insurancelist.inspection.done")
 		if checkDate == "" {
 			if od := normDate(orderDate); od != "" && od < todayStr {
-				statusPill, statusLabel = "p-apprno", "已逾期"
+				statusPill, statusLabel = "p-apprno", i18n.T(r.Context(), "insurancelist.inspection.overdue")
 			} else {
-				statusPill, statusLabel = "p-waitparts", "待檢驗"
+				statusPill, statusLabel = "p-waitparts", i18n.T(r.Context(), "insurancelist.inspection.pending")
 			}
 		}
 		result = append(result, pages.InspectionRow{

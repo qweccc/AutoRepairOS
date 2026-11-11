@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/internal/service"
 )
@@ -23,7 +25,7 @@ func shouldCheckTransition(current, target string) bool {
 func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	status := r.FormValue("status")
-	if _, ok := workOrderStatusLabel[status]; !ok {
+	if !isKnownWorkOrderStatus(status) {
 		formError(w, r, "更新工單狀態", "/work-orders/"+strconv.FormatInt(id, 10), "無效狀態")
 		return
 	}
@@ -32,7 +34,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	currentStatus := countStatus(id)
 	if shouldCheckTransition(currentStatus, status) {
 		if err := service.ValidateWorkOrderTransition(currentStatus, status); err != nil {
-			fail(w, "不允許從「"+workOrderStatusLabel[currentStatus]+"」轉換為「"+workOrderStatusLabel[status]+"」")
+			fail(w, "不允許從「"+workOrderStatusLabel(r.Context(), currentStatus)+"」轉換為「"+workOrderStatusLabel(r.Context(), status)+"」")
 			return
 		}
 	}
@@ -46,7 +48,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	// 已結帳的工單是財務憑證，不允許再改狀態：否則扣料與營收會與實物對不上。
 	if WorkOrderStatus(currentStatus) == WorkOrderStatusPaid {
 		if WorkOrderStatus(status) != WorkOrderStatusPaid {
-			fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel[status]+"」。如需更正請另行開立沖銷單。")
+			fail(w, "此工單已結帳，不可變更為「"+workOrderStatusLabel(r.Context(), status)+"」。如需更正請另行開立沖銷單。")
 			return
 		}
 	}
@@ -78,7 +80,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		if err := RecordPassbookForWorkOrder(id); err != nil {
 			log.Printf("工單 #%d 結帳成功，但建立 Passbook 失敗: %v", id, err)
 		}
-		redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
+		redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel(r.Context(), status)+"」")
 		return
 	}
 
@@ -114,7 +116,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel[status]+"」")
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "狀態已更新為「"+workOrderStatusLabel(r.Context(), status)+"」")
 }
 
 // countStatus 讀取工單目前狀態；查無回傳空字串。
@@ -122,7 +124,7 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 	approval := r.FormValue("approval_status")
-	if _, ok := approvalLabel[approval]; !ok {
+	if !isKnownApprovalStatus(approval) {
 		formError(w, r, "更新核准狀態", "/work-orders/"+strconv.FormatInt(id, 10), "無效核准狀態")
 		return
 	}
@@ -141,7 +143,7 @@ func UpdateWorkOrderApproval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "核准狀態已更新為「"+approvalLabel[approval]+"」")
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "核准狀態已更新為「"+approvalLabel(r.Context(), approval)+"」")
 }
 
 func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
@@ -165,18 +167,18 @@ func ToggleWorkOrderSOP(w http.ResponseWriter, r *http.Request) {
 	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "SOP 狀態已切換")
 }
 
-func statusOptions(current string) string {
+func statusOptions(ctx context.Context, current string) string {
 	var b strings.Builder
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
-		b.WriteString(`<option value="` + s + `"` + selIf(current == s) + `>` + workOrderStatusLabel[s] + `</option>`)
+		b.WriteString(`<option value="` + s + `"` + selIf(current == s) + `>` + workOrderStatusLabel(ctx, s) + `</option>`)
 	}
 	return b.String()
 }
 
-func approvalOptions(current string) string {
+func approvalOptions(ctx context.Context, current string) string {
 	var b strings.Builder
 	for _, s := range []string{"not_required", "pending", "approved", "rejected"} {
-		b.WriteString(`<option value="` + s + `"` + selIf(current == s) + `>` + approvalLabel[s] + `</option>`)
+		b.WriteString(`<option value="` + s + `"` + selIf(current == s) + `>` + approvalLabel(ctx, s) + `</option>`)
 	}
 	return b.String()
 }
@@ -193,35 +195,35 @@ func approvalOptions(current string) string {
 //	                         出現在技師選單裡，污染技師產值與佣金統計。
 //	active=1 —— 離職技師不該出現在指派選單（migration 014 加入）。
 
-func statusControls(wo model.WorkOrder, canEdit bool) string {
+func statusControls(ctx context.Context, wo model.WorkOrder, canEdit bool) string {
 	if !canEdit {
-		return `<div style="padding:10px 14px;border-radius:8px;background:#052e16;
-          color:#86efac;border:1px solid #166534;font-size:13.5px">
+		return `<div style="padding:10px 14px;border-radius:8px;background:var(--ok-bg);
+          color:var(--ok);border:1px solid var(--ok);font-size:13.5px">
           此工單已結帳，內容唯讀。如需更正請另行開立沖銷單。
         </div>`
 	}
 
 	return `
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/status">
-          <label style="font-size:12px;color:#94a3b8">變更狀態</label>
-          <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
-		statusOptions(wo.Status) + `</select>
-          <button class="btn btn-p" type="submit">更新狀態</button>
+          <label style="font-size:12px;color:var(--text-sub)">` + i18n.T(ctx, "workorder.status.change") + `</label>
+          <select name="status" style="padding:6px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);margin:0 8px">` +
+		statusOptions(ctx, wo.Status) + `</select>
+          <button class="btn btn-p" type="submit">` + i18n.T(ctx, "workorder.status.update") + `</button>
         </form>
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/approval">
-          <label style="font-size:12px;color:#94a3b8;margin-left:16px">核准</label>
-          <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;margin:0 8px">` +
-		approvalOptions(wo.ApprovalStatus) + `</select>
-          <button class="btn btn-p" type="submit">更新核准</button>
+          <label style="font-size:12px;color:var(--text-sub);margin-left:16px">` + i18n.T(ctx, "workorder.col.approval") + `</label>
+          <select name="approval_status" style="padding:6px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);margin:0 8px">` +
+		approvalOptions(ctx, wo.ApprovalStatus) + `</select>
+          <button class="btn btn-p" type="submit">` + i18n.T(ctx, "workorder.approval.update") + `</button>
         </form>
         <form class="inline" method="POST" action="/work-orders/` + strconv.FormatInt(wo.ID, 10) + `/sop">
-          <button class="btn btn-s" type="submit">` + sopToggleLabel(wo.SOPCompleted) + `</button>
+          <button class="btn btn-s" type="submit">` + sopToggleLabel(ctx, wo.SOPCompleted) + `</button>
         </form>`
 }
 
-func sopToggleLabel(done bool) string {
+func sopToggleLabel(ctx context.Context, done bool) string {
 	if done {
-		return "取消 SOP 完成"
+		return i18n.T(ctx, "workorder.sop.cancel")
 	}
-	return "標記 SOP 完成"
+	return i18n.T(ctx, "workorder.sop.mark_done")
 }

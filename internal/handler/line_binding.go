@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -235,7 +236,7 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 		if err != nil {
 			return "查不到您的車輛紀錄，請確認手機號碼是否已登錄。"
 		}
-		label := workOrderStatusLabel[status]
+		label := workOrderStatusLabel(context.Background(), status)
 		if label == "" {
 			label = status
 		}
@@ -257,7 +258,7 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 		if err != nil {
 			return "找不到這張工單，或它不是您的車輛。"
 		}
-		label := workOrderStatusLabel[status]
+		label := workOrderStatusLabel(context.Background(), status)
 		if label == "" {
 			label = status
 		}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 )
 
 func atoiDefault(s string, def int) int {
@@ -95,20 +97,42 @@ func selIf(cond bool) string {
 	return ""
 }
 
-var workOrderStatusLabel = map[string]string{
-	"pending":       "待處理",
-	"in_progress":   "進行中",
-	"waiting_parts": "待料",
-	"completed":     "待結帳",
-	"paid":          "已結帳",
+// 狀態／核准標籤一律走 i18n 字典（見 locales/*.json 的 workorder.status.*、
+// workorder.approval.*）。字典缺鍵時退回原始代碼，避免畫面直接出現
+// "workorder.status.xxx" 這種 key。
+func workOrderStatusLabel(ctx context.Context, status string) string {
+	key := "workorder.status." + status
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return status
 }
 
-var approvalLabel = map[string]string{
-	"not_required": "-",
-	"pending":      "待核准",
-	"approved":     "已核准",
-	"rejected":     "已拒絕",
+func approvalLabel(ctx context.Context, status string) string {
+	key := "workorder.approval." + status
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return status
 }
+
+var knownWorkOrderStatus = map[string]bool{
+	"pending":       true,
+	"in_progress":   true,
+	"waiting_parts": true,
+	"completed":     true,
+	"paid":          true,
+}
+
+var knownApprovalStatus = map[string]bool{
+	"not_required": true,
+	"pending":      true,
+	"approved":     true,
+	"rejected":     true,
+}
+
+func isKnownWorkOrderStatus(s string) bool { return knownWorkOrderStatus[s] }
+func isKnownApprovalStatus(s string) bool  { return knownApprovalStatus[s] }
 
 var statusPill = map[string]string{
 	"pending":       "p-pending",

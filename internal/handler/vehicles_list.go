@@ -348,7 +348,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		tb.WriteString(`<tr><td><a href="/work-orders/` + strconv.FormatInt(woID, 10) + `">` +
 			strconv.FormatInt(woID, 10) + `</a></td><td>` + woCreatedText(parseFlexTime(createdAt)) +
-			`</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel[status] +
+			`</td><td><span class="pill ` + statusPill[status] + `">` + workOrderStatusLabel(r.Context(), status) +
 			`</span></td><td class="num">` + strconv.Itoa(mileage) + `</td><td class="num">` + money(amount) +
 			`</td><td>` + orDash(htmlEsc(tech)) + `</td><td>` + insCell + `</td><td style="font-size:12px;color:#94a3b8">` +
 			htmlEsc(notes) + `</td></tr>`)

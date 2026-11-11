@@ -67,7 +67,7 @@ func allSweepPages() map[string]templ.Component {
 		"ShowVehiclePage":              ShowVehiclePage(testVehicle, 0, 0, 0, 0, "", "", "", "", "", testOwner),
 		"ListWorkOrdersPage":           ListWorkOrdersPage(nil, 0, 1, 20, "", "", "", "", "", "", "", "", testOwner),
 		"NewWorkOrderPage":             NewWorkOrderPage(NewWorkOrderPageData{}, testOwner),
-		"ShowWorkOrderPage":            ShowWorkOrderPage(testWO, nil, 0, nil, nil, nil, nil, nil, false, "", nil, "", nil, false, nil, testOwner),
+		"ShowWorkOrderPage":            ShowWorkOrderPage(testWO, nil, 0, "", nil, "", nil, nil, false, "", nil, "", nil, false, nil, testOwner),
 		"WorkOrderItemsTable":          WorkOrderItemsTable(1, nil, nil, true, 0, testOwner),
 		"StatusControls":               StatusControls(testWO, true),
 		"SOPChecklistTable":            SOPChecklistTable(1, nil, true),

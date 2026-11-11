@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"context"
 	"strconv"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 // ShowWorkOrderPage 工單詳情頁。
 // 用 Templ 型別安全產生，HTMX 處理狀態切換與新增項目。
 templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTotal float64,
-	statusLabels map[string]string, statusPill map[string]string, approvalLabels map[string]string, approvalPill map[string]string,
+	statusLabel string, statusPill map[string]string, approvalLabel string, approvalPill map[string]string,
 	techNames map[int64]string, canEdit bool, flashMsg string,
 	sopRecords []model.SOPRecord, sopTemplateOpts string, attachedTemplates []int64,
 	canCreateApproval bool, pendingApprovals []PendingApproval, user model.User) {
@@ -34,13 +35,13 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 				</tr>
 				<tr>
 					<th>{ i18n.T(ctx, "workorder.col.status") }</th>
-					<td><span class={ "pill " + statusPill[wo.Status] }>{ statusLabels[wo.Status] }</span></td>
+					<td><span class={ "pill " + statusPill[wo.Status] }>{ statusLabel }</span></td>
 					<th>{ i18n.T(ctx, "workorder.col.approval_status") }</th>
-					<td><span class={ "pill " + approvalPill[wo.ApprovalStatus] }>{ approvalLabels[wo.ApprovalStatus] }</span></td>
+					<td><span class={ "pill " + approvalPill[wo.ApprovalStatus] }>{ approvalLabel }</span></td>
 				</tr>
 				<tr><th>{ i18n.T(ctx, "workorder.col.complaint") }</th><td colspan="3">{ wo.CustomerComplaint }</td></tr>
 				<tr>
-					<th>SOP</th><td>{ sopStatusText(wo.SOPCompleted, len(sopRecords)) }</td>
+					<th>SOP</th><td>{ sopStatusText(ctx, wo.SOPCompleted, len(sopRecords)) }</td>
 					<th>{ i18n.T(ctx, "workorder.col.created_at") }</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
 				</tr>
 				@InsuranceRow(wo, canEdit)
@@ -72,7 +73,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 						style="margin-top:14px;display:flex;gap:8px;align-items:center">
 						@components.CSRFInput()
 						<select name="template_id"
-							style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+							style="padding:6px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 							@templ.Raw(sopTemplateOpts)
 						</select>
 						<button class="btn btn-s" type="submit">{ i18n.T(ctx, "workorder.sop.attach") }</button>
@@ -137,7 +138,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 		</tr>
 			for _, it := range items {
 				<tr>
-					<td>@components.Pill(itemTypeLabel(it.ItemType), "p-progress")</td>
+					<td>@components.Pill(itemTypeLabel(ctx, it.ItemType), "p-progress")</td>
 					<td>{ it.Description }</td>
 					<td class="num">{ strconv.Itoa(it.Quantity) }</td>
 					if showMoney {
@@ -238,7 +239,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			style="display:inline;margin:0 8px">
 			@components.CSRFInput()
 			<select name="status" onchange="htmx.trigger(this.closest('form'), 'submit')"
-				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				style="padding:6px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 				<option value="pending" selected?={ wo.Status == "pending" }>{ i18n.T(ctx, "workorder.status.pending") }</option>
 				<option value="in_progress" selected?={ wo.Status == "in_progress" }>{ i18n.T(ctx, "workorder.status.in_progress") }</option>
 				<option value="waiting_parts" selected?={ wo.Status == "waiting_parts" }>{ i18n.T(ctx, "workorder.status.waiting_parts") }</option>
@@ -252,7 +253,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			style="display:inline;margin:0 8px">
 			@components.CSRFInput()
 			<select name="approval_status" onchange="htmx.trigger(this.closest('form'), 'submit')"
-				style="padding:6px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				style="padding:6px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 				<option value="pending" selected?={ wo.ApprovalStatus == "pending" }>{ i18n.T(ctx, "workorder.approval.pending") }</option>
 				<option value="approved" selected?={ wo.ApprovalStatus == "approved" }>{ i18n.T(ctx, "workorder.approval.approved") }</option>
 				<option value="rejected" selected?={ wo.ApprovalStatus == "rejected" }>{ i18n.T(ctx, "workorder.approval.rejected") }</option>
@@ -263,7 +264,7 @@ templ StatusControls(wo model.WorkOrder, canEdit bool) {
 			hx-swap="innerHTML"
 			style="display:inline;margin:0 8px">
 			@components.CSRFInput()
-			<button class="btn btn-s" type="submit">{ sopLabel(wo.SOPCompleted) }</button>
+			<button class="btn btn-s" type="submit">{ sopLabel(ctx, wo.SOPCompleted) }</button>
 		</form>
 	}
 }
@@ -309,7 +310,7 @@ templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {
 		for _, r := range records {
 			<tr>
 				<td>{ r.Description }</td>
-				<td>{ yesNo(r.Required) }</td>
+				<td>{ yesNo(ctx, r.Required) }</td>
 				<td>
 					if r.Completed {
 						if canEdit {
@@ -420,36 +421,36 @@ func statusStepStyle(stepIdx, currentIdx int) string {
 	return "background:#334155;color:#64748b"
 }
 
-func itemTypeLabel(t string) string {
+func itemTypeLabel(ctx context.Context, t string) string {
 	switch t {
 	case "labor":
-		return "工資"
+		return i18n.T(ctx, "workorder.item_type.labor")
 	case "part":
-		return "零件"
+		return i18n.T(ctx, "workorder.item_type.part")
 	case "subcontract":
-		return "外包"
+		return i18n.T(ctx, "workorder.item_type.subcontract")
 	}
 	return t
 }
 
-func yesNo(b bool) string {
+func yesNo(ctx context.Context, b bool) string {
 	if b {
-		return "是"
+		return i18n.T(ctx, "common.yes")
 	}
-	return "否"
+	return i18n.T(ctx, "common.no")
 }
 
-func sopLabel(done bool) string {
+func sopLabel(ctx context.Context, done bool) string {
 	if done {
-		return "取消 SOP"
+		return i18n.T(ctx, "workorder.sop.cancel")
 	}
-	return "標記 SOP 完成"
+	return i18n.T(ctx, "workorder.sop.mark_done")
 }
 
-func sopStatusText(completed bool, total int) string {
-	if total == 0 { return "未掛入模板" }
-	if completed { return "已完成" }
-	return "進行中"
+func sopStatusText(ctx context.Context, completed bool, total int) string {
+	if total == 0 { return i18n.T(ctx, "workorder.sop.not_attached") }
+	if completed { return i18n.T(ctx, "workorder.sop.done") }
+	return i18n.T(ctx, "workorder.sop.in_progress")
 }
 
 func money(f float64) string {

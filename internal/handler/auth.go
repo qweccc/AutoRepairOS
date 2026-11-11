@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/internal/session"
 	"autorepairos/web/pages"
@@ -181,12 +182,12 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			query string
 			href  string
 		}{
-			{"待收款", "SELECT COUNT(1) FROM active_work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
-			{"待結帳", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
-			{"進行中", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
-			{"低庫存件", "SELECT COUNT(1) FROM active_inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
-			{"客戶數", "SELECT COUNT(1) FROM active_customers", "/customers"},
-			{"車輛數", "SELECT COUNT(1) FROM active_vehicles", "/vehicles"},
+			{"dashboard.stat.receivable", "SELECT COUNT(1) FROM active_work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
+			{"dashboard.stat.to_checkout", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+			{"dashboard.stat.in_progress", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'in_progress'", "/work-orders?status=in_progress"},
+			{"dashboard.stat.low_stock", "SELECT COUNT(1) FROM active_inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+			{"dashboard.stat.customers", "SELECT COUNT(1) FROM active_customers", "/customers"},
+			{"dashboard.stat.vehicles", "SELECT COUNT(1) FROM active_vehicles", "/vehicles"},
 		}
 	case "counter":
 		stats = []struct {
@@ -194,10 +195,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			query string
 			href  string
 		}{
-			{"待處理工單", "SELECT COUNT(1) FROM active_work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
-			{"待結帳", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
-			{"待收款", "SELECT COUNT(1) FROM active_work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
-			{"低庫存件", "SELECT COUNT(1) FROM active_inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
+			{"dashboard.stat.open_orders", "SELECT COUNT(1) FROM active_work_orders WHERE status IN ('pending','in_progress','waiting_parts')", "/work-orders?status=pending"},
+			{"dashboard.stat.to_checkout", "SELECT COUNT(1) FROM active_work_orders WHERE status = 'completed'", "/work-orders?status=completed"},
+			{"dashboard.stat.receivable", "SELECT COUNT(1) FROM active_work_orders wo WHERE wo.status = 'completed' AND COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0) < wo.total_amount", "/receivables?unpaid=1"},
+			{"dashboard.stat.low_stock", "SELECT COUNT(1) FROM active_inventory_items WHERE stock_quantity < min_safety_stock", "/inventory?low=1"},
 		}
 	default: // technician
 		stats = []struct {
@@ -205,9 +206,9 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			query string
 			href  string
 		}{
-			{"我的工單", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status IN ('pending','in_progress','waiting_parts')", "/work-orders?mine=1"},
-			{"進行中", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status = 'in_progress'", "/work-orders?mine=1&status=in_progress"},
-			{"待結帳", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status = 'completed'", "/work-orders?mine=1&status=completed"},
+			{"dashboard.stat.my_orders", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status IN ('pending','in_progress','waiting_parts')", "/work-orders?mine=1"},
+			{"dashboard.stat.in_progress", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status = 'in_progress'", "/work-orders?mine=1&status=in_progress"},
+			{"dashboard.stat.to_checkout", "SELECT COUNT(1) FROM active_work_orders WHERE technician_id = ? AND status = 'completed'", "/work-orders?mine=1&status=completed"},
 		}
 	}
 
@@ -227,37 +228,37 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 				return
 			}
 		}
-		statsOut = append(statsOut, pages.DashboardStat{Label: s.label, Href: s.href, Count: n})
+		statsOut = append(statsOut, pages.DashboardStat{Label: i18n.T(r.Context(), s.label), Href: s.href, Count: n})
 	}
 
 	issues := []pages.DashboardIssue{
 		{
-			Label:  "客戶名稱疑似亂碼",
-			Detail: "請檢查含替換字元或編碼符號的客戶名稱",
+			Label:  "dashboard.issue.customer_garbled",
+			Detail: "dashboard.issue.customer_garbled_desc",
 			Href:   "/customers",
 			Query:  `SELECT COUNT(1) FROM active_customers WHERE name LIKE '%�%' OR name GLOB '*[¤§ª«¬±´µ¸º»ÃÂ]*'`,
 		},
 		{
-			Label:  "廠商名稱疑似亂碼",
-			Detail: "請檢查含替換字元或編碼符號的廠商名稱",
+			Label:  "dashboard.issue.supplier_garbled",
+			Detail: "dashboard.issue.supplier_garbled_desc",
 			Href:   "/suppliers",
 			Query:  `SELECT COUNT(1) FROM active_suppliers WHERE name LIKE '%�%' OR name GLOB '*[¤§ª«¬±´µ¸º»ÃÂ]*'`,
 		},
 		{
-			Label:  "客戶缺少電話",
-			Detail: "電話是客戶搜尋與通知的重要資料",
+			Label:  "dashboard.issue.customer_no_phone",
+			Detail: "dashboard.issue.customer_no_phone_desc",
 			Href:   "/customers",
 			Query:  `SELECT COUNT(1) FROM active_customers WHERE TRIM(COALESCE(phone, '')) = ''`,
 		},
 		{
-			Label:  "庫存為負數",
-			Detail: "庫存數量小於 0 的零件需要盤點",
+			Label:  "dashboard.issue.negative_stock",
+			Detail: "dashboard.issue.negative_stock_desc",
 			Href:   "/inventory",
 			Query:  `SELECT COUNT(1) FROM inventory_items WHERE stock_quantity < 0`,
 		},
 		{
-			Label:  "車輛資料不完整",
-			Detail: "缺少車牌、車型或車主的車輛需要補正",
+			Label:  "dashboard.issue.vehicle_incomplete",
+			Detail: "dashboard.issue.vehicle_incomplete_desc",
 			Href:   "/vehicles",
 			Query: `SELECT COUNT(1) FROM active_vehicles v
 				LEFT JOIN active_customers c ON c.id = v.customer_id
@@ -276,6 +277,8 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		if count > 0 {
 			issue.Count = count
+			issue.Label = i18n.T(r.Context(), issue.Label)
+			issue.Detail = i18n.T(r.Context(), issue.Detail)
 			issuesOut = append(issuesOut, issue)
 		}
 	}
@@ -300,7 +303,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 			}
 			recentOut = append(recentOut, pages.DashboardRecentWorkOrder{
 				ID: id, PlateNumber: plate, BrandModel: model_, CustomerName: cname,
-				StatusLabel: workOrderStatusLabel[status], StatusPill: statusPill[status],
+				StatusLabel: workOrderStatusLabel(r.Context(), status), StatusPill: statusPill[status],
 			})
 		}
 		if err := rows.Err(); err != nil {

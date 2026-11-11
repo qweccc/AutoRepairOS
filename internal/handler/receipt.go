@@ -71,7 +71,7 @@ func PrintWorkOrderReceipt(w http.ResponseWriter, r *http.Request, user model.Us
 	}
 	data := pages.ReceiptPageData{
 		AppName: appName(), WorkOrderID: strconv.FormatInt(wo.ID, 10), Date: today(),
-		Status: workOrderStatusLabel[wo.Status], Approval: approvalLabel[wo.ApprovalStatus],
+		Status: workOrderStatusLabel(r.Context(), wo.Status), Approval: approvalLabel(r.Context(), wo.ApprovalStatus),
 		CustomerName: wo.CustomerName, CustomerPhone: wo.CustomerPhone,
 		PlateNumber: wo.PlateNumber, BrandModel: wo.BrandModel,
 		Mileage: strconv.Itoa(wo.CurrentMileage), Technician: optionalPrintValue(wo.TechnicianName),

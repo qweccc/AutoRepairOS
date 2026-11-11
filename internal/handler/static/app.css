@@ -26,6 +26,9 @@
   --ok-bg: #dcfce7;
   --neutral: #475569;
   --brown: #4a2f13;
+  --surface-2: #f1f5f9;
+  --primary-bg: #dbeafe;
+  --warn-bg: #fef3c7;
 }
 [data-theme="dark"] {
   --bg: #0f172a;
@@ -45,6 +48,9 @@
   --ok-bg: #14532d;
   --neutral: #d4d4d8;
   --brown: #4a2f13;
+  --surface-2: #0f172a;
+  --primary-bg: #1e3a5f;
+  --warn-bg: #3b2f13;
 }
 
 
@@ -125,7 +131,7 @@ main {
 
 /* ---- Nav（右側直排側邊欄）---- */
 nav {
-  background: #111c33;
+  background: var(--surface);
   width: var(--nav-w);
   border-left: 1px solid var(--border);
   display: flex;
@@ -148,7 +154,7 @@ nav a {
 }
 nav a:hover {
   color: var(--text);
-  background: #1a2740;
+  background: var(--surface-2);
 }
 nav a.on {
   color: var(--primary);
@@ -207,7 +213,7 @@ th {
   font-weight: 600;
 }
 tr:hover td {
-  background: #263449;
+  background: var(--surface-2);
 }
 .num {
   text-align: right;
@@ -285,12 +291,12 @@ tr:hover td {
   color: var(--ok);
 }
 .p-pending {
-  background: #3b2f13;
+  background: var(--warn-bg);
   color: var(--warn);
 }
 .p-progress {
-  background: #1e3a5f;
-  color: var(--primary-soft);
+  background: var(--primary-bg);
+  color: var(--primary);
 }
 .p-waitparts {
   background: var(--brown);
@@ -301,7 +307,7 @@ tr:hover td {
   color: var(--danger-text);
 }
 .p-cancelled {
-  background: #3f3f46;
+  background: var(--surface-2);
   color: var(--neutral);
 }
 
@@ -622,5 +628,5 @@ form.login button:hover {
   background: var(--surface);
 }
 .bin-loc {
-  color: #10b981;
+  color: var(--ok);
 }

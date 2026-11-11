@@ -67,7 +67,7 @@ func ShowWorkOrder(w http.ResponseWriter, r *http.Request, user model.User) {
 	sopTemplateOpts := SOPTemplateOptions(attachedTemplates)
 
 	pages.ShowWorkOrderPage(wo, items, itemTotal,
-		workOrderStatusLabel, statusPill, approvalLabel, approvalPill,
+		workOrderStatusLabel(r.Context(), wo.Status), statusPill, approvalLabel(r.Context(), wo.ApprovalStatus), approvalPill,
 		techNames, canEdit, flashText(r),
 		sopRecords, sopTemplateOpts, attachedTemplates,
 		canCreateApproval, pendingApprovalRows(id), user).Render(r.Context(), w)

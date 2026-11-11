@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 
@@ -19,6 +20,10 @@ import (
 
 // TestHelpersRound2 exercises every plain-Go helper's branches directly.
 func TestHelpersRound2(t *testing.T) {
+	// 標籤類 helper 要字典才譯得出來；未載入時 i18n.T 會直接回傳 key。
+	if err := i18n.Load("../../locales"); err != nil {
+		t.Skipf("locales not available: %v", err)
+	}
 	// statusIndex: every flow status + unknown
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid", "bogus", ""} {
 		statusIndex(s)
@@ -29,18 +34,18 @@ func TestHelpersRound2(t *testing.T) {
 	}
 	// itemTypeLabel: all cases + fallback
 	for _, s := range []string{"labor", "part", "subcontract", "other", ""} {
-		itemTypeLabel(s)
+		itemTypeLabel(context.Background(), s)
 	}
-	if yesNo(true) != "是" || yesNo(false) != "否" {
+	if yesNo(context.Background(), true) != "是" || yesNo(context.Background(), false) != "否" {
 		t.Fatal("yesNo")
 	}
-	if sopLabel(true) != "取消 SOP" || sopLabel(false) != "標記 SOP 完成" {
+	if sopLabel(context.Background(), true) != "取消 SOP 完成" || sopLabel(context.Background(), false) != "標記 SOP 完成" {
 		t.Fatal("sopLabel")
 	}
 	// sopStatusText: total 0 / completed / in progress
-	sopStatusText(false, 0)
-	sopStatusText(true, 3)
-	sopStatusText(false, 3)
+	sopStatusText(context.Background(), false, 0)
+	sopStatusText(context.Background(), true, 3)
+	sopStatusText(context.Background(), false, 3)
 	money(0)
 	money(98765)
 
@@ -352,8 +357,8 @@ func TestRenderVariantsRound2(t *testing.T) {
 		{"WorkOrderSearchRowsEmpty", WorkOrderSearchRows(nil), ""},
 		{"NewWorkOrderPageFull", NewWorkOrderPage(NewWorkOrderPageData{FlashHTML: "<p>提示</p>", NotFoundHTML: "<p>查無</p>", ApptBannerHTML: "<p>預約</p>", PreAppointment: 7, PreVehicle: 1, VehicleOptionsJSON: "[]", Vehicles: []model.Vehicle{testVehicle, vehFull}, PresetLabel: "XYZ-9999", Mileage: "60000", TechnicianOptions: "<option>技師A</option>", InsuranceOptions: "<option>保險B</option>", CustomerHintHTML: "<p>提示</p>"}, testOwner), "XYZ-9999"},
 		{"NewWorkOrderPageNoVehicles", NewWorkOrderPage(NewWorkOrderPageData{}, testCounter), ""},
-		{"ShowWorkOrderPageFull", ShowWorkOrderPage(woInsuranceFull, []model.WorkOrderItem{{ID: 10, WorkOrderID: 3, ItemType: "part", Description: "煞車皮", Quantity: 2, UnitPrice: 1500, Subtotal: 3000, PrimaryTechnicianID: 1}, {ID: 11, WorkOrderID: 3, ItemType: "labor", Description: "工資", Quantity: 1, UnitPrice: 1000, Subtotal: 1000, PhotoURL: "/photos/1.jpg"}}, 4000, map[string]string{"completed": "已完工"}, map[string]string{"completed": "pill-ok"}, map[string]string{"approved": "已同意"}, map[string]string{"approved": "pill-ok"}, map[int64]string{1: "技師A"}, true, "已儲存", []model.SOPRecord{{ID: 1, WorkOrderID: 3, Description: "檢查煞車", Required: true, Completed: true, CompletedByName: "技師A", CompletedAtText: "2026-11-05 10:00"}, {ID: 2, WorkOrderID: 3, Description: "檢查胎壓", Required: false, Completed: false}}, "<option>保養SOP</option>", []int64{1, 2}, true, []PendingApproval{{ID: 1, Description: "追加項目"}}, testOwner), "煞車皮"},
-		{"ShowWorkOrderPagePending", ShowWorkOrderPage(woPending, nil, 0, map[string]string{"pending": "待處理"}, map[string]string{"pending": "pill"}, map[string]string{"pending": "待核准"}, map[string]string{"pending": "pill"}, nil, false, "", nil, "", nil, false, nil, testTech), "待處理"},
+		{"ShowWorkOrderPageFull", ShowWorkOrderPage(woInsuranceFull, []model.WorkOrderItem{{ID: 10, WorkOrderID: 3, ItemType: "part", Description: "煞車皮", Quantity: 2, UnitPrice: 1500, Subtotal: 3000, PrimaryTechnicianID: 1}, {ID: 11, WorkOrderID: 3, ItemType: "labor", Description: "工資", Quantity: 1, UnitPrice: 1000, Subtotal: 1000, PhotoURL: "/photos/1.jpg"}}, 4000, "已完工", map[string]string{"completed": "pill-ok"}, "已同意", map[string]string{"approved": "pill-ok"}, map[int64]string{1: "技師A"}, true, "已儲存", []model.SOPRecord{{ID: 1, WorkOrderID: 3, Description: "檢查煞車", Required: true, Completed: true, CompletedByName: "技師A", CompletedAtText: "2026-11-05 10:00"}, {ID: 2, WorkOrderID: 3, Description: "檢查胎壓", Required: false, Completed: false}}, "<option>保養SOP</option>", []int64{1, 2}, true, []PendingApproval{{ID: 1, Description: "追加項目"}}, testOwner), "煞車皮"},
+		{"ShowWorkOrderPagePending", ShowWorkOrderPage(woPending, nil, 0, "待處理", map[string]string{"pending": "pill"}, "待核准", map[string]string{"pending": "pill"}, nil, false, "", nil, "", nil, false, nil, testTech), "待處理"},
 		{"WorkOrderItemsTableNoMoney", WorkOrderItemsTable(1, []model.WorkOrderItem{testWOItem}, map[int64]string{}, false, 0, testCounter), "換機油"},
 		{"WorkOrderItemsTableEmpty", WorkOrderItemsTable(1, nil, nil, true, 0, testOwner), ""},
 		{"StatusControlsPending", StatusControls(woPending, true), ""},

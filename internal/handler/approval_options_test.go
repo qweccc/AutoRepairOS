@@ -1,9 +1,12 @@
 package handler
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestApprovalOptions(t *testing.T) {
-	got := approvalOptions("pending")
+	got := approvalOptions(context.Background(), "pending")
 	if got == "" {
 		t.Error("should not be empty")
 	}

@@ -168,7 +168,7 @@ func TestWriterSweepAllPages(t *testing.T) {
 		"WorkOrderSearchError":         WorkOrderSearchError(),
 		"WorkOrderSearchRows":          WorkOrderSearchRows(nil),
 		"NewWorkOrderPage":             NewWorkOrderPage(NewWorkOrderPageData{}, model.User{}),
-		"ShowWorkOrderPage":            ShowWorkOrderPage(model.WorkOrder{}, nil, 0, nil, nil, nil, nil, nil, false, "", nil, "", nil, false, nil, model.User{}),
+		"ShowWorkOrderPage":            ShowWorkOrderPage(model.WorkOrder{}, nil, 0, "", nil, "", nil, nil, false, "", nil, "", nil, false, nil, model.User{}),
 		"WorkOrderItemsTable":          WorkOrderItemsTable(0, nil, nil, false, 0, model.User{}),
 		"AddItemForm":                  AddItemForm(0),
 		"StatusControls":               StatusControls(model.WorkOrder{}, false),

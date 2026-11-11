@@ -74,7 +74,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		out := make([]pages.Phase5ReportStatusRow, 0, 5)
 		for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
-			out = append(out, pages.Phase5ReportStatusRow{Label: workOrderStatusLabel[s], Pill: statusPill[s], Count: strconv.Itoa(statusCounts[idx][s])})
+			out = append(out, pages.Phase5ReportStatusRow{Label: workOrderStatusLabel(r.Context(), s), Pill: statusPill[s], Count: strconv.Itoa(statusCounts[idx][s])})
 		}
 		return out
 	}

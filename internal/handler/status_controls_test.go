@@ -1,16 +1,18 @@
 package handler
 
 import (
-	"autorepairos/internal/model"
+	"context"
 	"testing"
+
+	"autorepairos/internal/model"
 )
 
 func TestStatusControls(t *testing.T) {
-	got := statusControls(model.WorkOrder{}, false)
+	got := statusControls(context.Background(), model.WorkOrder{}, false)
 	if got == "" {
 		t.Error("should not be empty")
 	}
-	got2 := statusControls(model.WorkOrder{}, true)
+	got2 := statusControls(context.Background(), model.WorkOrder{}, true)
 	if got2 == "" {
 		t.Error("should not be empty")
 	}

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 	"log"
@@ -31,7 +32,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		args = append(args, user.ID)
 	}
 	if status != "" {
-		if _, ok := workOrderStatusLabel[status]; ok {
+		if isKnownWorkOrderStatus(status) {
 			where += ` AND wo.status = ?`
 			args = append(args, status)
 		}
@@ -181,10 +182,10 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 			CustomerPhone:  wo.CustomerPhone,
 			TechnicianName: wo.TechnicianName,
 			Status:         wo.Status,
-			StatusLabel:    workOrderStatusLabel[wo.Status],
+			StatusLabel:    workOrderStatusLabel(r.Context(), wo.Status),
 			StatusPill:     statusPill[wo.Status],
 			ApprovalStatus: wo.ApprovalStatus,
-			ApprovalLabel:  approvalLabel[wo.ApprovalStatus],
+			ApprovalLabel:  approvalLabel(r.Context(), wo.ApprovalStatus),
 			ApprovalPill:   approvalPill[wo.ApprovalStatus],
 			IsInsurance:    wo.IsInsurance,
 			PartSummary:    wo.PartSummary,
@@ -202,12 +203,12 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		if q != "" {
 			mineURL += "&q=" + url.QueryEscape(q)
 		}
-		tabs.WriteString(`<a href="` + mineURL + `" class="btn ` + btnIf(mine, "btn-p", "btn-s") + `">我的工單</a> `)
+		tabs.WriteString(`<a href="` + mineURL + `" class="btn ` + btnIf(mine, "btn-p", "btn-s") + `">` + i18n.T(r.Context(), "workorder.mine") + `</a> `)
 	}
-	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(WorkOrderStatus(status) == "" && !mine, "btn-p", "btn-s") + `">全部</a> `)
+	tabs.WriteString(`<a href="` + woTabURL(qv, "") + `" class="btn ` + btnIf(WorkOrderStatus(status) == "" && !mine, "btn-p", "btn-s") + `">` + i18n.T(r.Context(), "workorder.filter_all") + `</a> `)
 	for _, s := range []string{"pending", "in_progress", "waiting_parts", "completed", "paid"} {
 		tabs.WriteString(`<a href="` + woTabURL(qv, s) + `" class="btn ` + btnIf(WorkOrderStatus(status) == WorkOrderStatus(s), "btn-p", "btn-s") + `">` +
-			workOrderStatusLabel[s] + `</a> `)
+			workOrderStatusLabel(r.Context(), s) + `</a> `)
 	}
 
 	pages.ListWorkOrdersPage(woRows, total, page, size,
@@ -235,7 +236,7 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 		args = append(args, like, like, like)
 	}
 	if status != "" {
-		if _, ok := workOrderStatusLabel[status]; ok {
+		if isKnownWorkOrderStatus(status) {
 			where += ` AND wo.status = ?`
 			args = append(args, status)
 		}
@@ -280,10 +281,10 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 			CustomerPhone:  wo.CustomerPhone,
 			TechnicianName: wo.TechnicianName,
 			Status:         wo.Status,
-			StatusLabel:    workOrderStatusLabel[wo.Status],
+			StatusLabel:    workOrderStatusLabel(r.Context(), wo.Status),
 			StatusPill:     statusPill[wo.Status],
 			ApprovalStatus: wo.ApprovalStatus,
-			ApprovalLabel:  approvalLabel[wo.ApprovalStatus],
+			ApprovalLabel:  approvalLabel(r.Context(), wo.ApprovalStatus),
 			ApprovalPill:   approvalPill[wo.ApprovalStatus],
 			IsInsurance:    wo.IsInsurance,
 			CurrentMileage: wo.CurrentMileage,

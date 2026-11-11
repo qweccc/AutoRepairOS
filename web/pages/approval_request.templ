@@ -47,7 +47,7 @@ templ ApprovalRequestBlock(woID int64, canCreate bool, pending []PendingApproval
 				<tr><th>{ i18n.T(ctx, "approval_request.col_item") }</th><th>{ i18n.T(ctx, "approval_request.col_qty") }</th><th class="num">{ i18n.T(ctx, "approval_request.col_unit") }</th><th>{ i18n.T(ctx, "approval_request.col_expires") }</th><th>{ i18n.T(ctx, "approval_request.col_action") }</th></tr>
 				for _, p := range pending {
 					<tr>
-						<td>{ p.Description }<span style="color:#64748b;font-size:12px">（{ itemTypeLabel(p.ItemType) }）</span></td>
+						<td>{ p.Description }<span style="color:#64748b;font-size:12px">（{ itemTypeLabel(ctx, p.ItemType) }）</span></td>
 						<td>{ strconv.Itoa(p.Quantity) }</td>
 						<td class="num">{ money(p.UnitPrice) }</td>
 						<td>{ p.ExpiresAt }</td>

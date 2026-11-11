@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -159,15 +160,15 @@ func TestBatchEWorkOrderStatus(t *testing.T) {
 			t.Fatalf("shouldCheckTransition(%q,%q)", tc.cur, tc.tgt)
 		}
 	}
-	if statusOptions("pending") == "" || approvalOptions("approved") == "" {
+	if statusOptions(context.Background(), "pending") == "" || approvalOptions(context.Background(), "approved") == "" {
 		t.Fatal("options")
 	}
-	if sopToggleLabel(true) == "" || sopToggleLabel(false) == "" {
+	if sopToggleLabel(context.Background(), true) == "" || sopToggleLabel(context.Background(), false) == "" {
 		t.Fatal("sopToggleLabel")
 	}
 	// statusControls variants
-	_ = statusControls(model.WorkOrder{}, true)
-	_ = statusControls(model.WorkOrder{Status: "paid"}, false)
+	_ = statusControls(context.Background(), model.WorkOrder{}, true)
+	_ = statusControls(context.Background(), model.WorkOrder{Status: "paid"}, false)
 
 	if _, err := db.DB.Exec(`INSERT INTO customers (id, name, phone) VALUES (1,'王小明','0912')`); err != nil {
 		t.Fatal(err)

@@ -145,7 +145,7 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 	}
 
 	// 工單狀態標籤
-	statusLabel := workOrderStatusLabel[woStatus]
+	statusLabel := workOrderStatusLabel(r.Context(), woStatus)
 	if statusLabel == "" {
 		statusLabel = woStatus
 	}
