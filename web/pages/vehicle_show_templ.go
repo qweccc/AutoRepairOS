@@ -786,7 +786,7 @@ func ShowVehiclePage(v model.Vehicle,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</td></tr></table><div style=\"margin-top:14px;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:9px\"><div style=\"color:#94a3b8;font-size:12.5px;margin-bottom:8px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</td></tr></table><div style=\"margin-top:14px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:9px\"><div style=\"color:var(--text-sub);font-size:12.5px;margin-bottom:8px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -958,7 +958,7 @@ func ShowVehiclePage(v model.Vehicle,
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</h2><p style=\"color:#64748b;font-size:12.5px;margin:0 0 12px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</h2><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 12px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

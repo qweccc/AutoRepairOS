@@ -111,7 +111,7 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h2><p style=\"color:#64748b;font-size:12.5px;margin:0 0 14px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h2><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 14px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -496,7 +496,7 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</textarea></label><div class=\"full\" style=\"border-top:1px solid #263449;padding-top:16px;margin-top:4px\"><p style=\"color:#64748b;font-size:12.5px;margin:0 0 12px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</textarea></label><div class=\"full\" style=\"border-top:1px solid var(--surface-2);padding-top:16px;margin-top:4px\"><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 12px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

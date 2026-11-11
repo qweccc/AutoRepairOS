@@ -29,10 +29,10 @@ templ ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn
 			</div>
 			<div style="margin-bottom:14px">
 				<div class="stat"><b>{ strconv.Itoa(total) }</b><span>{ i18n.T(ctx, "expense.stat_count") }</span></div>
-				<div class="stat"><b style="color:#86efac">{ moneyFmt(sumIn) }</b><span>{ i18n.T(ctx, "expense.stat_in") }</span></div>
-				<div class="stat"><b style="color:#fca5a5">{ moneyFmt(sumOut) }</b><span>{ i18n.T(ctx, "expense.stat_out") }</span></div>
+				<div class="stat"><b style="color:var(--ok)">{ moneyFmt(sumIn) }</b><span>{ i18n.T(ctx, "expense.stat_in") }</span></div>
+				<div class="stat"><b style="color:var(--danger)">{ moneyFmt(sumOut) }</b><span>{ i18n.T(ctx, "expense.stat_out") }</span></div>
 			</div>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "expense.intro") }
 			</p>
 			<input type="search" name="q" value={ q }
@@ -41,7 +41,7 @@ templ ListExpensesPage(rows []ExpenseRow, total, page, size int, q string, sumIn
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#expense-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<table>
 				<tr><th>{ i18n.T(ctx, "expense.col_date") }</th><th>{ i18n.T(ctx, "expense.col_account") }</th><th>{ i18n.T(ctx, "expense.col_desc") }</th><th class="num">{ i18n.T(ctx, "expense.col_in") }</th><th class="num">{ i18n.T(ctx, "expense.col_out") }</th></tr>
 				<tbody id="expense-rows">
@@ -65,7 +65,7 @@ templ ExpenseRowContent(e ExpenseRow) {
 		<td style="font-size:12.5px">{ orEmpty(e.Notes) }</td>
 		<td class="num">
 			if e.AmtIn != 0 {
-				<span style="color:#86efac">{ moneyFmt(e.AmtIn) }</span>
+				<span style="color:var(--ok)">{ moneyFmt(e.AmtIn) }</span>
 			}
 			if e.AmtIn == 0 {
 				-
@@ -73,7 +73,7 @@ templ ExpenseRowContent(e ExpenseRow) {
 		</td>
 		<td class="num">
 			if e.AmtOut != 0 {
-				<span style="color:#fca5a5">{ moneyFmt(e.AmtOut) }</span>
+				<span style="color:var(--danger)">{ moneyFmt(e.AmtOut) }</span>
 			}
 			if e.AmtOut == 0 {
 				-
@@ -85,7 +85,7 @@ templ ExpenseRowContent(e ExpenseRow) {
 // ExpenseSearchRows 支出即時搜尋回傳的純列。
 templ ExpenseSearchRows(rows []ExpenseRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "expense.no_results") }</td></tr>
+		<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "expense.no_results") }</td></tr>
 	}
 	for _, e := range rows {
 		@ExpenseRowContent(e)

@@ -84,8 +84,8 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "appointment.list_title"), total) }</h2>
 			<form method="GET" action="/appointments" style="margin-bottom:12px">
-				<input type="date" name="date" value={ date } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
-				<select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<input type="date" name="date" value={ date } style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+				<select name="status" style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 					<option value="">{ i18n.T(ctx, "appointment.status_all") }</option>
 					<option value="booked" selected?={ status == "booked" }>{ i18n.T(ctx, "appointment.status.booked") }</option>
 					<option value="confirmed" selected?={ status == "confirmed" }>{ i18n.T(ctx, "appointment.status.confirmed") }</option>
@@ -102,13 +102,13 @@ templ ListAppointmentsPage(rows []AppointmentRow, total, page, size int,
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#appointment-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			if len(baySummary) > 0 {
 				<div class="card"><h2>{ fmt.Sprintf(i18n.T(ctx, "appointment.bay_summary"), bayDate) }</h2><table><tr><th>{ i18n.T(ctx, "appointment.col.bay") }</th><th>{ i18n.T(ctx, "appointment.col.day_usage") }</th></tr>
 					for _, bay := range baySummary {
 						<tr><td>{ bay.Label }</td><td style="font-size:12.5px">
 							if len(bay.Slots) == 0 {
-								<span style="color:#86efac">{ i18n.T(ctx, "appointment.bay_empty") }</span>
+								<span style="color:var(--ok)">{ i18n.T(ctx, "appointment.bay_empty") }</span>
 							} else {
 								for i, slot := range bay.Slots {
 									if i > 0 {
@@ -149,10 +149,10 @@ templ AppointmentRowContent(a AppointmentRow) {
 		<td>{ a.AppointmentTime }</td>
 		<td>
 			if a.BayLabel != "" {
-				<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ a.BayLabel }</span>
+				<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ a.BayLabel }</span>
 			}
 			if a.BayLabel == "" {
-				<span style="color:#64748b">—</span>
+				<span style="color:var(--muted)">—</span>
 			}
 		</td>
 		<td>{ a.PlateNumber }</td>
@@ -179,7 +179,7 @@ templ AppointmentRowContent(a AppointmentRow) {
 // AppointmentSearchRows HTMX 即時搜尋回傳的純列。
 templ AppointmentSearchRows(rows []AppointmentRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "appointment.search_empty") }</td></tr>
+		<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "appointment.search_empty") }</td></tr>
 	}
 	for _, a := range rows {
 		@AppointmentRowContent(a)

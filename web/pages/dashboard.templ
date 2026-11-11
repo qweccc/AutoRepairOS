@@ -79,7 +79,7 @@ templ DashboardPage(stats []DashboardStat, issues []DashboardIssue, recent []Das
 				}
 			}
 		@components.Card(i18n.T(ctx, "dashboard.modules")) {
-			<p style="color:#94a3b8;font-size:13.5px">{ i18n.T(ctx, "dashboard.modules_note") }</p>
+			<p style="color:var(--text-sub);font-size:13.5px">{ i18n.T(ctx, "dashboard.modules_note") }</p>
 		}
 	}
 }

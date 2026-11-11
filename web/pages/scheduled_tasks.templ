@@ -36,7 +36,7 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 	@components.Layout(i18n.T(ctx, "scheduled.title"), "/scheduled-tasks", user, AppName) {
 		<div class="card">
 			<h2>{ i18n.T(ctx, "scheduled.tasks_title") }</h2>
-			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+			<p style="color:var(--muted);font-size:12.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "scheduled.tasks_note") }
 			</p>
 			if len(tasks) > 0 {
@@ -44,7 +44,7 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 					for _, task := range tasks {
 						<tr><td><b>{ task.Name }</b>
 							if task.LastError != "" {
-								<br><span style="color:#fca5a5;font-size:11.5px">{ fmt.Sprintf(i18n.T(ctx, "scheduled.error_prefix"), task.LastError) }</span>
+								<br><span style="color:var(--danger);font-size:11.5px">{ fmt.Sprintf(i18n.T(ctx, "scheduled.error_prefix"), task.LastError) }</span>
 							}
 						</td><td><code>{ task.Key }</code></td><td>{ task.Interval }</td>
 						<td>@components.Pill(taskStatusLabelCtx(ctx, task.Enabled), taskStatusPill(task.Enabled))</td>
@@ -65,12 +65,12 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 		</div>
 		<div class="card">
 			<h2>{ i18n.T(ctx, "scheduled.notif_title") }</h2>
-			<p style="color:#64748b;font-size:12.5px;margin:0 0 6px">
+			<p style="color:var(--muted);font-size:12.5px;margin:0 0 6px">
 				{ fmt.Sprintf(i18n.T(ctx, "scheduled.notif_summary"), pendingText, recentText) }
 			</p>
 			<p style="font-size:12.5px;margin:0 0 14px">
 				<span class={ "pill " + linePill }>LINE</span>
-				<span style="color:#94a3b8">{ lineStatus }</span>
+				<span style="color:var(--text-sub)">{ lineStatus }</span>
 			</p>
 			if len(notifications) > 0 {
 				<table><tr><th>#</th><th>{ i18n.T(ctx, "scheduled.col_kind") }</th><th>{ i18n.T(ctx, "scheduled.col_channel") }</th><th>{ i18n.T(ctx, "scheduled.col_subject") }</th><th>{ i18n.T(ctx, "scheduled.col_body") }</th><th>{ i18n.T(ctx, "scheduled.col_scheduled") }</th><th>{ i18n.T(ctx, "scheduled.col_status") }</th><th>{ i18n.T(ctx, "scheduled.col_action") }</th></tr>
@@ -79,7 +79,7 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 							<td style="max-width:340px">{ n.Body }</td><td>{ n.ScheduledAt }</td>
 							<td>@components.Pill(n.StatusLabel, n.StatusPill)
 								if n.ErrorDetail != "" {
-									<br><small style="color:#fca5a5">{ n.ErrorDetail }</small>
+									<br><small style="color:var(--danger)">{ n.ErrorDetail }</small>
 								}
 							</td>
 							<td>
@@ -88,7 +88,7 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 										@components.CSRFInput()<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.cancel") }</button>
 									</form>
 								} else {
-									<span style="color:#64748b">—</span>
+									<span style="color:var(--muted)">—</span>
 								}
 							</td>
 						</tr>

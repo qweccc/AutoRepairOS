@@ -28,7 +28,7 @@ templ EditInventoryPage(it model.InventoryItem, showMoney bool, categoryOptions,
 				<label>{ i18n.T(ctx, "inventory.field.min_safety") }<input name="min_safety_stock" type="number" min="0" value={ strconv.Itoa(it.MinSafetyStock) }></label>
 				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.save") }</button> <a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "inventory.stock_hint") }</p>
+			<p style="color:var(--muted);font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "inventory.stock_hint") }</p>
 		</div>
 	}
 }
@@ -37,7 +37,7 @@ templ StockAdjustPage(it model.InventoryItem, user model.User) {
 	@components.Layout(i18n.T(ctx, "inventory.stock_adjust"), "/inventory", user, AppName) {
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.stock_title"), it.Name, it.PartNumber) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px">{ i18n.T(ctx, "inventory.current_stock") + "：" }<b style="color:#f8fafc;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>{ "　" + i18n.T(ctx, "inventory.field.min_safety") + "：" }{ strconv.Itoa(it.MinSafetyStock) }</p>
+			<p style="color:var(--text-sub);font-size:13.5px">{ i18n.T(ctx, "inventory.current_stock") + "：" }<b style="color:#f8fafc;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>{ "　" + i18n.T(ctx, "inventory.field.min_safety") + "：" }{ strconv.Itoa(it.MinSafetyStock) }</p>
 			<form class="frm" method="POST" action={ "/inventory/" + strconv.FormatInt(it.ID, 10) + "/stock" }>
 				@components.CSRFInput()
 				<label>{ i18n.T(ctx, "inventory.delta_label") }<input name="delta" type="number" required placeholder={ i18n.T(ctx, "inventory.delta_placeholder") }></label>

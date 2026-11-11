@@ -559,14 +559,14 @@ func EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON string
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\" autocomplete=\"off\" required><div class=\"vs-list hidden\"></div></div><span style=\"color:#94a3b8;font-size:12px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\" autocomplete=\"off\" required><div class=\"vs-list hidden\"></div></div><span style=\"color:var(--text-sub);font-size:12px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "estimates.vehicle_hint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 112, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/estimates.templ`, Line: 112, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -1415,7 +1415,7 @@ func EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.Us
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, "\" required></label><div id=\"estAddErr\" style=\"color:#f87171;margin-top:6px;font-size:13px\"></div><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, "\" required></label><div id=\"estAddErr\" style=\"color:var(--danger);margin-top:6px;font-size:13px\"></div><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

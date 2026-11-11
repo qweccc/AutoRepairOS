@@ -23,7 +23,7 @@ templ ListLookupPage(rows []LookupRow, category, categoryLabel string, total int
 	@components.Layout(i18n.T(ctx, "lookup.title"), "/lookup", user, AppName) {
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "lookup.list_heading"), categoryLabel, total) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "lookup.intro") }
 			</p>
 			<div style="margin-bottom:12px">@templ.Raw(catTabsHTML)</div>
@@ -36,7 +36,7 @@ templ ListLookupPage(rows []LookupRow, category, categoryLabel string, total int
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#lookup-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<table>
 				<tr><th>{ i18n.T(ctx, "lookup.field.code") }</th><th>{ i18n.T(ctx, "lookup.field.name") }</th><th>{ i18n.T(ctx, "lookup.field.sort") }</th><th>{ i18n.T(ctx, "lookup.field.status") }</th><th>{ i18n.T(ctx, "lookup.field.actions") }</th></tr>
 				<tbody id="lookup-rows">
@@ -59,10 +59,10 @@ templ LookupRowContent(li LookupRow) {
 		<td class="num">{ strconv.Itoa(li.SortOrder) }</td>
 		<td>
 			if li.Active == 0 {
-				<span class="pill" style="background:#7f1d1d;color:#fca5a5">{ i18n.T(ctx, "lookup.inactive") }</span>
+				<span class="pill" style="background:var(--danger-bg);color:var(--danger)">{ i18n.T(ctx, "lookup.inactive") }</span>
 			}
 			if li.Active != 0 {
-				<span class="pill" style="background:#14532d;color:#86efac">{ i18n.T(ctx, "lookup.active") }</span>
+				<span class="pill" style="background:var(--ok-bg);color:var(--ok)">{ i18n.T(ctx, "lookup.active") }</span>
 			}
 		</td>
 		<td>
@@ -80,7 +80,7 @@ templ LookupRowContent(li LookupRow) {
 // LookupSearchRows HTMX 即時搜尋回傳的純列。
 templ LookupSearchRows(rows []LookupRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="5" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "lookup.search_empty") }</td></tr>
+		<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "lookup.search_empty") }</td></tr>
 	}
 	for _, li := range rows {
 		@LookupRowContent(li)

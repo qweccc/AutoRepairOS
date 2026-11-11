@@ -19,7 +19,7 @@ type PhraseLookupResult struct {
 
 templ PartLookupResults(results []PartLookupResult) {
 	if len(results) == 0 {
-		<div style="padding:8px;color:#64748b">查無零件</div>
+		<div style="padding:8px;color:var(--muted)">查無零件</div>
 	}
 	for _, p := range results {
 		<div class="part-result-item"
@@ -27,9 +27,9 @@ templ PartLookupResults(results []PartLookupResult) {
 			data-part-name={ p.Name }
 			data-part-number={ p.PartNumber }
 			data-part-price={ p.Price }
-			style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:13px">
+			style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--surface);font-size:13px">
 			<b>{ p.Name }</b>
-			<span style="color:#64748b">{ p.PartNumber }</span>
+			<span style="color:var(--muted)">{ p.PartNumber }</span>
 			if p.BinLocation != "" {
 				<span class="bin-loc">📍{ p.BinLocation }</span>
 			}
@@ -41,13 +41,13 @@ templ PartLookupResults(results []PartLookupResult) {
 
 templ PhraseLookupResults(results []PhraseLookupResult) {
 	if len(results) == 0 {
-		<div style="padding:8px;color:#64748b;font-size:12px">查無片語</div>
+		<div style="padding:8px;color:var(--muted);font-size:12px">查無片語</div>
 	}
 	for _, p := range results {
 		<div class="phrase-result-item"
 			data-phrase={ p.Phrase }
-			style="padding:6px 10px;cursor:pointer;border-bottom:1px solid #1e293b;font-size:12.5px">
-			<span style="color:#94a3b8">[{ p.Category }]</span> { p.Phrase }
+			style="padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--surface);font-size:12.5px">
+			<span style="color:var(--text-sub)">[{ p.Category }]</span> { p.Phrase }
 		</div>
 	}
 }

@@ -32,11 +32,11 @@ templ NegativeStockPage(stats NegativeStockStats, rows []NegativeStockRow, total
 		@templ.Raw(flashHTML)
 		<div class="card">
 			<h2>{ i18n.T(ctx, "inventory.negative_title") }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">{ i18n.T(ctx, "inventory.negative_intro") }<br><b>{ i18n.T(ctx, "inventory.negative_audit") }</b>{ i18n.T(ctx, "inventory.negative_audit_suffix") }</p>
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">{ i18n.T(ctx, "inventory.negative_intro") }<br><b>{ i18n.T(ctx, "inventory.negative_audit") }</b>{ i18n.T(ctx, "inventory.negative_audit_suffix") }</p>
 			<div style="margin-bottom:14px">
 				<div class="stat"><b>{ strconv.Itoa(stats.Total) }</b><span>{ i18n.T(ctx, "inventory.stat.negative_parts") }</span></div>
 				<div class="stat"><b>{ strconv.Itoa(stats.TotalAll) }</b><span>{ i18n.T(ctx, "inventory.stat.all_parts") }</span></div>
-				<div class="stat"><b style="color:#f87171">{ strconv.Itoa(stats.WorstQty) }</b><span>{ i18n.T(ctx, "inventory.stat.worst_qty") }</span></div>
+				<div class="stat"><b style="color:var(--danger)">{ strconv.Itoa(stats.WorstQty) }</b><span>{ i18n.T(ctx, "inventory.stat.worst_qty") }</span></div>
 				<div class="stat"><b>{ strconv.Itoa(stats.SumDeficit) }</b><span>{ i18n.T(ctx, "inventory.stat.deficit_sum") }</span></div>
 				<div class="stat"><b>{ strconv.Itoa(stats.SellableOnly) }</b><span>{ i18n.T(ctx, "inventory.stat.with_price") }</span></div>
 				<div class="stat"><b>{ strconv.Itoa(stats.WithSupplier) }</b><span>{ i18n.T(ctx, "inventory.stat.with_supplier") }</span></div>
@@ -48,7 +48,7 @@ templ NegativeStockPage(stats NegativeStockStats, rows []NegativeStockRow, total
 				<a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.back_list") }</a>
 			</div>
 			<form method="GET" action="/inventory/negative" style="margin-bottom:12px">
-				<input name="q" value={ q } placeholder={ i18n.T(ctx, "inventory.negative_search_placeholder") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+				<input name="q" value={ q } placeholder={ i18n.T(ctx, "inventory.negative_search_placeholder") } style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px">
 				@templ.Raw(hiddenHTML)
 				<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button>
 				<a class="btn btn-s" href="/inventory/negative">{ i18n.T(ctx, "inventory.clear") }</a>
@@ -59,7 +59,7 @@ templ NegativeStockPage(stats NegativeStockStats, rows []NegativeStockRow, total
 			} else {
 				<table><tr><th>{ i18n.T(ctx, "inventory.col.part_number") }</th><th>{ i18n.T(ctx, "inventory.col.name") }</th><th>{ i18n.T(ctx, "inventory.col.bin") }</th><th>{ i18n.T(ctx, "inventory.col.supplier") }</th><th class="num">{ i18n.T(ctx, "inventory.col.selling") }</th><th class="num">{ i18n.T(ctx, "inventory.col.current_stock") }</th><th class="num">{ i18n.T(ctx, "inventory.col.suggested") }</th><th>{ i18n.T(ctx, "inventory.col.actions") }</th></tr>
 					for _, row := range rows {
-						<tr><td><code>{ row.PartNumber }</code></td><td>{ row.Name }</td><td>{ row.BinLocation }</td><td>{ row.SupplierName }</td><td class="num">{ row.SellingPrice }</td><td class="num"><b style="color:#f87171">{ strconv.Itoa(row.StockQuantity) }</b></td><td class="num" style="color:#86efac">+{ strconv.Itoa(row.Suggested) }</td><td><a class="btn btn-p" href={ "/inventory/negative?id=" + strconv.FormatInt(row.ID, 10) }>{ i18n.T(ctx, "inventory.fix") }</a></td></tr>
+						<tr><td><code>{ row.PartNumber }</code></td><td>{ row.Name }</td><td>{ row.BinLocation }</td><td>{ row.SupplierName }</td><td class="num">{ row.SellingPrice }</td><td class="num"><b style="color:var(--danger)">{ strconv.Itoa(row.StockQuantity) }</b></td><td class="num" style="color:var(--ok)">+{ strconv.Itoa(row.Suggested) }</td><td><a class="btn btn-p" href={ "/inventory/negative?id=" + strconv.FormatInt(row.ID, 10) }>{ i18n.T(ctx, "inventory.fix") }</a></td></tr>
 					}
 				</table>
 			}
@@ -94,7 +94,7 @@ templ NegativeStockFixPage(it model.InventoryItem, movements []InventoryMovement
 	@components.Layout(i18n.T(ctx, "inventory.negative_title"), "/inventory", user, AppName) {
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.negative_fix_title"), it.Name, it.PartNumber) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px">{ i18n.T(ctx, "inventory.current_stock") + "：" }<b style="color:#f87171;font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>{ "　" + i18n.T(ctx, "inventory.field.min_safety") + "：" }{ strconv.Itoa(it.MinSafetyStock) }{ "　" + i18n.T(ctx, "inventory.col.selling") + "：" }{ moneyFmt(it.SellingPrice) }</p>
+			<p style="color:var(--text-sub);font-size:13.5px">{ i18n.T(ctx, "inventory.current_stock") + "：" }<b style="color:var(--danger);font-size:20px">{ strconv.Itoa(it.StockQuantity) }</b>{ "　" + i18n.T(ctx, "inventory.field.min_safety") + "：" }{ strconv.Itoa(it.MinSafetyStock) }{ "　" + i18n.T(ctx, "inventory.col.selling") + "：" }{ moneyFmt(it.SellingPrice) }</p>
 			<form class="frm" method="POST" action="/inventory/negative/fix">
 				@components.CSRFInput()
 				<input type="hidden" name="item_id" value={ strconv.FormatInt(it.ID, 10) }>
@@ -103,7 +103,7 @@ templ NegativeStockFixPage(it model.InventoryItem, movements []InventoryMovement
 				<label class="full">{ i18n.T(ctx, "inventory.fix_reason") }<input name="reason" value={ i18n.T(ctx, "inventory.fix_reason_default") } placeholder={ i18n.T(ctx, "inventory.fix_reason_placeholder") }></label>
 				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "inventory.confirm_fix") }</button> <a class="btn btn-s" href="/inventory/negative">{ i18n.T(ctx, "common.cancel") }</a></div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:12px">{ i18n.T(ctx, "inventory.fix_hint") }</p>
+			<p style="color:var(--muted);font-size:12.5px;margin-top:12px">{ i18n.T(ctx, "inventory.fix_hint") }</p>
 		</div>
 		@MovementTable(i18n.T(ctx, "inventory.recent_movements"), movements, true)
 	}
@@ -114,7 +114,7 @@ templ MovementLogPage(rows []InventoryMovementRow, total, page, size int, q, sou
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "inventory.movements_list_title"), total) }</h2>
 			<div style="margin-bottom:12px"><a class={ "btn " + sourceClass("", source) } href={ sourceURL("", q) }>{ i18n.T(ctx, "inventory.source.all") }</a> <a class={ "btn " + sourceClass("manual", source) } href={ sourceURL("manual", q) }>{ i18n.T(ctx, "inventory.source.manual") }</a> <a class={ "btn " + sourceClass("checkout", source) } href={ sourceURL("checkout", q) }>{ i18n.T(ctx, "inventory.source.checkout") }</a> <a class={ "btn " + sourceClass("legacy_fix", source) } href={ sourceURL("legacy_fix", q) }>{ i18n.T(ctx, "inventory.source.legacy_fix") }</a> <a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.back_list") }</a></div>
-			<form method="GET" action="/inventory/movements" style="margin-bottom:12px"><input name="q" value={ q } placeholder={ i18n.T(ctx, "inventory.movements_search_placeholder") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">@templ.Raw(hiddenHTML)<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button> <a class="btn btn-s" href="/inventory/movements">{ i18n.T(ctx, "inventory.clear") }</a></form>
+			<form method="GET" action="/inventory/movements" style="margin-bottom:12px"><input name="q" value={ q } placeholder={ i18n.T(ctx, "inventory.movements_search_placeholder") } style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px">@templ.Raw(hiddenHTML)<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button> <a class="btn btn-s" href="/inventory/movements">{ i18n.T(ctx, "inventory.clear") }</a></form>
 			@MovementTable("", rows, false)
 			@templ.Raw(pagerHTML)
 			<div style="margin-top:6px">@templ.Raw(perPageHTML)</div>
@@ -162,15 +162,15 @@ templ MovementTable(title string, rows []InventoryMovementRow, recent bool) {
 				<th class="num">{ i18n.T(ctx, "inventory.col.delta") }</th><th class="num">{ i18n.T(ctx, "inventory.col.before") }</th><th class="num">{ i18n.T(ctx, "inventory.col.after") }</th><th>{ i18n.T(ctx, "inventory.col.source") }</th><th>{ i18n.T(ctx, "inventory.col.reason") }</th><th>{ i18n.T(ctx, "inventory.col.user") }</th></tr>
 				for _, row := range rows {
 					<tr>
-						<td style="font-size:12.5px;color:#94a3b8">{ row.CreatedAt }</td>
+						<td style="font-size:12.5px;color:var(--text-sub)">{ row.CreatedAt }</td>
 						if !recent {
 							<td><code>{ row.PartNumber }</code></td><td>{ row.Name }</td>
 						}
 						<td class="num">
 							if row.DeltaPositive {
-								<b style="color:#86efac">+{ strconv.Itoa(row.Delta) }</b>
+								<b style="color:var(--ok)">+{ strconv.Itoa(row.Delta) }</b>
 							} else {
-								<b style="color:#f87171">{ strconv.Itoa(row.Delta) }</b>
+								<b style="color:var(--danger)">{ strconv.Itoa(row.Delta) }</b>
 							}
 						</td>
 						<td class="num">{ strconv.Itoa(row.Before) }</td><td class="num">{ strconv.Itoa(row.After) }</td>

@@ -42,7 +42,7 @@ templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 				if user.Role == "owner" || user.Role == "counter" {
 					<a class="btn btn-p" href="/work-orders/new">{ i18n.T(ctx, "workorder.new_button") }</a>
 				}
-				<span style="color:#64748b;font-size:12.5px">{ i18n.T(ctx, "workorder.list_hint") }</span>
+				<span style="color:var(--muted);font-size:12.5px">{ i18n.T(ctx, "workorder.list_hint") }</span>
 			</div>
 			<div style="margin-bottom:12px">@templ.Raw(tabsHTML)</div>
 			<form method="GET" action="/work-orders" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -55,24 +55,24 @@ templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 					hx-include="[name='part'],[name='status'],[name='tech']"
 					hx-indicator="#wo-search-indicator"
 					hx-on::response-error="htmx.ajax('GET', '/api/work-orders/search?error=1', {target:'#wo-rows', swap:'innerHTML'})"
-					style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:240px">
-				<label style="font-size:12.5px;color:#94a3b8">{ i18n.T(ctx, "workorder.col.technician") }
-					<select name="tech" style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+					style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:240px">
+				<label style="font-size:12.5px;color:var(--text-sub)">{ i18n.T(ctx, "workorder.col.technician") }
+					<select name="tech" style="padding:7px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 						<option value="">{ i18n.T(ctx, "workorder.filter_all") }</option>
 						<option value="0" selected?={ tech == "0" }>{ i18n.T(ctx, "workorder.filter_unassigned") }</option>
 						@templ.Raw(techOptionsHTML)
 					</select>
 				</label>
-				<label style="font-size:12.5px;color:#94a3b8">{ i18n.T(ctx, "workorder.col.part") }
+				<label style="font-size:12.5px;color:var(--text-sub)">{ i18n.T(ctx, "workorder.col.part") }
 					<input name="part" value={ part } placeholder={ i18n.T(ctx, "workorder.filter_part_ph") }
-						style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:190px">
+						style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:190px">
 				</label>
 				<input type="hidden" name="status" value={ status }>
-				<label style="font-size:12.5px;color:#94a3b8">{ i18n.T(ctx, "workorder.filter_from") }
-					<input type="date" name="from" value={ from } style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<label style="font-size:12.5px;color:var(--text-sub)">{ i18n.T(ctx, "workorder.filter_from") }
+					<input type="date" name="from" value={ from } style="padding:7px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 				</label>
-				<label style="font-size:12.5px;color:#94a3b8">{ i18n.T(ctx, "workorder.filter_to") }
-					<input type="date" name="to" value={ to } style="padding:7px 9px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<label style="font-size:12.5px;color:var(--text-sub)">{ i18n.T(ctx, "workorder.filter_to") }
+					<input type="date" name="to" value={ to } style="padding:7px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 				</label>
 				<button class="btn btn-p" type="submit">{ i18n.T(ctx, "workorder.search_button") }</button>
 				<span id="wo-search-indicator" class="htmx-indicator search-indicator" role="status">{ i18n.T(ctx, "workorder.searching") }</span>
@@ -104,11 +104,11 @@ templ WorkOrderRowContent(wo WorkOrderRow) {
 		<td><a href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) }>{ strconv.FormatInt(wo.ID, 10) }</a></td>
 		<td>
 			<b>{ wo.PlateNumber }</b><br>
-			<span style="color:#64748b;font-size:12px">{ wo.BrandModel }</span>
+			<span style="color:var(--muted);font-size:12px">{ wo.BrandModel }</span>
 		</td>
 		<td>
 			{ wo.CustomerName }<br>
-			<span style="color:#64748b;font-size:12px">{ wo.CustomerPhone }</span>
+			<span style="color:var(--muted);font-size:12px">{ wo.CustomerPhone }</span>
 		</td>
 		<td>{ wo.TechnicianName }</td>
 		<td>
@@ -123,15 +123,15 @@ templ WorkOrderRowContent(wo WorkOrderRow) {
 			if wo.PartCount > 0 {
 				{ wo.PartSummary }
 				if wo.PartCount > 1 {
-					<span style="color:#64748b;font-size:11.5px">{ i18n.T(ctx, "workorder.and_more") } { strconv.Itoa(wo.PartCount) } { i18n.T(ctx, "workorder.items_unit") }</span>
+					<span style="color:var(--muted);font-size:11.5px">{ i18n.T(ctx, "workorder.and_more") } { strconv.Itoa(wo.PartCount) } { i18n.T(ctx, "workorder.items_unit") }</span>
 				}
 			} else {
-				<span style="color:#475569">—</span>
+				<span style="color:var(--text-sub)">—</span>
 			}
 		</td>
 		<td class="num">{ strconv.Itoa(wo.CurrentMileage) }</td>
 		<td class="num">{ moneyFmt(wo.TotalAmount) }</td>
-		<td style="font-size:12.5px;color:#94a3b8">{ wo.CreatedAt }</td>
+		<td style="font-size:12.5px;color:var(--text-sub)">{ wo.CreatedAt }</td>
 	</tr>
 }
 
@@ -148,7 +148,7 @@ templ WorkOrderSearchError() {
 // WorkOrderSearchRows HTMX 即時搜尋回傳的純列。
 templ WorkOrderSearchRows(rows []WorkOrderRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="10" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "workorder.search_no_results") }</td></tr>
+		<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "workorder.search_no_results") }</td></tr>
 	}
 	for _, wo := range rows {
 		@WorkOrderRowContent(wo)

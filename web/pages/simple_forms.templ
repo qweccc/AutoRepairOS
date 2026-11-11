@@ -58,10 +58,10 @@ templ AddVehicleMileagePage(vehicleID int64, plate, brand string, last int, hasL
 	@components.Layout(i18n.T(ctx, "mileage.title"), "/vehicles", user, AppName) {
 		<div class="card">
 			<h2>{ i18n.T(ctx, "mileage.heading_prefix") } { plate }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ brand }
 				if hasLast {
-					<span style="color:#64748b;font-size:12.5px">{ i18n.T(ctx, "mileage.last_prefix") }{ strconv.Itoa(last) } { i18n.T(ctx, "mileage.last_suffix") }</span>
+					<span style="color:var(--muted);font-size:12.5px">{ i18n.T(ctx, "mileage.last_prefix") }{ strconv.Itoa(last) } { i18n.T(ctx, "mileage.last_suffix") }</span>
 				}
 			</p>
 			<form class="frm" method="POST" action={ "/vehicles/" + strconv.FormatInt(vehicleID, 10) + "/mileage" }>
@@ -73,7 +73,7 @@ templ AddVehicleMileagePage(vehicleID int64, plate, brand string, last int, hasL
 					<a class="btn btn-s" href={ "/vehicles/" + strconv.FormatInt(vehicleID, 10) }>{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:10px">
+			<p style="color:var(--muted);font-size:12.5px;margin-top:10px">
 				{ i18n.T(ctx, "mileage.intro") }
 			</p>
 		</div>

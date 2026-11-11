@@ -46,7 +46,7 @@ templ Pager(path string, currentPage, totalPages, totalItems int) {
 				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage+1)) }>下一頁 ›</a>
 				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(totalPages)) }>末頁 »</a>
 			}
-			<span style="color:#94a3b8;font-size:12.5px;margin-left:10px">
+			<span style="color:var(--text-sub);font-size:12.5px;margin-left:10px">
 				第 { strconv.Itoa(currentPage) } / { strconv.Itoa(totalPages) } 頁，共 { strconv.Itoa(totalItems) } 筆
 			</span>
 		</div>
@@ -123,7 +123,7 @@ templ PlateScanUI(fieldMapJSON string) {
 	<div class="full" data-fieldmap={ fieldMapJSON } style="grid-column:1/-1;margin-bottom:4px">
 		<button type="button" class="btn btn-o" id="plateScanBtn">📷 拍照辨識行照</button>
 		<input type="file" id="plateScanInput" accept="image/*" capture="environment" style="display:none">
-		<span style="color:#64748b;font-size:12px;margin-left:8px">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span>
+		<span style="color:var(--muted);font-size:12px;margin-left:8px">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span>
 	</div>
 	<script>
 		// fieldMapJSON 由 templ 用屬性插值放在上面 div 的 data-fieldmap，

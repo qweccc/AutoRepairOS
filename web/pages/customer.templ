@@ -63,7 +63,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, for
 				<label class="full">{ i18n.T(ctx, "customer.notes") }<textarea name="notes">{ form.Notes }</textarea></label>
 				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "customer.create") }</button></div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6">
+			<p style="color:var(--muted);font-size:12.5px;margin:10px 0 0;line-height:1.6">
 				{ i18n.T(ctx, "customer.line_binding_hint") }
 			</p>
 		</div>
@@ -76,7 +76,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, for
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#customer-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<a class="btn btn-s" href="/customers">{ i18n.T(ctx, "customer.clear") }</a>
 			<table>
 				<tr>
@@ -126,7 +126,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, for
 // CustomerSearchRows HTMX 即時搜尋回傳的純列（無 Layout）。
 templ CustomerSearchRows(rows []CustomerRow, user model.User) {
 	if len(rows) == 0 {
-		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "customer.search_empty") }</td></tr>
+		<tr><td colspan="11" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "customer.search_empty") }</td></tr>
 	}
 	for _, c := range rows {
 		<tr>
@@ -158,13 +158,13 @@ templ CustomerSearchRows(rows []CustomerRow, user model.User) {
 // tagPillsHTML 標籤轉為 HTML pill。
 func tagPillsHTML(tags string) string {
 	if tags == "" {
-		return `<span style="color:#64748b">-</span>`
+		return `<span style="color:var(--muted)">-</span>`
 	}
 	var b []byte
-	b = append(b, []byte(`<span class="pill" style="background:#1e3a5f;color:#bae6fd;margin-right:4px">`)...)
+	b = append(b, []byte(`<span class="pill" style="background:var(--primary-bg);color:var(--primary);margin-right:4px">`)...)
 	for i, ch := range tags {
 		if ch == ',' {
-			b = append(b, []byte(`</span> <span class="pill" style="background:#1e3a5f;color:#bae6fd;margin-right:4px">`)...)
+			b = append(b, []byte(`</span> <span class="pill" style="background:var(--primary-bg);color:var(--primary);margin-right:4px">`)...)
 			_ = i
 			continue
 		}

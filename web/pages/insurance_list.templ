@@ -103,7 +103,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 	@components.Layout(i18n.T(ctx, "insurancelist.title"), "/insurances", user, AppName) {
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "insurancelist.list_heading"), total) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "insurancelist.intro") }
 			</p>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
@@ -115,7 +115,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#insurance-list-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<a class="btn btn-p" href="/insurances/new">{ i18n.T(ctx, "insurancelist.new") }</a>
 			<a class="btn btn-s" href="/insurances/expiring">{ i18n.T(ctx, "insurancelist.expiring") }</a>
 			<a class="btn btn-s" href="/inspections">{ i18n.T(ctx, "insurancelist.inspections") }</a>
@@ -145,7 +145,7 @@ templ VehicleInsuranceRowContent(r VehicleInsuranceRow) {
 		<td>{ orEmpty(r.Company) }</td>
 		<td>
 			if r.ClassName != "" {
-				<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ r.ClassName }</span>
+				<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ r.ClassName }</span>
 			}
 			if r.ClassName == "" {
 				{ orEmpty(r.Class) }
@@ -155,7 +155,7 @@ templ VehicleInsuranceRowContent(r VehicleInsuranceRow) {
 		<td><code style="font-size:12px">{ r.PolicyNumber }</code></td>
 		<td style="font-size:12.5px">{ r.ExpiryDate }</td>
 		<td><code style="font-size:12px">{ r.CardNo }</code></td>
-		<td style="font-size:12px;color:#94a3b8">{ r.Amount }</td>
+		<td style="font-size:12px;color:var(--text-sub)">{ r.Amount }</td>
 		<td>
 			<a class="btn btn-s" href={ "/insurances/" + strconv.FormatInt(r.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			<a class="btn btn-d" href={ "/insurances/" + strconv.FormatInt(r.ID, 10) + "/delete" }
@@ -181,7 +181,7 @@ templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q 
 	@components.Layout(i18n.T(ctx, "insurancelist.inspection_title"), "/inspections", user, AppName) {
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "insurancelist.inspection_heading"), total, pendingCount) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "insurancelist.inspection_intro") }
 			</p>
 			<input type="search" name="q" value={ q }
@@ -190,7 +190,7 @@ templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q 
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#inspection-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<a class="btn btn-p" href="/inspections/new">{ i18n.T(ctx, "insurancelist.inspection_new") }</a>
 			<a class="btn btn-s" href="/insurances">{ i18n.T(ctx, "insurancelist.back_insurances") }</a>
 			<table>
@@ -228,7 +228,7 @@ templ VehicleInspectionRowContent(r InspectionRow) {
 // VehicleInsuranceSearchRows 投保即時搜尋回傳的純列。
 templ VehicleInsuranceSearchRows(rows []VehicleInsuranceRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="10" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "insurancelist.search_empty") }</td></tr>
+		<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "insurancelist.search_empty") }</td></tr>
 	}
 	for _, r := range rows {
 		@VehicleInsuranceRowContent(r)
@@ -238,7 +238,7 @@ templ VehicleInsuranceSearchRows(rows []VehicleInsuranceRow) {
 // VehicleInspectionSearchRows 定檢即時搜尋回傳的純列。
 templ VehicleInspectionSearchRows(rows []InspectionRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="6" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "insurancelist.inspection_search_empty") }</td></tr>
+		<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "insurancelist.inspection_search_empty") }</td></tr>
 	}
 	for _, r := range rows {
 		@VehicleInspectionRowContent(r)

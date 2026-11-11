@@ -48,7 +48,7 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 			</table>
 			<div style="margin-top:16px">
 				@StatusControls(wo, canEdit)
-				<div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155">
+				<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
 					<a class="btn btn-p" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/receipt" }>{ i18n.T(ctx, "workorder.action.receipt") }</a>
 					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/quotation?paper=a4" }>{ i18n.T(ctx, "workorder.action.quotation") }</a>
 					<a class="btn btn-s" href={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/completion" }>{ i18n.T(ctx, "workorder.action.completion") }</a>
@@ -96,13 +96,13 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 
 		<div class="card">
 			<h2>{ i18n.T(ctx, "workorder.section.walkaround") }</h2>
-			<p style="color:#64748b;font-size:12.5px">{ i18n.T(ctx, "workorder.walkaround.hint") }</p>
+			<p style="color:var(--muted);font-size:12.5px">{ i18n.T(ctx, "workorder.walkaround.hint") }</p>
 			@WalkaroundCanvas(wo.ID, nil)
 			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
 				@WalkaroundMarkTypeSelect("scratch")
 				<label>{ i18n.T(ctx, "workorder.walkaround.note_label") }<input id="walkaround-note" type="text" placeholder={ i18n.T(ctx, "workorder.walkaround.note_ph") }></label>
 			</div>
-			<div id="walkaround-status" role="status" style="margin-top:6px;color:#94a3b8"></div>
+			<div id="walkaround-status" role="status" style="margin-top:6px;color:var(--text-sub)"></div>
 		</div>
 
 				if user.Role == "owner" || user.Role == "counter" {
@@ -157,7 +157,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 							</td>
 							}
 							if canEdit == false {
-							<td style="color:#64748b">—</td>
+							<td style="color:var(--muted)">—</td>
 							}
 				</tr>
 			}
@@ -195,7 +195,7 @@ templ AddItemForm(woID int64) {
 			<input name="description" id="itemDesc" placeholder={ i18n.T(ctx, "workorder.form.desc_ph") } required>
 			<div style="margin-top:4px">
 				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">{ i18n.T(ctx, "workorder.form.phrases") }</button>
-				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a">
+				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--surface)">
 					<input type="search" id="phraseSearch" name="phrase" class="search-input" placeholder={ i18n.T(ctx, "workorder.form.phrase_search_ph") } style="width:100%;margin-bottom:8px"
 						hx-get="/api/phrases/search" hx-trigger="keyup changed delay:300ms, search"
 						hx-target="#phraseResults" hx-swap="innerHTML">
@@ -223,7 +223,7 @@ templ AddItemForm(woID int64) {
 				<div class="staff-picker-results"></div>
 			</div>
 		</label>
-				<div id="addItemError" style="color:#f87171;margin-top:6px;font-size:13px"></div>
+				<div id="addItemError" style="color:var(--danger);margin-top:6px;font-size:13px"></div>
 				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "workorder.form.add_item") }</button></div>
 	</form>
 	@PartSearchScript()
@@ -413,12 +413,12 @@ func statusIndex(s string) int {
 
 func statusStepStyle(stepIdx, currentIdx int) string {
 	if stepIdx < currentIdx {
-		return "background:#1e3a5f;color:#93c5fd"
+		return "background:var(--primary-bg);color:var(--primary)"
 	}
 	if stepIdx == currentIdx {
 		return "background:#1d4ed8;color:#fff"
 	}
-	return "background:#334155;color:#64748b"
+	return "background:var(--border);color:var(--muted)"
 }
 
 func itemTypeLabel(ctx context.Context, t string) string {

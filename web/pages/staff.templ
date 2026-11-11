@@ -69,7 +69,7 @@ templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
 					<label>{ i18n.T(ctx, "staff.field.branch") }<select name="staff_branch">@templ.Raw(branchOpts)</select></label>
 					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.create") }</button></div>
 				</form>
-				<p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
+				<p style="color:var(--muted);font-size:12.5px;margin:10px 0 0">
 					{ i18n.T(ctx, "staff.new_hint") }
 				</p>
 			</div>
@@ -92,7 +92,7 @@ templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#staff-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<a class="btn btn-s" href="/staff">{ i18n.T(ctx, "common.clear") }</a>
 			<a class="btn btn-s" href="/technicians/commissions">{ i18n.T(ctx, "staff.commissions") }</a>
 			<table>
@@ -120,20 +120,20 @@ templ StaffRowContent(s StaffRow) {
 		<td><code>{ s.Username }</code></td>
 		<td>
 			if s.Active == 0 {
-				<span class="pill" style="background:#7f1d1d;color:#fca5a5">{ i18n.T(ctx, "staff.inactive") }</span>
+				<span class="pill" style="background:var(--danger-bg);color:var(--danger)">{ i18n.T(ctx, "staff.inactive") }</span>
 			}
 			if s.Active != 0 {
-				<span class="pill" style="background:#14532d;color:#86efac">{ i18n.T(ctx, "staff.active") }</span>
+				<span class="pill" style="background:var(--ok-bg);color:var(--ok)">{ i18n.T(ctx, "staff.active") }</span>
 			}
 		</td>
 		<td><span class="pill" style={ s.KindCls }>{ s.KindLabel }</span></td>
-		<td style="font-size:12.5px;color:#94a3b8">{ s.Branch }</td>
+		<td style="font-size:12.5px;color:var(--text-sub)">{ s.Branch }</td>
 		<td style="font-size:12.5px">
 			if s.DepOf > 0 {
 				{ s.DepOfName }
 			}
 			if s.DepOf == 0 {
-				<span style="color:#64748b">{ i18n.T(ctx, "staff.self") }</span>
+				<span style="color:var(--muted)">{ i18n.T(ctx, "staff.self") }</span>
 			}
 		</td>
 		<td><code style="font-size:12px">{ s.NationalID }</code></td>
@@ -141,7 +141,7 @@ templ StaffRowContent(s StaffRow) {
 		<td style="font-size:12.5px">{ s.InsStart }</td>
 		<td style="font-size:12.5px">
 			if s.InsEndRed {
-				<span style="color:#f87171">{ s.InsEndLabel }</span>
+				<span style="color:var(--danger)">{ s.InsEndLabel }</span>
 			}
 			if !s.InsEndRed {
 				{ s.InsEndLabel }
@@ -158,7 +158,7 @@ templ StaffRowContent(s StaffRow) {
 // StaffSearchRows HTMX 即時搜尋回傳的純列。
 templ StaffSearchRows(rows []StaffRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="11" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "staff.search_empty") }</td></tr>
+		<tr><td colspan="11" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "staff.search_empty") }</td></tr>
 	}
 	for _, s := range rows {
 		@StaffRowContent(s)

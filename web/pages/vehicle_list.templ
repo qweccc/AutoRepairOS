@@ -23,7 +23,7 @@ type VehicleRow struct {
 
 templ VehicleSearchRows(rows []VehicleRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "vehicle.no_results") }</td></tr>
+		<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "vehicle.no_results") }</td></tr>
 	}
 	for _, row := range rows {
 		<tr>
@@ -32,9 +32,9 @@ templ VehicleSearchRows(rows []VehicleRow) {
 			<td>{ row.BrandModel }</td>
 			<td>
 				if row.VehicleTypeLabel != "" {
-					<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ row.VehicleTypeLabel }</span>
+					<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ row.VehicleTypeLabel }</span>
 				} else {
-					<span style="color:#64748b">-</span>
+					<span style="color:var(--muted)">-</span>
 				}
 			</td>
 			<td>{ intOrBlank(row.ManufactureYear) }</td>
@@ -103,7 +103,7 @@ templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 				<label>{ i18n.T(ctx, "vehicle.maint_interval_km") }<input name="maint_interval_km" type="number" min="500" value="5000"></label>
 				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "vehicle.create") }</button></div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin-top:10px">
+			<p style="color:var(--muted);font-size:12.5px;margin-top:10px">
 				{ i18n.T(ctx, "vehicle.model_note") }
 			</p>
 			<script>
@@ -134,7 +134,7 @@ templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 					hx-trigger="keyup changed delay:300ms, search"
 					hx-target="#vehicle-rows"
 					hx-swap="innerHTML"
-					style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:320px">
+					style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:320px">
 				<button class="btn btn-p" type="submit">{ i18n.T(ctx, "vehicle.search") }</button>
 				<a class="btn btn-s" href="/vehicles">{ i18n.T(ctx, "vehicle.clear") }</a>
 			</form>
@@ -155,10 +155,10 @@ templ ListVehiclesPage(rows []VehicleRow, total, page, size int,
 								<td>{ row.BrandModel }</td>
 								<td>
 									if row.VehicleTypeLabel != "" {
-										<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ row.VehicleTypeLabel }</span>
+										<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ row.VehicleTypeLabel }</span>
 									}
 									if row.VehicleTypeLabel == "" {
-										<span style="color:#64748b">-</span>
+										<span style="color:var(--muted)">-</span>
 									}
 								</td>
 								<td>{ intOrBlank(row.ManufactureYear) }</td>

@@ -26,7 +26,7 @@ templ WorkOrderPhotosPage(workOrderID int64, photos []PhotoCard, photoDir string
 		@components.FlashMsg(flashMessage)
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "photos.list_heading"), len(photos)) }</h2>
-			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+			<p style="color:var(--muted);font-size:12.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "photos.offline_prefix") } <code>{ photoDir }</code>{ i18n.T(ctx, "photos.offline_suffix") }
 			</p>
 			if len(photos) == 0 {

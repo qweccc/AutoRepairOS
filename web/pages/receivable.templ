@@ -45,7 +45,7 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				<div class="stat"><b>{ moneyFmt(sumCheck) }</b><span>{ i18n.T(ctx, "receivable.check") }</span></div>
 				<div class="stat"><b>{ moneyFmt(sumTransfer) }</b><span>{ i18n.T(ctx, "receivable.transfer") }</span></div>
 			</div>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "receivable.filter_note") }
 			</p>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
@@ -65,7 +65,7 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#receivable-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<table>
 				<tr>
 					<th>{ i18n.T(ctx, "receivable.col_voucher") }</th><th>{ i18n.T(ctx, "receivable.col_date") }</th><th>{ i18n.T(ctx, "receivable.col_customer") }</th><th>{ i18n.T(ctx, "receivable.col_plate") }</th>
@@ -91,7 +91,7 @@ templ ReceivableRowContent(rec ReceivableRow) {
 		<td>
 			<code style="font-size:12px">{ rec.VoucherNo }</code>
 			if rec.IsLegacy {
-				<span style="color:#64748b;font-size:11px">{ i18n.T(ctx, "receivable.legacy_old") }</span>
+				<span style="color:var(--muted);font-size:11px">{ i18n.T(ctx, "receivable.legacy_old") }</span>
 			}
 		</td>
 		<td style="font-size:12.5px">{ rec.PayDate }</td>
@@ -108,13 +108,13 @@ templ ReceivableRowContent(rec ReceivableRow) {
 				<a href={ "/work-orders/" + strconv.FormatInt(rec.WorkOrderID, 10) }>{ rec.WoCell }</a>
 			}
 			if rec.WorkOrderID == 0 {
-				<span style="color:#475569">—</span>
+				<span style="color:var(--text-sub)">—</span>
 			}
 		</td>
 		<td class="num">{ rec.ReceivedCell }</td>
 		<td class="num">
 			if rec.UnpaidRed {
-				<span style="color:#f87171">{ rec.UnpaidCell }</span>
+				<span style="color:var(--danger)">{ rec.UnpaidCell }</span>
 			}
 			if !rec.UnpaidRed {
 				{ rec.UnpaidCell }
@@ -130,7 +130,7 @@ templ ReceivableRowContent(rec ReceivableRow) {
 // ReceivableSearchRows HTMX 即時搜尋回傳的純列。
 templ ReceivableSearchRows(rows []ReceivableRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="14" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "receivable.no_results") }</td></tr>
+		<tr><td colspan="14" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "receivable.no_results") }</td></tr>
 	}
 	for _, rec := range rows {
 		@ReceivableRowContent(rec)

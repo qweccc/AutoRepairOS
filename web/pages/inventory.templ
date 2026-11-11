@@ -118,14 +118,14 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 		<td>
 			{ it.Name }
 			if it.ItemKind == "labor" {
-				<span style="color:#94a3b8;font-size:11px">({ i18n.T(ctx, "inventory.labor") })</span>
+				<span style="color:var(--text-sub);font-size:11px">({ i18n.T(ctx, "inventory.labor") })</span>
 			}
 		</td>
 		<td>
 			if it.Category != "" {
-				<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ it.Category }</span>
+				<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ it.Category }</span>
 			} else {
-				<span style="color:#64748b">-</span>
+				<span style="color:var(--muted)">-</span>
 			}
 		</td>
 		<td>{ orEmpty(it.BinLocation) }</td>
@@ -136,7 +136,7 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 		<td class="num">{ moneyFmt(it.SellingPrice) }</td>
 		<td class="num">
 			if it.LowStock {
-				<b style="color:#f87171">{ strconv.Itoa(it.StockQuantity) } ⚠</b>
+				<b style="color:var(--danger)">{ strconv.Itoa(it.StockQuantity) } ⚠</b>
 			} else {
 				{ strconv.Itoa(it.StockQuantity) }
 			}
@@ -155,7 +155,7 @@ templ InventoryRowContent(it InventoryRow, showMoney bool) {
 // InventorySearchRows HTMX 即時搜尋回傳的純列。
 templ InventorySearchRows(rows []InventoryRow, showMoney bool) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "inventory.search_empty") }</td></tr>
+		<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "inventory.search_empty") }</td></tr>
 	}
 	for _, it := range rows {
 		@InventoryRowContent(it, showMoney)

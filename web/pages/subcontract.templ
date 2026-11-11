@@ -59,7 +59,7 @@ templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, stat
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#subcontract-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:260px;margin-bottom:12px">
 			<table>
 				<tr>
 					<th>ID</th><th>{ i18n.T(ctx, "subcontract.field.workorder_th") }</th><th>{ i18n.T(ctx, "subcontract.field.vendor_th") }</th><th>{ i18n.T(ctx, "subcontract.field.content_th") }</th><th class="num">{ i18n.T(ctx, "subcontract.field.cost_th") }</th>
@@ -102,7 +102,7 @@ templ SubcontractRowContent(s SubcontractRow) {
 // SubcontractSearchRows HTMX 即時搜尋回傳的純列。
 templ SubcontractSearchRows(rows []SubcontractRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "subcontract.search_empty") }</td></tr>
+		<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "subcontract.search_empty") }</td></tr>
 	}
 	for _, s := range rows {
 		@SubcontractRowContent(s)

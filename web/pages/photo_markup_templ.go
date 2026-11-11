@@ -81,7 +81,7 @@ func PhotoMarkerOverlay(photoURL string, photoID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div data-photo-annotation-list style=\"margin-top:8px;font-size:12px;color:#94a3b8\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div data-photo-annotation-list style=\"margin-top:8px;font-size:12px;color:var(--text-sub)\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

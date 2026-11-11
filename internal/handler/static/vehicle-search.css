@@ -8,23 +8,23 @@
   width: 100%;
   padding: 9px 12px;
   border-radius: 7px;
-  border: 1px solid #334155;
-  background: #0f172a;
-  color: #e2e8f0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
   font-size: 13.5px;
   font-family: inherit;
 }
 
 .vs-input:focus {
   outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 .vsearch.vs-picked .vs-input {
-  border-color: #047857;
-  background: #052e16;
-  color: #86efac;
+  border-color: var(--ok);
+  background: var(--ok-bg);
+  color: var(--ok);
 }
 
 .vs-list {
@@ -35,10 +35,10 @@
   right: 0;
   max-height: 290px;
   overflow-y: auto;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
 
 .vs-list.hidden {
@@ -52,26 +52,26 @@
   padding: 9px 12px;
   background: none;
   border: 0;
-  border-bottom: 1px solid #263449;
-  color: #e2e8f0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
   font-size: 13.5px;
   font-family: inherit;
   cursor: pointer;
 }
 
 .vs-opt:hover {
-  background: #263449;
+  background: var(--surface-2);
 }
 
 .vs-opt-on {
-  background: #0c4a6e;
-  color: #7dd3fc;
+  background: var(--primary-bg);
+  color: var(--primary);
   font-weight: 700;
 }
 
 .vs-empty {
   padding: 18px 14px;
-  color: #fca5a5;
+  color: var(--danger);
   font-size: 13px;
   text-align: center;
   line-height: 1.7;
@@ -79,13 +79,13 @@
 
 .vs-more {
   padding: 8px 12px;
-  color: #64748b;
+  color: var(--muted);
   font-size: 11.5px;
-  background: #0f172a;
+  background: var(--surface-2);
 }
 
 .vs-hint {
-  color: #64748b;
+  color: var(--muted);
   font-size: 12px;
   margin-top: 5px;
 }

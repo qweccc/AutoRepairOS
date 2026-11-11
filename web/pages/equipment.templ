@@ -52,7 +52,7 @@ templ ListEquipmentPage(rows []EquipmentRow, total, page, size int, q, status st
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#equipment-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:260px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:260px;margin-bottom:12px">
 			<table>
 				<tr>
 					<th>ID</th><th>{ i18n.T(ctx, "equipment.field.name") }</th><th>{ i18n.T(ctx, "equipment.field.model") }</th><th>{ i18n.T(ctx, "equipment.field.serial") }</th><th>{ i18n.T(ctx, "equipment.field.location") }</th><th>{ i18n.T(ctx, "lookup.field.status") }</th><th>{ i18n.T(ctx, "lookup.field.actions") }</th>
@@ -92,7 +92,7 @@ templ EquipmentRowContent(e EquipmentRow) {
 // EquipmentSearchRows HTMX 即時搜尋回傳的純列。
 templ EquipmentSearchRows(rows []EquipmentRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="7" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "equipment.search_empty") }</td></tr>
+		<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "equipment.search_empty") }</td></tr>
 	}
 	for _, e := range rows {
 		@EquipmentRowContent(e)

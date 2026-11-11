@@ -367,7 +367,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, form
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</button></div></form><p style=\"color:#64748b;font-size:12.5px;margin:10px 0 0;line-height:1.6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</button></div></form><p style=\"color:var(--muted);font-size:12.5px;margin:10px 0 0;line-height:1.6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -419,7 +419,7 @@ func ListCustomersPage(rows []CustomerRow, total, page, size int, q string, form
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" hx-get=\"/api/customers/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#customer-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px\"> <a class=\"btn btn-s\" href=\"/customers\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" hx-get=\"/api/customers/search\" hx-trigger=\"keyup changed delay:300ms, search\" hx-target=\"#customer-rows\" hx-swap=\"innerHTML\" style=\"padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px\"> <a class=\"btn btn-s\" href=\"/customers\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -907,14 +907,14 @@ func CustomerSearchRows(rows []CustomerRow, user model.User) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		if len(rows) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<tr><td colspan=\"11\" style=\"color:#64748b;text-align:center;padding:20px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<tr><td colspan=\"11\" style=\"color:var(--muted);text-align:center;padding:20px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "customer.search_empty"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/customer.templ`, Line: 129, Col: 114}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/customer.templ`, Line: 129, Col: 119}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 			if templ_7745c5c3_Err != nil {
@@ -1229,13 +1229,13 @@ func CustomerSearchRows(rows []CustomerRow, user model.User) templ.Component {
 // tagPillsHTML 標籤轉為 HTML pill。
 func tagPillsHTML(tags string) string {
 	if tags == "" {
-		return `<span style="color:#64748b">-</span>`
+		return `<span style="color:var(--muted)">-</span>`
 	}
 	var b []byte
-	b = append(b, []byte(`<span class="pill" style="background:#1e3a5f;color:#bae6fd;margin-right:4px">`)...)
+	b = append(b, []byte(`<span class="pill" style="background:var(--primary-bg);color:var(--primary);margin-right:4px">`)...)
 	for i, ch := range tags {
 		if ch == ',' {
-			b = append(b, []byte(`</span> <span class="pill" style="background:#1e3a5f;color:#bae6fd;margin-right:4px">`)...)
+			b = append(b, []byte(`</span> <span class="pill" style="background:var(--primary-bg);color:var(--primary);margin-right:4px">`)...)
 			_ = i
 			continue
 		}

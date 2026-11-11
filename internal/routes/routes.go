@@ -175,6 +175,11 @@ func New(d Deps) *chi.Mux {
 	r.Get("/api/parts", handler.RequireLogin(handler.SearchPartsAPI))
 	r.Get("/api/estimate-items/search", handler.RequireLogin(handler.SearchEstimateItemsAPI))
 	r.Get("/api/customers/search", handler.RequireLogin(handler.SearchCustomersAPI))
+	// 選擇器（customer-search.js / vehicle-search.js）用的 JSON 選項端點。
+	// 這兩個 handler 一直都在，但路由從沒掛上 → 前端 fetch 全部 404，
+	// 畫面只會顯示「查無符合…」，看起來像是搜尋壞掉。
+	r.Get("/api/customers/picker", handler.RequireLogin(handler.CustomerPickerAPI))
+	r.Get("/api/work-orders/vehicles", handler.RequireLogin(handler.SearchWorkOrderVehiclesAPI))
 	r.Get("/api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	r.Get("/api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
 	r.Get("/api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))

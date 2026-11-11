@@ -58,7 +58,7 @@ func LoginPage(appName, errMsg, returnTo string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</title><link rel=\"stylesheet\" href=\"/static/app.css\"><style>\n\t\t\t\t.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }\n\t\t\t\tform.login { background: #1e293b; border: 1px solid #334155; border-radius: 12px;\n\t\t\t\t             padding: 32px; width: 340px; max-width: 100%; }\n\t\t\t\tform.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;\n\t\t\t\t                   border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 14px; }\n\t\t\t\tform.login button { width: 100%; padding: 11px; background: #38bdf8; color: #0f172a;\n\t\t\t\t                    border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }\n\t\t\t\tform.login button:hover { background: #0ea5e9; }\n\t\t\t\t.login-err { background: #7f1d1d; color: #fecaca; padding: 10px 12px; border-radius: 8px;\n\t\t\t\t             font-size: 13px; margin-bottom: 16px; }\n\t\t\t</style></head><body><div class=\"wrap\"><form class=\"login\" method=\"POST\" action=\"/login\"><h2 style=\"text-align:center;margin:0 0 24px;color:#38bdf8\">🔧 ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</title><link rel=\"stylesheet\" href=\"/static/app.css\"><style>\n\t\t\t\t.wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }\n\t\t\t\tform.login { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;\n\t\t\t\t             padding: 32px; width: 340px; max-width: 100%; }\n\t\t\t\tform.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;\n\t\t\t\t                   border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; }\n\t\t\t\tform.login button { width: 100%; padding: 11px; background: #38bdf8; color: var(--surface);\n\t\t\t\t                    border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }\n\t\t\t\tform.login button:hover { background: #0ea5e9; }\n\t\t\t\t.login-err { background: var(--danger-bg); color: #fecaca; padding: 10px 12px; border-radius: 8px;\n\t\t\t\t             font-size: 13px; margin-bottom: 16px; }\n\t\t\t</style></head><body><div class=\"wrap\"><form class=\"login\" method=\"POST\" action=\"/login\"><h2 style=\"text-align:center;margin:0 0 24px;color:#38bdf8\">🔧 ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -94,27 +94,27 @@ func LoginPage(appName, errMsg, returnTo string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<label style=\"font-size:13px;color:#94a3b8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<label style=\"font-size:13px;color:var(--text-sub)\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "login.username"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/login.templ`, Line: 37, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/login.templ`, Line: 37, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " <input type=\"text\" name=\"username\" required autofocus autocomplete=\"username\"></label> <label style=\"font-size:13px;color:#94a3b8\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " <input type=\"text\" name=\"username\" required autofocus autocomplete=\"username\"></label> <label style=\"font-size:13px;color:var(--text-sub)\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "login.password"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/login.templ`, Line: 40, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/login.templ`, Line: 40, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {

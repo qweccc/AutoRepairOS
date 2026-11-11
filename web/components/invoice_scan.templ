@@ -13,13 +13,13 @@ templ InvoiceScanUI() {
 	<div class="full" style="margin:4px 0 8px">
 		<button type="button" class="btn btn-o" id="invoiceScanBtn">📷 拍照辨識進貨單</button>
 		<input type="file" id="invoiceScanInput" accept="image/*" capture="environment" style="display:none">
-		<span style="color:#64748b;font-size:12px;margin-left:8px">拍供應商出貨單，自動帶入供應商、日期與品項（數量/單價請複核）</span>
+		<span style="color:var(--muted);font-size:12px;margin-left:8px">拍供應商出貨單，自動帶入供應商、日期與品項（數量/單價請複核）</span>
 	</div>
-	<div id="invoiceScanBox" style="display:none;margin:6px 0 12px;border:1px solid #334155;border-radius:8px;overflow:hidden">
-		<div style="padding:8px 10px;background:#1e293b;color:#94a3b8;font-size:12.5px">
+	<div id="invoiceScanBox" style="display:none;margin:6px 0 12px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+		<div style="padding:8px 10px;background:var(--surface);color:var(--text-sub);font-size:12.5px">
 			辨識到 <b id="invoiceScanCount">0</b> 項品項，可直接編輯數量與單價，確認後按下方「建立並加入品項」
 		</div>
-		<div id="invoiceScanSupplier" style="display:none;padding:6px 10px;border-top:1px solid #334155;font-size:13px"></div>
+		<div id="invoiceScanSupplier" style="display:none;padding:6px 10px;border-top:1px solid var(--border);font-size:13px"></div>
 		<div id="supplierLookup" hx-get="/api/suppliers" hx-trigger="supplier-lookup" style="display:none"></div>
 		<div id="invoiceScanRows"></div>
 	</div>
@@ -172,29 +172,29 @@ templ InvoiceScanUI() {
 				countEl.textContent = String(items.length);
 				items.forEach(function (it, i) {
 					var row = document.createElement("div");
-					row.style.cssText = "padding:8px 10px;border-top:1px solid #334155;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap";
+					row.style.cssText = "padding:8px 10px;border-top:1px solid var(--border);font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap";
 
 					var desc = document.createElement("input");
 					desc.value = it.description;
 					desc.placeholder = "品項名稱";
-					desc.style.cssText = "flex:1;min-width:150px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0";
+					desc.style.cssText = "flex:1;min-width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)";
 					desc.addEventListener("input", function () { it.description = this.value; });
 
 					// 類別標籤：顯示後端猜到的零件類別（僅提示，進貨單品項表不存類別，
 					// 類別屬於 inventory_items；此處只是讓櫃檯知道系統怎麼歸類）。
 					var cat = document.createElement("span");
-					cat.style.cssText = "color:#94a3b8;font-size:12px;min-width:52px";
+					cat.style.cssText = "color:var(--text-sub);font-size:12px;min-width:52px";
 					cat.textContent = it.category ? it.category : "未分類";
 					cat.title = "依品名自動猜測的零件類別";
 
 					var qty = document.createElement("input");
 					qty.type = "number"; qty.step = "0.01"; qty.min = "0.01"; qty.value = it.quantity;
-					qty.style.cssText = "width:70px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0";
+					qty.style.cssText = "width:70px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)";
 					qty.addEventListener("input", function () { it.quantity = parseFloat(this.value) || 0; });
 
 					var price = document.createElement("input");
 					price.type = "number"; price.min = "0"; price.step = "1"; price.value = Math.round(it.unit_price);
-					price.style.cssText = "width:90px;padding:5px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0";
+					price.style.cssText = "width:90px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)";
 					price.addEventListener("input", function () { it.unit_price = parseFloat(this.value) || 0; });
 
 					var sub = document.createElement("span");
@@ -214,7 +214,7 @@ templ InvoiceScanUI() {
 				});
 
 				var add = document.createElement("div");
-				add.style.cssText = "padding:8px 10px;border-top:1px solid #334155";
+				add.style.cssText = "padding:8px 10px;border-top:1px solid var(--border)";
 				var addBtn = document.createElement("button");
 				addBtn.type = "button"; addBtn.className = "btn btn-s"; addBtn.textContent = "＋ 手動加一項";
 				addBtn.addEventListener("click", function () {

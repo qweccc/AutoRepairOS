@@ -35,7 +35,7 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 		@templ.Raw(data.ApptBannerHTML)
 		<div class="card">
 			<h2>{ i18n.T(ctx, "workorder.new") }</h2>
-			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+			<p style="color:var(--muted);font-size:12.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "workorder.new_hint") }
 			</p>
 			<form class="frm" method="POST" action="/work-orders" id="woForm">
@@ -74,8 +74,8 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 				</select></label>
 				<label>{ i18n.T(ctx, "workorder.form.owner") } @templ.Raw(data.CustomerHintHTML)</label>
 				<label class="full">{ i18n.T(ctx, "workorder.form.complaint") }<textarea name="customer_complaint" placeholder={ i18n.T(ctx, "workorder.form.complaint_ph") }>{ data.Complaint }</textarea></label>
-				<div class="full" style="border-top:1px solid #263449;padding-top:16px;margin-top:4px">
-					<p style="color:#64748b;font-size:12.5px;margin:0 0 12px">
+				<div class="full" style="border-top:1px solid var(--surface-2);padding-top:16px;margin-top:4px">
+					<p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">
 						{ i18n.T(ctx, "workorder.claim.hint") }
 					</p>
 				</div>

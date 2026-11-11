@@ -140,7 +140,7 @@ templ TechnicianEfficiencyTable(rows []Phase5TechRow, unlogged string, showCost 
 			}
 		</table>
 	}
-	<p style="color:#94a3b8;font-size:12.5px;margin:8px 0 0">{ i18n.T(ctx, "reports.unlogged_prefix") } { unlogged } { i18n.T(ctx, "reports.unlogged_suffix") }</p>
+	<p style="color:var(--text-sub);font-size:12.5px;margin:8px 0 0">{ i18n.T(ctx, "reports.unlogged_prefix") } { unlogged } { i18n.T(ctx, "reports.unlogged_suffix") }</p>
 }
 
 templ ReportStatusTable(label string, rows []Phase5ReportStatusRow) {

@@ -109,7 +109,7 @@ templ EstimateNewPage(vehicles []EstimateVehicleOption, vehicleOptionsJSON strin
 							placeholder={ i18n.T(ctx, "estimates.plate_ph") } autocomplete="off" required>
 						<div class="vs-list hidden"></div>
 					</div>
-					<span style="color:#94a3b8;font-size:12px">{ i18n.T(ctx, "estimates.vehicle_hint") }</span>
+					<span style="color:var(--text-sub);font-size:12px">{ i18n.T(ctx, "estimates.vehicle_hint") }</span>
 				</label>
 				<label>{ i18n.T(ctx, "estimates.mileage") }
 					<input name="current_mileage" type="number" min="0" value="0" placeholder={ i18n.T(ctx, "estimates.mileage_ph") }>
@@ -195,7 +195,7 @@ templ EstimateDetailPage(e EstimateDetail, items []EstimateItemRow, user model.U
 					<input type="hidden" name="item_type" id="estimateItemTypeHidden" value="labor">
 					<input type="hidden" name="quantity" id="estimateQuantityHidden" value="1">
 					<label>{ i18n.T(ctx, "estimates.field.unit_price") }<input name="unit_price" id="estimateUnitPrice" type="number" min="0" step="1" value="0" placeholder={ i18n.T(ctx, "estimates.unit_price_ph") } required></label>
-					<div id="estAddErr" style="color:#f87171;margin-top:6px;font-size:13px"></div>
+					<div id="estAddErr" style="color:var(--danger);margin-top:6px;font-size:13px"></div>
 					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "estimates.add_item") }</button></div>
 				</form>
 				<script>

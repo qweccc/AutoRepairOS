@@ -44,11 +44,11 @@ templ ListSOPTemplatesPage(data SOPTemplateListData) {
 		@components.FlashMsg(data.Flash)
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "sop.list_heading"), len(data.Rows)) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "sop.intro") }
 			</p>
 			<form method="GET" action="/sop-templates" style="margin-bottom:12px">
-				<input name="q" value={ data.Query } placeholder={ i18n.T(ctx, "sop.search_ph") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+				<input name="q" value={ data.Query } placeholder={ i18n.T(ctx, "sop.search_ph") } style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px">
 				<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button>
 				<a class="btn btn-s" href="/sop-templates">{ i18n.T(ctx, "common.clear") }</a>
 				<a class="btn btn-p" href="/sop-templates/new">{ i18n.T(ctx, "sop.new") }</a>

@@ -38,7 +38,7 @@ templ ListInsurancePage(rows []InsuranceCompanyRow, total, page, size int, q str
 		</div>
 		<div class="card">
 			<h2>{ i18n.T(ctx, "insurance.list_prefix") } { strconv.Itoa(total) } { i18n.T(ctx, "insurance.list_suffix") }</h2>
-			<p style="color:#64748b;font-size:12.5px;margin:0 0 14px">
+			<p style="color:var(--muted);font-size:12.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "insurance.intro") }
 			</p>
 			<input type="search" name="q" value={ q }
@@ -47,7 +47,7 @@ templ ListInsurancePage(rows []InsuranceCompanyRow, total, page, size int, q str
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#insurance-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:300px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:300px;margin-bottom:12px">
 			<a class="btn btn-s" href="/insurance-companies">{ i18n.T(ctx, "common.clear") }</a>
 			<table>
 				<tr>
@@ -96,7 +96,7 @@ templ InsuranceCompanyRowContent(ic InsuranceCompanyRow) {
 // InsuranceSearchRows HTMX 即時搜尋回傳的純列。
 templ InsuranceSearchRows(rows []InsuranceCompanyRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="7" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "insurance.search_empty") }</td></tr>
+		<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "insurance.search_empty") }</td></tr>
 	}
 	for _, ic := range rows {
 		@InsuranceCompanyRowContent(ic)

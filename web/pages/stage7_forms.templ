@@ -194,7 +194,7 @@ templ EditCustomerPage(data CustomerEditData) {
 					<option value="telegram" selected?={ data.Customer.NotificationPref == "telegram" }>Telegram</option>
 				</select></label>
 				if data.SMSWarning {
-					<div style="color:#fca5a5;font-size:11.5px;margin-bottom:8px">{ i18n.T(ctx, "customer.sms_warning") }</div>
+					<div style="color:var(--danger);font-size:11.5px;margin-bottom:8px">{ i18n.T(ctx, "customer.sms_warning") }</div>
 				}
 				<label>{ i18n.T(ctx, "staff.field.birthday") }<input name="birthday" type="date" value={ data.Customer.Birthday } placeholder={ i18n.T(ctx, "customer.birthday_ph") }></label>
 				<label class="full">{ i18n.T(ctx, "common.address") }<input name="address" value={ data.Customer.Address }></label>
@@ -206,7 +206,7 @@ templ EditCustomerPage(data CustomerEditData) {
 					<a class="btn btn-s" href="/customers">{ i18n.T(ctx, "common.cancel") }</a>
 				</div>
 			</form>
-			<p style="color:#64748b;font-size:12.5px;margin:10px 0 0">
+			<p style="color:var(--muted);font-size:12.5px;margin:10px 0 0">
 				{ i18n.T(ctx, "customer.line_hint") }
 			</p>
 		</div>
@@ -231,15 +231,15 @@ templ CustomerLineBinding(c model.Customer) {
 				<button class="btn btn-s" type="submit">{ i18n.T(ctx, "customer.generate_line_code") }</button>
 			</form>
 			<div id="line-bind-result"></div>
-			<p style="color:#94a3b8;font-size:12px;margin:4px 0 0">{ i18n.T(ctx, "customer.line_code_hint") }</p>
+			<p style="color:var(--text-sub);font-size:12px;margin:4px 0 0">{ i18n.T(ctx, "customer.line_code_hint") }</p>
 			<details style="margin-top:6px">
-				<summary style="cursor:pointer;color:#93c5fd;font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
+				<summary style="cursor:pointer;color:var(--primary);font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
 				<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 					@components.CSRFInput()
-					<input name="line_user_id" placeholder="U1234567890abcdef" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+					<input name="line_user_id" placeholder="U1234567890abcdef" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 					<button class="btn btn-p" type="submit">{ lineBindLabel(c) }</button>
 				</form>
-				<p style="color:#64748b;font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.line_unique_hint") }</p>
+				<p style="color:var(--muted);font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.line_unique_hint") }</p>
 			</details>
 			}
 	</div>
@@ -251,7 +251,7 @@ templ CustomerTelegramBinding(c model.Customer) {
 		<h2>{ i18n.T(ctx, "customer.telegram_binding") }</h2>
 		if c.TelegramUserID != "" {
 			<p style="margin:0 0 10px"><span class="pill p-done">{ i18n.T(ctx, "customer.bound") }</span><code style="margin-left:8px">{ c.TelegramUserID }</code></p>
-			<p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px">{ i18n.T(ctx, "customer.telegram_bound_hint") }</p>
+			<p style="color:var(--text-sub);font-size:12.5px;margin:0 0 12px">{ i18n.T(ctx, "customer.telegram_bound_hint") }</p>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-unbind" } onsubmit="return confirm('確定取消 Telegram 綁定？')">
 				@components.CSRFInput()
 				<button class="btn btn-d" type="submit">{ i18n.T(ctx, "customer.unbind") }</button>
@@ -259,20 +259,20 @@ templ CustomerTelegramBinding(c model.Customer) {
 		} else {
 			<p style="margin:0 0 10px"><span class="pill">{ i18n.T(ctx, "customer.unbound") }</span></p>
 		}
-		<p style="color:#94a3b8;font-size:12.5px;margin:12px 0">{ i18n.T(ctx, "customer.telegram_hint") }</p>
+		<p style="color:var(--text-sub);font-size:12.5px;margin:12px 0">{ i18n.T(ctx, "customer.telegram_hint") }</p>
 		<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=telegram" } hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=telegram" } hx-target="#telegram-bind-result" hx-swap="innerHTML" style="margin:8px 0">
 			@components.CSRFInput()
 			<button class="btn btn-s" type="submit">{ i18n.T(ctx, "customer.generate_telegram_code") }</button>
 		</form>
 		<div id="telegram-bind-result"></div>
 		<details style="margin-top:6px">
-			<summary style="cursor:pointer;color:#93c5fd;font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
+			<summary style="cursor:pointer;color:var(--primary);font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 				@components.CSRFInput()
-				<input name="telegram_user_id" placeholder="123456789" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+				<input name="telegram_user_id" placeholder="123456789" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
 				<button class="btn btn-p" type="submit">{ telegramBindLabel(c) }</button>
 			</form>
-			<p style="color:#64748b;font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.telegram_chat_hint") }</p>
+			<p style="color:var(--muted);font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.telegram_chat_hint") }</p>
 		</details>
 	</div>
 }
@@ -352,7 +352,7 @@ templ VehicleInspectionFormPage(data InspectionFormData) {
 				</div>
 			</form>
 			if data.New {
-				<p style="color:#64748b;font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "inspection.hint") }</p>
+				<p style="color:var(--muted);font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "inspection.hint") }</p>
 			}
 		</div>
 	}
@@ -378,7 +378,7 @@ templ ReceivableFormPage(data ReceivableFormData) {
 				<label>{ i18n.T(ctx, "receivable.field.pay_date") }<input name="pay_date" type="date" value={ data.PayDate } required></label>
 				<label>{ i18n.T(ctx, "receivable.field.customer") }<input name="customer_q" value={ data.CustomerName } placeholder={ i18n.T(ctx, "receivable.customer_ph") } required><input type="hidden" name="customer_id" value={ data.CustomerID }></label>
 				<label>{ i18n.T(ctx, "receivable.field.workorder") }<input name="work_order_id" value={ data.WorkOrderID } placeholder={ i18n.T(ctx, "receivable.workorder_ph") }></label>
-				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.methods_hint") }</p></div>
+				<div class="full" style="border-top:1px solid var(--surface-2);padding-top:14px;margin-top:4px"><p style="color:var(--text-sub);font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.methods_hint") }</p></div>
 				<label>{ i18n.T(ctx, "receivable.field.cash") }<input name="cash" type="number" min="0" step="1" value={ data.Cash }></label>
 				<label>{ i18n.T(ctx, "receivable.field.card") }<input name="card" type="number" min="0" step="1" value={ data.Card }></label>
 				<label>{ i18n.T(ctx, "receivable.field.card_no") }<input name="card_no" value={ data.CardNo }></label>
@@ -388,7 +388,7 @@ templ ReceivableFormPage(data ReceivableFormData) {
 				<label>{ i18n.T(ctx, "receivable.field.bank") }<input name="bank" value={ data.Bank }></label>
 				<label>{ i18n.T(ctx, "receivable.field.transfer_amount") }<input name="transfer_amount" type="number" min="0" step="1" value={ data.TransferAmount }></label>
 				<label>{ i18n.T(ctx, "receivable.field.transfer_ref") }<input name="transfer_reference" value={ data.TransferReference }></label>
-				<div class="full" style="border-top:1px solid #263449;padding-top:14px;margin-top:4px"><p style="color:#94a3b8;font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.split_hint") }</p></div>
+				<div class="full" style="border-top:1px solid var(--surface-2);padding-top:14px;margin-top:4px"><p style="color:var(--text-sub);font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.split_hint") }</p></div>
 				<label>{ i18n.T(ctx, "receivable.field.detail_total") }<input name="detail_total" type="number" min="0" step="1" value={ data.DetailTotal }></label>
 				<label>{ i18n.T(ctx, "receivable.field.discount") }<input name="discount" type="number" min="0" step="1" value={ data.Discount }></label>
 				<label>{ i18n.T(ctx, "receivable.field.tax") }<input name="tax" type="number" min="0" step="1" value={ data.Tax }></label>
@@ -443,9 +443,9 @@ templ ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) {
 			@components.FlashMsg(data.Flash)
 			<div class="card">
 				<h2>{ fmt.Sprintf(i18n.T(ctx, "mainttpl.list_heading"), len(data.Rows)) }</h2>
-				<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">{ i18n.T(ctx, "mainttpl.intro") }</p>
+				<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">{ i18n.T(ctx, "mainttpl.intro") }</p>
 				<form method="GET" action="/maintenance-templates" style="margin-bottom:12px">
-					<input name="q" value={ data.Query } placeholder={ i18n.T(ctx, "mainttpl.search_ph") } style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px">
+					<input name="q" value={ data.Query } placeholder={ i18n.T(ctx, "mainttpl.search_ph") } style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px">
 					<button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.search") }</button>
 					<a class="btn btn-s" href="/maintenance-templates">{ i18n.T(ctx, "common.clear") }</a>
 					<a class="btn btn-p" href="/maintenance-templates/new">{ i18n.T(ctx, "mainttpl.new") }</a>
@@ -498,7 +498,7 @@ templ NewMaintenanceTemplatePage(user model.User) {
 					<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes" placeholder={ i18n.T(ctx, "mainttpl.notes_ph") }></textarea></label>
 					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "inspection.create") }</button><a class="btn btn-s" href="/maintenance-templates">{ i18n.T(ctx, "common.cancel") }</a></div>
 				</form>
-				<p style="color:#64748b;font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "mainttpl.new_hint") }</p>
+				<p style="color:var(--muted);font-size:12.5px;margin-top:10px">{ i18n.T(ctx, "mainttpl.new_hint") }</p>
 			</div>
 		}
 	}
@@ -515,7 +515,7 @@ templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
 					<label class="full">{ i18n.T(ctx, "common.notes") }<textarea name="notes">{ data.Notes }</textarea></label>
 				</form>
 				<h3 style="margin:20px 0 8px;font-size:14px">{ i18n.T(ctx, "mainttpl.standard_items") }</h3>
-				<p style="color:#64748b;font-size:12.5px;margin:0 0 10px">{ i18n.T(ctx, "mainttpl.items_hint") }</p>
+				<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">{ i18n.T(ctx, "mainttpl.items_hint") }</p>
 				<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/items" }>
 					@components.CSRFInput()
 					<table style="width:100%">
@@ -523,10 +523,10 @@ templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
 						<tbody id="tplItems">
 							for _, item := range data.Items {
 								<tr class="tpl-item">
-									<td><input name="part_number" value={ item.PartNumber } placeholder={ i18n.T(ctx, "mainttpl.part_number_ph") } style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-									<td><input name="item_desc" value={ item.Description } required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-									<td><input name="item_qty" type="number" min="0" step="0.1" value={ item.Quantity } style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
-									<td><input name="item_price" type="number" min="0" step="1" value={ item.Price } style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>
+									<td><input name="part_number" value={ item.PartNumber } placeholder={ i18n.T(ctx, "mainttpl.part_number_ph") } style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>
+									<td><input name="item_desc" value={ item.Description } required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>
+									<td><input name="item_qty" type="number" min="0" step="0.1" value={ item.Quantity } style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>
+									<td><input name="item_price" type="number" min="0" step="1" value={ item.Price } style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>
 									<td><button type="button" class="btn btn-d" onclick="this.closest('tr').remove()">{ i18n.T(ctx, "mainttpl.remove") }</button></td>
 								</tr>
 							}
@@ -537,7 +537,7 @@ templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
 						<button type="submit" class="btn btn-p">{ i18n.T(ctx, "mainttpl.save_items") }</button>
 					</div>
 				</form>
-				<div style="margin-top:18px;padding-top:14px;border-top:1px solid #334155">
+				<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
 					<a class="btn btn-p" href="/maintenance-templates">{ i18n.T(ctx, "mainttpl.back") }</a>
 					<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
 						@components.CSRFInput()
@@ -550,10 +550,10 @@ templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
 				var tb = document.getElementById('tplItems');
 				var tr = document.createElement('tr');
 				tr.className = 'tpl-item';
-				tr.innerHTML = '<td><input name="part_number" placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-					'<td><input name="item_desc" required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-					'<td><input name="item_qty" type="number" min="0" step="0.1" value="1" style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
-					'<td><input name="item_price" type="number" min="0" step="1" value="0" style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0"></td>' +
+				tr.innerHTML = '<td><input name="part_number" placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
+					'<td><input name="item_desc" required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
+					'<td><input name="item_qty" type="number" min="0" step="0.1" value="1" style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
+					'<td><input name="item_price" type="number" min="0" step="1" value="0" style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
 					'<td><button type="button" class="btn btn-d" onclick="this.closest(\'tr\').remove()">移除</button></td>';
 				tb.appendChild(tr);
 			}

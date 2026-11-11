@@ -442,7 +442,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div style=\"margin-top:14px;padding-top:14px;border-top:1px solid #334155\"><a class=\"btn btn-p\" href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<div style=\"margin-top:14px;padding-top:14px;border-top:1px solid var(--border)\"><a class=\"btn btn-p\" href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -716,14 +716,14 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</h2><p style=\"color:#64748b;font-size:12.5px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</h2><p style=\"color:var(--muted);font-size:12.5px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.walkaround.hint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 99, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder.templ`, Line: 99, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -771,7 +771,7 @@ func ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTota
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\"></label></div><div id=\"walkaround-status\" role=\"status\" style=\"margin-top:6px;color:#94a3b8\"></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\"></label></div><div id=\"walkaround-status\" role=\"status\" style=\"margin-top:6px;color:var(--text-sub)\"></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1160,7 +1160,7 @@ func WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map[
 					}
 				}
 				if canEdit == false {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "<td style=\"color:#64748b\">—</td>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "<td style=\"color:var(--muted)\">—</td>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1343,7 +1343,7 @@ func AddItemForm(woID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "</button><div id=\"phrasePicker\" style=\"display:none;margin-top:8px;border:1px solid #334155;border-radius:7px;padding:8px;background:#0f172a\"><input type=\"search\" id=\"phraseSearch\" name=\"phrase\" class=\"search-input\" placeholder=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "</button><div id=\"phrasePicker\" style=\"display:none;margin-top:8px;border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--surface)\"><input type=\"search\" id=\"phraseSearch\" name=\"phrase\" class=\"search-input\" placeholder=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1434,7 +1434,7 @@ func AddItemForm(woID int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "\" autocomplete=\"off\" hx-get=\"/api/staff/search?format=picker&kind=employee\" hx-trigger=\"keyup changed delay:250ms, search\" hx-target=\"next .staff-picker-results\" hx-swap=\"innerHTML\"> <input type=\"hidden\" name=\"assistant_technician_id\" value=\"0\"><div class=\"staff-picker-results\"></div></div></label><div id=\"addItemError\" style=\"color:#f87171;margin-top:6px;font-size:13px\"></div><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "\" autocomplete=\"off\" hx-get=\"/api/staff/search?format=picker&kind=employee\" hx-trigger=\"keyup changed delay:250ms, search\" hx-target=\"next .staff-picker-results\" hx-swap=\"innerHTML\"> <input type=\"hidden\" name=\"assistant_technician_id\" value=\"0\"><div class=\"staff-picker-results\"></div></div></label><div id=\"addItemError\" style=\"color:var(--danger);margin-top:6px;font-size:13px\"></div><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2485,12 +2485,12 @@ func statusIndex(s string) int {
 
 func statusStepStyle(stepIdx, currentIdx int) string {
 	if stepIdx < currentIdx {
-		return "background:#1e3a5f;color:#93c5fd"
+		return "background:var(--primary-bg);color:var(--primary)"
 	}
 	if stepIdx == currentIdx {
 		return "background:#1d4ed8;color:#fff"
 	}
-	return "background:#334155;color:#64748b"
+	return "background:var(--border);color:var(--muted)"
 }
 
 func itemTypeLabel(ctx context.Context, t string) string {

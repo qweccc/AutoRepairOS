@@ -34,7 +34,7 @@ type AnalyticsGroupRow struct {
 templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, svgWidth int, showCost bool) {
 	<div class="card">
 		<h2>{ i18n.T(ctx, "analytics.trend_title") }</h2>
-		<p style="color:#94a3b8;font-size:12.5px">{ i18n.T(ctx, "analytics.trend_note") }</p>
+		<p style="color:var(--text-sub);font-size:12.5px">{ i18n.T(ctx, "analytics.trend_note") }</p>
 		<div style="overflow-x:auto">
 			<svg role="img" aria-label={ i18n.T(ctx, "analytics.chart_aria") } viewBox={ "0 0 " + strconv.Itoa(svgWidth) + " 270" } style="display:block;width:100%;min-width:680px;height:auto">
 				<line x1="24" y1="210" x2={ strconv.Itoa(svgWidth - 24) } y2="210" stroke="#475569" stroke-width="1"/>
@@ -51,13 +51,13 @@ templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, 
 				}
 			</svg>
 		</div>
-		<p style="display:flex;gap:16px;color:#cbd5e1;font-size:12px">
+		<p style="display:flex;gap:16px;color:var(--text-sub);font-size:12px">
 			<span><i style="display:inline-block;width:10px;height:10px;background:#38bdf8;margin-right:5px"></i>{ i18n.T(ctx, "analytics.legend_revenue") }</span>
 			if showCost {
 				<span><i style="display:inline-block;width:10px;height:10px;background:#34d399;margin-right:5px"></i>{ i18n.T(ctx, "analytics.legend_gross") }</span>
 			}
 		</p>
-		<p style="color:#64748b;font-size:12px">{ i18n.T(ctx, "analytics.cost_note") }</p>
+		<p style="color:var(--muted);font-size:12px">{ i18n.T(ctx, "analytics.cost_note") }</p>
 		<table>
 			<tr>
 				<th>{ i18n.T(ctx, "analytics.col_month") }</th>
@@ -99,7 +99,7 @@ templ AnalyticsCharts(points []AnalyticsTrendPoint, groups []AnalyticsGroupRow, 
 					<tr>
 						<td>
 							{ group.Label }
-							<div style="height:5px;background:#1e293b;border-radius:4px;margin-top:5px">
+							<div style="height:5px;background:var(--surface);border-radius:4px;margin-top:5px">
 								<div style={ "height:5px;width:" + strconv.Itoa(group.RevenueWidth) + "%;background:#38bdf8;border-radius:4px" }></div>
 							</div>
 						</td>

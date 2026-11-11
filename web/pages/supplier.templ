@@ -52,7 +52,7 @@ templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype stri
 		}
 		<div class="card">
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "supplier.list_title"), total) }</h2>
-			<p style="color:#94a3b8;font-size:13.5px;margin:0 0 14px">
+			<p style="color:var(--text-sub);font-size:13.5px;margin:0 0 14px">
 				{ i18n.T(ctx, "supplier.hint") }
 			</p>
 			<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
@@ -66,7 +66,7 @@ templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype stri
 				hx-trigger="keyup changed delay:300ms, search"
 				hx-target="#supplier-rows"
 				hx-swap="innerHTML"
-				style="padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;width:280px;margin-bottom:12px">
+				style="padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px;margin-bottom:12px">
 			<a class="btn btn-s" href="/suppliers">{ i18n.T(ctx, "supplier.clear") }</a>
 			<table>
 				<tr>
@@ -98,25 +98,25 @@ templ SupplierRowContent(s SupplierRow) {
 		<td><b>{ s.Name }</b></td>
 		<td>
 			if s.Active == 0 {
-				<span class="pill" style="background:#7f1d1d;color:#fca5a5">{ i18n.T(ctx, "supplier.status.inactive") }</span>
+				<span class="pill" style="background:var(--danger-bg);color:var(--danger)">{ i18n.T(ctx, "supplier.status.inactive") }</span>
 			}
 			if s.Active != 0 {
-				<span class="pill" style="background:#14532d;color:#86efac">{ i18n.T(ctx, "supplier.status.active") }</span>
+				<span class="pill" style="background:var(--ok-bg);color:var(--ok)">{ i18n.T(ctx, "supplier.status.active") }</span>
 			}
 		</td>
 		<td>
 			if s.VendorType == "vendor" {
-				<span class="pill" style="background:#4a2f13;color:#fde68a">{ s.VendorLabel }</span>
+				<span class="pill" style="background:var(--brown);color:#fde68a">{ s.VendorLabel }</span>
 			}
 			if s.VendorType != "vendor" {
-				<span class="pill" style="background:#1e3a5f;color:#bae6fd">{ s.VendorLabel }</span>
+				<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ s.VendorLabel }</span>
 			}
 		</td>
-		<td style="font-size:12.5px;color:#94a3b8">{ s.PaymentTerms }</td>
+		<td style="font-size:12.5px;color:var(--text-sub)">{ s.PaymentTerms }</td>
 		<td>{ s.Phone }</td>
 		<td>{ s.ContactPerson }</td>
 		<td style="font-size:12.5px">{ s.Address }</td>
-		<td style="font-size:12px;color:#94a3b8">{ s.Notes }</td>
+		<td style="font-size:12px;color:var(--text-sub)">{ s.Notes }</td>
 		<td>
 			if s.Active == 0 {
 				<a class="btn btn-s" href={ "/suppliers/" + strconv.FormatInt(s.ID, 10) + "/reactivate" }
@@ -133,7 +133,7 @@ templ SupplierRowContent(s SupplierRow) {
 // SupplierSearchRows HTMX 即時搜尋回傳的純列。
 templ SupplierSearchRows(rows []SupplierRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:#64748b;text-align:center;padding:20px">{ i18n.T(ctx, "supplier.search_empty") }</td></tr>
+		<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "supplier.search_empty") }</td></tr>
 	}
 	for _, s := range rows {
 		@SupplierRowContent(s)
