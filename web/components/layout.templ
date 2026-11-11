@@ -29,6 +29,26 @@ templ Layout(title, active string, user model.User, appName string) {
 					}
 					document.documentElement.setAttribute("data-theme", t);
 				} catch (e) {}
+
+				// setTheme(theme): 立即套用主題（不重整），把偏好寫進 localStorage，
+				// 並 POST /set-theme 讓 SSR 下次_render 同一主題。
+				//
+				// 為什麼寫在行內而不是 prefs.js：prefs.js 是獨立靜態檔，曾因為
+				// 沒被列進 SW 的 NETWORK_FIRST 而對既有瀏覽器永遠停在舊版（舊版
+				// 還沒有 setTheme），導致選了淺色完全沒反應。行內 script 跟著 HTML
+				// 走（navigate 一定回伺服器），永遠是新的，不再受靜態檔快取影響。
+				window.setTheme = function (theme) {
+					if (theme !== "light" && theme !== "dark") return;
+					document.documentElement.setAttribute("data-theme", theme);
+					try { localStorage.setItem("theme", theme); } catch (e) {}
+					var fd = new URLSearchParams({ theme: theme }).toString();
+					fetch("/set-theme", {
+						method: "POST",
+						headers: { "Content-Type": "application/x-www-form-urlencoded", "HX-Request": "true" },
+						body: fd,
+						credentials: "same-origin"
+					});
+				};
 			</script>
 			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/htmx.min.js"></script>

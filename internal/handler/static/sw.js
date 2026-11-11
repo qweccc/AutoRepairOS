@@ -1,7 +1,7 @@
 // AutoRepair OS Service Worker
 // 快取靜態資源，並在離線時提供應用程式外殼。
 
-const CACHE = "autorepairos-v3";
+const CACHE = "autorepairos-v4";
 const SHELL = ["/offline.js", "/offline.css"];
 
 // 會隨版本改變的檔：不做長期快取，一律 network-first（快取只當離線備援）。
@@ -10,8 +10,17 @@ const SHELL = ["/offline.js", "/offline.css"];
 // （繞過 service worker）才看得到新版。車廠人員不會按 Shift+F5，等於功能上線
 // 他們看不到。離線優先的前提是不能把「舊版」當成永久答案。
 //
-// 判斷標準：內容會隨 release 改變的都列進來。純 vendor 函式庫（htmx.min.js、
-// html5-qrcode.min.js）版本固定、內容不變，留在 cache-first 沒有問題。
+// 判斷標準：**凡是我們會手改的檔，全部都要列進來**（漏一個就會讓那個功能對
+// 既有使用者靜默失效）。純 vendor 函式庫（htmx.min.js、html5-qrcode.min.js）
+// 版本固定、內容不變，留在 cache-first 沒有問題。
+//
+// 教訓（2026-11-11）：prefs.js 被漏在這份清單外，於是它走 cache-first。
+// 瀏覽器在「淺色主題下拉選單」上線前就快取過 prefs.js（當時裡面還沒有
+// setTheme），版面上線後 HTML 的 onchange="setTheme(this.value)" 打到的
+// 是舊檔 → ReferenceError → 選了淺色完全沒反應。CACHE 版本又一直停留在
+// v3，activate 只會清掉「名字不是目前 CACHE」的快取，同名cache裡的舊檔
+// 永遠不會被丟掉。兩者相加 = 改版對舊使用者無效。
+// 因此：新增任何自己維護的靜態檔時，**一律加進 NETWORK_FIRST**。
 //
 // /offline.js、/offline.css 是我們自己維護、會隨 release 改的檔案（它們同時
 // 也在 SHELL 被預快取）。只放 SHELL 的話它們會落到最後的 cache-first 分支，
@@ -25,6 +34,8 @@ const SHELL = ["/offline.js", "/offline.css"];
 // 真的接上時踩到同一種 stale 問題。
 const NETWORK_FIRST = [
   "/static/app.css",
+  "/static/prefs.js",
+  "/static/vehicle-search.css",
   "/offline.js",
   "/offline.css",
   "/static/vehicle-search.js",

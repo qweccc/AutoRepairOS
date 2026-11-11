@@ -1,8 +1,11 @@
-// prefs.js: language + theme preferences (vanilla JS, no dependencies).
+// prefs.js: language preference + form error focus (vanilla JS, no dependencies).
 // - setLang(lang): POST /set-lang (HTMX, HX header) to sync the cookie,
 //   then reload so SSR re-renders with the new locale.
-// - toggleTheme(): flip data-theme immediately (no reload), persist to
-//   localStorage, and POST /set-theme so SSR renders it next time.
+//
+// 注意：主題切換（setTheme）不在這裡，已經搬到 layout.templ 的行內 script。
+// 原因見 sw.js 的 NETWORK_FIRST 註解：自維護靜態檔一旦沒列進 network-first，
+// 就會對既有瀏覽器永遠停在舊版（舊版 prefs.js 沒有 setTheme），主題下拉
+// 選了會完全沒反應。行內 script 跟著 HTML 走，不受靜態檔快取影響。
 (function () {
   function postForm(url, body) {
     var fd = new URLSearchParams(body).toString();
@@ -16,24 +19,6 @@
 
   window.setLang = function (lang) {
     postForm("/set-lang", { lang: lang }).then(function () { location.reload(); });
-  };
-
-  window.toggleTheme = function () {
-    var root = document.documentElement;
-    var next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-    setTheme(next);
-  };
-
-  // setTheme(theme): apply immediately (no reload — the dropdown already
-  // shows the choice), persist to localStorage so the FOUC script restores it
-  // before first paint, and POST /set-theme so SSR renders the same theme
-  // on the next full page load.
-  window.setTheme = function (theme) {
-    if (theme !== "light" && theme !== "dark") return;
-    var root = document.documentElement;
-    root.setAttribute("data-theme", theme);
-    try { localStorage.setItem("theme", theme); } catch (e) {}
-    postForm("/set-theme", { theme: theme });
   };
 
   // Error focus (H2): after a failed POST re-renders with .msg-err, or an
