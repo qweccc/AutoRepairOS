@@ -4,6 +4,9 @@
 (function () {
   "use strict";
 
+  var II = {};
+  try { II = JSON.parse(document.body.getAttribute("data-i18n-js") || "{}"); } catch (e) { II = {}; }
+
   const DB_NAME = "autorepairos-offline";
   const DB_VERSION = 2;
   const DRAFT_STORE = "drafts";
@@ -15,7 +18,7 @@
   function openDB() {
     return new Promise((resolve, reject) => {
       if (!("indexedDB" in window)) {
-        reject(new Error("IndexedDB 不可用"));
+        reject(new Error(II["offline.idb_unavailable"] || "IndexedDB 不可用"));
         return;
       }
       const req = indexedDB.open(DB_NAME, DB_VERSION);

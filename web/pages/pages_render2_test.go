@@ -74,10 +74,10 @@ func TestHelpersRound2(t *testing.T) {
 	backupStatusPill(true)
 	backupStatusPill(false)
 
-	lineBindLabel(model.Customer{LineUserID: "U1"})
-	lineBindLabel(model.Customer{})
-	telegramBindLabel(model.Customer{TelegramUserID: "123"})
-	telegramBindLabel(model.Customer{})
+	lineBindLabel(context.Background(), model.Customer{LineUserID: "U1"})
+	lineBindLabel(context.Background(), model.Customer{})
+	telegramBindLabel(context.Background(), model.Customer{TelegramUserID: "123"})
+	telegramBindLabel(context.Background(), model.Customer{})
 
 	intOrBlank(0)
 	intOrBlank(2024)
@@ -105,7 +105,7 @@ func TestHelpersRound2(t *testing.T) {
 	estimateMoney(0)
 	estimateMoney(3000)
 	for _, s := range []string{"labor", "part", "subcontract", "other", ""} {
-		estimateItemType(s)
+		estimateItemType(context.Background(), s)
 	}
 	estimateSubtotal(nil)
 	estimateSubtotal([]EstimateItemRow{{Quantity: 2, UnitPrice: 500}, {Quantity: 1, UnitPrice: 100}})

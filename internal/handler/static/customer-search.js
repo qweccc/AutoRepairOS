@@ -1,6 +1,9 @@
 (function () {
   "use strict";
 
+  var II = {};
+  try { II = JSON.parse(document.body.getAttribute("data-i18n-js") || "{}"); } catch (e) { II = {}; }
+
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return {
@@ -28,7 +31,7 @@
     function render(items, q) {
       if (!items.length) {
         list.innerHTML =
-          '<div class="vs-empty">查無符合「' + esc(q) + "」的客戶</div>";
+          II["customer.search_empty"].replace("%s", esc(q));
       } else {
         list.innerHTML = items
           .map(function (item) {

@@ -1,16 +1,19 @@
 (function () {
   "use strict";
 
+  var II = {};
+  try { II = JSON.parse(document.body.getAttribute("data-i18n-js") || "{}"); } catch (e) { II = {}; }
+
   var csrfToken = JSON.parse(document.body.getAttribute("hx-headers") || "{}")[
     "X-CSRF-Token"
   ];
   var markLabels = {
-    scratch: "刮痕",
-    dent: "凹痕",
-    crack: "裂紋",
-    rust: "鏽蝕",
-    light_damage: "燈具損壞",
-    panel_repair: "鈑金修復",
+    scratch: II["photo.mark.scratch"] || "刮痕",
+    dent: II["photo.mark.dent"] || "凹痕",
+    crack: II["photo.mark.crack"] || "裂紋",
+    rust: II["photo.mark.rust"] || "鏽蝕",
+    light_damage: II["photo.mark.light_damage"] || "燈具損壞",
+    panel_repair: II["photo.mark.panel_repair"] || "鈑金修復",
   };
 
   function requestJSON(url, method, payload) {
@@ -70,7 +73,7 @@
       drawArrow(ctx, x1, y1, x2, y2);
     } else if (annotation.annotation_type === "text") {
       ctx.font = "bold 16px sans-serif";
-      ctx.fillText(annotation.note || "標記", x1, y1);
+      ctx.fillText(annotation.note || (II["photo.mark"] || "標記"), x1, y1);
     } else {
       ctx.beginPath();
       ctx.moveTo(x1, y1);
@@ -149,7 +152,7 @@
                 var button = document.createElement("button");
                 button.type = "button";
                 button.className = "btn btn-d";
-                button.textContent = "刪除";
+                button.textContent = II["photo.delete"] || "刪除";
                 button.addEventListener("click", function () {
                   requestJSON("/api/annotations/" + item.id + "/delete", "POST")
                     .then(loadAnnotations)
@@ -183,7 +186,9 @@
           controls.style.display = editing ? "block" : "none";
           canvas.style.pointerEvents = editing ? "auto" : "none";
           canvas.style.cursor = editing ? "crosshair" : "default";
-          toggle.textContent = editing ? "結束標記" : "標記";
+          toggle.textContent = editing
+            ? (II["photo.end_mark"] || "結束標記")
+            : (II["photo.mark"] || "標記");
           if (editing) redraw();
         });
         canvas.addEventListener("pointerdown", function (event) {
@@ -215,7 +220,7 @@
         form.addEventListener("submit", function (event) {
           event.preventDefault();
           if (!start || !current) {
-            alert("請先在照片上繪製標記");
+            alert(II["photo.draw_first"] || "請先在照片上繪製標記");
             return;
           }
           var payload = {
@@ -305,7 +310,7 @@
             var button = document.createElement("button");
             button.type = "button";
             button.className = "btn btn-d";
-            button.textContent = "刪除";
+            button.textContent = II["photo.delete"] || "刪除";
             button.addEventListener("click", function () {
               requestJSON(
                 "/work-orders/" +
@@ -338,21 +343,23 @@
       requestJSON("/work-orders/" + woID + "/walkaround-marks", "POST", payload)
         .then(function () {
           noteInput.value = "";
-          status.textContent = "舊傷標記已新增";
+          status.textContent = II["photo.added"] || "舊傷標記已新增";
           return loadMarks();
         })
         .catch(function (error) {
-          status.textContent = "新增失敗：" + error.message;
+          status.textContent =
+            (II["photo.add_failed"] || "新增失敗：") + error.message;
         });
     });
     window.addEventListener("resize", redraw);
     loadMarks().catch(function (error) {
-      status.textContent = "讀取舊傷標記失敗：" + error.message;
+      status.textContent =
+        (II["photo.load_failed"] || "讀取舊傷標記失敗：") + error.message;
     });
   }
 
   function showError(error) {
-    alert("標記操作失敗：" + error.message);
+    alert((II["photo.action_failed"] || "標記操作失敗：") + error.message);
   }
 
   initPhotoMarkers();

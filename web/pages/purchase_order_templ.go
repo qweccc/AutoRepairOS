@@ -1213,7 +1213,7 @@ func ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderIt
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" hx-on::response-error=\"alert(event.detail.xhr.responseText || '操作失敗')\" style=\"display:inline\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" hx-on::response-error=\"alert(event.detail.xhr.responseText || document.body.getAttribute('data-i18n-operation-failed'))\" style=\"display:inline\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1752,7 +1752,7 @@ func AddPurchaseItemForm(orderID int64, partCategoryOptions string) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 139, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" hx-on::response-error=\"alert(event.detail.xhr.responseText || '操作失敗')\" style=\"margin-top:18px\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 139, "\" hx-target=\"#po-items\" hx-swap=\"innerHTML\" hx-on::after-request=\"if(event.detail.successful) this.reset();\" hx-on::response-error=\"alert(event.detail.xhr.responseText || document.body.getAttribute('data-i18n-operation-failed'))\" style=\"margin-top:18px\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

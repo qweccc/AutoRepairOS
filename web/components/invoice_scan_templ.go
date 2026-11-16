@@ -9,6 +9,10 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import (
+	"autorepairos/internal/i18n"
+)
+
 // InvoiceScanUI 進貨單據拍照辨識 UI（掛在「開立進貨單」表單內）。
 //
 // 流程：櫃檯不用先選供應商 —— 直接拍供應商出貨單/發票，後端辨識出
@@ -34,7 +38,254 @@ func InvoiceScanUI() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script src=\"/static/scan.js\"></script><div class=\"full\" style=\"margin:4px 0 8px\"><button type=\"button\" class=\"btn btn-o\" id=\"invoiceScanBtn\">📷 拍照辨識進貨單</button> <input type=\"file\" id=\"invoiceScanInput\" accept=\"image/*\" capture=\"environment\" style=\"display:none\"> <span style=\"color:var(--muted);font-size:12px;margin-left:8px\">拍供應商出貨單，自動帶入供應商、日期與品項（數量/單價請複核）</span></div><div id=\"invoiceScanBox\" style=\"display:none;margin:6px 0 12px;border:1px solid var(--border);border-radius:8px;overflow:hidden\"><div style=\"padding:8px 10px;background:var(--surface);color:var(--text-sub);font-size:12.5px\">辨識到 <b id=\"invoiceScanCount\">0</b> 項品項，可直接編輯數量與單價，確認後按下方「建立並加入品項」</div><div id=\"invoiceScanSupplier\" style=\"display:none;padding:6px 10px;border-top:1px solid var(--border);font-size:13px\"></div><div id=\"supplierLookup\" hx-get=\"/api/suppliers\" hx-trigger=\"supplier-lookup\" style=\"display:none\"></div><div id=\"invoiceScanRows\"></div></div><script>\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\n\t\t\tvar btn = document.getElementById(\"invoiceScanBtn\");\n\t\t\tvar input = document.getElementById(\"invoiceScanInput\");\n\t\t\tvar box = document.getElementById(\"invoiceScanBox\");\n\t\t\tvar rowsBox = document.getElementById(\"invoiceScanRows\");\n\t\t\tvar suppBox = document.getElementById(\"invoiceScanSupplier\");\n\t\t\tvar supplierLookup = document.getElementById(\"supplierLookup\");\n\t\t\tvar countEl = document.getElementById(\"invoiceScanCount\");\n\t\t\tif (!btn || !input || !rowsBox) return;\n\n\t\t\tvar items = []; // 目前清單（可編輯），送出前序列化進 items_json\n\t\t\tvar pendingSupplierName = \"\";\n\n\t\t\tbtn.addEventListener(\"click\", function () { input.click(); });\n\n\t\t\tinput.addEventListener(\"change\", function () {\n\t\t\t\tvar file = input.files && input.files[0];\n\t\t\t\tif (!file) return;\n\t\t\t\tbtn.disabled = true;\n\t\t\t\tvar oldText = btn.textContent;\n\t\t\t\tbtn.textContent = \"辨識中…（單據較大可能等 10-60 秒）\";\n\n\t\t\t\tvar reader = new FileReader();\n\t\t\t\treader.onload = function () {\n\t\t\t\t\tfetch(\"/api/vision/invoice\", {\n\t\t\t\t\t\tmethod: \"POST\",\n\t\t\t\t\t\theaders: { \"Content-Type\": \"application/json\" },\n\t\t\t\t\t\tbody: JSON.stringify({ image: reader.result })\n\t\t\t\t\t})\n\t\t\t\t\t\t.then(function (r) { return r.json(); })\n\t\t\t\t\t\t.then(function (j) {\n\t\t\t\t\t\t\tif (!j.ok) { alert(\"辨識失敗：\" + (j.error || \"未知錯誤\")); return; }\n\t\t\t\t\t\t\tif (!j.items || j.items.length === 0) {\n\t\t\t\t\t\t\t\talert(\"沒有辨識到任何品項（請確認拍的是供應商出貨單/發票，光線充足、畫面不歪）\");\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tapplyDoc(j);\n\t\t\t\t\t\t})\n\t\t\t\t\t\t.catch(function () { alert(\"辨識請求失敗（網路或伺服器錯誤）\"); })\n\t\t\t\t\t\t.finally(function () {\n\t\t\t\t\t\t\tbtn.disabled = false;\n\t\t\t\t\t\t\tbtn.textContent = oldText;\n\t\t\t\t\t\t\tinput.value = \"\";\n\t\t\t\t\t\t});\n\t\t\t\t};\n\t\t\t\treader.readAsDataURL(file);\n\t\t\t});\n\n\t\t\t// 把辨識結果套用到表單：供應商、日期、品項清單。\n\t\t\tfunction applyDoc(j) {\n\t\t\t\tmatchSupplier(j.supplier_name);\n\t\t\t\tif (j.order_date) {\n\t\t\t\t\tvar d = document.querySelector('[name=\"order_date\"]');\n\t\t\t\t\tif (d && !d.value) d.value = j.order_date;\n\t\t\t\t}\n\t\t\t\titems = j.items.map(function (it) {\n\t\t\t\t\treturn {\n\t\t\t\t\t\tdescription: it.description || \"\",\n\t\t\t\t\t\tquantity: it.quantity > 0 ? it.quantity : 1,\n\t\t\t\t\t\tunit_price: it.unit_price || 0,\n\t\t\t\t\t\tpart_number: it.part_number || \"\",\n\t\t\t\t\t\tcategory: it.guess_category || \"\"\n\t\t\t\t\t};\n\t\t\t\t});\n\t\t\t\trenderRows();\n\t\t\t\tbox.style.display = \"block\";\n\t\t\t}\n\n\t\t\t// 供應商名比對：先精確，再互相包含；比不到就提供「＋ 新增為供應商」。\n\t\t\tfunction matchSupplier(name) {\n\t\t\t\tsuppBox.style.display = \"none\";\n\t\t\t\tif (!name) return;\n\t\t\t\tpendingSupplierName = name;\n\t\t\t\thtmx.trigger(supplierLookup, \"supplier-lookup\");\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function (e) {\n\t\t\t\tif (e.detail.elt !== supplierLookup || !pendingSupplierName) return;\n\t\t\t\tvar target = normalizeName(pendingSupplierName);\n\t\t\t\tvar best = null;\n\t\t\t\tsupplierLookup.querySelectorAll(\"option\").forEach(function (opt) {\n\t\t\t\t\tvar sn = normalizeName(opt.dataset.supplierName || opt.textContent);\n\t\t\t\t\tif (sn === target || (!best && sn && target && (sn.indexOf(target) >= 0 || target.indexOf(sn) >= 0))) {\n\t\t\t\t\t\tbest = { id: opt.value, name: opt.dataset.supplierName || opt.textContent };\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\tvar sel = document.querySelector('[name=\"supplier_id\"]');\n\t\t\t\tif (best && sel) {\n\t\t\t\t\tsel.value = best.id;\n\t\t\t\t\tshowSupplierNote(\"已帶入供應商：\" + best.name, \"#4ade80\");\n\t\t\t\t} else {\n\t\t\t\t\tshowSupplierNotFound(pendingSupplierName);\n\t\t\t\t}\n\t\t\t});\n\n\t\t\t// 找不到供應商：列出「＋ 新增『X』為供應商」按鈕，一鍵建立並帶入下拉選單。\n\t\t\tfunction showSupplierNotFound(name) {\n\t\t\t\tsuppBox.innerHTML = \"\";\n\t\t\t\tsuppBox.style.color = \"#fbbf24\";\n\t\t\t\tvar label = document.createElement(\"span\");\n\t\t\t\tlabel.textContent = \"辨識到供應商「\" + name + \"」，系統裡找不到相同名稱。\";\n\t\t\t\tsuppBox.appendChild(label);\n\t\t\t\tvar mk = document.createElement(\"button\");\n\t\t\t\tmk.type = \"button\";\n\t\t\t\tmk.className = \"btn btn-p\";\n\t\t\t\tmk.name = \"name\";\n\t\t\t\tmk.value = name;\n\t\t\t\tmk.setAttribute(\"hx-post\", \"/api/suppliers/quick-create\");\n\t\t\t\tmk.setAttribute(\"hx-target\", \"#invoiceScanSupplier\");\n\t\t\t\tmk.setAttribute(\"hx-swap\", \"innerHTML\");\n\t\t\t\tmk.style.cssText = \"margin-left:8px;padding:3px 10px;font-size:12.5px\";\n\t\t\t\tmk.textContent = \"＋ 新增為供應商\";\n\t\t\t\tsuppBox.appendChild(mk);\n\t\t\t\tsuppBox.style.display = \"block\";\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function (e) {\n\t\t\t\tif (!e.detail.elt || e.detail.elt.name !== \"name\" || e.detail.elt.getAttribute(\"hx-post\") !== \"/api/suppliers/quick-create\") return;\n\t\t\t\tvar parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, \"text/html\");\n\t\t\t\tvar result = parsed.getElementById(\"supplierQuickCreateResult\");\n\t\t\t\tif (!result) return;\n\t\t\t\tvar sel = document.querySelector('[name=\"supplier_id\"]');\n\t\t\t\tif (sel) {\n\t\t\t\t\tvar opt = document.createElement(\"option\");\n\t\t\t\t\topt.value = result.dataset.id;\n\t\t\t\t\topt.textContent = result.dataset.name;\n\t\t\t\t\tsel.appendChild(opt);\n\t\t\t\t\tsel.value = result.dataset.id;\n\t\t\t\t}\n\t\t\t\tshowSupplierNote(result.dataset.note, result.dataset.color);\n\t\t\t});\n\n\t\t\tfunction showSupplierNote(text, color) {\n\t\t\t\tsuppBox.textContent = text;\n\t\t\t\tsuppBox.style.color = color;\n\t\t\t\tsuppBox.style.display = \"block\";\n\t\t\t}\n\n\t\t\tfunction normalizeName(s) {\n\t\t\t\treturn String(s || \"\").replace(/[\\s\u3000]/g, \"\").replace(/(股份有限公司|有限公司|公司|行|號)$/g, \"\");\n\t\t\t}\n\n\t\t\t// 重繪可編輯品項列（品名/數量/單價/類別可改、可刪、可新增一列空白）。\n\t\t\tfunction renderRows() {\n\t\t\t\trowsBox.innerHTML = \"\";\n\t\t\t\tcountEl.textContent = String(items.length);\n\t\t\t\titems.forEach(function (it, i) {\n\t\t\t\t\tvar row = document.createElement(\"div\");\n\t\t\t\t\trow.style.cssText = \"padding:8px 10px;border-top:1px solid var(--border);font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap\";\n\n\t\t\t\t\tvar desc = document.createElement(\"input\");\n\t\t\t\t\tdesc.value = it.description;\n\t\t\t\t\tdesc.placeholder = \"品項名稱\";\n\t\t\t\t\tdesc.style.cssText = \"flex:1;min-width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\";\n\t\t\t\t\tdesc.addEventListener(\"input\", function () { it.description = this.value; });\n\n\t\t\t\t\t// 類別標籤：顯示後端猜到的零件類別（僅提示，進貨單品項表不存類別，\n\t\t\t\t\t// 類別屬於 inventory_items；此處只是讓櫃檯知道系統怎麼歸類）。\n\t\t\t\t\tvar cat = document.createElement(\"span\");\n\t\t\t\t\tcat.style.cssText = \"color:var(--text-sub);font-size:12px;min-width:52px\";\n\t\t\t\t\tcat.textContent = it.category ? it.category : \"未分類\";\n\t\t\t\t\tcat.title = \"依品名自動猜測的零件類別\";\n\n\t\t\t\t\tvar qty = document.createElement(\"input\");\n\t\t\t\t\tqty.type = \"number\"; qty.step = \"0.01\"; qty.min = \"0.01\"; qty.value = it.quantity;\n\t\t\t\t\tqty.style.cssText = \"width:70px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\";\n\t\t\t\t\tqty.addEventListener(\"input\", function () { it.quantity = parseFloat(this.value) || 0; });\n\n\t\t\t\t\tvar price = document.createElement(\"input\");\n\t\t\t\t\tprice.type = \"number\"; price.min = \"0\"; price.step = \"1\"; price.value = Math.round(it.unit_price);\n\t\t\t\t\tprice.style.cssText = \"width:90px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\";\n\t\t\t\t\tprice.addEventListener(\"input\", function () { it.unit_price = parseFloat(this.value) || 0; });\n\n\t\t\t\t\tvar sub = document.createElement(\"span\");\n\t\t\t\t\tsub.style.cssText = \"color:#38bdf8;min-width:80px;text-align:right\";\n\t\t\t\t\tfunction updSub() { sub.textContent = \"$\" + (Math.round(it.quantity * it.unit_price * 100) / 100); }\n\t\t\t\t\tqty.addEventListener(\"input\", updSub);\n\t\t\t\t\tprice.addEventListener(\"input\", updSub);\n\t\t\t\t\tupdSub();\n\n\t\t\t\t\tvar del = document.createElement(\"button\");\n\t\t\t\t\tdel.type = \"button\"; del.className = \"btn btn-d\"; del.textContent = \"刪\";\n\t\t\t\t\tdel.addEventListener(\"click\", function () { items.splice(i, 1); renderRows(); });\n\n\t\t\t\t\trow.appendChild(desc); row.appendChild(cat); row.appendChild(qty); row.appendChild(price);\n\t\t\t\t\trow.appendChild(sub); row.appendChild(del);\n\t\t\t\t\trowsBox.appendChild(row);\n\t\t\t\t});\n\n\t\t\t\tvar add = document.createElement(\"div\");\n\t\t\t\tadd.style.cssText = \"padding:8px 10px;border-top:1px solid var(--border)\";\n\t\t\t\tvar addBtn = document.createElement(\"button\");\n\t\t\t\taddBtn.type = \"button\"; addBtn.className = \"btn btn-s\"; addBtn.textContent = \"＋ 手動加一項\";\n\t\t\t\taddBtn.addEventListener(\"click\", function () {\n\t\t\t\t\titems.push({ description: \"\", quantity: 1, unit_price: 0, part_number: \"\", category: \"\" });\n\t\t\t\t\trenderRows();\n\t\t\t\t});\n\t\t\t\tadd.appendChild(addBtn);\n\t\t\t\trowsBox.appendChild(add);\n\n\t\t\t\tsyncItemsJson();\n\t\t\t}\n\n\t\t\t// 把目前品項寫進表單 hidden 欄位，送出時一起 POST。\n\t\t\t// category 一併送出（辨識猜到的類別），確認進貨時帶到自動建檔的零件。\n\t\t\tfunction syncItemsJson() {\n\t\t\t\tvar form = document.getElementById(\"newPurchaseOrderForm\");\n\t\t\t\tif (!form) return;\n\t\t\t\tvar hidden = form.querySelector('[name=\"items_json\"]');\n\t\t\t\tif (!hidden) {\n\t\t\t\t\thidden = document.createElement(\"input\");\n\t\t\t\t\thidden.type = \"hidden\";\n\t\t\t\t\thidden.name = \"items_json\";\n\t\t\t\t\tform.appendChild(hidden);\n\t\t\t\t}\n\t\t\t\tvar cleaned = items.filter(function (it) { return it.description && it.quantity > 0; });\n\t\t\t\thidden.value = cleaned.length ? JSON.stringify(cleaned) : \"\";\n\t\t\t}\n\n\t\t\t// 表單送出前再同步一次（使用者可能最後才改數量）。\n\t\t\tdocument.addEventListener(\"submit\", function (e) {\n\t\t\t\tvar form = document.getElementById(\"newPurchaseOrderForm\");\n\t\t\t\tif (form && form === e.target) { syncItemsJson(); }\n\t\t\t}, true);\n\n\t\t\twindow.__invoiceScanSync = syncItemsJson;\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script src=\"/static/scan.js\"></script><div class=\"full\" style=\"margin:4px 0 8px\"><button type=\"button\" class=\"btn btn-o\" id=\"invoiceScanBtn\">📷 ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "purchase_order.scan.button"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 18, Col: 110}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</button> <input type=\"file\" id=\"invoiceScanInput\" accept=\"image/*\" capture=\"environment\" style=\"display:none\"> <span style=\"color:var(--muted);font-size:12px;margin-left:8px\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "purchase_order.scan.hint"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 20, Col: 107}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</span></div><div id=\"invoiceScanBox\" style=\"display:none;margin:6px 0 12px;border:1px solid var(--border);border-radius:8px;overflow:hidden\" data-i18n-scanning=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var4 string
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.scanning")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 23, Col: 66}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" data-i18n-failed=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.failed")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 24, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" data-i18n-unknown-error=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.unknown_error")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 25, Col: 76}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" data-i18n-no-items=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.no_items")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 26, Col: 66}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" data-i18n-request-failed=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.request_failed")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 27, Col: 78}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" data-i18n-supplier-matched=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.supplier_matched")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 28, Col: 82}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-i18n-supplier-not-found=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var10 string
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.supplier_not_found")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 29, Col: 86}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" data-i18n-add-supplier=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var11 string
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.add_supplier")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 30, Col: 74}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" data-i18n-item-name-ph=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.item_name_ph")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 31, Col: 74}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" data-i18n-uncategorized=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var13 string
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.uncategorized")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 32, Col: 76}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" data-i18n-category-hint=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var14 string
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.category_hint")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 33, Col: 76}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" data-i18n-delete=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var15 string
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.delete")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 34, Col: 62}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" data-i18n-add-row=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var16 string
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.add_row")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 35, Col: 64}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\"><div style=\"padding:8px 10px;background:var(--surface);color:var(--text-sub);font-size:12.5px\" data-i18n-count-before=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.count_before")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 37, Col: 75}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-i18n-count-after=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var18 string
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "purchase_order.scan.count_after")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 38, Col: 73}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var19 string
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "purchase_order.scan.count_before"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 39, Col: 52}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, " <b id=\"invoiceScanCount\">0</b> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var20 string
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "purchase_order.scan.count_after"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/invoice_scan.templ`, Line: 39, Col: 134}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><div id=\"invoiceScanSupplier\" style=\"display:none;padding:6px 10px;border-top:1px solid var(--border);font-size:13px\"></div><div id=\"supplierLookup\" hx-get=\"/api/suppliers\" hx-trigger=\"supplier-lookup\" style=\"display:none\"></div><div id=\"invoiceScanRows\"></div></div><script>\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\n\t\t\tvar btn = document.getElementById(\"invoiceScanBtn\");\n\t\t\tvar input = document.getElementById(\"invoiceScanInput\");\n\t\t\tvar box = document.getElementById(\"invoiceScanBox\");\n\t\t\tvar rowsBox = document.getElementById(\"invoiceScanRows\");\n\t\t\tvar suppBox = document.getElementById(\"invoiceScanSupplier\");\n\t\t\tvar supplierLookup = document.getElementById(\"supplierLookup\");\n\t\t\tvar countEl = document.getElementById(\"invoiceScanCount\");\n\t\t\tvar L = box.dataset;\n\t\t\tif (!btn || !input || !rowsBox) return;\n\n\t\t\tvar items = []; // 目前清單（可編輯），送出前序列化進 items_json\n\t\t\tvar pendingSupplierName = \"\";\n\n\t\t\tbtn.addEventListener(\"click\", function () { input.click(); });\n\n\t\t\tinput.addEventListener(\"change\", function () {\n\t\t\t\tvar file = input.files && input.files[0];\n\t\t\t\tif (!file) return;\n\t\t\t\tbtn.disabled = true;\n\t\t\t\tvar oldText = btn.textContent;\n\t\t\t\tbtn.textContent = L.scanning;\n\n\t\t\t\tvar reader = new FileReader();\n\t\t\t\treader.onload = function () {\n\t\t\t\t\tfetch(\"/api/vision/invoice\", {\n\t\t\t\t\t\tmethod: \"POST\",\n\t\t\t\t\t\theaders: { \"Content-Type\": \"application/json\" },\n\t\t\t\t\t\tbody: JSON.stringify({ image: reader.result })\n\t\t\t\t\t})\n\t\t\t\t\t\t.then(function (r) { return r.json(); })\n\t\t\t\t\t\t.then(function (j) {\n\t\t\t\t\t\t\tif (!j.ok) { alert(L.failed + (j.error || L.unknownError)); return; }\n\t\t\t\t\t\t\tif (!j.items || j.items.length === 0) {\n\t\t\t\t\t\t\t\talert(L.noItems);\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tapplyDoc(j);\n\t\t\t\t\t\t})\n\t\t\t\t\t\t.catch(function () { alert(L.requestFailed); })\n\t\t\t\t\t\t.finally(function () {\n\t\t\t\t\t\t\tbtn.disabled = false;\n\t\t\t\t\t\t\tbtn.textContent = oldText;\n\t\t\t\t\t\t\tinput.value = \"\";\n\t\t\t\t\t\t});\n\t\t\t\t};\n\t\t\t\treader.readAsDataURL(file);\n\t\t\t});\n\n\t\t\t// 把辨識結果套用到表單：供應商、日期、品項清單。\n\t\t\tfunction applyDoc(j) {\n\t\t\t\tmatchSupplier(j.supplier_name);\n\t\t\t\tif (j.order_date) {\n\t\t\t\t\tvar d = document.querySelector('[name=\"order_date\"]');\n\t\t\t\t\tif (d && !d.value) d.value = j.order_date;\n\t\t\t\t}\n\t\t\t\titems = j.items.map(function (it) {\n\t\t\t\t\treturn {\n\t\t\t\t\t\tdescription: it.description || \"\",\n\t\t\t\t\t\tquantity: it.quantity > 0 ? it.quantity : 1,\n\t\t\t\t\t\tunit_price: it.unit_price || 0,\n\t\t\t\t\t\tpart_number: it.part_number || \"\",\n\t\t\t\t\t\tcategory: it.guess_category || \"\"\n\t\t\t\t\t};\n\t\t\t\t});\n\t\t\t\trenderRows();\n\t\t\t\tbox.style.display = \"block\";\n\t\t\t}\n\n\t\t\t// 供應商名比對：先精確，再互相包含；比不到就提供「＋ 新增為供應商」。\n\t\t\tfunction matchSupplier(name) {\n\t\t\t\tsuppBox.style.display = \"none\";\n\t\t\t\tif (!name) return;\n\t\t\t\tpendingSupplierName = name;\n\t\t\t\thtmx.trigger(supplierLookup, \"supplier-lookup\");\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function (e) {\n\t\t\t\tif (e.detail.elt !== supplierLookup || !pendingSupplierName) return;\n\t\t\t\tvar target = normalizeName(pendingSupplierName);\n\t\t\t\tvar best = null;\n\t\t\t\tsupplierLookup.querySelectorAll(\"option\").forEach(function (opt) {\n\t\t\t\t\tvar sn = normalizeName(opt.dataset.supplierName || opt.textContent);\n\t\t\t\t\tif (sn === target || (!best && sn && target && (sn.indexOf(target) >= 0 || target.indexOf(sn) >= 0))) {\n\t\t\t\t\t\tbest = { id: opt.value, name: opt.dataset.supplierName || opt.textContent };\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\tvar sel = document.querySelector('[name=\"supplier_id\"]');\n\t\t\t\tif (best && sel) {\n\t\t\t\t\tsel.value = best.id;\n\t\t\t\t\tshowSupplierNote(L.supplierMatched + best.name, \"#4ade80\");\n\t\t\t\t} else {\n\t\t\t\t\tshowSupplierNotFound(pendingSupplierName);\n\t\t\t\t}\n\t\t\t});\n\n\t\t\t// 找不到供應商：列出「＋ 新增『X』為供應商」按鈕，一鍵建立並帶入下拉選單。\n\t\t\tfunction showSupplierNotFound(name) {\n\t\t\t\tsuppBox.innerHTML = \"\";\n\t\t\t\tsuppBox.style.color = \"#fbbf24\";\n\t\t\t\tvar label = document.createElement(\"span\");\n\t\t\t\tlabel.textContent = L.supplierNotFound.replace(\"%s\", name);\n\t\t\t\tsuppBox.appendChild(label);\n\t\t\t\tvar mk = document.createElement(\"button\");\n\t\t\t\tmk.type = \"button\";\n\t\t\t\tmk.className = \"btn btn-p\";\n\t\t\t\tmk.name = \"name\";\n\t\t\t\tmk.value = name;\n\t\t\t\tmk.setAttribute(\"hx-post\", \"/api/suppliers/quick-create\");\n\t\t\t\tmk.setAttribute(\"hx-target\", \"#invoiceScanSupplier\");\n\t\t\t\tmk.setAttribute(\"hx-swap\", \"innerHTML\");\n\t\t\t\tmk.style.cssText = \"margin-left:8px;padding:3px 10px;font-size:12.5px\";\n\t\t\t\tmk.textContent = L.addSupplier;\n\t\t\t\tsuppBox.appendChild(mk);\n\t\t\t\tsuppBox.style.display = \"block\";\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function (e) {\n\t\t\t\tif (!e.detail.elt || e.detail.elt.name !== \"name\" || e.detail.elt.getAttribute(\"hx-post\") !== \"/api/suppliers/quick-create\") return;\n\t\t\t\tvar parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, \"text/html\");\n\t\t\t\tvar result = parsed.getElementById(\"supplierQuickCreateResult\");\n\t\t\t\tif (!result) return;\n\t\t\t\tvar sel = document.querySelector('[name=\"supplier_id\"]');\n\t\t\t\tif (sel) {\n\t\t\t\t\tvar opt = document.createElement(\"option\");\n\t\t\t\t\topt.value = result.dataset.id;\n\t\t\t\t\topt.textContent = result.dataset.name;\n\t\t\t\t\tsel.appendChild(opt);\n\t\t\t\t\tsel.value = result.dataset.id;\n\t\t\t\t}\n\t\t\t\tshowSupplierNote(result.dataset.note, result.dataset.color);\n\t\t\t});\n\n\t\t\tfunction showSupplierNote(text, color) {\n\t\t\t\tsuppBox.textContent = text;\n\t\t\t\tsuppBox.style.color = color;\n\t\t\t\tsuppBox.style.display = \"block\";\n\t\t\t}\n\n\t\t\tfunction normalizeName(s) {\n\t\t\t\treturn String(s || \"\").replace(/[\\s\u3000]/g, \"\").replace(/(股份有限公司|有限公司|公司|行|號)$/g, \"\");\n\t\t\t}\n\n\t\t\t// 重繪可編輯品項列（品名/數量/單價/類別可改、可刪、可新增一列空白）。\n\t\t\tfunction renderRows() {\n\t\t\t\trowsBox.innerHTML = \"\";\n\t\t\t\tcountEl.textContent = String(items.length);\n\t\t\t\titems.forEach(function (it, i) {\n\t\t\t\t\tvar row = document.createElement(\"div\");\n\t\t\t\t\trow.style.cssText = \"padding:8px 10px;border-top:1px solid var(--border);font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap\";\n\n\t\t\t\t\tvar desc = document.createElement(\"input\");\n\t\t\t\t\tdesc.value = it.description;\n\t\t\t\t\tdesc.placeholder = L.itemNamePh;\n\t\t\t\t\tdesc.style.cssText = \"flex:1;min-width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\";\n\t\t\t\t\tdesc.addEventListener(\"input\", function () { it.description = this.value; });\n\n\t\t\t\t\t// 類別標籤：顯示後端猜到的零件類別（僅提示，進貨單品項表不存類別，\n\t\t\t\t\t// 類別屬於 inventory_items；此處只是讓櫃檯知道系統怎麼歸類）。\n\t\t\t\t\tvar cat = document.createElement(\"span\");\n\t\t\t\t\tcat.style.cssText = \"color:var(--text-sub);font-size:12px;min-width:52px\";\n\t\t\t\t\tcat.textContent = it.category ? it.category : L.uncategorized;\n\t\t\t\t\tcat.title = L.categoryHint;\n\n\t\t\t\t\tvar qty = document.createElement(\"input\");\n\t\t\t\t\tqty.type = \"number\"; qty.step = \"0.01\"; qty.min = \"0.01\"; qty.value = it.quantity;\n\t\t\t\t\tqty.style.cssText = \"width:70px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\";\n\t\t\t\t\tqty.addEventListener(\"input\", function () { it.quantity = parseFloat(this.value) || 0; });\n\n\t\t\t\t\tvar price = document.createElement(\"input\");\n\t\t\t\t\tprice.type = \"number\"; price.min = \"0\"; price.step = \"1\"; price.value = Math.round(it.unit_price);\n\t\t\t\t\tprice.style.cssText = \"width:90px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\";\n\t\t\t\t\tprice.addEventListener(\"input\", function () { it.unit_price = parseFloat(this.value) || 0; });\n\n\t\t\t\t\tvar sub = document.createElement(\"span\");\n\t\t\t\t\tsub.style.cssText = \"color:#38bdf8;min-width:80px;text-align:right\";\n\t\t\t\t\tfunction updSub() { sub.textContent = \"$\" + (Math.round(it.quantity * it.unit_price * 100) / 100); }\n\t\t\t\t\tqty.addEventListener(\"input\", updSub);\n\t\t\t\t\tprice.addEventListener(\"input\", updSub);\n\t\t\t\t\tupdSub();\n\n\t\t\t\t\tvar del = document.createElement(\"button\");\n\t\t\t\t\tdel.type = \"button\"; del.className = \"btn btn-d\"; del.textContent = L.delete;\n\t\t\t\t\tdel.addEventListener(\"click\", function () { items.splice(i, 1); renderRows(); });\n\n\t\t\t\t\trow.appendChild(desc); row.appendChild(cat); row.appendChild(qty); row.appendChild(price);\n\t\t\t\t\trow.appendChild(sub); row.appendChild(del);\n\t\t\t\t\trowsBox.appendChild(row);\n\t\t\t\t});\n\n\t\t\t\tvar add = document.createElement(\"div\");\n\t\t\t\tadd.style.cssText = \"padding:8px 10px;border-top:1px solid var(--border)\";\n\t\t\t\tvar addBtn = document.createElement(\"button\");\n\t\t\t\taddBtn.type = \"button\"; addBtn.className = \"btn btn-s\"; addBtn.textContent = L.addRow;\n\t\t\t\taddBtn.addEventListener(\"click\", function () {\n\t\t\t\t\titems.push({ description: \"\", quantity: 1, unit_price: 0, part_number: \"\", category: \"\" });\n\t\t\t\t\trenderRows();\n\t\t\t\t});\n\t\t\t\tadd.appendChild(addBtn);\n\t\t\t\trowsBox.appendChild(add);\n\n\t\t\t\tsyncItemsJson();\n\t\t\t}\n\n\t\t\t// 把目前品項寫進表單 hidden 欄位，送出時一起 POST。\n\t\t\t// category 一併送出（辨識猜到的類別），確認進貨時帶到自動建檔的零件。\n\t\t\tfunction syncItemsJson() {\n\t\t\t\tvar form = document.getElementById(\"newPurchaseOrderForm\");\n\t\t\t\tif (!form) return;\n\t\t\t\tvar hidden = form.querySelector('[name=\"items_json\"]');\n\t\t\t\tif (!hidden) {\n\t\t\t\t\thidden = document.createElement(\"input\");\n\t\t\t\t\thidden.type = \"hidden\";\n\t\t\t\t\thidden.name = \"items_json\";\n\t\t\t\t\tform.appendChild(hidden);\n\t\t\t\t}\n\t\t\t\tvar cleaned = items.filter(function (it) { return it.description && it.quantity > 0; });\n\t\t\t\thidden.value = cleaned.length ? JSON.stringify(cleaned) : \"\";\n\t\t\t}\n\n\t\t\t// 表單送出前再同步一次（使用者可能最後才改數量）。\n\t\t\tdocument.addEventListener(\"submit\", function (e) {\n\t\t\t\tvar form = document.getElementById(\"newPurchaseOrderForm\");\n\t\t\t\tif (form && form === e.target) { syncItemsJson(); }\n\t\t\t}, true);\n\n\t\t\twindow.__invoiceScanSync = syncItemsJson;\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -180,7 +180,7 @@ templ ShowPurchaseOrderPage(po model.PurchaseOrder, items []model.PurchaseOrderI
 						hx-target="#po-items"
 						hx-swap="innerHTML"
 						hx-on::after-request="if(event.detail.successful) this.reset();"
-hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
+hx-on::response-error="alert(event.detail.xhr.responseText || document.body.getAttribute('data-i18n-operation-failed'))"
 						style="display:inline">
 						@components.CSRFInput()
 						<button class="btn btn-p" type="submit">{ i18n.T(ctx, "po.add_items_hint") }</button>
@@ -262,7 +262,7 @@ templ AddPurchaseItemForm(orderID int64, partCategoryOptions string) {
 		hx-target="#po-items"
 		hx-swap="innerHTML"
 		hx-on::after-request="if(event.detail.successful) this.reset();"
-hx-on::response-error="alert(event.detail.xhr.responseText || '操作失敗')"
+hx-on::response-error="alert(event.detail.xhr.responseText || document.body.getAttribute('data-i18n-operation-failed'))"
 		style="margin-top:18px">
 		@components.CSRFInput()
 		<label class="full">{ i18n.T(ctx, "po.field.item_name") }

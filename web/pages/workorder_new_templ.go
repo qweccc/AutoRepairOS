@@ -686,20 +686,98 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</a></div></form></div><script>\r\n\t\t\t// 未勾選保險件時把保險欄位停用，避免誤填。\r\n\t\t\t// 注意：disabled 的 input 不會隨表單送出，所以保險公司另以 hidden 鏡像保存 id，\r\n\t\t\t// 否則「選了保險件但沒改公司」時後端會收不到 insurance_company_id。\r\n\t\t\t(function () {\r\n\t\t\t\tvar sel = document.getElementById('isInsurance');\r\n\t\t\t\tvar mirror = document.getElementById('insuranceCompanyMirror');\r\n\t\t\t\tvar company = document.querySelector('[name=\"insurance_company_id\"]');\r\n\t\t\t\tvar others = ['claim_no', 'accident_date', 'deductible_amount', 'claim_date', 'claim_amount', 'claim_note'];\r\n\t\t\t\tfunction sync() {\r\n\t\t\t\t\tvar on = sel && sel.value === '1';\r\n\t\t\t\t\tothers.forEach(function (n) {\r\n\t\t\t\t\t\tvar el = document.querySelector('[name=\"' + n + '\"]');\r\n\t\t\t\t\t\tif (el) el.disabled = !on;\r\n\t\t\t\t\t});\r\n\t\t\t\t\tif (company) company.disabled = !on;\r\n\t\t\t\t\tif (mirror) mirror.value = (on && company) ? company.value : '';\r\n\t\t\t\t}\r\n\t\t\t\tif (sel) {\r\n\t\t\t\t\tsel.addEventListener('change', sync);\r\n\t\t\t\t\tif (company) company.addEventListener('change', sync);\r\n\t\t\t\t\tsync();\r\n\t\t\t\t}\r\n\t\t\t})();\r\n\t\t</script> <link rel=\"stylesheet\" href=\"/static/vehicle-search.css\"><script src=\"/static/vehicle-search.js\" defer></script> <div id=\"quickModal\" class=\"modal-backdrop hidden\"><div class=\"modal-card\"><div class=\"modal-header\"><h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</a></div></form></div><script>\r\n\t\t\t// 未勾選保險件時把保險欄位停用，避免誤填。\r\n\t\t\t// 注意：disabled 的 input 不會隨表單送出，所以保險公司另以 hidden 鏡像保存 id，\r\n\t\t\t// 否則「選了保險件但沒改公司」時後端會收不到 insurance_company_id。\r\n\t\t\t(function () {\r\n\t\t\t\tvar sel = document.getElementById('isInsurance');\r\n\t\t\t\tvar mirror = document.getElementById('insuranceCompanyMirror');\r\n\t\t\t\tvar company = document.querySelector('[name=\"insurance_company_id\"]');\r\n\t\t\t\tvar others = ['claim_no', 'accident_date', 'deductible_amount', 'claim_date', 'claim_amount', 'claim_note'];\r\n\t\t\t\tfunction sync() {\r\n\t\t\t\t\tvar on = sel && sel.value === '1';\r\n\t\t\t\t\tothers.forEach(function (n) {\r\n\t\t\t\t\t\tvar el = document.querySelector('[name=\"' + n + '\"]');\r\n\t\t\t\t\t\tif (el) el.disabled = !on;\r\n\t\t\t\t\t});\r\n\t\t\t\t\tif (company) company.disabled = !on;\r\n\t\t\t\t\tif (mirror) mirror.value = (on && company) ? company.value : '';\r\n\t\t\t\t}\r\n\t\t\t\tif (sel) {\r\n\t\t\t\t\tsel.addEventListener('change', sync);\r\n\t\t\t\t\tif (company) company.addEventListener('change', sync);\r\n\t\t\t\t\tsync();\r\n\t\t\t\t}\r\n\t\t\t})();\r\n\t\t</script> <link rel=\"stylesheet\" href=\"/static/vehicle-search.css\"><script src=\"/static/vehicle-search.js\" defer></script> <div id=\"quickModal\" class=\"modal-backdrop hidden\" data-i18n-unknown-owner=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var44 string
-			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.title"))
+			templ_7745c5c3_Var44, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.unknown_owner")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 133, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 131, Col: 73}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</h3><button type=\"button\" class=\"close-btn\" onclick=\"closeQuickModal()\">✕</button></div><form id=\"quickForm\" hx-post=\"/api/quick-vehicle\" hx-target=\"#quickVehicleStatus\" hx-swap=\"innerHTML\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "\" data-i18n-duplicate-title=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var45 string
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.duplicate_title")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 132, Col: 77}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" data-i18n-current-owner=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var46 string
+			templ_7745c5c3_Var46, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.current_owner")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 133, Col: 73}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" data-i18n-use-existing=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var47 string
+			templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.use_existing")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 134, Col: 71}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" data-i18n-duplicate-hint=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var48 string
+			templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.duplicate_hint")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 135, Col: 75}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" data-i18n-create-failed=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var49 string
+			templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.operation_failed")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 136, Col: 67}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\"><div class=\"modal-card\"><div class=\"modal-header\"><h3>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var50 string
+			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.title"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 139, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</h3><button type=\"button\" class=\"close-btn\" onclick=\"closeQuickModal()\">✕</button></div><form id=\"quickForm\" hx-post=\"/api/quick-vehicle\" hx-target=\"#quickVehicleStatus\" hx-swap=\"innerHTML\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -707,111 +785,111 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<div class=\"frm\"><label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var45 string
-			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.plate"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 139, Col: 51}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<input name=\"plate_number\" id=\"quickPlate\" required></label> <label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var46 string
-			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.model"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 140, Col: 51}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "<input name=\"brand_model\" placeholder=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var47 string
-			templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.model_ph")).Resolve(ctx)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 140, Col: 132}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" required></label> <label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var48 string
-			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.owner"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 141, Col: 51}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<input name=\"customer_name\" required></label> <label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var49 string
-			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.phone"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 142, Col: 51}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<input name=\"customer_phone\" required></label> <label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var50 string
-			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.mileage"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 143, Col: 53}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<input name=\"current_mileage\" type=\"number\" min=\"0\" required></label></div><div class=\"modal-actions\"><button type=\"submit\" class=\"btn btn-p\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"frm\"><label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.create"))
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.plate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 146, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 145, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"closeQuickModal()\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<input name=\"plate_number\" id=\"quickPlate\" required></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var52 string
-			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.cancel"))
+			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.model"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 147, Col: 107}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 146, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</button></div><div id=\"quickVehicleStatus\" role=\"status\"></div></form></div></div><script>\r\n\t\t\tfunction openQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.remove('hidden');\r\n\t\t\t\tdocument.getElementById('quickPlate').focus();\r\n\t\t\t}\r\n\t\t\tfunction closeQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.add('hidden');\r\n\t\t\t\tdocument.getElementById('quickForm').reset();\r\n\t\t\t}\r\n\t\t\tdocument.addEventListener('htmx:afterRequest', function(e) {\r\n\t\t\t\tif (e.detail.elt !== document.getElementById('quickForm')) return;\r\n\t\t\t\tvar parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, 'text/html');\r\n\t\t\t\tvar result = parsed.getElementById('quickVehicleResult');\r\n\t\t\t\tif (!result || result.dataset.ok !== 'true') return;\r\n\t\t\t\t\t\t\t// 車牌已存在時先問清楚再帶入。\r\n\t\t\t\t\t\t\t// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於\r\n\t\t\t\t\t\t\t// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。\r\n\t\t\t\t\t\t\tif (result.dataset.duplicate === 'true') {\r\n\t\t\t\t\t\t\t\tvar who = (result.dataset.ownerName || '未知車主') +\r\n\t\t\t\t\t\t\t\t\t(result.dataset.ownerPhone ? '（' + result.dataset.ownerPhone + '）' : '');\r\n\t\t\t\t\t\t\t\tvar msg = '車牌 ' + result.dataset.label.split(' / ')[0] + ' 已經有建檔紀錄。\\n\\n' +\r\n\t\t\t\t\t\t\t\t\t'現有車主：' + who + '\\n\\n' +\r\n\t\t\t\t\t\t\t\t\t'要使用這台既有車輛嗎？\\n' +\r\n\t\t\t\t\t\t\t\t\t'按「取消」可留下來修改車牌，或改用上方的搜尋清單選車。';\r\n\t\t\t\t\t\t\t\tif (!confirm(msg)) {\r\n\t\t\t\t\t\t\t\t\treturn;   // 不帶入，modal 保持開啟讓櫃檯修正\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tcloseQuickModal();\r\n\t\t\t\t\t\t\tvar input = document.getElementById('vehicle_id');\r\n\t\t\t\t\t\t\tinput.value = result.dataset.vehicleId;\r\n\t\t\t\t\t\t\tvar vs = document.querySelector('.vs-input');\r\n\t\t\t\t\t\t\tif (vs) vs.value = result.dataset.label;\r\n\t\t\t\t\t\t\tvar hint = document.querySelector('[name=\"current_mileage\"]');\r\n\t\t\t\t\t\t\tif (hint) hint.value = result.dataset.mileage || '';\r\n\t\t\t\t\t\t\tvar btn = document.querySelector('.btn-p');\r\n\t\t\t\t\t\t\tif (btn) btn.focus();\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('htmx:responseError', function(e) {\r\n\t\t\t\tif (e.detail.elt === document.getElementById('quickForm')) {\r\n\t\t\t\t\talert(e.detail.xhr.responseText || '建立失敗');\r\n\t\t\t\t}\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });\r\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<input name=\"brand_model\" placeholder=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var53 string
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.model_ph")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 146, Col: 132}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" required></label> <label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var54 string
+			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.owner"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 147, Col: 51}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<input name=\"customer_name\" required></label> <label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var55 string
+			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.phone"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 148, Col: 51}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<input name=\"customer_phone\" required></label> <label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var56 string
+			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.mileage"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 149, Col: 53}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<input name=\"current_mileage\" type=\"number\" min=\"0\" required></label></div><div class=\"modal-actions\"><button type=\"submit\" class=\"btn btn-p\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var57 string
+			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.create"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 152, Col: 85}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"closeQuickModal()\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var58 string
+			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.cancel"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 153, Col: 107}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</button></div><div id=\"quickVehicleStatus\" role=\"status\"></div></form></div></div><script>\r\n\t\t\tfunction openQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.remove('hidden');\r\n\t\t\t\tdocument.getElementById('quickPlate').focus();\r\n\t\t\t}\r\n\t\t\tfunction closeQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.add('hidden');\r\n\t\t\t\tdocument.getElementById('quickForm').reset();\r\n\t\t\t}\r\n\t\t\tdocument.addEventListener('htmx:afterRequest', function(e) {\r\n\t\t\t\tif (e.detail.elt !== document.getElementById('quickForm')) return;\r\n\t\t\t\tvar parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, 'text/html');\r\n\t\t\t\tvar result = parsed.getElementById('quickVehicleResult');\r\n\t\t\t\tif (!result || result.dataset.ok !== 'true') return;\r\n\t\t\t\t\t\t\t// 車牌已存在時先問清楚再帶入。\r\n\t\t\t\t\t\t\t// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於\r\n\t\t\t\t\t\t\t// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。\r\n\t\t\t\t\t\t\tif (result.dataset.duplicate === 'true') {\r\n\t\t\t\t\t\t\t\tvar qd = document.getElementById('quickModal').dataset;\n\t\t\t\t\t\t\t\tvar who = (result.dataset.ownerName || qd.i18nUnknownOwner) +\r\n\t\t\t\t\t\t\t\t\t(result.dataset.ownerPhone ? '（' + result.dataset.ownerPhone + '）' : '');\r\n\t\t\t\t\t\t\t\tvar msg = qd.i18nDuplicateTitle.replace('%s', result.dataset.label.split(' / ')[0]) + '\n\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nCurrentOwner + who + '\n\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nUseExisting + '\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nDuplicateHint;\r\n\t\t\t\t\t\t\t\tif (!confirm(msg)) {\r\n\t\t\t\t\t\t\t\t\treturn;   // 不帶入，modal 保持開啟讓櫃檯修正\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tcloseQuickModal();\r\n\t\t\t\t\t\t\tvar input = document.getElementById('vehicle_id');\r\n\t\t\t\t\t\t\tinput.value = result.dataset.vehicleId;\r\n\t\t\t\t\t\t\tvar vs = document.querySelector('.vs-input');\r\n\t\t\t\t\t\t\tif (vs) vs.value = result.dataset.label;\r\n\t\t\t\t\t\t\tvar hint = document.querySelector('[name=\"current_mileage\"]');\r\n\t\t\t\t\t\t\tif (hint) hint.value = result.dataset.mileage || '';\r\n\t\t\t\t\t\t\tvar btn = document.querySelector('.btn-p');\r\n\t\t\t\t\t\t\tif (btn) btn.focus();\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('htmx:responseError', function(e) {\r\n\t\t\t\tif (e.detail.elt === document.getElementById('quickForm')) {\r\n\t\t\t\t\talert(e.detail.xhr.responseText || document.getElementById('quickModal').dataset.i18nCreateFailed);\r\n\t\t\t\t}\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });\r\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

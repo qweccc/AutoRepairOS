@@ -5,6 +5,9 @@
 (function () {
   "use strict";
 
+  var II = {};
+  try { II = JSON.parse(document.body.getAttribute("data-i18n-js") || "{}"); } catch (e) { II = {}; }
+
   // ---- 行照/車牌拍照辨識 ----
   // 在指定表單插入「📷 拍照辨識行照」按鈕，選圖後 POST 到後端，回填欄位。
   // fieldMap: 後端 reading 欄位 -> 表單 input name 的對照。
@@ -22,7 +25,7 @@
       if (!file) return;
       btn.disabled = true;
       var oldText = btn.textContent;
-      btn.textContent = "辨識中…";
+      btn.textContent = II["scan.scanning"];
 
       var reader = new FileReader();
       reader.onload = function () {
@@ -36,13 +39,13 @@
           })
           .then(function (j) {
             if (!j.ok) {
-              alert("辨識失敗：" + (j.error || "未知錯誤"));
+              alert(II["scan.failed"] + (j.error || II["scan.unknown_error"]));
               return;
             }
             fillFields(j.reading, opts.fieldMap || {});
           })
           .catch(function () {
-            alert("辨識請求失敗（網路或伺服器錯誤）");
+            alert(II["scan.request_failed"]);
           })
           .finally(function () {
             btn.disabled = false;
@@ -68,7 +71,7 @@
       }
     });
     if (filled === 0) {
-      alert("已辨識但沒有可填入的空欄（或未辨識到資料）");
+      alert(II["scan.no_fillable_fields"]);
     }
   }
 
@@ -87,7 +90,7 @@
       var div = document.getElementById(opts.containerId);
       if (!div) return;
       div.style.display = "block";
-      btn.textContent = "停止掃描";
+      btn.textContent = II["scan.stop"];
       scanner = new Html5Qrcode(opts.containerId);
       scanner
         .start(
@@ -107,7 +110,7 @@
           },
         )
         .catch(function () {
-          alert("無法啟動相機（請確認已授權相機權限）");
+          alert(II["scan.camera_failed"]);
           stopScan();
         });
     });
@@ -124,7 +127,7 @@
       }
       var div = document.getElementById(opts.containerId);
       if (div) div.style.display = "none";
-      btn.textContent = "📷 掃條碼";
+      btn.textContent = II["scan.barcode_button"];
     }
   };
 })();

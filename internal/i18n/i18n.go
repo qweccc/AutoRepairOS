@@ -233,3 +233,34 @@ func Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+// JSKeys 是靜態 JS（沒有 request context）需要讀取的字典鍵。
+//
+// 為什麼需要這份清單：scan.js、photo-markup.js 等靜態檔直接操作 DOM，
+// 不受 i18n middleware 管轄。這些字串由 Layout 打包成 JSON 掛在 body 的
+// data-i18n-js，JS 再從那裡取（見 JSBundle）。
+var JSKeys = []string{
+	"common.operation_failed", "common.remove",
+	"customer.search_empty",
+	"scan.scanning", "scan.failed", "scan.unknown_error", "scan.request_failed",
+	"scan.no_fillable_fields", "scan.stop", "scan.camera_failed", "scan.barcode_button",
+	"photo.mark", "photo.end_mark", "photo.delete", "photo.draw_first",
+	"photo.added", "photo.add_failed", "photo.load_failed", "photo.action_failed",
+	"photo.mark.scratch", "photo.mark.dent", "photo.mark.crack", "photo.mark.rust",
+	"photo.mark.light_damage", "photo.mark.panel_repair",
+	"offline.idb_unavailable",
+}
+
+// JSBundle 把 JSKeys 目前語言的字串打包成 JSON，給前端靜態 JS 使用。
+// 掛在 body 的 data-i18n-js attribute，JS 以 JSON.parse 取回。
+func JSBundle(ctx context.Context) string {
+	m := make(map[string]string, len(JSKeys))
+	for _, k := range JSKeys {
+		m[k] = T(ctx, k)
+	}
+	b, err := json.Marshal(m)
+	if err != nil {
+		return "{}"
+	}
+	return string(b)
+}

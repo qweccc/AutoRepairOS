@@ -127,7 +127,13 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 
 		<link rel="stylesheet" href="/static/vehicle-search.css"/>
 		<script src="/static/vehicle-search.js" defer></script>
-		<div id="quickModal" class="modal-backdrop hidden">
+		<div id="quickModal" class="modal-backdrop hidden"
+			data-i18n-unknown-owner={ i18n.T(ctx, "workorder.quick.unknown_owner") }
+			data-i18n-duplicate-title={ i18n.T(ctx, "workorder.quick.duplicate_title") }
+			data-i18n-current-owner={ i18n.T(ctx, "workorder.quick.current_owner") }
+			data-i18n-use-existing={ i18n.T(ctx, "workorder.quick.use_existing") }
+			data-i18n-duplicate-hint={ i18n.T(ctx, "workorder.quick.duplicate_hint") }
+			data-i18n-create-failed={ i18n.T(ctx, "common.operation_failed") }>
 			<div class="modal-card">
 				<div class="modal-header">
 					<h3>{ i18n.T(ctx, "workorder.quick.title") }</h3>
@@ -168,12 +174,18 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 							// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於
 							// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。
 							if (result.dataset.duplicate === 'true') {
-								var who = (result.dataset.ownerName || '未知車主') +
+								var qd = document.getElementById('quickModal').dataset;
+								var who = (result.dataset.ownerName || qd.i18nUnknownOwner) +
 									(result.dataset.ownerPhone ? '（' + result.dataset.ownerPhone + '）' : '');
-								var msg = '車牌 ' + result.dataset.label.split(' / ')[0] + ' 已經有建檔紀錄。\n\n' +
-									'現有車主：' + who + '\n\n' +
-									'要使用這台既有車輛嗎？\n' +
-									'按「取消」可留下來修改車牌，或改用上方的搜尋清單選車。';
+								var msg = qd.i18nDuplicateTitle.replace('%s', result.dataset.label.split(' / ')[0]) + '
+
+' +
+									qd.i18nCurrentOwner + who + '
+
+' +
+									qd.i18nUseExisting + '
+' +
+									qd.i18nDuplicateHint;
 								if (!confirm(msg)) {
 									return;   // 不帶入，modal 保持開啟讓櫃檯修正
 								}
@@ -190,7 +202,7 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 			});
 			document.addEventListener('htmx:responseError', function(e) {
 				if (e.detail.elt === document.getElementById('quickForm')) {
-					alert(e.detail.xhr.responseText || '建立失敗');
+					alert(e.detail.xhr.responseText || document.getElementById('quickModal').dataset.i18nCreateFailed);
 				}
 			});
 			document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });

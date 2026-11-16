@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -220,7 +221,7 @@ templ CustomerLineBinding(c model.Customer) {
 		<h2>{ i18n.T(ctx, "customer.line_binding") }</h2>
 		if c.LineUserID != "" {
 			<p style="margin:0 0 10px"><span class="pill p-done">{ i18n.T(ctx, "customer.bound") }</span><code style="margin-left:8px">{ c.LineUserID }</code></p>
-			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/line-unbind" } onsubmit="return confirm('確定取消綁定？取消後這位客戶將無法在 LINE 查到自己的維修紀錄。')">
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID,10) + "/line-unbind" } data-confirm={ i18n.T(ctx, "customer.confirm_unbind_line") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 				@components.CSRFInput()
 				<button class="btn btn-d" type="submit">{ i18n.T(ctx, "customer.unbind") }</button>
 			</form>
@@ -237,7 +238,7 @@ templ CustomerLineBinding(c model.Customer) {
 				<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/line-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 					@components.CSRFInput()
 					<input name="line_user_id" placeholder="U1234567890abcdef" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
-					<button class="btn btn-p" type="submit">{ lineBindLabel(c) }</button>
+					<button class="btn btn-p" type="submit">{ lineBindLabel(ctx, c) }</button>
 				</form>
 				<p style="color:var(--muted);font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.line_unique_hint") }</p>
 			</details>
@@ -252,7 +253,7 @@ templ CustomerTelegramBinding(c model.Customer) {
 		if c.TelegramUserID != "" {
 			<p style="margin:0 0 10px"><span class="pill p-done">{ i18n.T(ctx, "customer.bound") }</span><code style="margin-left:8px">{ c.TelegramUserID }</code></p>
 			<p style="color:var(--text-sub);font-size:12.5px;margin:0 0 12px">{ i18n.T(ctx, "customer.telegram_bound_hint") }</p>
-			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-unbind" } onsubmit="return confirm('確定取消 Telegram 綁定？')">
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-unbind" } data-confirm={ i18n.T(ctx, "customer.confirm_unbind_telegram") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 				@components.CSRFInput()
 				<button class="btn btn-d" type="submit">{ i18n.T(ctx, "customer.unbind") }</button>
 			</form>
@@ -270,21 +271,21 @@ templ CustomerTelegramBinding(c model.Customer) {
 			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/telegram-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 				@components.CSRFInput()
 				<input name="telegram_user_id" placeholder="123456789" required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
-				<button class="btn btn-p" type="submit">{ telegramBindLabel(c) }</button>
+				<button class="btn btn-p" type="submit">{ telegramBindLabel(ctx, c) }</button>
 			</form>
 			<p style="color:var(--muted);font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer.telegram_chat_hint") }</p>
 		</details>
 	</div>
 }
 
-func lineBindLabel(c model.Customer) string {
-	if c.LineUserID != "" { return "重新綁定" }
-	return "綁定"
+func lineBindLabel(ctx context.Context, c model.Customer) string {
+	if c.LineUserID != "" { return i18n.T(ctx, "customer.bind_again") }
+	return i18n.T(ctx, "customer.bind")
 }
 
-func telegramBindLabel(c model.Customer) string {
-	if c.TelegramUserID != "" { return "重新綁定" }
-	return "綁定"
+func telegramBindLabel(ctx context.Context, c model.Customer) string {
+	if c.TelegramUserID != "" { return i18n.T(ctx, "customer.bind_again") }
+	return i18n.T(ctx, "customer.bind")
 }
 
 type InsuranceCompanyEditData struct {
@@ -460,7 +461,7 @@ templ ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) {
 								<td>
 									<a class="btn btn-s" href={ "/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10) }>{ i18n.T(ctx, "mainttpl.view_items") }</a>
 									<a class="btn btn-p" href={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
-									<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
+									<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" data-confirm={ i18n.T(ctx, "mainttpl.confirm_delete") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 										@components.CSRFInput()
 										<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.delete") }</button>
 									</form>
@@ -539,22 +540,24 @@ templ EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) {
 				</form>
 				<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
 					<a class="btn btn-p" href="/maintenance-templates">{ i18n.T(ctx, "mainttpl.back") }</a>
-					<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除這個套餐？已開出的工單不受影響。')">
+					<form method="POST" action={ "/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete" } style="display:inline" data-confirm={ i18n.T(ctx, "mainttpl.confirm_delete") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 						@components.CSRFInput()
 						<button class="btn btn-d" type="submit">{ i18n.T(ctx, "mainttpl.delete_plan") }</button>
 					</form>
 				</div>
 			</div>
-			<script>
-			function addTplRow(){
+			<script data-part-number-ph={ i18n.T(ctx, "mainttpl.part_number_ph_optional") } data-remove-label={ i18n.T(ctx, "common.remove") }>
+function addTplRow(){
+				var sc = document.currentScript.dataset;
 				var tb = document.getElementById('tplItems');
 				var tr = document.createElement('tr');
 				tr.className = 'tpl-item';
-				tr.innerHTML = '<td><input name="part_number" placeholder="料號（可空）" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
+				tr.innerHTML = '<td><input name="part_number" placeholder="' + sc.partNumberPh + '" style="width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
 					'<td><input name="item_desc" required style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
 					'<td><input name="item_qty" type="number" min="0" step="0.1" value="1" style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
 					'<td><input name="item_price" type="number" min="0" step="1" value="0" style="width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)"></td>' +
-					'<td><button type="button" class="btn btn-d" onclick="this.closest(\'tr\').remove()">移除</button></td>';
+					'<td><button type="button" class="btn btn-d">' + sc.removeLabel + '</button></td>';
+				tr.querySelector('button').addEventListener('click', function () { this.closest('tr').remove(); });
 				tb.appendChild(tr);
 			}
 			</script>
