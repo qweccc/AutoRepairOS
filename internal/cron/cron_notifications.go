@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/integration/line"
 	"autorepairos/internal/integration/telegram"
 )
@@ -16,6 +18,12 @@ import (
 // --- 通知佇列 ---
 
 // QueueNotification 將通知寫入佇列，待 processNotifications 處理。
+// tr 取系統預設語系的翻譯，供外發訊息範本使用。
+//
+// 客戶通知沒有個別語系設定（車行客戶以台灣為主），因此用預設語系
+// （繁體中文）；字典未載入時回傳 key，訊息仍可得。
+func tr(key string) string { return i18n.T(context.Background(), key) }
+
 func QueueNotification(kind, channel, subject, body string, customerID, workOrderID int64, scheduledAt time.Time) error {
 	var custArg, woArg interface{}
 	if customerID > 0 {
@@ -90,22 +98,22 @@ func queueWorkOrderCompletedNotification(woID, customerID int64) (bool, error) {
 	}
 
 	var body strings.Builder
-	fmt.Fprintf(&body, "親愛的 %s 您好\n車牌：%s\n工單編號：#%d\n維修項目：",
+	fmt.Fprintf(&body, tr("notify.completed_body"),
 		customerName, plate, woID)
 	if len(items) == 0 {
-		body.WriteString("\n- 無明細")
+		body.WriteString(tr("notify.no_items"))
 	} else {
 		for i, item := range items {
 			if i == 3 {
-				fmt.Fprintf(&body, "\n另有 %d 項", len(items)-3)
+				fmt.Fprintf(&body, tr("notify.more_items"), len(items)-3)
 				break
 			}
 			fmt.Fprintf(&body, "\n- %s x%d", item.description, item.quantity)
 		}
 	}
-	fmt.Fprintf(&body, "\n工單總金額：$%.0f\n車輛已完成維修，歡迎來廠取車並結帳", totalAmount)
+	fmt.Fprintf(&body, tr("notify.completed_total"), totalAmount)
 
-	subject := "完工通知 — 您的愛車已完成維修"
+	subject := tr("notify.completed_subject")
 	result, err := db.DB.Exec(`INSERT INTO notifications
 		(work_order_id, customer_id, channel, kind, subject, body, scheduled_at)
 		SELECT ?, ?, ?, 'work_order_completed', ?, ?, ?

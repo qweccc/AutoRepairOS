@@ -80,8 +80,8 @@ func ScanBirthdayRemindersNow() (int, error) {
 
 	queued := 0
 	for _, c := range candidates {
-		body := fmt.Sprintf("親愛的 %s 您好，祝您生日快樂！感謝您長期的支持，期待再次為您服務。", c.name)
-		added, err := queueVehicleReminder("customer_birthday", "生日祝福", body, c)
+		body := fmt.Sprintf(tr("notify.birthday_body"), c.name)
+		added, err := queueVehicleReminder("customer_birthday", tr("notify.birthday_subject"), body, c)
 		if err != nil {
 			return queued, err
 		}
@@ -143,9 +143,9 @@ func ScanAppointmentRemindersNow() (int, error) {
 		if !enabled {
 			continue
 		}
-		body := fmt.Sprintf("您好，提醒您明日預約：車輛 %s，時間 %s，服務內容：%s。",
+		body := fmt.Sprintf(tr("notify.appointment_body"),
 			item.plate, item.time, item.service)
-		subject := fmt.Sprintf("預約 #%d 前日提醒", item.appointmentID)
+		subject := fmt.Sprintf(tr("notify.appointment_subject"), item.appointmentID)
 		res, err := db.DB.Exec(`INSERT INTO notifications
 			(customer_id, channel, kind, subject, body, scheduled_at)
 			SELECT ?, ?, 'appointment_reminder', ?, ?, ?
@@ -274,21 +274,21 @@ func scanMaintenanceReminders() (int, error) {
 	for _, c := range candidates {
 		var reasons []string
 		if dueDate := reminderDate(c.dueDate); dueDate != "" && dueDate <= dateCutoff {
-			reasons = append(reasons, "保養日期 "+dueDate)
+			reasons = append(reasons, tr("notify.maintenance_reason_date")+dueDate)
 		}
 		currentMileage := c.historyMileage
 		if c.orderMileage > currentMileage {
 			currentMileage = c.orderMileage
 		}
 		if c.dueMileage > 0 && currentMileage >= c.dueMileage {
-			reasons = append(reasons, fmt.Sprintf("保養里程 %d 公里", c.dueMileage))
+			reasons = append(reasons, fmt.Sprintf(tr("notify.maintenance_reason_km"), c.dueMileage))
 		}
 		if len(reasons) == 0 {
 			continue
 		}
-		body := fmt.Sprintf("親愛的 %s 您好，車輛 %s 的%s已到期，歡迎預約保養。",
-			c.customer.name, c.plate, strings.Join(reasons, "、"))
-		added, err := queueVehicleReminder("maintenance_due", "定期保養提醒", body, c.customer)
+		body := fmt.Sprintf(tr("notify.maintenance_body"),
+			c.customer.name, c.plate, strings.Join(reasons, tr("notify.separator")))
+		added, err := queueVehicleReminder("maintenance_due", tr("notify.maintenance_subject"), body, c.customer)
 		if err != nil {
 			return queued, err
 		}
@@ -345,9 +345,9 @@ func scanInspectionReminders() (int, error) {
 		if dueDate == "" || dueDate < today || dueDate > cutoff {
 			continue
 		}
-		body := fmt.Sprintf("親愛的 %s 您好，車輛 %s 預定於 %s 定期檢驗，請預先安排驗車。",
+		body := fmt.Sprintf(tr("notify.inspection_body"),
 			item.name, item.plate, dueDate)
-		added, err := queueVehicleReminder("inspection_due", "車輛定檢提醒", body, item.reminderCandidate)
+		added, err := queueVehicleReminder("inspection_due", tr("notify.inspection_subject"), body, item.reminderCandidate)
 		if err != nil {
 			return queued, err
 		}
@@ -399,9 +399,9 @@ func scanInsuranceReminders() (int, error) {
 		if dueDate == "" || dueDate < today || dueDate > cutoff {
 			continue
 		}
-		body := fmt.Sprintf("親愛的 %s 您好，車輛 %s 的%s保單 %s 將於 %s 到期，請洽詢續保。",
+		body := fmt.Sprintf(tr("notify.insurance_body"),
 			item.name, item.plate, item.company, item.policy, dueDate)
-		added, err := queueVehicleReminder("insurance_due", "保單到期提醒", body, item.reminderCandidate)
+		added, err := queueVehicleReminder("insurance_due", tr("notify.insurance_subject"), body, item.reminderCandidate)
 		if err != nil {
 			return queued, err
 		}
