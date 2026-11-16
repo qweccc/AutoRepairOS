@@ -107,6 +107,48 @@ func (s *InventoryService) ApplyStockAdjustTx(ctx context.Context, tx sqlExecuto
 	return nil
 }
 
+// ApplyWorkOrderCheckoutTx 在指定交易內扣減工單零件庫存（含保留量），並寫一筆
+// 可追溯到工單的庫存異動。
+//
+// 這是結帳專屬的扣料方法，與 ApplyStockAdjustTx 語意不同：
+//
+//   - 檢查用 stock_quantity（不是 stock − reserved）：結帳是實際銷售，
+//     不能因預留量存在就拒絕扣貨。
+//   - 同時扣除 reserved_quantity：VoidReceipt 回沖時 stock 與 reserved 都加回，
+//     兩邊必須對稱，否則作廢後保留量憑空消失。
+//   - 異動帶 reason「工單 #N 結帳扣料」、source='checkout' 與 work_order_id，
+//     讓庫存異動頁能追溯到工單。
+func (s *InventoryService) ApplyWorkOrderCheckoutTx(ctx context.Context, tx sqlExecutor, workOrderID, itemID int64, quantity int, actorID int64) error {
+	// RETURNING stock_quantity + ? = 扣減前的庫存量（before）。
+	var before int
+	err := tx.QueryRowContext(ctx, `UPDATE inventory_items
+		SET stock_quantity = stock_quantity - ?,
+			reserved_quantity = MAX(COALESCE(reserved_quantity,0) - ?, 0)
+		WHERE id = ? AND COALESCE(stock_quantity,0) >= ?
+		RETURNING stock_quantity + ?`,
+		quantity, quantity, itemID, quantity, quantity).Scan(&before)
+	if errors.Is(err, sql.ErrNoRows) {
+		// UPDATE 沒命中有兩種可能：品項不存在、或庫存不足。要分開回報，
+		// 否則庫存不足會被誤判成資料缺失。
+		var current int
+		qerr := tx.QueryRowContext(ctx, `SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ?`, itemID).Scan(&current)
+		if qerr != nil {
+			return ErrItemNotFound
+		}
+		return &StockShortfall{Current: current, Needed: quantity}
+	}
+	if err != nil {
+		return err
+	}
+	after := before - quantity
+	_, err = tx.ExecContext(ctx, `INSERT INTO inventory_movements
+		(inventory_item_id, delta, before_quantity, after_quantity, reason, source, work_order_id, created_by)
+		VALUES (?,?,?,?,?,?,?,?)`,
+		itemID, -quantity, before, after,
+		fmt.Sprintf("工單 #%d 結帳扣料", workOrderID), "checkout", workOrderID, nullableID(actorID))
+	return err
+}
+
 // ApplyStockDelta applies a signed stock delta (positive restocks, negative
 // deducts) and records a movement in the same transaction, mirroring the
 // manual stock-adjust semantics of the HTTP handler: deductions are

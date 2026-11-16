@@ -14,7 +14,8 @@ var ErrDuplicateVoucher = errors.New("receipt voucher number already exists")
 
 // Service contains business operations backed by an injected database.
 type Service struct {
-	db *sql.DB
+	db              *sql.DB
+	inventoryService *InventoryService
 }
 
 type sqlExecutor interface {
@@ -24,7 +25,10 @@ type sqlExecutor interface {
 }
 
 func New(db *sql.DB) *Service {
-	return &Service{db: db}
+	return &Service{
+		db:              db,
+		inventoryService: NewInventoryService(db),
+	}
 }
 
 // ReceiptInput contains the fields needed to create or update a receipt.
@@ -55,7 +59,7 @@ type ReceiptInput struct {
 // effects atomically. Repeating a successful checkout is a no-op.
 func (s *Service) Checkout(ctx context.Context, workOrderID, actorID int64) error {
 	return s.withTx(ctx, "checkout", func(tx sqlExecutor) error {
-		return checkoutTx(ctx, tx, workOrderID, actorID)
+		return s.checkoutTx(ctx, tx, workOrderID, actorID)
 	})
 }
 
@@ -152,7 +156,7 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 			if !ready {
 				return nil
 			}
-			if err := checkoutTx(ctx, tx, receipt.WorkOrderID, receipt.CreatedBy); err != nil {
+			if err := s.checkoutTx(ctx, tx, receipt.WorkOrderID, receipt.CreatedBy); err != nil {
 				return err
 			}
 		}
@@ -224,7 +228,7 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 			if !ready {
 				return nil
 			}
-			if err := checkoutTx(ctx, tx, workOrderID, receipt.CreatedBy); err != nil {
+			if err := s.checkoutTx(ctx, tx, workOrderID, receipt.CreatedBy); err != nil {
 				return err
 			}
 		}
@@ -447,7 +451,11 @@ func receiptCompletesWorkOrder(ctx context.Context, tx sqlExecutor, workOrderID 
 	return false, nil
 }
 
-func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64) error {
+// checkoutTx 是結帳的核心：標記工單已付款並扣除零件庫存。
+//
+// 必須是 *Service 的方法（而非獨立函式）：扣庫存委託 InventoryService，
+// 後者才知道 reserved_quantity 的語意與庫存異動要怎麼寫。
+func (s *Service) checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64) error {
 	// 同步工單總金額（以明細加總為準），避免明細與總額不一致導致結帳金額錯誤
 	// 測試環境 schema 可能與實際 schema 不同，儘量嘗試各種方式，若失敗則跳過重算
 	if _, err := tx.ExecContext(ctx, `UPDATE work_orders SET total_amount =
@@ -527,29 +535,8 @@ func checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, actorID int64)
 	}
 
 	for _, delta := range deltas {
-		var before int
-		err := tx.QueryRowContext(ctx, `UPDATE inventory_items
-			SET stock_quantity = stock_quantity - ?,
-				reserved_quantity = MAX(COALESCE(reserved_quantity,0) - ?, 0)
-			WHERE id = ? AND COALESCE(stock_quantity,0) >= ?
-			RETURNING stock_quantity + ?`,
-			delta.quantity, delta.quantity, delta.inventoryID, delta.quantity, delta.quantity).Scan(&before)
-		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("insufficient inventory for item %d", delta.inventoryID)
-		}
-		if err != nil {
+		if err := s.inventoryService.ApplyWorkOrderCheckoutTx(ctx, tx, workOrderID, delta.inventoryID, delta.quantity, actorID); err != nil {
 			return fmt.Errorf("deduct inventory item %d: %w", delta.inventoryID, err)
-		}
-		after := before - delta.quantity
-		_, err = tx.ExecContext(ctx, `INSERT INTO inventory_movements
-			(inventory_item_id, delta, before_quantity, after_quantity, reason, source,
-			 work_order_id, created_by)
-			VALUES (?,?,?,?,?,?,?,?)`,
-			delta.inventoryID, -delta.quantity, before, after,
-			fmt.Sprintf("工單 #%d 結帳扣料", workOrderID), "checkout",
-			workOrderID, nullableID(actorID))
-		if err != nil {
-			return fmt.Errorf("record inventory movement for item %d: %w", delta.inventoryID, err)
 		}
 	}
 

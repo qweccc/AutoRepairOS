@@ -524,7 +524,7 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 		fx := &fakeExecutor{db: db,
 			execs:    []execOutcome{{err: errors.New("r1")}, {err: errors.New("r2")}, {res: fakeResult{affected: 0}}},
 			rowQueue: []*sql.Row{db.QueryRow(`SELECT 'paid'`)}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); err != nil {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -533,7 +533,7 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 		fx := &fakeExecutor{db: db,
 			execs:    []execOutcome{{res: okRes()}, {res: fakeResult{affected: 0}}},
 			rowQueue: []*sql.Row{db.QueryRow(`SELECT 'completed'`)}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); !errors.Is(err, ErrNotFound) {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); !errors.Is(err, ErrNotFound) {
 			t.Fatalf("%v", err)
 		}
 	})
@@ -542,7 +542,7 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 		fx := &fakeExecutor{db: db,
 			execs:    []execOutcome{{res: okRes()}, {res: fakeResult{affected: 0}}},
 			rowQueue: []*sql.Row{noRowsRow(db)}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); !errors.Is(err, ErrNotFound) {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); !errors.Is(err, ErrNotFound) {
 			t.Fatalf("%v", err)
 		}
 	})
@@ -551,21 +551,21 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 		fx := &fakeExecutor{db: db,
 			execs:    []execOutcome{{res: okRes()}, {res: fakeResult{affected: 0}}},
 			rowQueue: []*sql.Row{errRow(db)}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); err == nil {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); err == nil {
 			t.Fatal("expected error")
 		}
 	})
 	t.Run("mark paid exec error", func(t *testing.T) {
 		db := setupTestDB(t)
 		fx := &fakeExecutor{db: db, execs: []execOutcome{{res: okRes()}, {err: errors.New("upd boom")}}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); err == nil {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); err == nil {
 			t.Fatal("expected error")
 		}
 	})
 	t.Run("rows affected error", func(t *testing.T) {
 		db := setupTestDB(t)
 		fx := &fakeExecutor{db: db, execs: []execOutcome{{res: okRes()}, {res: errRes()}}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); err == nil {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); err == nil {
 			t.Fatal("expected error")
 		}
 	})
@@ -574,7 +574,7 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 		fx := &fakeExecutor{db: db,
 			execs:    []execOutcome{{res: okRes()}, {res: okRes()}},
 			rowQueue: []*sql.Row{noRowsRow(db)}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); !errors.Is(err, ErrNotFound) {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); !errors.Is(err, ErrNotFound) {
 			t.Fatalf("%v", err)
 		}
 	})
@@ -583,7 +583,7 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 		fx := &fakeExecutor{db: db,
 			execs:    []execOutcome{{res: okRes()}, {res: okRes()}},
 			rowQueue: []*sql.Row{errRow(db)}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); err == nil {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); err == nil {
 			t.Fatal("expected error")
 		}
 	})
@@ -593,7 +593,7 @@ func TestCheckoutTxFakeBranches(t *testing.T) {
 			execs:    []execOutcome{{res: okRes()}, {res: okRes()}},
 			rowQueue: []*sql.Row{db.QueryRow(`SELECT 1`)},
 			queries:  []queryOutcome{{err: errors.New("parts boom")}}}
-		if err := checkoutTx(bgCtx, fx, 10, 1); err == nil {
+		if err := New(db).checkoutTx(bgCtx, fx, 10, 1); err == nil {
 			t.Fatal("expected error")
 		}
 	})
