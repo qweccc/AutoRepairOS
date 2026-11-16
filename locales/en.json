@@ -1694,9 +1694,9 @@
   "notify.appointment_subject": "Appointment #%d Reminder",
   "notify.birthday_body": "Dear %s, happy birthday! Thank you for your continued support — we look forward to serving you again.",
   "notify.birthday_subject": "Birthday Wishes",
-  "notify.completed_body": "Dear %s\\nPlate: %s\\nWork order: #%d\\nItems:",
+  "notify.completed_body": "Dear %s\nPlate: %s\nWork order: #%d\nItems:",
   "notify.completed_subject": "Completion Notice — Your Vehicle Is Ready",
-  "notify.completed_total": "\\nTotal: $%.0f\\nYour vehicle has been repaired. Please collect it and settle the payment.",
+  "notify.completed_total": "\nTotal: $%.0f\nYour vehicle has been repaired. Please collect it and settle the payment.",
   "notify.inspection_body": "Dear %s, vehicle %s is scheduled for inspection on %s. Please arrange the inspection in advance.",
   "notify.inspection_subject": "Inspection Reminder",
   "notify.insurance_body": "Dear %s, the %s policy %s for vehicle %s expires on %s. Contact us to renew.",
@@ -1705,7 +1705,7 @@
   "notify.maintenance_reason_date": "Service due: ",
   "notify.maintenance_reason_km": "Service due at %d km",
   "notify.maintenance_subject": "Service Due Reminder",
-  "notify.more_items": "\\n+%d more",
+  "notify.more_items": "\n+%d more",
   "notify.no_items": "- No details",
   "notify.separator": ", "
 }
