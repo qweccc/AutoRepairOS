@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -82,17 +83,17 @@ func PrintAPStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var b strings.Builder
 	if len(rows) == 0 {
-		b.WriteString(`<div class="empty">此月份沒有已完成的外包加工紀錄</div>`)
+		b.WriteString(`<div class="empty">` + i18n.T(r.Context(), "print.ap.empty") + `</div>`)
 	} else {
-		b.WriteString(`<table><tr><th>完成日</th><th>工單</th><th>車牌</th><th>加工內容</th>
-			<th class="num">外包成本</th><th class="num">向客收費</th></tr>`)
+		b.WriteString(`<table><tr><th>` + i18n.T(r.Context(), "print.ap.col_date") + `</th><th>` + i18n.T(r.Context(), "print.ap.col_wo") + `</th><th>` + i18n.T(r.Context(), "print.ap.col_plate") + `</th><th>` + i18n.T(r.Context(), "print.ap.col_content") + `</th>
+			<th class="num">` + i18n.T(r.Context(), "print.ap.col_cost") + `</th><th class="num">` + i18n.T(r.Context(), "print.ap.col_charge") + `</th></tr>`)
 		for _, x := range rows {
 			b.WriteString(`<tr><td>` + htmlEsc(normDate(x.date)) + `</td><td>#` +
 				strconv.FormatInt(x.woID, 10) + `</td><td>` + htmlEsc(x.plate) +
 				`</td><td>` + htmlEsc(x.desc) + `</td><td class="num">` + money(x.cost) +
 				`</td><td class="num">` + money(x.charge) + `</td></tr>`)
 		}
-		b.WriteString(`<tr class="grand"><td colspan="4"><b>合計</b></td><td class="num"><b>` +
+		b.WriteString(`<tr class="grand"><td colspan="4"><b>` + i18n.T(r.Context(), "print.ap.total") + `</b></td><td class="num"><b>` +
 			money(totalCost) + `</b></td><td class="num"><b>` + money(totalCharge) +
 			`</b></td></tr></table>`)
 	}
@@ -104,36 +105,36 @@ func PrintAPStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	body := `
   <div class="sheet">
-    ` + printHead("外包加工月結對帳單", []string{
-		metaPair("帳款月份", month),
-		metaPair("對帳日期", today()),
+    ` + printHead(i18n.T(r.Context(), "print.ap.title"), []string{
+		metaPair(i18n.T(r.Context(), "print.ap.meta_month"), month),
+		metaPair(i18n.T(r.Context(), "print.ap.meta_date"), today()),
 	}) + `
 
     <div class="c-parties">
-      <div><span class="lbl">廠商</span><b>` + htmlEsc(sup.Name) + `</b>
-        <span class="lbl">聯絡人</span>` + htmlEsc(orDash(sup.ContactPerson)) + `</div>
-      <div><span class="lbl">電話</span>` + htmlEsc(orDash(sup.Phone)) + `</div>
-      <div><span class="lbl">付款條件</span>` + termsLabel + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.ap.supplier") + `</span><b>` + htmlEsc(sup.Name) + `</b>
+        <span class="lbl">` + i18n.T(r.Context(), "print.ap.contact") + `</span>` + htmlEsc(orDash(sup.ContactPerson)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.ap.phone") + `</span>` + htmlEsc(orDash(sup.Phone)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.ap.payment_terms") + `</span>` + termsLabel + `</div>
     </div>
 
     <div class="c-sec">
-      <h2>` + htmlEsc(month) + ` 已完成外包加工</h2>` + b.String() + `
+      <h2>` + fmt.Sprintf(i18n.T(r.Context(), "print.ap.section_title"), htmlEsc(month)) + `</h2>` + b.String() + `
     </div>
 
     <div class="c-notice">
-      <p>上述金額請核對無誤後，依付款條件（` + termsLabel + `）開立請款單據。</p>
-      <p class="tiny">對帳範圍僅含外包加工紀錄；零件採購的對帳需先進貨單功能，目前不在本單據範圍內。</p>
+      <p>` + fmt.Sprintf(i18n.T(r.Context(), "print.ap.notice"), termsLabel) + `</p>
+      <p class="tiny">` + i18n.T(r.Context(), "print.ap.scope") + `</p>
     </div>
 
     <div class="c-sign">
-      <div><span>廠商確認簽章</span><div class="line"></div></div>
-      <div><span>本店經辦</span><div class="line"></div><span class="name">` + htmlEsc(user.Username) + `</span></div>
+      <div><span>` + i18n.T(r.Context(), "print.ap.sign_supplier") + `</span><div class="line"></div></div>
+      <div><span>` + i18n.T(r.Context(), "print.ap.sign_shop") + `</span><div class="line"></div><span class="name">` + htmlEsc(user.Username) + `</span></div>
     </div>
   </div>
-  ` + printToolbar(`<a class="btn btn-s" href="/suppliers/`+strconv.FormatInt(sup.ID, 10)+`/edit">編輯廠商</a>`,
-		`<a class="btn btn-s" href="/suppliers">返回廠商</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/suppliers/`+strconv.FormatInt(sup.ID, 10)+`/edit">` + i18n.T(r.Context(), "print.ap.back_edit") + `</a>`,
+		`<a class="btn btn-s" href="/suppliers">` + i18n.T(r.Context(), "print.ap.back_suppliers") + `</a>`)
 
-	renderPrintPage(w, "AP 對帳單 "+sup.Name+" "+month, body)
+	renderPrintPage(w, fmt.Sprintf(i18n.T(r.Context(), "print.ap.doc_title"), sup.Name, month), body)
 }
 
 // ============ FR-PRINT-06 日結報表 ============
@@ -185,8 +186,8 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	var payB strings.Builder
-	payB.WriteString(`<table class="amt"><tr><th>支付方式</th><th class="num">金額</th><th class="num">佔比</th></tr>`)
-	for _, x := range payMethodRows(cash, card, checkAmt, transferAmt) {
+	payB.WriteString(`<table class="amt"><tr><th>` + i18n.T(r.Context(), "print.daily.col_method") + `</th><th class="num">` + i18n.T(r.Context(), "print.daily.col_amount") + `</th><th class="num">` + i18n.T(r.Context(), "print.daily.col_pct") + `</th></tr>`)
+	for _, x := range payMethodRows(r.Context(), cash, card, checkAmt, transferAmt) {
 		pct := 0.0
 		if payTotal > 0 {
 			pct = x.Value / payTotal * 100
@@ -194,51 +195,51 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 		payB.WriteString(`<tr><td>` + x.Label + `</td><td class="num">` + money(x.Value) +
 			`</td><td class="num">` + strconv.FormatFloat(pct, 'f', 1, 64) + `%</td></tr>`)
 	}
-	if len(payMethodRows(cash, card, checkAmt, transferAmt)) == 0 {
-		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">今日無收款紀錄</td></tr>`)
+	if len(payMethodRows(r.Context(), cash, card, checkAmt, transferAmt)) == 0 {
+		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">` + i18n.T(r.Context(), "print.daily.empty") + `</td></tr>`)
 	}
-	payB.WriteString(`<tr class="grand"><td><b>收款合計</b></td><td class="num"><b>` + money(payTotal) +
+	payB.WriteString(`<tr class="grand"><td><b>` + i18n.T(r.Context(), "print.daily.total") + `</b></td><td class="num"><b>` + money(payTotal) +
 		`</b></td><td class="num"></td></tr></table>`)
 
 	body := `
   <div class="sheet">
-    ` + printHead("日結報表", []string{
-		metaPair("日期", date),
-		metaPair("列印", today()),
+    ` + printHead(i18n.T(r.Context(), "print.daily.title"), []string{
+		metaPair(i18n.T(r.Context(), "print.daily.meta_date"), date),
+		metaPair(i18n.T(r.Context(), "print.daily.meta_print"), today()),
 	}) + `
 
     <div class="kpi-row">
-      <div class="kpi"><b>` + money(woRevenue) + `</b><span>營業額</span></div>
-      <div class="kpi"><b>` + strconv.Itoa(paidCount) + `</b><span>結帳工單</span></div>
-      <div class="kpi"><b>` + money(gross) + `</b><span>毛利</span></div>
-      <div class="kpi"><b>` + strconv.FormatFloat(grossPct, 'f', 1, 64) + `%</b><span>毛利率</span></div>
+      <div class="kpi"><b>` + money(woRevenue) + `</b><span>` + i18n.T(r.Context(), "print.daily.kpi_revenue") + `</span></div>
+      <div class="kpi"><b>` + strconv.Itoa(paidCount) + `</b><span>` + i18n.T(r.Context(), "print.daily.kpi_paid") + `</span></div>
+      <div class="kpi"><b>` + money(gross) + `</b><span>` + i18n.T(r.Context(), "print.daily.kpi_gross") + `</span></div>
+      <div class="kpi"><b>` + strconv.FormatFloat(grossPct, 'f', 1, 64) + `%</b><span>` + i18n.T(r.Context(), "print.daily.kpi_margin") + `</span></div>
     </div>
 
-    <div class="c-sec"><h2>支付方式分布</h2>` + payB.String() + `
-      <p class="tiny">依收款紀錄（` + strconv.Itoa(receiptCount) + ` 筆）統計，以收款日為準。</p>
+    <div class="c-sec"><h2>` + i18n.T(r.Context(), "print.daily.section_pay") + `</h2>` + payB.String() + `
+      <p class="tiny">` + fmt.Sprintf(i18n.T(r.Context(), "print.daily.note_basis"), strconv.Itoa(receiptCount)) + `</p>
     </div>
 
-    <div class="c-sec"><h2>工單統計</h2>
+    <div class="c-sec"><h2>` + i18n.T(r.Context(), "print.daily.section_wo") + `</h2>
       <table class="amt">
-        <tr><th>項目</th><th class="num">數量／金額</th></tr>
-        <tr><td>已結帳工單</td><td class="num">` + strconv.Itoa(paidCount) + ` 張</td></tr>
-        <tr><td>其中保險理賠件</td><td class="num">` + strconv.Itoa(insCount) + ` 張</td></tr>
-        <tr><td>折扣總額</td><td class="num">` + money(discountTotal) + `</td></tr>
-        <tr><td>保固工單金額</td><td class="num">` + money(warrantyRev) + `</td></tr>
-        <tr><td>零件成本</td><td class="num">` + money(partsCost) + `</td></tr>
-        <tr class="grand"><td><b>毛利（營業額 − 零件成本）</b></td><td class="num"><b>` +
+        <tr><th>` + i18n.T(r.Context(), "print.daily.col_item") + `</th><th class="num">` + i18n.T(r.Context(), "print.daily.col_qty_amount") + `</th></tr>
+        <tr><td>` + i18n.T(r.Context(), "print.daily.row_paid") + `</td><td class="num">` + strconv.Itoa(paidCount) + " " + i18n.T(r.Context(), "print.daily.sheets") + `</td></tr>
+        <tr><td>` + i18n.T(r.Context(), "print.daily.row_insurance") + `</td><td class="num">` + strconv.Itoa(insCount) + " " + i18n.T(r.Context(), "print.daily.sheets") + `</td></tr>
+        <tr><td>` + i18n.T(r.Context(), "print.daily.row_discount") + `</td><td class="num">` + money(discountTotal) + `</td></tr>
+        <tr><td>` + i18n.T(r.Context(), "print.daily.row_warranty") + `</td><td class="num">` + money(warrantyRev) + `</td></tr>
+        <tr><td>` + i18n.T(r.Context(), "print.daily.row_parts_cost") + `</td><td class="num">` + money(partsCost) + `</td></tr>
+        <tr class="grand"><td><b>` + i18n.T(r.Context(), "print.daily.gross_formula") + `</b></td><td class="num"><b>` +
 		money(gross) + `</b></td></tr>
       </table>
-      <p class="tiny">毛利只計零件成本；工資與外包在舊系統未記錄成本，故不計入。</p>
+      <p class="tiny">` + i18n.T(r.Context(), "print.daily.note_gross") + `</p>
     </div>
 
     <div class="rpt-foot">
-      <p class="tiny">列印時間：` + time.Now().Format("2006-01-02 15:04") + ` / 櫃檯：` +
+      <p class="tiny">` + i18n.T(r.Context(), "print.printed_at") + `` + time.Now().Format("2006-01-02 15:04") + `  / ` + i18n.T(r.Context(), "print.counter") + `` +
 		htmlEsc(user.Username) + `</p>
     </div>
   </div>
-  ` + printToolbar(`<a class="btn btn-s" href="/reports">營運報表</a>`,
-		`<a class="btn btn-s" href="/analytics/export?from=`+date+`&amp;to=`+date+`">匯出 CSV</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/reports">` + i18n.T(r.Context(), "print.daily.reports") + `</a>`,
+		`<a class="btn btn-s" href="/analytics/export?from=`+date+`&amp;to=`+date+`">` + i18n.T(r.Context(), "print.daily.export_csv") + `</a>`)
 
-	renderPrintPage(w, "日結報表 "+date, body)
+	renderPrintPage(w, fmt.Sprintf(i18n.T(r.Context(), "print.daily.doc_title"), date), body)
 }

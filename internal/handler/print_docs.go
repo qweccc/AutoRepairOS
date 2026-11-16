@@ -2,12 +2,14 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 )
 
@@ -72,89 +74,89 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 
 	var amountB strings.Builder
 	amountB.WriteString(`<table class="amt">`)
-	amountB.WriteString(`<tr><th>項目</th><th class="num">金額</th></tr>`)
+	amountB.WriteString(`<tr><th>` + i18n.T(r.Context(), "print.receipt.col_item") + `</th><th class="num">` + i18n.T(r.Context(), "print.receipt.col_amount") + `</th></tr>`)
 	if v.DetailTotal > 0 && v.DetailTotal != v.PayTotal {
-		amountB.WriteString(`<tr><td>明細合計</td><td class="num">` + money(v.DetailTotal) + `</td></tr>`)
+		amountB.WriteString(`<tr><td>` + i18n.T(r.Context(), "print.receipt.detail_total") + `</td><td class="num">` + money(v.DetailTotal) + `</td></tr>`)
 	}
 	if v.Discount > 0 {
-		amountB.WriteString(`<tr><td>折扣／折讓</td><td class="num" style="color:#b91c1c">-` +
+		amountB.WriteString(`<tr><td>` + i18n.T(r.Context(), "print.receipt.discount") + `</td><td class="num" style="color:#b91c1c">-` +
 			money(v.Discount) + `</td></tr>`)
 	}
-	amountB.WriteString(`<tr><td>應稅銷售額（未稅）</td><td class="num">` + money(taxable) + `</td></tr>`)
-	amountB.WriteString(`<tr><td>營業稅（5%）</td><td class="num">` + money(taxAmount) + `</td></tr>`)
-	amountB.WriteString(`<tr class="grand"><td><b>實收總額</b></td><td class="num"><b>` +
+	amountB.WriteString(`<tr><td>` + i18n.T(r.Context(), "print.receipt.taxable") + `</td><td class="num">` + money(taxable) + `</td></tr>`)
+	amountB.WriteString(`<tr><td>` + i18n.T(r.Context(), "print.receipt.tax") + `</td><td class="num">` + money(taxAmount) + `</td></tr>`)
+	amountB.WriteString(`<tr class="grand"><td><b>` + i18n.T(r.Context(), "print.receipt.total") + `</b></td><td class="num"><b>` +
 		money(v.PayTotal) + `</b></td></tr>`)
 	amountB.WriteString(`</table>`)
 
 	var payB strings.Builder
-	payB.WriteString(`<table class="amt"><tr><th>支付方式</th><th class="num">金額</th><th>票據資訊</th></tr>`)
-	rows := payMethodRows(v.Cash, v.Card, v.CheckAmount, v.TransferAmount)
+	payB.WriteString(`<table class="amt"><tr><th>` + i18n.T(r.Context(), "print.receipt.col_method") + `</th><th class="num">` + i18n.T(r.Context(), "print.receipt.col_amount") + `</th><th>` + i18n.T(r.Context(), "print.receipt.col_note") + `</th></tr>`)
+	rows := payMethodRows(r.Context(), v.Cash, v.Card, v.CheckAmount, v.TransferAmount)
 	if len(rows) == 0 {
-		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">未記錄支付方式</td></tr>`)
+		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">` + i18n.T(r.Context(), "print.receipt.not_recorded") + `</td></tr>`)
 	}
-	for _, r := range rows {
+	for _, pm := range rows {
 		note := "—"
-		if r.Label == "信用卡" && v.CardNo != "" {
-			note = "卡號 " + v.CardNo
+		if pm.Code == "card" && v.CardNo != "" {
+			note = i18n.T(r.Context(), "print.receipt.card_no") + " " + v.CardNo
 		}
-		if r.Label == "票據" {
-			note = "票號 " + orDash(v.CheckNo)
+		if pm.Code == "check" {
+			note = i18n.T(r.Context(), "print.receipt.check_no") + " " + orDash(v.CheckNo)
 			if v.CheckDate != "" {
-				note += " / 到期 " + normDate(v.CheckDate)
+				note += " / " + i18n.T(r.Context(), "print.receipt.due") + " " + normDate(v.CheckDate)
 			}
 			if v.Bank != "" {
 				note += " / " + v.Bank
 			}
 		}
-		if r.Label == "轉帳" && v.TransferReference != "" {
-			note = "交易序號 " + v.TransferReference
+		if pm.Code == "transfer" && v.TransferReference != "" {
+			note = i18n.T(r.Context(), "print.receipt.transfer_ref") + " " + v.TransferReference
 		}
-		payB.WriteString(`<tr><td>` + r.Label + `</td><td class="num">` + money(r.Value) +
+		payB.WriteString(`<tr><td>` + pm.Label + `</td><td class="num">` + money(pm.Value) +
 			`</td><td style="font-size:12.5px">` + htmlEsc(note) + `</td></tr>`)
 	}
 	payB.WriteString(`</table>`)
 
 	voidBanner := ""
 	if v.Voided != 0 {
-		voidBanner = `<div class="void-banner">此收款單已作廢</div>`
+		voidBanner = `<div class="void-banner">` + i18n.T(r.Context(), "print.receipt.voided") + `</div>`
 	}
 
 	body := `
   <div class="sheet">
-    ` + printHead("收款明細", []string{
-		metaPair("收款單號", orDash(v.VoucherNo)),
-		metaPair("收款日期", normDate(payDate)),
+    ` + printHead(i18n.T(r.Context(), "print.receipt.title"), []string{
+		metaPair(i18n.T(r.Context(), "print.receipt.meta_voucher"), orDash(v.VoucherNo)),
+		metaPair(i18n.T(r.Context(), "print.receipt.meta_date"), normDate(payDate)),
 	}) + `
     ` + voidBanner + `
     <div class="c-parties">
-      <div><span class="lbl">客戶</span><b>` + htmlEsc(v.CustomerName) + `</b></div>
-      <div><span class="lbl">收款單號</span><b>` + htmlEsc(orDash(v.VoucherNo)) + `</b></div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.receipt.customer") + `</span><b>` + htmlEsc(v.CustomerName) + `</b></div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.receipt.meta_voucher") + `</span><b>` + htmlEsc(orDash(v.VoucherNo)) + `</b></div>
     </div>
 
-    <div class="c-sec"><h2>金額明細</h2>` + amountB.String() + `
-      <p class="tiny">稅額依含稅總額內含拆分（應稅 = 總額 ÷ 1.05）；若收款時另有記錄稅額則以該值為準。</p>
+    <div class="c-sec"><h2>` + i18n.T(r.Context(), "print.receipt.section_amount") + `</h2>` + amountB.String() + `
+      <p class="tiny">` + i18n.T(r.Context(), "print.receipt.tax_note") + `</p>
     </div>
 
-    <div class="c-sec"><h2>支付方式</h2>` + payB.String() + `</div>
+    <div class="c-sec"><h2>` + i18n.T(r.Context(), "print.receipt.section_payment") + `</h2>` + payB.String() + `</div>
 
-    ` + optNoteBlock(v.Notes) + `
+    ` + optNoteBlock(r.Context(), v.Notes) + `
 
     <div class="rpt-foot">
-      <p class="tiny">列印時間：` + time.Now().Format("2006-01-02 15:04") + `</p>
+      <p class="tiny">` + i18n.T(r.Context(), "print.printed_at") + `` + time.Now().Format("2006-01-02 15:04") + `</p>
     </div>
   </div>
-  ` + printToolbar(`<a class="btn btn-s" href="/receivables">返回收款列表</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/receivables">` + i18n.T(r.Context(), "print.receipt.back") + `</a>`)
 
-	renderPrintPage(w, "收款明細 "+orDash(v.VoucherNo), body)
+	renderPrintPage(w, i18n.T(r.Context(), "print.receipt.doc_title")+orDash(v.VoucherNo), body)
 }
 
 // optNoteBlock 備註區塊（有內容才顯示）。
-func optNoteBlock(notes string) string {
+func optNoteBlock(ctx context.Context, notes string) string {
 	if strings.TrimSpace(notes) == "" {
 		return ""
 	}
 	return `
-    <div class="c-sec"><h2>備註</h2><p>` + htmlEsc(notes) + `</p></div>`
+    <div class="c-sec"><h2>` + i18n.T(ctx, "print.receipt.note_title") + `</h2><p>` + htmlEsc(notes) + `</p></div>`
 }
 
 // ============ FR-PRINT-04 AR 催款單 ============
@@ -210,13 +212,13 @@ func PrintARStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 			}
 			switch {
 			case x.days > 90:
-				x.bucket = "90+ 天"
+				x.bucket = i18n.T(r.Context(), "print.ar.bucket.over90")
 			case x.days > 60:
-				x.bucket = "61-90 天"
+				x.bucket = i18n.T(r.Context(), "print.ar.bucket.61_90")
 			case x.days > 30:
-				x.bucket = "31-60 天"
+				x.bucket = i18n.T(r.Context(), "print.ar.bucket.31_60")
 			default:
-				x.bucket = "0-30 天"
+				x.bucket = i18n.T(r.Context(), "print.ar.bucket.0_30")
 			}
 			rows = append(rows, x)
 		}
@@ -230,10 +232,10 @@ func PrintARStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var b strings.Builder
 	if len(rows) == 0 {
-		b.WriteString(`<div class="empty">此客戶目前沒有未收清的帳款</div>`)
+		b.WriteString(`<div class="empty">` + i18n.T(r.Context(), "print.ar.empty") + `</div>`)
 	} else {
-		b.WriteString(`<table><tr><th>工單</th><th>車牌</th><th>日期</th><th class="num">帳齡</th>
-			<th class="num">未收金額</th></tr>`)
+		b.WriteString(`<table><tr><th>` + i18n.T(r.Context(), "print.ar.col_wo") + `</th><th>` + i18n.T(r.Context(), "print.ar.col_plate") + `</th><th>` + i18n.T(r.Context(), "print.ar.col_date") + `</th><th class="num">` + i18n.T(r.Context(), "print.ar.col_age") + `</th>
+			<th class="num">` + i18n.T(r.Context(), "print.ar.col_unpaid") + `</th></tr>`)
 		for _, x := range rows {
 			overdueCls := ""
 			if x.days > 60 {
@@ -244,38 +246,38 @@ func PrintARStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 				`</td><td>` + htmlEsc(orDash(x.date)) + `</td><td class="num"` + overdueCls + `>` +
 				x.bucket + `</td><td class="num">` + money(x.unpaid) + `</td></tr>`)
 		}
-		b.WriteString(`<tr class="grand"><td colspan="4"><b>應收合計</b></td><td class="num"><b>` +
+		b.WriteString(`<tr class="grand"><td colspan="4"><b>` + i18n.T(r.Context(), "print.ar.total") + `</b></td><td class="num"><b>` +
 			money(totalUnpaid) + `</b></td></tr></table>`)
 	}
 
 	body := `
   <div class="sheet">
-    ` + printHead("應收帳款催款單", []string{
-		metaPair("日期", today()),
-		metaPair("客戶編號", strconv.FormatInt(customerID, 10)),
+    ` + printHead(i18n.T(r.Context(), "print.ar.title"), []string{
+		metaPair(i18n.T(r.Context(), "print.ar.meta_date"), today()),
+		metaPair(i18n.T(r.Context(), "print.ar.meta_customer_no"), strconv.FormatInt(customerID, 10)),
 	}) + `
 
     <div class="c-parties">
-      <div><span class="lbl">客戶</span><b>` + htmlEsc(custName) + `</b>
-        <span class="lbl">電話</span>` + htmlEsc(orDash(phone)) + `</div>
-      <div><span class="lbl">地址</span>` + htmlEsc(orDash(addr)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.ar.customer") + `</span><b>` + htmlEsc(custName) + `</b>
+        <span class="lbl">` + i18n.T(r.Context(), "print.ar.phone") + `</span>` + htmlEsc(orDash(phone)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.ar.address") + `</span>` + htmlEsc(orDash(addr)) + `</div>
     </div>
 
     <div class="c-sec">
-      <h2>未收帳款明細</h2>` + b.String() + `
+      <h2>` + i18n.T(r.Context(), "print.ar.section_unpaid") + `</h2>` + b.String() + `
     </div>
 
     <div class="c-notice">
-      <p>以上款項已逾期未收，敬請於文到七日內惠予處理。如有疑問請與本店聯絡，謝謝。</p>
+      <p>` + i18n.T(r.Context(), "print.ar.notice") + `</p>
     </div>
 
     <div class="rpt-foot">
-      <p class="tiny">列印時間：` + time.Now().Format("2006-01-02 15:04") + ` / 經辦：` +
+      <p class="tiny">` + i18n.T(r.Context(), "print.ar.print_time") + `` + time.Now().Format("2006-01-02 15:04") + `  / ` + i18n.T(r.Context(), "print.operator") + `` +
 		htmlEsc(user.Username) + `</p>
     </div>
   </div>
-  ` + printToolbar(`<a class="btn btn-s" href="/receivables?customer=`+strconv.FormatInt(customerID, 10)+`">查看收款紀錄</a>`,
-		`<a class="btn btn-s" href="/customers">返回客戶</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/receivables?customer=`+strconv.FormatInt(customerID, 10)+`">` + i18n.T(r.Context(), "print.ar.view_receipts") + `</a>`,
+		`<a class="btn btn-s" href="/customers">` + i18n.T(r.Context(), "print.ar.back_customers") + `</a>`)
 
-	renderPrintPage(w, "催款單 "+custName, body)
+	renderPrintPage(w, i18n.T(r.Context(), "print.ar.doc_title")+custName, body)
 }

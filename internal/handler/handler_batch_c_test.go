@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -336,7 +337,7 @@ func TestBatchCPrintDocs(t *testing.T) {
 	_ = itemTypeLabelShort("labor")
 	_ = itemTypeLabelShort("subcontract")
 	_ = itemTypeLabelShort("other")
-	if optNoteBlock("") != "" || optNoteBlock("x") == "" {
+	if optNoteBlock(context.Background(), "") != "" || optNoteBlock(context.Background(), "x") == "" {
 		t.Fatal("optNoteBlock")
 	}
 	t.Run("completion", func(t *testing.T) {

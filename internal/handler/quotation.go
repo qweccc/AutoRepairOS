@@ -2,12 +2,14 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -76,9 +78,9 @@ func PrintWorkOrderQuotation(w http.ResponseWriter, r *http.Request, user model.
 		subtotal float64
 	}
 	groups := []group{
-		{label: "工資"},
-		{label: "零件"},
-		{label: "外包加工"},
+		{label: i18n.T(r.Context(), "quotation.group.labor")},
+		{label: i18n.T(r.Context(), "quotation.group.part")},
+		{label: i18n.T(r.Context(), "quotation.group.subcontract")},
 	}
 	gidx := map[string]int{"labor": 0, "part": 1, "subcontract": 2}
 	for _, it := range items {
@@ -117,9 +119,7 @@ func PrintWorkOrderQuotation(w http.ResponseWriter, r *http.Request, user model.
 		discountText = money(discount)
 	}
 
-	terms := `本估價單有效期 ` + strconv.Itoa(quoteValidityDays) + ` 天，逾期報價失效。
-		零件保固依廠商規定，人為損壞與消耗品不在保固範圍。
-		施工中如發現其他問題，將另行報價並經客戶同意後才動工。`
+	terms := fmt.Sprintf(i18n.T(r.Context(), "print.quote.terms"), strconv.Itoa(quoteValidityDays))
 
 	data := pages.QuotationPageData{
 		AppName: appName(), WorkOrderID: strconv.FormatInt(wo.ID, 10), Paper: paper,

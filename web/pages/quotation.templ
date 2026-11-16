@@ -44,7 +44,7 @@ type QuotationPageData struct {
 
 templ QuotationPage(data QuotationPageData) {
 	<!DOCTYPE html>
-	<html lang="zh-Hant">
+	<html lang={ i18n.LangOf(ctx) }>
 	<head>
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>

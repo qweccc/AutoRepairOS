@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -45,46 +46,32 @@ func computeTaxBreakdown(total float64) taxBreakdown {
 	}
 }
 
+// payMethodRow 收款方式拆分列。
+//
+// Code 是稳定的方式代碼（比對用），Label 是顯示用翻譯——介面語系切換時
+// 用 Label 比對會失效，所以兩者分開。
+type payMethodRow struct {
+	Code  string
+	Label string
+	Value float64
+}
+
 // payMethodRows 收款方式的拆分列。
 //
 // 一筆收款可能同時使用多種方式，因此逐項列出而非互斥分類。
-func payMethodRows(cash, card, check, transfer float64) []struct {
-	Label string
-	Value float64
-	Note  string
-} {
-	var out []struct {
-		Label string
-		Value float64
-		Note  string
-	}
+func payMethodRows(ctx context.Context, cash, card, check, transfer float64) []payMethodRow {
+	var out []payMethodRow
 	if cash > 0 {
-		out = append(out, struct {
-			Label string
-			Value float64
-			Note  string
-		}{"現金", cash, ""})
+		out = append(out, payMethodRow{Code: "cash", Label: i18n.T(ctx, "paymethod.cash"), Value: cash})
 	}
 	if card > 0 {
-		out = append(out, struct {
-			Label string
-			Value float64
-			Note  string
-		}{"信用卡", card, ""})
+		out = append(out, payMethodRow{Code: "card", Label: i18n.T(ctx, "paymethod.card"), Value: card})
 	}
 	if check > 0 {
-		out = append(out, struct {
-			Label string
-			Value float64
-			Note  string
-		}{"票據", check, ""})
+		out = append(out, payMethodRow{Code: "check", Label: i18n.T(ctx, "paymethod.check"), Value: check})
 	}
 	if transfer > 0 {
-		out = append(out, struct {
-			Label string
-			Value float64
-			Note  string
-		}{"轉帳", transfer, ""})
+		out = append(out, payMethodRow{Code: "transfer", Label: i18n.T(ctx, "paymethod.transfer"), Value: transfer})
 	}
 	return out
 }
@@ -96,10 +83,10 @@ func renderPrintPage(w http.ResponseWriter, title string, body string) {
 }
 
 // printToolbar 文件下方的操作列（不列印）。
-func printToolbar(links ...string) string {
+func printToolbar(ctx context.Context, links ...string) string {
 	var b strings.Builder
 	b.WriteString(`<div class="no-print">`)
-	b.WriteString(`<button class="btn btn-p" onclick="window.print()">🖨 列印</button>`)
+	b.WriteString(`<button class="btn btn-p" onclick="window.print()">` + i18n.T(ctx, "print.button") + `</button>`)
 	for _, l := range links {
 		b.WriteString(" " + l)
 	}
@@ -178,7 +165,11 @@ func PrintWorkOrderCompletion(w http.ResponseWriter, r *http.Request, user model
 		label string
 		items []model.WorkOrderItem
 	}
-	groups := []group{{label: "維修工資"}, {label: "更換零件"}, {label: "外包加工"}}
+	groups := []group{
+		{label: i18n.T(r.Context(), "print.completion.group_labor")},
+		{label: i18n.T(r.Context(), "print.completion.group_part")},
+		{label: i18n.T(r.Context(), "print.completion.group_subcontract")},
+	}
 	gidx := map[string]int{"labor": 0, "part": 1, "subcontract": 2}
 	for _, it := range items {
 		if i, ok := gidx[it.ItemType]; ok {
@@ -203,53 +194,53 @@ func PrintWorkOrderCompletion(w http.ResponseWriter, r *http.Request, user model
 	}
 	content := b.String()
 	if content == "" {
-		content = `<div class="empty">此工單沒有維修項目</div>`
+		content = `<div class="empty">` + i18n.T(r.Context(), "print.completion.empty") + `</div>`
 	}
 
 	// 完工日期：狀態為已結帳/待結帳時取 updated_at，否則標示施工中。
 	completedText := wo.UpdatedAt.Format("2006-01-02")
 	if wo.Status == "pending" || wo.Status == "in_progress" {
-		completedText = "（施工中）"
+		completedText = i18n.T(r.Context(), "print.completion.in_progress")
 	}
 
 	body := `
   <div class="sheet">
-    ` + printHead("維修完工證明", []string{
-		metaPair("工單編號", "#"+strconv.FormatInt(wo.ID, 10)),
-		metaPair("完工日期", completedText),
+    ` + printHead(i18n.T(r.Context(), "print.completion.title"), []string{
+		metaPair(i18n.T(r.Context(), "print.completion.meta_wo"), "#"+strconv.FormatInt(wo.ID, 10)),
+		metaPair(i18n.T(r.Context(), "print.completion.meta_date"), completedText),
 	}) + `
 
     <div class="c-parties">
-      <div><span class="lbl">車主</span><b>` + htmlEsc(wo.CustomerName) + `</b>
-        <span class="lbl">聯絡電話</span>` + htmlEsc(orDash(wo.CustomerPhone)) + `</div>
-      <div><span class="lbl">車輛</span><b>` + htmlEsc(wo.PlateNumber) + `</b>
-        <span class="lbl">車型</span>` + htmlEsc(orDash(wo.BrandModel)) + `</div>
-      <div><span class="lbl">進廠里程</span><b>` + strconv.Itoa(wo.CurrentMileage) + ` km</b>
-        <span class="lbl">主責技師</span>` + htmlEsc(orDash(wo.TechnicianName)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.completion.owner") + `</span><b>` + htmlEsc(wo.CustomerName) + `</b>
+        <span class="lbl">` + i18n.T(r.Context(), "print.completion.phone") + `</span>` + htmlEsc(orDash(wo.CustomerPhone)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.completion.vehicle") + `</span><b>` + htmlEsc(wo.PlateNumber) + `</b>
+        <span class="lbl">` + i18n.T(r.Context(), "print.completion.model") + `</span>` + htmlEsc(orDash(wo.BrandModel)) + `</div>
+      <div><span class="lbl">` + i18n.T(r.Context(), "print.completion.mileage") + `</span><b>` + strconv.Itoa(wo.CurrentMileage) + ` km</b>
+        <span class="lbl">` + i18n.T(r.Context(), "print.completion.technician") + `</span>` + htmlEsc(orDash(wo.TechnicianName)) + `</div>
     </div>
 
     <div class="c-sec">
-      <h2>客戶反映</h2>
+      <h2>` + i18n.T(r.Context(), "print.completion.complaint") + `</h2>
       <p>` + htmlEsc(orDash(wo.CustomerComplaint)) + `</p>
     </div>
 
     <div class="c-sec">
-      <h2>施工項目與更換零件</h2>` + content + `
+      <h2>` + i18n.T(r.Context(), "print.completion.items") + `</h2>` + content + `
     </div>
 
     <div class="c-sign">
-      <div><span>客戶簽收</span><div class="line"></div></div>
-      <div><span>交車人員</span><div class="line"></div><span class="name">` + htmlEsc(user.Username) + `</span></div>
-      <div><span>完工日期</span><div class="line"></div><span class="name">` + time.Now().Format("2006-01-02") + `</span></div>
+      <div><span>` + i18n.T(r.Context(), "print.completion.sign_customer") + `</span><div class="line"></div></div>
+      <div><span>` + i18n.T(r.Context(), "print.completion.sign_handover") + `</span><div class="line"></div><span class="name">` + htmlEsc(user.Username) + `</span></div>
+      <div><span>` + i18n.T(r.Context(), "print.completion.sign_date") + `</span><div class="line"></div><span class="name">` + time.Now().Format("2006-01-02") + `</span></div>
     </div>
 
     <div class="rpt-foot">
-      <p class="tiny">本證明列印時間：` + time.Now().Format("2006-01-02 15:04") + `</p>
+      <p class="tiny">` + i18n.T(r.Context(), "print.completion.print_note") + `` + time.Now().Format("2006-01-02 15:04") + `</p>
     </div>
   </div>
-  ` + printToolbar(`<a class="btn btn-s" href="/work-orders/`+strconv.FormatInt(wo.ID, 10)+`">返回工單</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/work-orders/`+strconv.FormatInt(wo.ID, 10)+`">` + i18n.T(r.Context(), "print.completion.back") + `</a>`)
 
-	renderPrintPage(w, "完工證明 #"+strconv.FormatInt(wo.ID, 10), body)
+	renderPrintPage(w, i18n.T(r.Context(), "print.completion.doc_title")+"#"+strconv.FormatInt(wo.ID, 10), body)
 }
 
 // printStyle 列印文件的共用 CSS。

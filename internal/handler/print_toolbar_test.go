@@ -1,9 +1,12 @@
 package handler
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestPrintToolbar(t *testing.T) {
-	got := printToolbar("<a>link</a>")
+	got := printToolbar(context.Background(), "<a>link</a>")
 	if got == "" {
 		t.Error("should not be empty")
 	}

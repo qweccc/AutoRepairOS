@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -157,11 +158,11 @@ func TestPrintDocHelpers(t *testing.T) {
 	if tb.Total != 1050 || tb.Tax <= 0 || tb.Taxable+tb.Tax != 1050 {
 		t.Fatalf("tax %+v", tb)
 	}
-	rows := payMethodRows(100, 50, 0, 25)
+	rows := payMethodRows(context.Background(), 100, 50, 0, 25)
 	if len(rows) != 3 {
 		t.Fatalf("rows %d", len(rows))
 	}
-	if len(payMethodRows(0, 0, 0, 0)) != 0 {
+	if len(payMethodRows(context.Background(), 0, 0, 0, 0)) != 0 {
 		t.Fatal("empty rows")
 	}
 	rec := httptest.NewRecorder()
@@ -169,7 +170,7 @@ func TestPrintDocHelpers(t *testing.T) {
 	if rec.Code != 200 || !strings.Contains(rec.Body.String(), "測試文件") {
 		t.Fatalf("code=%d", rec.Code)
 	}
-	if !strings.Contains(printToolbar(), "window.print") || !strings.Contains(printToolbar("<a>x</a>"), "<a>x</a>") {
+	if !strings.Contains(printToolbar(context.Background()), "window.print") || !strings.Contains(printToolbar(context.Background(), "<a>x</a>"), "<a>x</a>") {
 		t.Fatal("printToolbar")
 	}
 	if !strings.Contains(printHead("報價單", []string{"2026-11-09"}), "報價單") {
