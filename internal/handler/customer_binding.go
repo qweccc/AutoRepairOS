@@ -254,7 +254,7 @@ func lineBindingBlock(c model.Customer) string {
         <form method="POST" action="/customers/` + strconv.FormatInt(c.ID, 10) + `/line-bind"
               style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input name="line_user_id" placeholder="U1234567890abcdef" required
-                 style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0">
+                 style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
           <button class="btn btn-p" type="submit">` + lineBindButtonLabel(c) + `</button>
         </form>
         <p style="color:#64748b;font-size:12px;margin:8px 0 0">

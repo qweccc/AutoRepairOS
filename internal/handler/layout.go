@@ -20,26 +20,28 @@ const pageStyle = `
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
   th { color: var(--text-sub); font-weight: 600; }
-  tr:hover td { background: #263449; }
+  tr:hover td { background: var(--surface-2); }
   .stat { display: inline-block; margin: 0 32px 12px 0; text-decoration: none; }
-  .stat:hover b { color: #7dd3fc; }
+  .stat:hover b { color: var(--primary); }
   .stat b { font-size: 26px; color: var(--text); display: block; }
   .stat span { color: var(--text-sub); font-size: 12px; }
   .pill { padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
-  .p-pending    { background: #475569; color: var(--text); }
-  .p-progress   { background: #1d4ed8; color: #dbeafe; }
-  .p-waitparts  { background: #b45309; color: #fef3c7; }
-  .p-completed  { background: #047857; color: #d1fae5; }
-  .p-paid       { background: #065f46; color: #a7f3d0; }
-  .p-apprpend   { background: #b45309; color: #fef3c7; }
-  .p-appryes    { background: #047857; color: #d1fae5; }
-  .p-apprno     { background: #7f1d1d; color: #fecaca; }
+  /* 與 app.css 的 .p-* 保持同一套變數：pageStyle 在 app.css 之後載入，
+     寫死顏色會在淺色主題留下深色方塊（「部分深色」的另一個來源）。 */
+  .p-pending    { background: var(--warn-bg); color: var(--warn); }
+  .p-progress   { background: var(--primary-bg); color: var(--primary); }
+  .p-waitparts  { background: var(--warn-bg); color: var(--warn); }
+  .p-completed  { background: var(--ok-bg); color: var(--ok); }
+  .p-paid       { background: var(--ok-bg); color: var(--ok); }
+  .p-apprpend   { background: var(--warn-bg); color: var(--warn); }
+  .p-appryes    { background: var(--ok-bg); color: var(--ok); }
+  .p-apprno     { background: var(--danger-bg); color: var(--danger-text); }
   .btn { display: inline-block; padding: 6px 13px; border-radius: 7px; font-size: 12.5px;
          text-decoration: none; font-weight: 600; border: 0; cursor: pointer; }
   .btn-p { background: var(--primary); color: var(--bg); }
   .btn-s { background: var(--border); color: var(--text); }
-  .btn-d { background: #7f1d1d; color: #fecaca; }
-  .btn-o { background: #92400e; color: #fde68a; }
+  .btn-d { background: var(--danger-bg); color: var(--danger-text); }
+  .btn-o { background: var(--warn-bg); color: var(--warn); }
   form.inline { display: inline; }
   .frm { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
   .frm label { display: block; font-size: 12px; color: var(--text-sub); }
@@ -50,8 +52,8 @@ const pageStyle = `
   .frm textarea { height: 62px; resize: vertical; }
   .frm .full { grid-column: 1 / -1; }
   .msg { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13.5px; }
-  .msg-ok { background: #052e16; color: #86efac; border: 1px solid #166534; }
-  .msg-err { background: #2a0b0b; color: #fca5a5; border: 1px solid #7f1d1d; }
+  .msg-ok { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok); }
+  .msg-err { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger); }
   .empty { color: var(--muted); padding: 26px; text-align: center; font-size: 13.5px; }
   .num { text-align: right; }
   .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }

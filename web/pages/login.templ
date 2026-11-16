@@ -20,17 +20,17 @@ templ LoginPage(appName, errMsg, returnTo string) {
 				             padding: 32px; width: 340px; max-width: 100%; }
 				form.login input { width: 100%; padding: 10px; margin: 6px 0 16px; border-radius: 8px;
 				                   border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; }
-				form.login button { width: 100%; padding: 11px; background: #38bdf8; color: var(--surface);
+				form.login button { width: 100%; padding: 11px; background: var(--primary); color: var(--bg);
 				                    border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }
-				form.login button:hover { background: #0ea5e9; }
-				.login-err { background: var(--danger-bg); color: #fecaca; padding: 10px 12px; border-radius: 8px;
+				form.login button:hover { filter: brightness(1.1); }
+				.login-err { background: var(--danger-bg); color: var(--danger-text); padding: 10px 12px; border-radius: 8px;
 				             font-size: 13px; margin-bottom: 16px; }
 			</style>
 		</head>
 		<body>
 			<div class="wrap">
 				<form class="login" method="POST" action="/login">
-					<h2 style="text-align:center;margin:0 0 24px;color:#38bdf8">🔧 { appName }</h2>
+					<h2 style="text-align:center;margin:0 0 24px;color:var(--primary)">🔧 { appName }</h2>
 					if errMsg != "" {
 						<div class="login-err">{ errMsg }</div>
 					}

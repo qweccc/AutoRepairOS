@@ -416,7 +416,7 @@ func statusStepStyle(stepIdx, currentIdx int) string {
 		return "background:var(--primary-bg);color:var(--primary)"
 	}
 	if stepIdx == currentIdx {
-		return "background:#1d4ed8;color:#fff"
+		return "background:var(--primary);color:var(--bg)"
 	}
 	return "background:var(--border);color:var(--muted)"
 }

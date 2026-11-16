@@ -27,18 +27,19 @@ templ ApprovalPage(data ApprovalPageData) {
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>{ i18n.T(ctx, "approval.title") }</title>
+		<link rel="stylesheet" href="/static/app.css"/>
 		<style>
-			body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
-			.container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
-			h1 { color: #4a9eff; margin-top: 0; }
-			.error { color: #ff6b6b; background: var(--danger-bg); padding: 15px; border-radius: 4px; }
-			.success { color: #51cf66; background: #1f3d2f; padding: 15px; border-radius: 4px; }
-			.info { background: #1f2d3d; padding: 15px; border-radius: 4px; margin: 15px 0; }
+			body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+			.container { max-width: 600px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 30px; }
+			h1 { color: var(--primary); margin-top: 0; }
+			.error { color: var(--danger-text); background: var(--danger-bg); padding: 15px; border-radius: 4px; }
+			.success { color: var(--ok); background: var(--ok-bg); padding: 15px; border-radius: 4px; }
+			.info { background: var(--surface-2); padding: 15px; border-radius: 4px; margin: 15px 0; }
 			.btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }
-			.btn-approve { background: #51cf66; color: white; }
-			.btn-reject { background: #ff6b6b; color: white; }
+			.btn-approve { background: var(--ok); color: var(--ok-bg); }
+			.btn-reject { background: var(--danger); color: var(--danger-bg); }
 			.btn:hover { opacity: 0.9; }
-			.item { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }
+			.item { border-bottom: 1px solid var(--border); padding: 10px 0; }
 			.item:last-child { border-bottom: none; }
 		</style>
 	</head>
@@ -97,14 +98,15 @@ templ ApprovalResult(status, message string) {
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<title>{ i18n.T(ctx, "approval.result_title") }</title>
+		<link rel="stylesheet" href="/static/app.css"/>
 		<style>
-			body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }
-			.container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }
-			h1 { color: #4a9eff; margin-top: 0; }
+			body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+			.container { max-width: 600px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 30px; }
+			h1 { color: var(--primary); margin-top: 0; }
 			.info, .success, .error { padding: 15px; border-radius: 4px; margin: 20px 0; }
-			.success { color: #51cf66; background: #1f3d2f; }
-			.error { color: #ff6b6b; background: var(--danger-bg); }
-			.info { color: #4a9eff; background: #1f2d3d; }
+			.success { color: var(--ok); background: var(--ok-bg); }
+			.error { color: var(--danger-text); background: var(--danger-bg); }
+			.info { color: var(--text); background: var(--surface-2); }
 		</style>
 	</head>
 	<body>

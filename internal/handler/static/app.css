@@ -299,7 +299,7 @@ tr:hover td {
   color: var(--primary);
 }
 .p-waitparts {
-  background: var(--brown);
+  background: var(--warn-bg);
   color: var(--warn);
 }
 .p-apprno {
@@ -343,7 +343,7 @@ tr:hover td {
   color: var(--danger-text);
 }
 .btn-o {
-  background: var(--warn);
+  background: var(--warn-bg);
   color: var(--warn);
 }
 

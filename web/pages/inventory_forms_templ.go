@@ -449,14 +449,14 @@ func StockAdjustPage(it model.InventoryItem, user model.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<b style=\"color:#f8fafc;font-size:20px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<b style=\"color:var(--primary);font-size:20px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(it.StockQuantity))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/inventory_forms.templ`, Line: 40, Col: 175}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/inventory_forms.templ`, Line: 40, Col: 182}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -469,7 +469,7 @@ func StockAdjustPage(it model.InventoryItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs("　" + i18n.T(ctx, "inventory.field.min_safety") + "：")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/inventory_forms.templ`, Line: 40, Col: 240}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/inventory_forms.templ`, Line: 40, Col: 247}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -478,7 +478,7 @@ func StockAdjustPage(it model.InventoryItem, user model.User) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(it.MinSafetyStock))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/inventory_forms.templ`, Line: 40, Col: 275}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/inventory_forms.templ`, Line: 40, Col: 282}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {

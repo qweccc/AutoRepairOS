@@ -59,14 +59,14 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><style>\r\n\t\t\tbody { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }\r\n\t\t\t.container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }\r\n\t\t\th1 { color: #4a9eff; margin-top: 0; }\r\n\t\t\t.error { color: #ff6b6b; background: var(--danger-bg); padding: 15px; border-radius: 4px; }\r\n\t\t\t.success { color: #51cf66; background: #1f3d2f; padding: 15px; border-radius: 4px; }\r\n\t\t\t.info { background: #1f2d3d; padding: 15px; border-radius: 4px; margin: 15px 0; }\r\n\t\t\t.btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }\r\n\t\t\t.btn-approve { background: #51cf66; color: white; }\r\n\t\t\t.btn-reject { background: #ff6b6b; color: white; }\r\n\t\t\t.btn:hover { opacity: 0.9; }\r\n\t\t\t.item { border-bottom: 1px solid #3d3d3d; padding: 10px 0; }\r\n\t\t\t.item:last-child { border-bottom: none; }\r\n\t\t</style></head><body><div class=\"container\"><h1>🔧 ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/app.css\"><style>\r\n\t\t\tbody { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }\r\n\t\t\t.container { max-width: 600px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 30px; }\r\n\t\t\th1 { color: var(--primary); margin-top: 0; }\r\n\t\t\t.error { color: var(--danger-text); background: var(--danger-bg); padding: 15px; border-radius: 4px; }\r\n\t\t\t.success { color: var(--ok); background: var(--ok-bg); padding: 15px; border-radius: 4px; }\r\n\t\t\t.info { background: var(--surface-2); padding: 15px; border-radius: 4px; margin: 15px 0; }\r\n\t\t\t.btn { display: inline-block; padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; text-decoration: none; }\r\n\t\t\t.btn-approve { background: var(--ok); color: var(--ok-bg); }\r\n\t\t\t.btn-reject { background: var(--danger); color: var(--danger-bg); }\r\n\t\t\t.btn:hover { opacity: 0.9; }\r\n\t\t\t.item { border-bottom: 1px solid var(--border); padding: 10px 0; }\r\n\t\t\t.item:last-child { border-bottom: none; }\r\n\t\t</style></head><body><div class=\"container\"><h1>🔧 ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 47, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 48, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -84,7 +84,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(data.ErrorMsg)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 49, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 50, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -102,7 +102,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.expired"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 51, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 52, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -120,7 +120,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "approval.decided"), data.DecidedText, data.Request.DecidedAt))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 53, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 54, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -138,7 +138,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.wo_no"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 56, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 57, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -151,7 +151,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(data.WorkOrder.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 56, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 57, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -164,7 +164,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.customer"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 57, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 58, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -177,7 +177,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(data.Customer.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 57, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 58, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -190,7 +190,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.plate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 58, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 59, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -203,7 +203,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(data.WorkOrder.PlateNumber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 58, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 59, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -216,7 +216,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.expires"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 59, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 60, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -229,7 +229,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(data.Request.ExpiresAt)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 59, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 60, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -247,7 +247,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.add_items"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 63, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 64, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -260,7 +260,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(data.Request.ItemSummary)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 64, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 65, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -283,7 +283,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.wo_items"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 68, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 69, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -301,7 +301,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 70, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 71, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
@@ -314,7 +314,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(item.Quantity))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 70, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 71, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
@@ -327,7 +327,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatFloat(item.Subtotal, 'f', 0, 64))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 70, Col: 130}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 71, Col: 130}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -350,7 +350,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var21 string
 			templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/approval/approve/" + data.Request.Token).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 74, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 75, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
@@ -363,7 +363,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.approve"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 75, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 76, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -376,7 +376,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/approval/reject/" + data.Request.Token).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 77, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 78, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -389,7 +389,7 @@ func ApprovalPage(data ApprovalPageData) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.reject"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 78, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 79, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -439,20 +439,20 @@ func ApprovalResult(status, message string) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.result_title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 99, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 100, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</title><style>\r\n\t\t\tbody { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 0; padding: 20px; }\r\n\t\t\t.container { max-width: 600px; margin: 0 auto; background: #2d2d2d; border-radius: 8px; padding: 30px; }\r\n\t\t\th1 { color: #4a9eff; margin-top: 0; }\r\n\t\t\t.info, .success, .error { padding: 15px; border-radius: 4px; margin: 20px 0; }\r\n\t\t\t.success { color: #51cf66; background: #1f3d2f; }\r\n\t\t\t.error { color: #ff6b6b; background: var(--danger-bg); }\r\n\t\t\t.info { color: #4a9eff; background: #1f2d3d; }\r\n\t\t</style></head><body><div class=\"container\"><h1>🔧 ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</title><link rel=\"stylesheet\" href=\"/static/app.css\"><style>\r\n\t\t\tbody { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }\r\n\t\t\t.container { max-width: 600px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 30px; }\r\n\t\t\th1 { color: var(--primary); margin-top: 0; }\r\n\t\t\t.info, .success, .error { padding: 15px; border-radius: 4px; margin: 20px 0; }\r\n\t\t\t.success { color: var(--ok); background: var(--ok-bg); }\r\n\t\t\t.error { color: var(--danger-text); background: var(--danger-bg); }\r\n\t\t\t.info { color: var(--text); background: var(--surface-2); }\r\n\t\t</style></head><body><div class=\"container\"><h1>🔧 ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.result_heading"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 112, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 114, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -505,7 +505,7 @@ func ApprovalResult(status, message string) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 113, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 115, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -518,7 +518,7 @@ func ApprovalResult(status, message string) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "approval.close_hint"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 114, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/approval.templ`, Line: 116, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
