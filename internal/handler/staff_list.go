@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -41,6 +43,14 @@ var staffKindLabel = map[string]string{
 	"dependent": "健保眷屬",
 	"family":    "健保眷屬", // 舊值，相容用
 	"vendor":    "協力廠商",
+}
+
+func staffKindLabelOf(ctx context.Context, kind string) string {
+	key := "staff.kind_" + kind
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return staffKindLabel[kind]
 }
 
 // ListStaff 員工與健保資料頁。
@@ -107,9 +117,9 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var staffRows []pages.StaffRow
 	for _, s := range list {
-		kindCls := "background:#1e3a5f;color:#bae6fd"
+		kindCls := "background:var(--primary-bg);color:var(--primary)"
 		if s.Kind == "dependent" || s.Kind == "family" {
-			kindCls = "background:#3b2f13;color:#fde68a"
+			kindCls = "background:var(--warn-bg);color:var(--warn)"
 		}
 		endLabel := s.InsuranceEnd
 		endRed := false
@@ -124,7 +134,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 			Role:        s.Role,
 			Branch:      branchLabel(s.Branch),
 			Kind:        s.Kind,
-			KindLabel:   staffKindLabel[s.Kind],
+			KindLabel:   staffKindLabelOf(r.Context(), s.Kind),
 			KindCls:     kindCls,
 			NationalID:  s.NationalID,
 			Birthday:    s.Birthday,
@@ -139,9 +149,9 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		})
 	}
 
-	roleOpts := `<option value="">—</option><option value="technician">技師</option><option value="counter">櫃檯人員</option>`
+	roleOpts := `<option value="">—</option><option value="technician">` + i18n.T(r.Context(), "staff.role.technician") + `</option><option value="counter">` + i18n.T(r.Context(), "staff.role.counter") + `</option>`
 	if user.Role == "owner" {
-		roleOpts = roleOpts + `<option value="owner">系統管理員</option>`
+		roleOpts = roleOpts + `<option value="owner">` + i18n.T(r.Context(), "staff.role.owner") + `</option>`
 	}
 
 	pages.ListStaffPage(staffRows, total, page, size, q, kind, empCount, depCount, insuredCount,
@@ -192,9 +202,9 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 			&s.DependentOf, &s.DepOfName, &s.Active); err != nil {
 			continue
 		}
-		kindCls := "background:#1e3a5f;color:#bae6fd"
+		kindCls := "background:var(--primary-bg);color:var(--primary)"
 		if s.Kind == "dependent" || s.Kind == "family" {
-			kindCls = "background:#3b2f13;color:#fde68a"
+			kindCls = "background:var(--warn-bg);color:var(--warn)"
 		}
 		endLabel := s.InsuranceEnd
 		endRed := false
@@ -209,7 +219,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 			Role:        s.Role,
 			Branch:      branchLabel(s.Branch),
 			Kind:        s.Kind,
-			KindLabel:   staffKindLabel[s.Kind],
+			KindLabel:   staffKindLabelOf(r.Context(), s.Kind),
 			KindCls:     kindCls,
 			NationalID:  s.NationalID,
 			Birthday:    s.Birthday,

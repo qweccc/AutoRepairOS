@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -117,9 +118,9 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 零件／外包由同一條查詢带回（各自獨立 CASE），工资由 analyticsPeriodCosts
 	// 以 work_date 歸屬（與零件／外包的工單建立日歸屬刻意不同，見該函式註解）。
 	plRows := []plRow{
-		{Type: "labor", Label: itemTypeLabel["labor"], CostRecorded: false},
-		{Type: "part", Label: itemTypeLabel["part"], CostRecorded: true},
-		{Type: "subcontract", Label: itemTypeLabel["subcontract"], CostRecorded: true},
+		{Type: "labor", Label: itemTypeLabelOf(r.Context(), "labor"), CostRecorded: false},
+		{Type: "part", Label: itemTypeLabelOf(r.Context(), "part"), CostRecorded: true},
+		{Type: "subcontract", Label: itemTypeLabelOf(r.Context(), "subcontract"), CostRecorded: true},
 	}
 	plIdx := map[string]int{}
 	for i, p := range plRows {
@@ -182,7 +183,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		carRows.Close()
 	}
-	carTable = append(carTable, pages.Phase5Table{Headers: []string{"車型", "進廠次數"}, Rows: carData, Empty: "期間無維修紀錄"})
+	carTable = append(carTable, pages.Phase5Table{Headers: []string{i18n.T(r.Context(), "analytics.col_model"), i18n.T(r.Context(), "analytics.col_visits")}, Rows: carData, Empty: i18n.T(r.Context(), "analytics.empty_period_no_records")})
 
 	// ============ 熱銷零件（FR-ANA-03）============
 	partRows, _ := db.DB.Query(`SELECT COALESCE(i.name, woi.description), COALESCE(SUM(woi.quantity),0),
@@ -206,7 +207,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		partRows.Close()
 	}
-	partTable := []pages.Phase5Table{{Headers: []string{"零件", "數量", "營收"}, Rows: partData, Empty: "期間無零件銷售"}}
+	partTable := []pages.Phase5Table{{Headers: []string{i18n.T(r.Context(), "analytics.col_parts"), i18n.T(r.Context(), "analytics.col_quantity"), i18n.T(r.Context(), "analytics.col_revenue")}, Rows: partData, Empty: i18n.T(r.Context(), "analytics.empty_no_parts_sales")}}
 
 	// ============ 顧客留存（FR-ANA-05）============
 	// 新客 = 首次消費落在區間內；舊客 = 區間前就有消費紀錄。
@@ -243,11 +244,11 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// ============ 行銷方案成效（FR-ANA-06 / T2.18）============
 	// 由 analytics_campaign.go 的 campaignAnalysisBlock 產生——工單數、營收之外，
 	// 依 T2.13 的成本口徑補上成本與毛利（同一個方案的成本用批次查詢取回，不做 N+1）。
-	campTable := campaignAnalysisComponent(from, to, showCost)
+	campTable := campaignAnalysisComponent(r.Context(), from, to, showCost)
 
 	// ============ 技師效率（FR-ANA-02 / T2.17）============
 	// 由 analytics_tech.go 的 technicianEfficiencyBlock 產生。
-	techEfficiencyTable := technicianEfficiencyComponent(from, to, showCost)
+	techEfficiencyTable := technicianEfficiencyComponent(r.Context(), from, to, showCost)
 
 	// ============ 折扣與保固（FR-FIN-07 / T2.14 保固成本統計）============
 	var discountTotal float64
@@ -281,7 +282,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 			var stock int
 			var cost float64
 			if deadRows.Scan(&part, &name, &stock, &cost, &lastMove) == nil {
-				lm := "從未異動"
+				lm := i18n.T(r.Context(), "analytics.never_moved")
 				if t := parseFlexTime(lastMove); !t.IsZero() {
 					lm = t.Format("2006-01-02")
 				}
@@ -292,18 +293,22 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		deadRows.Close()
 	}
-	deadTable := []pages.Phase5Table{{Headers: []string{"料號", "名稱", "庫存", "滯銷成本", "最後異動"}, Rows: deadData, Empty: "沒有長期未動用的零件"}}
+	deadTable := []pages.Phase5Table{{Headers: []string{
+		i18n.T(r.Context(), "analytics.col_part_number"), i18n.T(r.Context(), "analytics.col_name"),
+		i18n.T(r.Context(), "analytics.col_stock"), i18n.T(r.Context(), "analytics.col_dead_cost"),
+		i18n.T(r.Context(), "analytics.col_last_movement")},
+		Rows: deadData, Empty: i18n.T(r.Context(), "analytics.dead_empty")}}
 
-	plHeaders := []string{"類別", "營收"}
+	plHeaders := []string{i18n.T(r.Context(), "analytics.col_group"), i18n.T(r.Context(), "analytics.col_revenue")}
 	if showCost {
-		plHeaders = append(plHeaders, "成本", "毛利", "毛利率")
+		plHeaders = append(plHeaders, i18n.T(r.Context(), "analytics.col_cost"), i18n.T(r.Context(), "analytics.col_gross"), i18n.T(r.Context(), "analytics.col_margin"))
 	}
 	var plData [][]pages.Phase5Cell
 	for _, p := range plRows {
 		row := []pages.Phase5Cell{{Value: p.Label}, {Value: money(p.Revenue), Class: "num"}}
 		if showCost {
 			if !p.CostRecorded {
-				row = append(row, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "—", Class: "num"})
+				row = append(row, pages.Phase5Cell{Value: i18n.T(r.Context(), "reports.not_recorded"), Class: "num"}, pages.Phase5Cell{Value: i18n.T(r.Context(), "reports.not_recorded"), Class: "num"}, pages.Phase5Cell{Value: "—", Class: "num"})
 			} else {
 				g := p.Revenue - p.Cost
 				gp := 0.0
@@ -315,22 +320,20 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		plData = append(plData, row)
 	}
-	totalRow := []pages.Phase5Cell{{Value: "合計"}, {Value: money(revenue), Class: "num"}}
+	totalRow := []pages.Phase5Cell{{Value: i18n.T(r.Context(), "analytics.col_total")}, {Value: money(revenue), Class: "num"}}
 	if showCost {
 		if costs.LaborRecorded {
 			totalRow = append(totalRow, pages.Phase5Cell{Value: money(costs.Total()), Class: "num"}, pages.Phase5Cell{Value: money(gross), Class: "num"}, pages.Phase5Cell{Value: fmt.Sprintf("%.1f%%", grossPct), Class: "num"})
 		} else {
-			totalRow = append(totalRow, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "未記錄", Class: "num"}, pages.Phase5Cell{Value: "—", Class: "num"})
+			totalRow = append(totalRow, pages.Phase5Cell{Value: i18n.T(r.Context(), "reports.not_recorded"), Class: "num"}, pages.Phase5Cell{Value: i18n.T(r.Context(), "reports.not_recorded"), Class: "num"}, pages.Phase5Cell{Value: "—", Class: "num"})
 		}
 	}
 	plData = append(plData, totalRow)
 	plTable := []pages.Phase5Table{{Headers: plHeaders, Rows: plData}}
 
-	grossNote := `成本與毛利僅限系統管理員檢視。`
+	grossNote := i18n.T(r.Context(), "analytics.gross_note_hidden")
 	if showCost {
-		grossNote = `毛利＝營收－零件成本－外包成本－工資成本（工資為技師佣金）。` +
-			`工資若該期間沒有任何技師工時紀錄，會顯示「未記錄」而不是 0，` +
-			`此時毛利與毛利率同樣標記未記錄，不以 0 冒充已計算。`
+		grossNote = i18n.T(r.Context(), "analytics.gross_note_owner")
 	}
 	_ = pages.AnalyticsPage(pages.Phase5AnalyticsData{
 		From: from, To: to, GroupBy: groupBy, Gran: gran, ShowCost: showCost,
@@ -340,6 +343,6 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		DiscountTotal: money(discountTotal), WarrantyCount: strconv.Itoa(warrantyCount), WarrantyRevenue: money(warrantyRev), WarrantyDiscount: money(warrantyDiscount),
 		WarrantyCostTotal: money(warrantyCostTotal), WarrantyGross: money(warrantyGross), WarrantyLaborRecorded: warrantyLaborRecorded,
 		DeadCostTotal: money(deadCostTotal), DeadCount: strconv.Itoa(deadCount), Campaign: campTable, Technician: techEfficiencyTable,
-		Flash: flash(r), ARO: money(aro), OrderCount: strconv.Itoa(orderCount), GrossStat: grossStatValue(showCost, costs, grossPct), RepeatRate: fmt.Sprintf("%.1f%%", repeatRate), GrossNote: grossNote, CanExportCosts: showCost,
+		Flash: flash(r), ARO: money(aro), OrderCount: strconv.Itoa(orderCount), GrossStat: grossStatValue(r.Context(), showCost, costs, grossPct), RepeatRate: fmt.Sprintf("%.1f%%", repeatRate), GrossNote: grossNote, CanExportCosts: showCost,
 	}, user).Render(r.Context(), w)
 }

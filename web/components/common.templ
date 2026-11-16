@@ -1,6 +1,11 @@
 package components
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+
+	"autorepairos/internal/i18n"
+)
 
 // Pill 狀態標籤。
 // cls 對應 CSS 的 p-pending / p-progress / p-completed 等。
@@ -38,17 +43,17 @@ templ Pager(path string, currentPage, totalPages, totalItems int) {
 	if totalPages > 1 {
 		<div style="margin:14px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
 			if currentPage > 1 {
-				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=1") }>« 首頁</a>
-				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage-1)) }>‹ 上一頁</a>
-			}
-			@PagerNumbers(path, currentPage, totalPages)
-			if currentPage < totalPages {
-				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage+1)) }>下一頁 ›</a>
-				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(totalPages)) }>末頁 »</a>
-			}
-			<span style="color:var(--text-sub);font-size:12.5px;margin-left:10px">
-				第 { strconv.Itoa(currentPage) } / { strconv.Itoa(totalPages) } 頁，共 { strconv.Itoa(totalItems) } 筆
-			</span>
+				<a class="btn btn-s" href={ templ.SafeURL(path + "?page=1") }>« { i18n.T(ctx, "pager.first") }</a>
+					<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage-1)) }>‹ { i18n.T(ctx, "pager.prev") }</a>
+				}
+				@PagerNumbers(path, currentPage, totalPages)
+				if currentPage < totalPages {
+					<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(currentPage+1)) }>{ i18n.T(ctx, "pager.next") } ›</a>
+					<a class="btn btn-s" href={ templ.SafeURL(path + "?page=" + strconv.Itoa(totalPages)) }>{ i18n.T(ctx, "pager.last") } »</a>
+				}
+				<span style="color:var(--text-sub);font-size:12.5px;margin-left:10px">
+					{ fmt.Sprintf(i18n.T(ctx, "pager.status"), currentPage, totalPages, totalItems) }
+				</span>
 		</div>
 	}
 }
@@ -121,9 +126,9 @@ type SelectOption struct {
 templ PlateScanUI(fieldMapJSON string) {
 	<script src="/static/scan.js"></script>
 	<div class="full" data-fieldmap={ fieldMapJSON } style="grid-column:1/-1;margin-bottom:4px">
-		<button type="button" class="btn btn-o" id="plateScanBtn">📷 拍照辨識行照</button>
+		<button type="button" class="btn btn-o" id="plateScanBtn">{ i18n.T(ctx, "vehicle.plate_scan_button") }</button>
 		<input type="file" id="plateScanInput" accept="image/*" capture="environment" style="display:none">
-		<span style="color:var(--muted);font-size:12px;margin-left:8px">拍行照或車牌，自動帶入車號、VIN、引擎號碼等</span>
+		<span style="color:var(--muted);font-size:12px;margin-left:8px">{ i18n.T(ctx, "vehicle.plate_scan_hint") }</span>
 	</div>
 	<script>
 		// fieldMapJSON 由 templ 用屬性插值放在上面 div 的 data-fieldmap，
@@ -157,7 +162,7 @@ templ PlateScanUI(fieldMapJSON string) {
 templ BarcodeScanUI(buttonId, targetId, containerId string) {
 	<script src="/static/scan.js"></script>
 	<div class="scan-btn-wrapper">
-		<button type="button" class="btn btn-s" id={ buttonId }>📷 掃條碼</button>
+		<button type="button" class="btn btn-s" id={ buttonId }>{ i18n.T(ctx, "inventory.scan_barcode") }</button>
 		<div id={ containerId } class="scan-box"></div>
 	</div>
 	<script>

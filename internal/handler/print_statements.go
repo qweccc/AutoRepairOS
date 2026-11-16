@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 )
 
@@ -96,9 +97,9 @@ func PrintAPStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 			`</b></td></tr></table>`)
 	}
 
-	termsLabel := paymentTermsLabel(sup.PaymentTerms)
+	termsLabel := paymentTermsLabelOf(r.Context(), sup.PaymentTerms)
 	if termsLabel == "" {
-		termsLabel = "未設定"
+		termsLabel = i18n.T(r.Context(), "supplier.payment.unset")
 	}
 
 	body := `

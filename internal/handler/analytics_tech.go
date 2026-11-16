@@ -50,7 +50,7 @@ type technicianEfficiencyRow struct {
 //
 //	from/to: YYYY-MM-DD 格式的日期區間
 //	showCost: true 顯示佣金與每工時計毛利（僅 Owner）；false 僅顯示工單數、工時與每工時計價
-func technicianEfficiencyComponent(from, to string, showCost bool) templ.Component {
+func technicianEfficiencyComponent(ctx context.Context, from, to string, showCost bool) templ.Component {
 	if db.DB == nil {
 		return pages.TechnicianEfficiencyTable(nil, "0", showCost)
 	}
@@ -114,7 +114,7 @@ func technicianEfficiencyComponent(from, to string, showCost bool) templ.Compone
 		}
 		rowsOut = append(rowsOut, pages.Phase5TechRow{
 			Name: t.Name, OrderCount: strconv.Itoa(t.OrderCount), Hours: trimNum(t.TotalHours),
-			HourlyPrice: price, Commission: costLabel(t.LaborRecorded, t.TotalCommission),
+			HourlyPrice: price, Commission: costLabel(ctx, t.LaborRecorded, t.TotalCommission),
 			Margin: margin, LaborRecorded: t.LaborRecorded,
 		})
 	}
@@ -123,6 +123,6 @@ func technicianEfficiencyComponent(from, to string, showCost bool) templ.Compone
 
 func technicianEfficiencyBlock(from, to string, showCost bool) string {
 	var out bytes.Buffer
-	_ = technicianEfficiencyComponent(from, to, showCost).Render(context.Background(), &out)
+	_ = technicianEfficiencyComponent(context.Background(), from, to, showCost).Render(context.Background(), &out)
 	return out.String()
 }

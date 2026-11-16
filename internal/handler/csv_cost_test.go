@@ -1,6 +1,9 @@
 package handler
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestCsvField(t *testing.T) {
 	if got := csvField("hello"); got != "hello" {
@@ -12,10 +15,10 @@ func TestCsvField(t *testing.T) {
 }
 
 func TestCostLabel(t *testing.T) {
-	if got := costLabel(false, 100); got != "未記錄" {
+	if got := costLabel(context.Background(), false, 100); got != "未記錄" {
 		t.Errorf("got %s", got)
 	}
-	if got := costLabel(true, 0); got == "未記錄" {
+	if got := costLabel(context.Background(), true, 0); got == "未記錄" {
 		t.Error("recorded should not be 未記錄")
 	}
 }

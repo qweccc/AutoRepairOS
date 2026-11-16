@@ -42,8 +42,8 @@ templ ListSuppliersPage(rows []SupplierRow, total, page, size int, q, vtype stri
 					<label>{ i18n.T(ctx, "supplier.field.payment_terms") }<select name="payment_terms">
 						<option value="cash">{ i18n.T(ctx, "supplier.payment.cash") }</option>
 						<option value="monthly">{ i18n.T(ctx, "supplier.payment.monthly") }</option>
-						<option value="net30">{ i18n.T(ctx, "supplier.payment.net30") }</option>
-						<option value="net60">{ i18n.T(ctx, "supplier.payment.net60") }</option>
+						<option value="check30">{ i18n.T(ctx, "supplier.payment.check30") }</option>
+						<option value="check60">{ i18n.T(ctx, "supplier.payment.check60") }</option>
 					</select></label>
 					<label class="full">{ i18n.T(ctx, "supplier.field.notes") }<textarea name="notes"></textarea></label>
 					<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "common.create") }</button></div>
@@ -106,7 +106,7 @@ templ SupplierRowContent(s SupplierRow) {
 		</td>
 		<td>
 			if s.VendorType == "vendor" {
-				<span class="pill" style="background:var(--brown);color:#fde68a">{ s.VendorLabel }</span>
+				<span class="pill" style="background:var(--brown);color:var(--warn)">{ s.VendorLabel }</span>
 			}
 			if s.VendorType != "vendor" {
 				<span class="pill" style="background:var(--primary-bg);color:var(--primary)">{ s.VendorLabel }</span>

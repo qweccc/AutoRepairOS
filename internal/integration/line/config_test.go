@@ -1,6 +1,7 @@
 package line
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +34,7 @@ func TestLoadFull(t *testing.T) {
 	if len(cfg.Missing()) != 0 {
 		t.Errorf("Missing = %v", cfg.Missing())
 	}
-	if got := cfg.StatusLine(); got != "已連線（Channel id1）" {
+	if got := cfg.StatusLine(context.Background()); got != "已連線（Channel id1）" {
 		t.Errorf("StatusLine = %q", got)
 	}
 }
@@ -53,7 +54,7 @@ func TestLoadMockAndDefaultBase(t *testing.T) {
 	if len(cfg.Missing()) != 3 {
 		t.Errorf("Missing = %v", cfg.Missing())
 	}
-	s := cfg.StatusLine()
+	s := cfg.StatusLine(context.Background())
 	if !strings.Contains(s, "MOCK") || !strings.Contains(s, "LINE_CHANNEL_TOKEN") {
 		t.Errorf("StatusLine = %q", s)
 	}
@@ -90,14 +91,14 @@ func TestConfigValidMissingStatus(t *testing.T) {
 		if len(tc.cfg.Missing()) != tc.missing {
 			t.Errorf("Missing(%+v) = %v", tc.cfg, tc.cfg.Missing())
 		}
-		if !strings.Contains(tc.cfg.StatusLine(), tc.status) {
-			t.Errorf("StatusLine(%+v) = %q want contains %q", tc.cfg, tc.cfg.StatusLine(), tc.status)
+		if !strings.Contains(tc.cfg.StatusLine(context.Background()), tc.status) {
+			t.Errorf("StatusLine(%+v) = %q want contains %q", tc.cfg, tc.cfg.StatusLine(context.Background()), tc.status)
 		}
 	}
 	// Mock 但憑證齊全 → 第二種 MOCK 文案
 	full := &Config{Mock: true, ChannelID: "x", ChannelSecret: "s", ChannelAccessToken: "t"}
-	if full.StatusLine() != "MOCK 模式 — 通知只記錄不外送" {
-		t.Errorf("StatusLine full mock = %q", full.StatusLine())
+	if full.StatusLine(context.Background()) != "MOCK 模式 — 通知只記錄不外送" {
+		t.Errorf("StatusLine full mock = %q", full.StatusLine(context.Background()))
 	}
 	if full.Ready() {
 		t.Error("Mock 不應 Ready")

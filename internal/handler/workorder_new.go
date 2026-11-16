@@ -2,11 +2,13 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 	"autorepairos/web/pages"
@@ -158,7 +160,7 @@ func buildNewWorkOrderPageData(r *http.Request, user model.User, preVehicle int6
 	}
 
 	// 客戶提示
-	customerHint := `<span style="color:#64748b;font-size:12px">建立後會依所選車輛自動帶入車主</span>`
+	customerHint := `<span style="color:#64748b;font-size:12px">` + i18n.T(r.Context(), "workorder.new_customer_hint") + `</span>`
 	if linkedCustomer != "" {
 		customerHint = `<span class="pill p-completed">` + htmlEsc(linkedCustomer) + `</span>`
 	}
@@ -179,12 +181,10 @@ func buildNewWorkOrderPageData(r *http.Request, user model.User, preVehicle int6
 
 	notFound := ""
 	if kw != "" && len(vehicleList) == 0 {
-		notFound = `<div class="msg msg-err">查無符合「` + htmlEsc(kw) + `」的車輛。
-			請確認車牌是否正確，或先到「車輛」頁為這位客戶新增車輛。</div>`
+		notFound = `<div class="msg msg-err">` + fmt.Sprintf(i18n.T(r.Context(), "workorder.notfound_vehicle"), htmlEsc(kw)) + `</div>`
 	}
 	if prePlate != "" && preVehicle <= 0 {
-		notFound = `<div class="msg msg-err">查無車牌「` + htmlEsc(prePlate) + `」。
-			請確認車牌是否正確，或先到「車輛」頁新增。</div>`
+		notFound = `<div class="msg msg-err">` + fmt.Sprintf(i18n.T(r.Context(), "workorder.notfound_plate"), htmlEsc(prePlate)) + `</div>`
 	}
 
 	// 表單裡的 appointment_id 由預約開單時帶回，建立工單時一併把預約標記為已進廠。
@@ -204,7 +204,7 @@ func buildNewWorkOrderPageData(r *http.Request, user model.User, preVehicle int6
 		ErrMsg:             errMsg,
 		Complaint:          complaint,
 		TechnicianOptions:  technicianOptions(),
-		InsuranceOptions:   insuranceOptionsSel(0),
+		InsuranceOptions:   insuranceOptionsSel(r.Context(), 0),
 		CustomerHintHTML:   customerHint,
 	}
 	return data

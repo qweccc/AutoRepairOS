@@ -84,7 +84,7 @@ templ ListScheduledTasksPage(tasks []ScheduledTaskRow, notifications []Notificat
 							</td>
 							<td>
 								if n.Cancelable {
-									<form method="POST" action={ "/notifications/" + strconv.FormatInt(n.ID, 10) + "/cancel" } style="display:inline" onsubmit="return confirm('取消這筆通知？')">
+									<form method="POST" action={ "/notifications/" + strconv.FormatInt(n.ID, 10) + "/cancel" } style="display:inline" data-confirm={ i18n.T(ctx, "scheduled.confirm_cancel_notification") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 										@components.CSRFInput()<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.cancel") }</button>
 									</form>
 								} else {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/integration/line"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
@@ -15,10 +17,14 @@ import (
 
 // ListScheduledTasks 顯示排程任務狀態、通知佇列與備份紀錄。
 func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User) {
-	statuses := cron.Status()
+	statuses := cron.Status(r.Context())
 	var taskRows []pages.ScheduledTaskRow
 	for _, s := range statuses {
-		taskRows = append(taskRows, pages.ScheduledTaskRow{Name: s.Name, Key: s.Key, Interval: s.IntervalLabel,
+		name := s.Name
+		if key := "scheduled.task." + s.Key; i18n.T(r.Context(), key) != key {
+			name = i18n.T(r.Context(), key)
+		}
+		taskRows = append(taskRows, pages.ScheduledTaskRow{Name: name, Key: s.Key, Interval: s.IntervalLabel,
 			LastRun: orDash(s.LastRunAt), NextRun: orDash(s.NextRunAt), RunCount: s.RunCount,
 			LastError: s.LastError, Enabled: s.Enabled})
 	}
@@ -37,41 +43,51 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 		linePill = "p-apprno"
 	}
 
-	kindLabels := map[string]string{
-		"maintenance_due":   "保養到期",
-		"work_order_ready":  "完工通知",
-		"estimate_approval": "估價核准",
+	kindLabelOf := func(kind string) string {
+		key := "scheduled.kind." + kind
+		if v := i18n.T(r.Context(), key); v != key {
+			return v
+		}
+		return kind
 	}
-	channelLabels := map[string]string{"line": "LINE", "telegram": "Telegram", "internal": "內部", "none": "不通知"}
-
-	type statusStyle struct{ Label, Pill string }
-	statusPills := map[string]statusStyle{
-		"pending":           {"待處理", "p-waitparts"},
-		"processing":        {"處理中", "p-waitparts"},
-		"sent":              {"已送達", "p-completed"},
-		"cancelled":         {"已取消", "p-pending"},
-		"failed":            {"失敗", "p-apprno"},
-		"permanent_failure": {"永久失敗", "p-apprno"},
+	channelLabelOf := func(ch string) string {
+		switch ch {
+		case "line":
+			return "LINE"
+		case "telegram":
+			return "Telegram"
+		}
+		key := "scheduled.channel." + ch
+		if v := i18n.T(r.Context(), key); v != key {
+			return v
+		}
+		return ch
+	}
+	statusLabelOf := func(status string) (string, string) {
+		key := "scheduled.status." + status
+		if v := i18n.T(r.Context(), key); v != key {
+			switch status {
+			case "pending", "processing":
+				return v, "p-waitparts"
+			case "sent":
+				return v, "p-completed"
+			case "cancelled":
+				return v, "p-pending"
+			default:
+				return v, "p-apprno"
+			}
+		}
+		return status, "p-pending"
 	}
 
 	for _, n := range recent {
-		kindLabel := kindLabels[n.Kind]
-		if kindLabel == "" {
-			kindLabel = n.Kind
-		}
-		chLabel := channelLabels[n.Channel]
-		if chLabel == "" {
-			chLabel = n.Channel
-		}
-		st, ok := statusPills[n.Status]
-		label, pill := n.Status, "p-pending"
-		if ok {
-			label, pill = st.Label, st.Pill
-		}
+		kindLabel := kindLabelOf(n.Kind)
+		chLabel := channelLabelOf(n.Channel)
+		label, pill := statusLabelOf(n.Status)
 
 		detail := ""
 		if n.RetryCount > 0 {
-			detail = "失敗次數 " + strconv.Itoa(n.RetryCount)
+			detail = fmt.Sprintf(i18n.T(r.Context(), "scheduled.retry_count"), n.RetryCount)
 		}
 		if n.ErrorMessage != "" {
 			if detail != "" {
@@ -106,7 +122,7 @@ func ListScheduledTasks(w http.ResponseWriter, r *http.Request, user model.User)
 
 	pages.ListScheduledTasksPage(taskRows, notificationRows, backupRowsData,
 		strconv.Itoa(len(pending)), strconv.Itoa(len(recent)),
-		linePill, lineCfg.StatusLine(),
+		linePill, lineCfg.StatusLine(r.Context()),
 		user).Render(r.Context(), w)
 }
 

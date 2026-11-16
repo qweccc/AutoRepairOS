@@ -64,7 +64,7 @@ templ ListSOPTemplatesPage(data SOPTemplateListData) {
 							<td class="num">{ strconv.Itoa(row.ItemCount) }</td>
 							<td>
 								<a class="btn btn-p" href={ "/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
-								<form method="POST" action={ "/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" onsubmit="return confirm('確定刪除？')">
+								<form method="POST" action={ "/sop-templates/" + strconv.FormatInt(row.ID, 10) + "/delete" } style="display:inline" data-confirm={ i18n.T(ctx, "common.confirm_delete") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 									@components.CSRFInput()
 									<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.delete") }</button>
 								</form>

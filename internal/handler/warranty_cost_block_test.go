@@ -1,12 +1,15 @@
 package handler
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestWarrantyCostBlock(t *testing.T) {
-	if warrantyCostBlock(false, 0, 0, false) != "" {
+	if warrantyCostBlock(context.Background(), false, 0, 0, false) != "" {
 		t.Error("should be empty when !showCost")
 	}
-	got := warrantyCostBlock(true, 100, 50, true)
+	got := warrantyCostBlock(context.Background(), true, 100, 50, true)
 	if got == "" {
 		t.Error("should not be empty")
 	}

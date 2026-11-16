@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/web/pages"
 )
 
@@ -83,10 +84,21 @@ type plRow struct {
 }
 
 // itemTypeLabel 對應 work_order_items.item_type（CHECK 約束的三值）。
+//
+// 用 ctx 版本而不是全域 map：語系切換對 map 無效（字典有 key 也沒用），
+// 這與「部分英文、部分中文」是同一種破口。
 var itemTypeLabel = map[string]string{
 	"labor":       "工資",
 	"part":        "零件",
 	"subcontract": "外包加工",
+}
+
+func itemTypeLabelOf(ctx context.Context, t string) string {
+	key := "analytics.item_type." + t
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return itemTypeLabel[t]
 }
 
 type analyticsChartDimensions struct {
@@ -161,10 +173,10 @@ func loadAnalyticsChartData(ctx context.Context, from, to, groupBy string, showC
 	if err := dimensionRows.Close(); err != nil {
 		return analyticsChartData{}, fmt.Errorf("close analytics chart dimensions: %w", err)
 	}
-	return aggregateAnalyticsChart(rows, dimensions, from, to, groupBy, showCost)
+	return aggregateAnalyticsChart(ctx, rows, dimensions, from, to, groupBy, showCost)
 }
 
-func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyticsChartDimensions, from, to, groupBy string, showCost bool) (analyticsChartData, error) {
+func aggregateAnalyticsChart(ctx context.Context, rows []reportExportRow, dimensions map[int64]analyticsChartDimensions, from, to, groupBy string, showCost bool) (analyticsChartData, error) {
 	start, err := time.Parse("2006-01-02", from)
 	if err != nil {
 		return analyticsChartData{}, fmt.Errorf("parse analytics start date: %w", err)
@@ -258,7 +270,7 @@ func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyt
 			}
 			itemRevenue := row.LaborRevenue + row.PartsRevenue + row.Subcontract
 			if itemRevenue <= 0 {
-				addGroup("(未分類)", row.WorkOrderID, netRevenue, row.PartsCost)
+				addGroup(i18n.T(ctx, "analytics.uncategorized"), row.WorkOrderID, netRevenue, row.PartsCost)
 				continue
 			}
 			for _, item := range items {
@@ -270,7 +282,7 @@ func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyt
 				if item.kind == "part" {
 					cost = row.PartsCost
 				}
-				addGroup(itemTypeLabel[item.kind], row.WorkOrderID, allocatedRevenue, cost)
+				addGroup(itemTypeLabelOf(ctx, item.kind), row.WorkOrderID, allocatedRevenue, cost)
 			}
 		case "customer":
 			tags := splitAnalyticsTags(dimension.CustomerTags)
@@ -316,8 +328,8 @@ func aggregateAnalyticsChart(rows []reportExportRow, dimensions map[int64]analyt
 		costText := formatReportAmount(total.TotalCost())
 		grossText := formatReportAmount(total.Gross())
 		if showCost && !total.LaborRecorded {
-			costText = "未記錄"
-			grossText = "未記錄"
+			costText = i18n.T(ctx, "reports.not_recorded")
+			grossText = i18n.T(ctx, "reports.not_recorded")
 		}
 		points = append(points, pages.AnalyticsTrendPoint{
 			Label:        month,

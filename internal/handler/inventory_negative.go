@@ -123,7 +123,7 @@ func NegativeStockList(w http.ResponseWriter, r *http.Request, user model.User) 
 		Total: stats.Total, TotalAll: stats.TotalAll, WorstQty: stats.WorstQty,
 		SumDeficit: stats.SumDeficit, SellableOnly: stats.SellableOnly, WithSupplier: stats.WithSupplier,
 	}, pageRows, total, page, size, q, sortBy, hiddenInputs(qv, "q", "page", "per"),
-		pager("/inventory/negative", qv, total, page, size), perPageSel("/inventory/negative", qv, size),
+		pager("/inventory/negative", qv, total, page, size), perPageSel(r.Context(), "/inventory/negative", qv, size),
 		flash(r), user).Render(r.Context(), w)
 }
 
@@ -288,7 +288,7 @@ func MovementLog(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 	pages.MovementLogPage(pageRows, total, page, size, q, source,
 		hiddenInputs(qv, "q", "page", "per"), pager("/inventory/movements", qv, total, page, size),
-		perPageSel("/inventory/movements", qv, size), user).Render(r.Context(), w)
+		perPageSel(r.Context(), "/inventory/movements", qv, size), user).Render(r.Context(), w)
 }
 
 // recentMovements 某料號的近期異動（HTML 片段）。

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
@@ -375,10 +376,10 @@ func TestBatchAInsurance(t *testing.T) {
 	if _, err := scanInsuranceCompany(row); err != nil {
 		t.Fatalf("scan: %v", err)
 	}
-	if s := insuranceOptionsSel(1); !strings.Contains(s, "CT2") {
+	if s := insuranceOptionsSel(context.Background(), 1); !strings.Contains(s, "CT2") {
 		t.Fatalf("options %q", s)
 	}
-	if s := insuranceOptionsSel(0); !strings.Contains(s, "不指定") {
+	if s := insuranceOptionsSel(context.Background(), 0); !strings.Contains(s, "不指定") {
 		t.Fatalf("options0 %q", s)
 	}
 

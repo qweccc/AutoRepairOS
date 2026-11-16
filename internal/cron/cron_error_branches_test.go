@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"context"
 	"archive/tar"
 	"compress/gzip"
 	"database/sql"
@@ -246,7 +247,7 @@ func TestStatusScanErrorSkipped(t *testing.T) {
 		VALUES('good','Good',30,1)`); err != nil {
 		t.Fatal(err)
 	}
-	got := Status()
+	got := Status(context.Background())
 	if len(got) != 1 || got[0].Key != "good" {
 		t.Fatalf("got %+v", got)
 	}

@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 	"autorepairos/web/pages"
@@ -47,10 +49,21 @@ var vendorTypeLabel = map[string]string{
 	"other":    "其他",
 }
 
+// vendorTypeLabelOf 回傳廠商類型的翻譯標籤。
+// map 只是缺鍵時的後備；字典鍵為 supplier.type.<code>。
+func vendorTypeLabelOf(ctx context.Context, vtype string) string {
+	key := "supplier.type." + vtype
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return vendorTypeLabel[vtype]
+}
+
 // 付款條件（FR-SUP-02）：現結 / 月結 / 期票，供 AP 模組引用。
-// 存值是小寫代碼，畫面顯示中文，報表依代碼分組才不會因打字差異分家。
+// 存值是小寫代碼，畫面顯示翻譯，報表依代碼分組才不會因打字差異分家。
+// 代碼必須與 migration 041（ap_due_date 的 CASE）一致：check30 / check60。
 var paymentTermsList = []struct{ code, label string }{
-	{"cash", "現結"},
+	{"cash", "現金"},
 	{"monthly", "月結"},
 	{"check30", "30 天期票"},
 	{"check60", "60 天期票"},
@@ -66,19 +79,19 @@ func normPaymentTerms(v string) string {
 	return ""
 }
 
-func paymentTermsLabel(v string) string {
+func paymentTermsLabelOf(ctx context.Context, v string) string {
 	for _, p := range paymentTermsList {
 		if p.code == v {
-			return p.label
+			return i18n.T(ctx, "supplier.payment."+p.code)
 		}
 	}
 	return ""
 }
 
-func paymentTermsSelectOptions(selected string) []components.SelectOption {
-	opts := []components.SelectOption{{Value: "", Label: "未設定", Selected: selected == ""}}
+func paymentTermsSelectOptions(ctx context.Context, selected string) []components.SelectOption {
+	opts := []components.SelectOption{{Value: "", Label: i18n.T(ctx, "supplier.payment.unset"), Selected: selected == ""}}
 	for _, p := range paymentTermsList {
-		opts = append(opts, components.SelectOption{Value: p.code, Label: p.label, Selected: p.code == selected})
+		opts = append(opts, components.SelectOption{Value: p.code, Label: i18n.T(ctx, "supplier.payment." + p.code), Selected: p.code == selected})
 	}
 	return opts
 }
@@ -130,8 +143,8 @@ func ListSuppliers(w http.ResponseWriter, r *http.Request, user model.User) {
 			ID:            s.ID,
 			Name:          s.Name,
 			VendorType:    s.VendorType,
-			VendorLabel:   vendorTypeLabel[s.VendorType],
-			PaymentTerms:  paymentTermsLabel(s.PaymentTerms),
+			VendorLabel:   vendorTypeLabelOf(r.Context(), s.VendorType),
+			PaymentTerms:  paymentTermsLabelOf(r.Context(), s.PaymentTerms),
 			Phone:         s.Phone,
 			ContactPerson: s.ContactPerson,
 			Address:       s.Address,
@@ -181,8 +194,8 @@ func SearchSuppliersAPI(w http.ResponseWriter, r *http.Request) {
 			ID:            s.ID,
 			Name:          s.Name,
 			VendorType:    s.VendorType,
-			VendorLabel:   vendorTypeLabel[s.VendorType],
-			PaymentTerms:  paymentTermsLabel(s.PaymentTerms),
+			VendorLabel:   vendorTypeLabelOf(r.Context(), s.VendorType),
+			PaymentTerms:  paymentTermsLabelOf(r.Context(), s.PaymentTerms),
 			Phone:         s.Phone,
 			ContactPerson: s.ContactPerson,
 			Address:       s.Address,
@@ -315,7 +328,7 @@ func EditSupplierForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	pages.EditSupplierPage(pages.SupplierEditData{
 		ID: s.ID, Name: s.Name, Phone: s.Phone, Contact: s.ContactPerson,
 		Address: s.Address, VendorType: s.VendorType, PaymentTerms: s.PaymentTerms,
-		Notes: s.Notes, PaymentOpts: paymentTermsSelectOptions(s.PaymentTerms), User: user,
+		Notes: s.Notes, PaymentOpts: paymentTermsSelectOptions(r.Context(), s.PaymentTerms), User: user,
 	}).Render(r.Context(), w)
 }
 

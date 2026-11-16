@@ -1,6 +1,10 @@
 package components
 
-import "strings"
+import (
+	"strings"
+
+	"autorepairos/internal/i18n"
+)
 
 type BayOption struct {
 	Code  string
@@ -8,12 +12,12 @@ type BayOption struct {
 }
 
 templ BayOptions(selected string, options []BayOption, legacy bool) {
-	<option value="">未指定工位</option>
+	<option value="">{ i18n.T(ctx, "appointment.bay_empty_option") }</option>
 	{{ normalized := strings.ToUpper(selected) }}
 	for _, option := range options {
 		<option value={ option.Code } selected?={ normalized == option.Code }>{ option.Label }（{ option.Code }）</option>
 	}
 	if legacy {
-		<option value={ selected } selected>{ selected }（非標準）</option>
+		<option value={ selected } selected>{ selected }（{ i18n.T(ctx, "appointment.bay_nonstandard") }）</option>
 	}
 }

@@ -60,7 +60,7 @@ templ Layout(title, active string, user model.User, appName string) {
 			<header>
 				<h1>🔧 { appName }</h1>
 				<div class="user">
-					{ i18n.T(ctx, "layout.logged_in") }：<code>{ user.Username }</code>
+					{ i18n.T(ctx, "layout.logged_in") }<code>{ user.Username }</code>
 					<span class="badge">{ user.Role }</span>
 					<form method="POST" action="/logout" style="display:inline">
 						@CSRFInput()

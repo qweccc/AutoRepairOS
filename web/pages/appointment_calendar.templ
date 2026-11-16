@@ -22,8 +22,8 @@ templ AppointmentCalendar(date, view, status string, days []CalendarDay) {
 					<option value="cancelled" selected?={ status == "cancelled" }>{ i18n.T(ctx, "appointment.status.cancelled") }</option>
 				</select>
 			</label>
-			<a class="btn btn-s" href={ calendarURL(date, view, status, -1) } hx-get={ calendarURL(date, view, status, -1) } hx-target="#appointment-calendar" hx-swap="outerHTML">{ i18n.T(ctx, "appointment.calendar.prev") }{ viewLabel(view) }</a>
-			<a class="btn btn-s" href={ calendarURL(date, view, status, 1) } hx-get={ calendarURL(date, view, status, 1) } hx-target="#appointment-calendar" hx-swap="outerHTML">{ i18n.T(ctx, "appointment.calendar.next") }{ viewLabel(view) }</a>
+			<a class="btn btn-s" href={ calendarURL(date, view, status, -1) } hx-get={ calendarURL(date, view, status, -1) } hx-target="#appointment-calendar" hx-swap="outerHTML">{ i18n.T(ctx, "appointment.calendar.prev") }{ viewLabel(ctx, view) }</a>
+			<a class="btn btn-s" href={ calendarURL(date, view, status, 1) } hx-get={ calendarURL(date, view, status, 1) } hx-target="#appointment-calendar" hx-swap="outerHTML">{ i18n.T(ctx, "appointment.calendar.next") }{ viewLabel(ctx, view) }</a>
 		</form>
 		for _, day := range days {
 			<h3 style="margin:12px 0 6px">{ day.Label }</h3>

@@ -45,7 +45,7 @@ templ WorkOrderPhotosPage(workOrderID int64, photos []PhotoCard, photoDir string
 								}
 								<form method="POST"
 									action={ "/work-orders/" + strconv.FormatInt(workOrderID, 10) + "/photos/" + strconv.FormatInt(photo.ID, 10) + "/delete" }
-									style="display:inline" onsubmit="return confirm('刪除這張照片？')">
+									style="display:inline" data-confirm={ i18n.T(ctx, "photos.confirm_delete") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
 									@components.CSRFInput()
 									<button class="btn btn-d" type="submit">{ i18n.T(ctx, "common.delete") }</button>
 								</form>

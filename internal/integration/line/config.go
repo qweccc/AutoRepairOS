@@ -1,6 +1,7 @@
 package line
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+
+	"autorepairos/internal/i18n"
 )
 
 // Config 為 LINE Messaging API 連線設定，全部從環境變數讀取，不寫死。
@@ -174,18 +177,18 @@ func ClearEnvFileCache() {
 }
 
 // StatusLine 產生給 UI 顯示的一行狀態說明，不洩漏憑證內容。
-func (c *Config) StatusLine() string {
+func (c *Config) StatusLine(ctx context.Context) string {
 	if c.Mock {
 		missing := c.Missing()
 		if len(missing) > 0 {
-			return "MOCK 模式（未設定：" + strings.Join(missing, ", ") + "）— 通知只記錄不外送"
+			return fmt.Sprintf(i18n.T(ctx, "scheduled.mock_mode_missing"), strings.Join(missing, ", "))
 		}
-		return "MOCK 模式 — 通知只記錄不外送"
+		return i18n.T(ctx, "scheduled.mock_mode")
 	}
 	if !c.Valid() {
-		return "憑證不完整（缺少：" + strings.Join(c.Missing(), ", ") + "）— 通知會失敗"
+		return fmt.Sprintf(i18n.T(ctx, "scheduled.credentials_incomplete"), strings.Join(c.Missing(), ", "))
 	}
-	return "已連線（Channel " + c.ChannelID + "）"
+	return fmt.Sprintf(i18n.T(ctx, "scheduled.connected"), c.ChannelID)
 }
 
 // Ready 表示可以實際外送。

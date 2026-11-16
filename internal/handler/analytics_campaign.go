@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/web/pages"
 	"github.com/a-h/templ"
 )
@@ -32,7 +33,7 @@ import (
 //
 //	from/to: YYYY-MM-DD 格式的日期區間
 //	showCost: true 顯示成本與毛利欄位（僅 Owner）；false 完全隱藏
-func campaignAnalysisComponent(from, to string, showCost bool) templ.Component {
+func campaignAnalysisComponent(ctx context.Context, from, to string, showCost bool) templ.Component {
 	if db.DB == nil {
 		return pages.CampaignAnalysisTable(nil, showCost)
 	}
@@ -53,7 +54,7 @@ func campaignAnalysisComponent(from, to string, showCost bool) templ.Component {
 
 	// 查詢工單：按方案代碼分組，並收集工單 ID
 	rows, err := db.DB.Query(`SELECT
-			COALESCE(NULLIF(wo.campaign_code,''), NULLIF(c.campaign_code,''), '(未設定)') AS code,
+			COALESCE(NULLIF(wo.campaign_code,''), NULLIF(c.campaign_code,''), '') AS code,
 			wo.id,
 			COALESCE(wo.total_amount,0) - COALESCE(wo.discount_amount,0) AS revenue
 		FROM active_work_orders wo
@@ -75,7 +76,11 @@ func campaignAnalysisComponent(from, to string, showCost bool) templ.Component {
 
 		g, ok := groups[code]
 		if !ok {
-			g = &campaignGroup{Code: code}
+			label := code
+			if label == "" {
+				label = i18n.T(ctx, "analytics.not_set")
+			}
+			g = &campaignGroup{Code: label}
 			groups[code] = g
 		}
 		g.OrderIDs = append(g.OrderIDs, woID)
@@ -145,6 +150,6 @@ func campaignAnalysisComponent(from, to string, showCost bool) templ.Component {
 
 func campaignAnalysisBlock(from, to string, showCost bool) string {
 	var out bytes.Buffer
-	_ = campaignAnalysisComponent(from, to, showCost).Render(context.Background(), &out)
+	_ = campaignAnalysisComponent(context.Background(), from, to, showCost).Render(context.Background(), &out)
 	return out.String()
 }

@@ -49,9 +49,9 @@ func TestHelpersRound2(t *testing.T) {
 	money(0)
 	money(98765)
 
-	phraseActiveLabel(1)
-	phraseActiveLabel(0)
-	phraseActiveLabel(2)
+	phraseActiveLabel(context.Background(), 1)
+	phraseActiveLabel(context.Background(), 0)
+	phraseActiveLabel(context.Background(), 2)
 
 	trimQtyF(2)   // integer
 	trimQtyF(2.5) // fractional

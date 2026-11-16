@@ -83,7 +83,7 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 			var rev, partCost, subCost float64
 			var qty int
 			if rows.Scan(&t, &rev, &qty, &partCost, &subCost) == nil {
-				label := itemTypeLabel[t]
+				label := itemTypeLabelOf(r.Context(), t)
 				if label == "" {
 					label = t
 				}

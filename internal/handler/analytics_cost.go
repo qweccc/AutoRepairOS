@@ -32,10 +32,12 @@ package handler
 // 這支檔爲纯查询、不吃 db.TxExecutor，全部走全域 db.DB（與 analytics.go 一致）。
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 )
 
 // analyticsCosts 是一段期間的三類成本。
@@ -183,9 +185,9 @@ func workOrderCostsByIDs(ids []int64) map[int64]workOrderCostComponents {
 
 // costLabel 把「未知成本」與「已計算為 0」分開顯示。
 // recorded=false → 「未記錄」；true 且值為 0 → 「0」。
-func costLabel(recorded bool, value float64) string {
+func costLabel(ctx context.Context, recorded bool, value float64) string {
 	if !recorded {
-		return "未記錄"
+		return i18n.T(ctx, "reports.not_recorded")
 	}
 	return money(value)
 }
@@ -194,12 +196,12 @@ func costLabel(recorded bool, value float64) string {
 //
 // 工資沒有工時紀錄時，毛利與毛利率都算不出來，顯示「未記錄」而不是一個
 // 用 0 成本算出來、看起來正常的數字。
-func grossStatValue(showCost bool, costs analyticsCosts, grossPct float64) string {
+func grossStatValue(ctx context.Context, showCost bool, costs analyticsCosts, grossPct float64) string {
 	if !showCost {
 		return fmt.Sprintf("%.1f%%", grossPct)
 	}
 	if !costs.LaborRecorded {
-		return "未記錄"
+		return i18n.T(ctx, "reports.not_recorded")
 	}
 	return fmt.Sprintf("%.1f%%", grossPct)
 }
@@ -256,11 +258,11 @@ func warrantyCostTotals(from, to string) (float64, bool) {
 //
 // showCost 為 false（非 Owner）時回空字串——成本屬營利資訊，不可讓櫃檯看到。
 // 工資無工時紀錄時以「未記錄」呈現，毛利同樣不顯示數字。
-func warrantyCostBlock(showCost bool, costTotal, gross float64, laborRecorded bool) string {
+func warrantyCostBlock(ctx context.Context, showCost bool, costTotal, gross float64, laborRecorded bool) string {
 	if !showCost {
 		return ""
 	}
-	unrecorded := `<b><span style="color:#64748b">未記錄</span></b>`
+	unrecorded := `<b><span style="color:var(--muted)">` + i18n.T(ctx, "reports.not_recorded") + `</span></b>`
 	costCell := `<b>` + money(costTotal) + `</b>`
 	grossCell := `<b>` + money(gross) + `</b>`
 	if !laborRecorded {
@@ -268,9 +270,9 @@ func warrantyCostBlock(showCost bool, costTotal, gross float64, laborRecorded bo
 		grossCell = unrecorded
 	}
 	return `
-      <p style="color:#64748b;font-size:12.5px;margin:10px 0 6px">保固成本＝零件成本＋外包成本＋工資成本（與損益分拆同一套計算）。</p>
+      <p style="color:var(--muted);font-size:12.5px;margin:10px 0 6px">` + i18n.T(ctx, "analytics.warranty_cost_note") + `</p>
       <div style="margin-bottom:12px">
-        <div class="stat">` + costCell + `<span>保固成本</span></div>
-        <div class="stat">` + grossCell + `<span>保固毛利</span></div>
+        <div class="stat">` + costCell + `<span>` + i18n.T(ctx, "analytics.warranty_cost") + `</span></div>
+        <div class="stat">` + grossCell + `<span>` + i18n.T(ctx, "analytics.warranty_gross") + `</span></div>
       </div>`
 }

@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -118,7 +121,7 @@ func ListAppointments(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 	}
 
-	calendarDays, err := appointmentCalendar(calendarDate, calendarView, status)
+	calendarDays, err := appointmentCalendar(r.Context(), calendarDate, calendarView, status)
 	if err != nil {
 		fail(w, "查詢預約行事曆失敗")
 		return
@@ -137,7 +140,7 @@ func AppointmentCalendarAPI(w http.ResponseWriter, r *http.Request, _ model.User
 	}
 	view := normalizeCalendarView(r.URL.Query().Get("view"))
 	status := strings.TrimSpace(r.URL.Query().Get("status"))
-	days, err := appointmentCalendar(date, view, status)
+	days, err := appointmentCalendar(r.Context(), date, view, status)
 	if err != nil {
 		http.Error(w, "查詢預約行事曆失敗", http.StatusInternalServerError)
 		return
@@ -164,7 +167,7 @@ func taipeiToday() string {
 	return time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).Format("2006-01-02")
 }
 
-func appointmentCalendar(date, view, status string) ([]pages.CalendarDay, error) {
+func appointmentCalendar(ctx context.Context, date, view, status string) ([]pages.CalendarDay, error) {
 	selected, err := time.Parse("2006-01-02", date)
 	if err != nil {
 		return nil, err
@@ -225,7 +228,7 @@ func appointmentCalendar(date, view, status string) ([]pages.CalendarDay, error)
 		day := selected.AddDate(0, 0, i)
 		dateValue := day.Format("2006-01-02")
 		days = append(days, pages.CalendarDay{
-			Date: dateValue, Label: dateValue + " " + []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}[day.Weekday()],
+			Date: dateValue, Label: dateValue + " " + i18n.T(ctx, "appointment.weekday."+strconv.Itoa(int(day.Weekday()))),
 			Appointments: byDate[dateValue],
 		})
 	}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"testing"
 
 	"autorepairos/internal/db"
@@ -100,7 +101,7 @@ func TestWorkOrderCostByIDMarksUnrecordedLabor(t *testing.T) {
 	if got.LaborRecorded {
 		t.Error("工單 1 無工時紀錄，LaborRecorded 應為 false")
 	}
-	if label := costLabel(got.LaborRecorded, got.LaborCost); label != "未記錄" {
+	if label := costLabel(context.Background(), got.LaborRecorded, got.LaborCost); label != "未記錄" {
 		t.Errorf("無工時紀錄應顯示「未記錄」，得到 %q", label)
 	}
 
@@ -111,7 +112,7 @@ func TestWorkOrderCostByIDMarksUnrecordedLabor(t *testing.T) {
 	if !got.LaborRecorded {
 		t.Fatal("補上工時後 LaborRecorded 應為 true")
 	}
-	if label := costLabel(got.LaborRecorded, got.LaborCost); label == "未記錄" {
+	if label := costLabel(context.Background(), got.LaborRecorded, got.LaborCost); label == "未記錄" {
 		t.Error("已有工時紀錄且佣金為 0 時應顯示 0，不是「未記錄」")
 	}
 }

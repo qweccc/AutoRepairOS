@@ -97,7 +97,7 @@ func ListVehicleInsurances(w http.ResponseWriter, r *http.Request, user model.Us
 
 	// 保險公司篩選籤
 	var compTabs strings.Builder
-	compTabs.WriteString(`<a class="btn ` + btnIf(company == "", "btn-p", "btn-s") + `" href="/insurances">全部</a> `)
+	compTabs.WriteString(`<a class="btn ` + btnIf(company == "", "btn-p", "btn-s") + `" href="/insurances">` + i18n.T(r.Context(), "insurance.all_companies") + `</a> `)
 	crows, cerr := db.DB.Query(`SELECT COALESCE(ic.name, vi.company_no, '(未知)') nm, COUNT(1) n
 		FROM active_vehicle_insurances vi
 		LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id

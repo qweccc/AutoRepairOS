@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -149,9 +150,9 @@ func ListTechnicianWorklogs(w http.ResponseWriter, r *http.Request, user model.U
 	if statusLabel == "" {
 		statusLabel = woStatus
 	}
-	insuranceLabel := "自費件"
+	insuranceLabel := i18n.T(r.Context(), "worklogs.insurance.self_pay")
 	if woIsInsurance == 1 {
-		insuranceLabel = "保險件"
+		insuranceLabel = i18n.T(r.Context(), "worklogs.insurance.claim")
 	}
 
 	_ = pages.WorklogsPage(pages.Phase5WorklogData{Flash: flash(r), WOID: strconv.FormatInt(woID, 10), StatusLabel: statusLabel, StatusPill: statusPill[woStatus], InsuranceLabel: insuranceLabel, WODateDefault: woDateDefault, WOAmount: moneyFor(woTotal), TotalHours: trimNum(totalHours), TotalLabor: moneyFor(totalLabor), TotalCommission: moneyFor(totalCommission), Count: strconv.Itoa(len(list)), Rows: rowsOut, Summaries: summaries, Technicians: phase5Technicians()}, user).Render(r.Context(), w)

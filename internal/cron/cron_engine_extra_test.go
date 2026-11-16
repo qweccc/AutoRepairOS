@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"strings"
@@ -69,7 +70,7 @@ func TestFormatInterval(t *testing.T) {
 		1440: "1 天",
 		2880: "2 天",
 	} {
-		if got := formatInterval(mins); got != want {
+		if got := formatInterval(context.Background(), mins); got != want {
 			t.Errorf("formatInterval(%d)=%q want %q", mins, got, want)
 		}
 	}
@@ -340,7 +341,7 @@ func TestTasksSorted(t *testing.T) {
 
 func TestStatus(t *testing.T) {
 	d := engineTestDB(t)
-	if got := Status(); len(got) != 0 {
+	if got := Status(context.Background()); len(got) != 0 {
 		t.Fatalf("Status on empty table should be empty, got %v", got)
 	}
 	rowsSeed := []struct {
@@ -361,7 +362,7 @@ func TestStatus(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	got := Status()
+	got := Status(context.Background())
 	if len(got) != len(rowsSeed) {
 		t.Fatalf("Status returned %d rows", len(got))
 	}
@@ -385,7 +386,7 @@ func TestStatus(t *testing.T) {
 	if _, err := d.Exec(`DROP TABLE scheduled_tasks`); err != nil {
 		t.Fatal(err)
 	}
-	if got := Status(); got != nil {
+	if got := Status(context.Background()); got != nil {
 		t.Fatalf("Status with missing table should be nil, got %v", got)
 	}
 }

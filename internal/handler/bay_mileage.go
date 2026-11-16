@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 	"autorepairos/web/pages"
@@ -201,6 +202,18 @@ var mileageSourceLabel = map[string]string{
 	"import":     "舊系統匯入",
 }
 
+// mileageSourceLabelOf 回傳里程來源的翻譯標籤。
+func mileageSourceLabelOf(ctx context.Context, src string) string {
+	key := "vehicle.mileage.source." + src
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	if v, ok := mileageSourceLabel[src]; ok {
+		return v
+	}
+	return src
+}
+
 // RecordMileage 記錄一筆里程。
 //
 // source 標明數字從哪來，這是判斷可信度的依據：
@@ -246,7 +259,7 @@ func lastMileageEntry(vehicleID int64) (int, string, bool) {
 }
 
 // mileageHistory 里程履歷列表（含回退標示）。
-func mileageHistory(vehicleID int64, limit int) string {
+func mileageHistory(ctx context.Context, vehicleID int64, limit int) string {
 	rows, err := db.DB.Query(`SELECT vm.mileage, COALESCE(vm.source,'manual'),
 			COALESCE(vm.notes,''), COALESCE(vm.created_at,''), COALESCE(u.username,''),
 			COALESCE(vm.work_order_id,0)
@@ -255,12 +268,17 @@ func mileageHistory(vehicleID int64, limit int) string {
 		WHERE vm.vehicle_id = ?
 		ORDER BY vm.created_at DESC, vm.id DESC LIMIT ?`, vehicleID, limit)
 	if err != nil {
-		return `<div class="empty">查詢里程履歷失敗</div>`
+		return `<div class="empty">` + i18n.T(ctx, "vehicle.mileage.empty") + `</div>`
 	}
 	defer rows.Close()
 
 	var b strings.Builder
-	b.WriteString(`<table><tr><th>日期</th><th class="num">里程</th><th>來源</th><th>工單</th><th>操作人</th><th>備註</th></tr>`)
+	b.WriteString(`<table><tr><th>` + i18n.T(ctx, "vehicle.mileage.col.date") +
+		`</th><th class="num">` + i18n.T(ctx, "vehicle.mileage.col.mileage") +
+		`</th><th>` + i18n.T(ctx, "vehicle.mileage.col.source") +
+		`</th><th>` + i18n.T(ctx, "vehicle.mileage.col.workorder") +
+		`</th><th>` + i18n.T(ctx, "vehicle.mileage.col.operator") +
+		`</th><th>` + i18n.T(ctx, "vehicle.mileage.col.notes") + `</th></tr>`)
 	n := 0
 	type row struct {
 		m    int
@@ -284,9 +302,9 @@ func mileageHistory(vehicleID int64, limit int) string {
 		// 時間序：all[0] 最新 → all[len-1] 最舊。第 i 筆的「前一筆」是 all[i+1]。
 		rollback := ""
 		if i+1 < len(all) && r.m < all[i+1].m {
-			rollback = ` <span class="pill" style="background:#7f1d1d;color:#fca5a5;font-size:11px">回退</span>`
+			rollback = ` <span class="pill" style="background:var(--danger-bg);color:var(--danger-text);font-size:11px">` + i18n.T(ctx, "vehicle.mileage.rollback") + `</span>`
 		}
-		srcLabel := mileageSourceLabel[r.src]
+		srcLabel := mileageSourceLabelOf(ctx, r.src)
 		if srcLabel == "" {
 			srcLabel = r.src
 		}
@@ -308,7 +326,7 @@ func mileageHistory(vehicleID int64, limit int) string {
 	}
 	b.WriteString(`</table>`)
 	if n == 0 {
-		return `<div class="empty">尚無里程紀錄</div>`
+		return `<div class="empty">` + i18n.T(ctx, "vehicle.mileage.empty") + `</div>`
 	}
 	return b.String()
 }

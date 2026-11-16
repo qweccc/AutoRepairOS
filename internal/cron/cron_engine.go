@@ -1,16 +1,17 @@
 package cron
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 )
 
 // --- 內建任務註冊表 ---
@@ -251,7 +252,7 @@ type TaskStatus struct {
 	IntervalLabel string
 }
 
-func Status() []TaskStatus {
+func Status(ctx context.Context) []TaskStatus {
 	rows, err := db.DB.Query(`SELECT task_key, name, COALESCE(interval_minutes,0),
 		COALESCE(enabled,0), COALESCE(last_run_at,''), COALESCE(next_run_at,''),
 		COALESCE(run_count,0), COALESCE(last_error,'')
@@ -271,21 +272,21 @@ func Status() []TaskStatus {
 		}
 		s.Enabled = en == 1
 		s.Interval = time.Duration(mins) * time.Minute
-		s.IntervalLabel = formatInterval(mins)
+		s.IntervalLabel = formatInterval(ctx, mins)
 		out = append(out, s)
 	}
 	return out
 }
 
-func formatInterval(mins int) string {
+func formatInterval(ctx context.Context, mins int) string {
 	switch {
 	case mins <= 0:
-		return "停用"
+		return i18n.T(ctx, "scheduled.task_disabled")
 	case mins < 60:
-		return strconv.Itoa(mins) + " 分鐘"
+		return fmt.Sprintf(i18n.T(ctx, "scheduled.interval_minutes"), mins)
 	case mins%1440 == 0:
-		return strconv.Itoa(mins/1440) + " 天"
+		return fmt.Sprintf(i18n.T(ctx, "scheduled.interval_days"), mins/1440)
 	default:
-		return strconv.Itoa(mins/60) + " 小時"
+		return fmt.Sprintf(i18n.T(ctx, "scheduled.interval_hours"), mins/60)
 	}
 }

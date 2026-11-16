@@ -1,15 +1,18 @@
 package pages
 
 import (
+	"context"
 	"net/url"
 	"time"
+
+	"autorepairos/internal/i18n"
 )
 
-func viewLabel(view string) string {
+func viewLabel(ctx context.Context, view string) string {
 	if view == "week" {
-		return "週"
+		return i18n.T(ctx, "appointment.calendar.week")
 	}
-	return "日"
+	return i18n.T(ctx, "appointment.calendar.day")
 }
 
 func calendarURL(date, view, status string, offset int) string {

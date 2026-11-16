@@ -2,12 +2,14 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -31,8 +33,8 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	// 保險 / 自費 分欄標記：is_insurance=1 為保險單,0 為自費單。
-	insLabel := "保險"
-	selfLabel := "自費"
+	insLabel := i18n.T(r.Context(), "reports.insurance")
+	selfLabel := i18n.T(r.Context(), "reports.self_pay")
 
 	// ============ 營收卡（保險 / 自費分欄）============
 	// 營收 = SUM(total_amount) WHERE status='paid'（修理成本視角）。
@@ -196,10 +198,10 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	aging := []pages.Phase5ReportAgingRow{
-		{Label: "0–30 天", Count: strconv.Itoa(agingCounts["0-30"]), Amount: money(agingAmounts["0-30"])},
-		{Label: "31–60 天", Count: strconv.Itoa(agingCounts["31-60"]), Amount: money(agingAmounts["31-60"])},
-		{Label: "61–90 天", Count: strconv.Itoa(agingCounts["61-90"]), Amount: money(agingAmounts["61-90"])},
-		{Label: "90+ 天", Count: strconv.Itoa(agingCounts["90+"]), Amount: money(agingAmounts["90+"]), Class: "color-red"},
+		{Label: fmt.Sprintf(i18n.T(r.Context(), "reports.aging_bucket"), "0–30"), Count: strconv.Itoa(agingCounts["0-30"]), Amount: money(agingAmounts["0-30"])},
+		{Label: fmt.Sprintf(i18n.T(r.Context(), "reports.aging_bucket"), "31–60"), Count: strconv.Itoa(agingCounts["31-60"]), Amount: money(agingAmounts["31-60"])},
+		{Label: fmt.Sprintf(i18n.T(r.Context(), "reports.aging_bucket"), "61–90"), Count: strconv.Itoa(agingCounts["61-90"]), Amount: money(agingAmounts["61-90"])},
+		{Label: fmt.Sprintf(i18n.T(r.Context(), "reports.aging_bucket"), "90+"), Count: strconv.Itoa(agingCounts["90+"]), Amount: money(agingAmounts["90+"]), Class: "color-red"},
 	}
 	_ = pages.ReportsPage(pages.Phase5ReportData{
 		From: from, To: to, InsLabel: insLabel, SelfLabel: selfLabel,

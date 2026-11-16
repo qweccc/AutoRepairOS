@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,9 +9,26 @@ import (
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
+
+// notificationLabel 把 notification_preference 代碼轉成畫面標籤（走字典）。
+// 集中在這裡是因為列表頁與 HTMX 搜尋片段兩處都要顯示，各自寫一份 Go map
+// 曾讓語系切換對這個欄位完全無效（字典有 customer.notify_none 也沒用）。
+func notificationLabel(ctx context.Context, pref string) string {
+	switch pref {
+	case "telegram":
+		return i18n.T(ctx, "customer.notify_telegram")
+	case "sms":
+		return i18n.T(ctx, "customer.notify_sms")
+	case "none":
+		return i18n.T(ctx, "customer.notify_none")
+	default:
+		return i18n.T(ctx, "customer.notify_line")
+	}
+}
 
 func ListCustomers(w http.ResponseWriter, r *http.Request, user model.User) {
 	renderCustomerList(w, r, user, pages.CustomerCreateForm{})
@@ -71,15 +89,7 @@ func renderCustomerList(w http.ResponseWriter, r *http.Request, user model.User,
 
 	var customerRows []pages.CustomerRow
 	for _, c := range list {
-		notif := "LINE"
-		switch c.NotificationPref {
-		case "telegram":
-			notif = "Telegram"
-		case "sms":
-			notif = "SMS（需更新）"
-		case "none":
-			notif = "不通知"
-		}
+		notif := notificationLabel(r.Context(), c.NotificationPref)
 		customerRows = append(customerRows, pages.CustomerRow{
 			ID:             c.ID,
 			Name:           c.Name,
@@ -131,16 +141,7 @@ func SearchCustomersAPI(w http.ResponseWriter, r *http.Request) {
 			&c.Address, &notifPref, &c.TotalSpent, &c.UnpaidAmount); err != nil {
 			continue
 		}
-		switch notifPref {
-		case "telegram":
-			c.Notification = "Telegram"
-		case "sms":
-			c.Notification = "SMS（需更新）"
-		case "none":
-			c.Notification = "不通知"
-		default:
-			c.Notification = "LINE"
-		}
+		c.Notification = notificationLabel(r.Context(), notifPref)
 		result = append(result, c)
 	}
 	pages.CustomerSearchRows(result, user).Render(r.Context(), w)
@@ -386,12 +387,12 @@ func tagPills(tags string) string {
 		if t == "" {
 			continue
 		}
-		style := "background:#1e3a5f;color:#bae6fd"
+		style := "background:var(--primary-bg);color:var(--primary)"
 		up := strings.ToUpper(t)
 		if up == "VIP" {
-			style = "background:#3b2f13;color:#fde68a"
+			style = "background:var(--warn-bg);color:var(--warn)"
 		} else if strings.Contains(up, "奧客") || strings.Contains(up, "警示") {
-			style = "background:#7f1d1d;color:#fca5a5"
+			style = "background:var(--danger-bg);color:var(--danger-text)"
 		}
 		b.WriteString(`<span class="pill" style="` + style + `;font-size:11.5px;margin-right:3px">` +
 			htmlEsc(t) + `</span>`)

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -63,7 +64,7 @@ func TestVehicleHelpers(t *testing.T) {
 	_ = normVehicleModel(" toyota ")
 	_ = customerOptions()
 	_ = vehicleOptions()
-	_ = vehicleModelOptions("")
+	_ = vehicleModelOptions(context.Background(), "")
 	if lastInsertID("vehicles") != 0 {
 		t.Fatal("lastInsertID empty")
 	}
@@ -235,11 +236,11 @@ func TestSupplierHandlers(t *testing.T) {
 			t.Fatalf("isSupplierType(%q)", tc.v)
 		}
 	}
-	if normPaymentTerms("check30") != "check30" || paymentTermsLabel("check30") == "" {
+	if normPaymentTerms("check30") != "check30" || paymentTermsLabelOf(context.Background(), "check30") == "" {
 		t.Fatal("payment terms")
 	}
-	_ = paymentTermsSelectOptions("check30")
-	_ = paymentTermsSelectOptions("")
+	_ = paymentTermsSelectOptions(context.Background(), "check30")
+	_ = paymentTermsSelectOptions(context.Background(), "")
 
 	rec := httptest.NewRecorder()
 	ListSuppliers(rec, httptest.NewRequest("GET", "/suppliers", nil), owner)

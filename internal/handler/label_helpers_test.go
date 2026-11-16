@@ -1,6 +1,9 @@
 package handler
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestItemTypeLabelShort(t *testing.T) {
 	if got := itemTypeLabelShort("labor"); got != "工資" {
@@ -19,6 +22,6 @@ func TestItemTypeLabelShort(t *testing.T) {
 
 func TestPaymentTermsLabel(t *testing.T) {
 	// Just ensure no panic
-	_ = paymentTermsLabel("")
-	_ = paymentTermsLabel("nonexistent")
+	_ = paymentTermsLabelOf(context.Background(), "")
+	_ = paymentTermsLabelOf(context.Background(), "nonexistent")
 }

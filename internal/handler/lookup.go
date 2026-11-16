@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -33,6 +35,17 @@ var lookupCategoryLabel = map[string]string{
 	"fuel_type":            "燃油種類",
 	"bay":                  "工位",
 	"walkaround_mark_type": "車況標記類型",
+}
+
+// lookupCategoryLabelOf 回傳分類的翻譯標籤。
+// 字典缺 key 時退回 Go map（ValueMap 是啟動檢查用的權威清單，
+// 兩邊必須同步；缺任一邊都會讓啟動 log 出現警告）。
+func lookupCategoryLabelOf(ctx context.Context, cat string) string {
+	key := "lookup.category." + cat
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return lookupCategoryLabel[cat]
 }
 
 // CheckLookupCategories 啟動時檢查每個分頁籤的 category 是否真的有資料。
@@ -131,6 +144,7 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 		if !ok {
 			continue
 		}
+		label = lookupCategoryLabelOf(r.Context(), key)
 		cls := "btn-s"
 		if category == key {
 			cls = "btn-p"
@@ -138,7 +152,7 @@ func ListLookupItems(w http.ResponseWriter, r *http.Request, user model.User) {
 		tabs.WriteString(`<a class="btn ` + cls + `" href="/lookup?category=` + key + `">` + label + `</a> `)
 	}
 
-	pages.ListLookupPage(lookupRows, category, lookupCategoryLabel[category], total,
+	pages.ListLookupPage(lookupRows, category, lookupCategoryLabelOf(r.Context(), category), total,
 		tabs.String(),
 		user).Render(r.Context(), w)
 }

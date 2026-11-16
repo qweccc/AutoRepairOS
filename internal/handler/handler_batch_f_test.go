@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -119,7 +120,7 @@ func TestBatchFAppointments(t *testing.T) {
 	if !strings.Contains(bayConflictMessage("LIFT", "2026-11-10", "09:00"), "") {
 		t.Fatal("bayConflictMessage")
 	}
-	if _, err := appointmentCalendar("2026-11-09", "week", ""); err != nil {
+	if _, err := appointmentCalendar(context.Background(), "2026-11-09", "week", ""); err != nil {
 		t.Fatal(err)
 	}
 }

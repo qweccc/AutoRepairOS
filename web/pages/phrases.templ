@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"context"
 	"strconv"
 
 	"autorepairos/internal/i18n"
@@ -27,7 +28,7 @@ templ PhrasesPage(phrases []model.TechnicianPhrase, user model.User, flashMessag
 						<td>{ p.Phrase }</td>
 						<td>{ p.Category }</td>
 						<td class="num">{ strconv.Itoa(p.SortOrder) }</td>
-						<td>{ phraseActiveLabel(p.Active) }</td>
+						<td>{ phraseActiveLabel(ctx, p.Active) }</td>
 						<td>
 							<a class="btn btn-s" href={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 							<a class="btn btn-d" href={ "/phrases/" + strconv.FormatInt(p.ID, 10) + "/delete" }
@@ -64,9 +65,9 @@ templ PhraseEditPage(p model.TechnicianPhrase, user model.User, flashMessage str
 	}
 }
 
-func phraseActiveLabel(active int) string {
+func phraseActiveLabel(ctx context.Context, active int) string {
 	if active == 0 {
-		return "停用"
+		return i18n.T(ctx, "phrases.inactive")
 	}
-	return "啟用"
+	return i18n.T(ctx, "phrases.active")
 }

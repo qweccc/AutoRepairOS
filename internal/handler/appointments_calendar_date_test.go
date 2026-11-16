@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"testing"
 
 	"autorepairos/internal/db"
@@ -21,7 +22,7 @@ func TestAppointmentCalendarRealSchema(t *testing.T) {
 
 	seedAppointment(t, "2026-11-10", "09:00")
 
-	days, err := appointmentCalendar("2026-11-10", "day", "")
+	days, err := appointmentCalendar(context.Background(), "2026-11-10", "day", "")
 	if err != nil {
 		t.Fatalf("appointmentCalendar: %v", err)
 	}
@@ -36,9 +37,9 @@ func TestAppointmentCalendarRealSchema(t *testing.T) {
 		t.Fatalf("AppointmentDate = %q, want %q", got, "2026-11-10")
 	}
 
-	week, err := appointmentCalendar("2026-11-10", "week", "")
+	week, err := appointmentCalendar(context.Background(), "2026-11-10", "week", "")
 	if err != nil {
-		t.Fatalf("appointmentCalendar(week): %v", err)
+		t.Fatalf("appointmentCalendar(context.Background(), week): %v", err)
 	}
 	if len(week) != 7 {
 		t.Fatalf("week view returned %d days, want 7", len(week))

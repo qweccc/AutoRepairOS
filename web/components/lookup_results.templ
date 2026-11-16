@@ -1,6 +1,10 @@
 package components
 
-import "strconv"
+import (
+	"strconv"
+
+	"autorepairos/internal/i18n"
+)
 
 type PartLookupResult struct {
 	ID          int64
@@ -19,7 +23,7 @@ type PhraseLookupResult struct {
 
 templ PartLookupResults(results []PartLookupResult) {
 	if len(results) == 0 {
-		<div style="padding:8px;color:var(--muted)">查無零件</div>
+		<div style="padding:8px;color:var(--muted)">{ i18n.T(ctx, "lookup.no_parts") }</div>
 	}
 	for _, p := range results {
 		<div class="part-result-item"
@@ -34,14 +38,14 @@ templ PartLookupResults(results []PartLookupResult) {
 				<span class="bin-loc">📍{ p.BinLocation }</span>
 			}
 			<span style="color:#38bdf8">${ p.Price }</span>
-			<span style="color:#f59e0b">庫存 { strconv.Itoa(p.Stock) }</span>
+			<span style="color:#f59e0b">{ i18n.T(ctx, "lookup.stock") } { strconv.Itoa(p.Stock) }</span>
 		</div>
 	}
 }
 
 templ PhraseLookupResults(results []PhraseLookupResult) {
 	if len(results) == 0 {
-		<div style="padding:8px;color:var(--muted);font-size:12px">查無片語</div>
+		<div style="padding:8px;color:var(--muted);font-size:12px">{ i18n.T(ctx, "lookup.no_phrases") }</div>
 	}
 	for _, p := range results {
 		<div class="phrase-result-item"

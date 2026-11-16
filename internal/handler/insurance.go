@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -255,16 +257,16 @@ func DeactivateInsuranceCompany(w http.ResponseWriter, r *http.Request) {
 
 // insuranceOptionsSel 保險公司下拉選單，只列啟用的。
 // selected > 0 時預選該公司（工單帶入保險時用）。
-func insuranceOptionsSel(selected int64) string {
+func insuranceOptionsSel(ctx context.Context, selected int64) string {
 	rows, err := db.DB.Query(`SELECT id, code, name FROM insurance_companies
 		WHERE active = 1 ORDER BY code`)
 	if err != nil {
-		return `<option value="">— 無法載入保險公司 —</option>`
+		return `<option value="">— ` + i18n.T(ctx, "insurance.load_failed") + ` —</option>`
 	}
 	defer rows.Close()
 
 	var sb strings.Builder
-	sb.WriteString(`<option value="">— 不指定 —</option>`)
+	sb.WriteString(`<option value="">— ` + i18n.T(ctx, "insurance.option.unspecified") + ` —</option>`)
 	for rows.Next() {
 		var id int64
 		var code, name string

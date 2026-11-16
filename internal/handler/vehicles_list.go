@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -228,7 +229,7 @@ func ListVehicles(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.ListVehiclesPage(vehicleRows, total, page, size, q, filterCustomer,
-		vehicleModelOptions(""),
+		vehicleModelOptions(r.Context(), ""),
 		lookupOptions("vehicle_type", ""),
 		lookupOptions("fuel_type", ""),
 		lookupOptions("body_style", ""),
@@ -327,7 +328,13 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	defer rows.Close()
 
 	var tb strings.Builder
-	tb.WriteString(`<table><tr><th>#</th><th>日期</th><th>狀態</th><th class="num">里程</th><th class="num">金額</th><th>技師</th><th>保險</th><th>備註</th></tr>`)
+	tb.WriteString(`<table><tr><th>#</th><th>` + i18n.T(r.Context(), "vehicle.orders.col.date") +
+		`</th><th>` + i18n.T(r.Context(), "vehicle.orders.col.status") +
+		`</th><th class="num">` + i18n.T(r.Context(), "vehicle.orders.col.mileage") +
+		`</th><th class="num">` + i18n.T(r.Context(), "vehicle.orders.col.amount") +
+		`</th><th>` + i18n.T(r.Context(), "vehicle.orders.col.technician") +
+		`</th><th>` + i18n.T(r.Context(), "vehicle.orders.col.insurance") +
+		`</th><th>` + i18n.T(r.Context(), "vehicle.orders.col.notes") + `</th></tr>`)
 	n := 0
 	for rows.Next() {
 		var woID int64
@@ -357,7 +364,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	ordersTable := tb.String()
 	if n == 0 {
-		ordersTable = `<div class="empty">這台車還沒有維修紀錄</div>`
+		ordersTable = `<div class="empty">` + i18n.T(r.Context(), "vehicle.orders.empty") + `</div>`
 	}
 
 	// 換過的零件（彙總）
@@ -373,7 +380,10 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	if perr == nil {
 		defer prows.Close()
 		var pb strings.Builder
-		pb.WriteString(`<table><tr><th>項目</th><th class="num">累計數量</th><th class="num">最近單價</th><th class="num">出現工單數</th></tr>`)
+		pb.WriteString(`<table><tr><th>` + i18n.T(r.Context(), "vehicle.parts.col.item") +
+			`</th><th class="num">` + i18n.T(r.Context(), "vehicle.parts.col.qty") +
+			`</th><th class="num">` + i18n.T(r.Context(), "vehicle.parts.col.price") +
+			`</th><th class="num">` + i18n.T(r.Context(), "vehicle.parts.col.orders") + `</th></tr>`)
 		pn := 0
 		for prows.Next() {
 			var desc string
@@ -389,7 +399,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		pb.WriteString(`</table>`)
 		if pn > 0 {
-			partsTable = `<div class="card"><h2>歷年更換項目（前 50 項）</h2>` + pb.String() + `</div>`
+			partsTable = `<div class="card"><h2>` + i18n.T(r.Context(), "vehicle.parts.title") + `</h2>` + pb.String() + `</div>`
 		}
 	}
 
@@ -400,6 +410,6 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	pages.ShowVehiclePage(v,
 		orderCount, totalSpent, unpaid, curKm,
 		dateCell, kmCell,
-		mileageHistory(v.ID, 50), ordersTable, partsTable,
+		mileageHistory(r.Context(), v.ID, 50), ordersTable, partsTable,
 		user).Render(r.Context(), w)
 }

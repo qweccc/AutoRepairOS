@@ -286,7 +286,7 @@ func pager(path string, query url.Values, total, page, size int) string {
 }
 
 // perPageSel 每頁筆數選擇器。
-func perPageSel(path string, query url.Values, size int) string {
+func perPageSel(ctx context.Context, path string, query url.Values, size int) string {
 	link := func(n int) string {
 		q := url.Values{}
 		for k, vs := range query {
@@ -304,7 +304,7 @@ func perPageSel(path string, query url.Values, size int) string {
 		}
 		return `<a class="btn ` + cls + `" href="` + path + `?` + q.Encode() + `">` + strconv.Itoa(n) + `</a>`
 	}
-	return `<span style="color:#64748b;font-size:12.5px;margin-left:8px">每頁</span> ` +
+	return `<span style="color:#64748b;font-size:12.5px;margin-left:8px">` + i18n.T(ctx, "common.per_page") + `</span> ` +
 		link(20) + link(50) + link(100) + link(200)
 }
 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/pages"
 )
@@ -140,7 +142,7 @@ func EditVehicleForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.EditVehiclePage(v,
-		vehicleModelOptions(v.BrandModel),
+		vehicleModelOptions(r.Context(), v.BrandModel),
 		lookupOptions("vehicle_type", v.VehicleType),
 		lookupOptions("fuel_type", v.FuelType),
 		lookupOptions("body_style", v.BodyStyle),
@@ -353,7 +355,7 @@ const vehicleModelOther = "__OTHER__"
 //   - 不在清單內（舊資料或自由輸入過）→ 額外附一個「（現有值）」選項並
 //     設為 selected，避免一進編輯頁就被靜默改寫成清單第一項
 //   - 最後固定附「其他（手動輸入）」
-func vehicleModelOptions(selected string) string {
+func vehicleModelOptions(ctx context.Context, selected string) string {
 	selected = strings.TrimSpace(selected)
 	rows, err := db.DB.Query(`SELECT code, label FROM lookup_items
 		WHERE category = 'vehicle_model' AND active = 1
@@ -380,9 +382,9 @@ func vehicleModelOptions(selected string) string {
 	// 現有值不在清單內：保留它，讓使用者自己決定是否正規化。
 	if selected != "" && !known {
 		b.WriteString(`<option value="` + htmlEsc(selected) + `" selected>` +
-			htmlEsc(selected) + `（現有值）</option>`)
+			htmlEsc(selected) + i18n.T(ctx, "vehicle.model_current_value") + `</option>`)
 	}
-	b.WriteString(`<option value="` + vehicleModelOther + `">其他（手動輸入）</option>`)
+	b.WriteString(`<option value="` + vehicleModelOther + `">` + i18n.T(ctx, "vehicle.model_other_option") + `</option>`)
 	return b.String()
 }
 

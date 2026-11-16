@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"autorepairos/internal/db"
+	"autorepairos/internal/i18n"
 	"autorepairos/internal/model"
 	"autorepairos/web/components"
 	"autorepairos/web/pages"
@@ -91,7 +92,7 @@ func renderInventoryList(w http.ResponseWriter, r *http.Request, user model.User
 
 	// 類別篩選籤（依實際資料的類別列出，附筆數）
 	var catTabs strings.Builder
-	catTabs.WriteString(`<a class="btn ` + btnIf(category == "", "btn-p", "btn-s") + `" href="` + invTabURL(qv, "", lowOnly) + `">全部</a> `)
+	catTabs.WriteString(`<a class="btn ` + btnIf(category == "", "btn-p", "btn-s") + `" href="` + invTabURL(qv, "", lowOnly) + `">` + i18n.T(r.Context(), "inventory.filter_all") + `</a> `)
 	catRows, cerr := db.DB.Query(`SELECT COALESCE(NULLIF(category,''),'__none__') c, COUNT(1) n
 		FROM active_inventory_items GROUP BY 1 ORDER BY n DESC`)
 	if cerr == nil {
@@ -104,7 +105,7 @@ func renderInventoryList(w http.ResponseWriter, r *http.Request, user model.User
 			}
 			label := c
 			if c == "__none__" {
-				label = "未分類"
+				label = i18n.T(r.Context(), "inventory.uncategorized")
 			}
 			catTabs.WriteString(`<a class="btn ` + btnIf(category == c, "btn-p", "btn-s") + `" href="` +
 				invTabURL(qv, c, lowOnly) + `">` + htmlEsc(label) + ` ` + strconv.Itoa(n) + `</a> `)

@@ -304,9 +304,9 @@ func AppointmentCalendar(date, view, status string, days []CalendarDay) templ.Co
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(viewLabel(view))
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(viewLabel(ctx, view))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/appointment_calendar.templ`, Line: 25, Col: 231}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/appointment_calendar.templ`, Line: 25, Col: 236}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -352,9 +352,9 @@ func AppointmentCalendar(date, view, status string, days []CalendarDay) templ.Co
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(viewLabel(view))
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(viewLabel(ctx, view))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/appointment_calendar.templ`, Line: 26, Col: 229}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/appointment_calendar.templ`, Line: 26, Col: 234}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {

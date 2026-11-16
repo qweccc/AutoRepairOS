@@ -88,7 +88,7 @@ func TestBatchEBayMileage(t *testing.T) {
 	if km, _, ok := lastMileageEntry(7); !ok || km != 50000 {
 		t.Fatalf("lastMileage km=%d ok=%v", km, ok)
 	}
-	if h := mileageHistory(7, 10); !strings.Contains(h, "50000") {
+	if h := mileageHistory(context.Background(), 7, 10); !strings.Contains(h, "50000") {
 		t.Fatalf("history %q", h)
 	}
 	if _, _, ok := lastMileageEntry(999); ok {
