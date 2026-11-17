@@ -156,8 +156,14 @@ func ServePhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	allowed, err := canViewWorkOrder(user, woID)
 	if err != nil {
-		log.Printf("檢查照片工單權限失敗（工單 #%d）: %v", woID, err)
-		http.Error(w, "無法確認工單權限", http.StatusInternalServerError)
+		// 工單不存在要回 404（舊連結、已刪除的工單），不是 500——否則使用者看到
+		// 「伺服器錯誤」會以為系統壞了。全域例外仍走 500 並留下紀錄。
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			log.Printf("檢查照片工單權限失敗（工單 #%d）: %v", woID, err)
+			http.Error(w, "無法確認工單權限", http.StatusInternalServerError)
+		}
 		return
 	}
 	if !allowed {

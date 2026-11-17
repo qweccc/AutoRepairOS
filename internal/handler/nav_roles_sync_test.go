@@ -28,6 +28,9 @@ var effectiveRoleOverrides = map[string][]string{
 	// ReportsHome 開頭即 `if !canSeeMoney(user) { 403 }`（財務數字屬店內機密），
 	// 但 main.go 註冊為 AllStaff。實際只有 owner/counter 進得去。
 	"/reports": {"owner", "counter"},
+	// ListTechnicianCommissions 同樣先跑 canSeeMoney（佣金是敏感財務資料），
+	// router 卻是 AllStaff。少了這條，選單會倒退回去坑技師（看到卻點不進去）。
+	"/technicians/commissions": {"owner", "counter"},
 }
 
 // navRoleVars nav.go 裡代表角色組合的變數。

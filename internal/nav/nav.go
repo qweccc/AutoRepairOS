@@ -30,17 +30,17 @@ type Route struct {
 	GroupKey string
 	// Roles 限制可見角色；空 slice 表示所有角色都看得到。
 	//
-	// 必須與 main.go 的權限包裝器一致：CounterUpPage 的頁面只能列
-	// owner/counter，否則技師會看到點進去被擋的入口——看得到卻進不去
-	// 比看不到更糟，使用者會以為系統壞了。
+	// 必須與「實際能不能進去」一致：權限包裝器放行的，handler 內部也可能再擋
+	// （canSeeMoney 之類）。選單若比實際更寬，技師就會看到點進去被擋的入口——
+	// 看得到卻進不去比看不到更糟，使用者會以為系統壞了。
 	//
-	// 權威來源是 main.go 的包裝器，不要憑常識猜：/staff、/reports、
-	// /technicians/commissions、/purchase-orders、/inventory、/suppliers
-	// 都是 AllStaff（技師看得到）。實際只有 6 項受限（counterUp）：
-	// /receivables、/expenses、/reports、/analytics、/ap、/lookup。
-	// 其中 /reports 是特例：main.go 包的是 AllStaff，但 ReportsHome 內部
-	// 用 canSeeMoney 讓技師 403，所以選單仍必須擋（見 nav_roles_sync_test.go
-	// 的 effectiveRoleOverrides）。
+	// 權威來源是路由包裝器 + handler 內部的第二道檢查，不要憑常識猜。
+	// 目前受限（counterUp，僅 owner/counter）共 7 項：/receivables、/expenses、
+	// /reports、/analytics、/ap、/lookup、/technicians/commissions。
+	// 其中 /reports 與 /technicians/commissions 是特例：router 包的是 AllStaff，
+	// 但 handler 內部用 canSeeMoney 讓技師 403，所以選單也必須擋（見
+	// nav_roles_sync_test.go 的 effectiveRoleOverrides）。其餘 AllStaff 頁面
+	// （/staff、/purchase-orders、/inventory、/suppliers…）技師真的看得到。
 	//
 	// 手冊 docs/USER_GUIDE_zh-TW.md 有同一份清單，由
 	// TestManualRoleVisibilityMatchesNav 交叉比對，改這裡要一起改。
@@ -83,11 +83,12 @@ var Routes = []Route{
 	{Path: "/insurances", Name: "投保", Group: "保養保險", NameKey: "nav.insurances", GroupKey: "group.care", Roles: nil},
 	{Path: "/insurance-companies", Name: "保險公司", Group: "保養保險", NameKey: "nav.insuranceCompanies", GroupKey: "group.care", Roles: nil},
 	{Path: "/staff", Name: "員工", Group: "帳務人事", NameKey: "nav.staff", GroupKey: "group.account", Roles: nil},
-	{Path: "/technicians/commissions", Name: "技師佣金", Group: "帳務人事", NameKey: "nav.commissions", GroupKey: "group.account", Roles: nil},
+	// /technicians/commissions 與 /reports 同在 main.go 註冊為 AllStaff，
+	// 但兩者 handler 開頭都先跑 canSeeMoney(user) → 技師會拿到 403
+	// （佣金是敏感財務資料）。導覽要反映「實際能不能進去」，不是包裝器怎麼寫，
+	// 否則技師看到連結卻點不進去。
+	{Path: "/technicians/commissions", Name: "技師佣金", Group: "帳務人事", NameKey: "nav.commissions", GroupKey: "group.account", Roles: counterUp},
 	{Path: "/expenses", Name: "支出", Group: "帳務人事", NameKey: "nav.expenses", GroupKey: "group.account", Roles: counterUp},
-	// /reports 在 main.go 註冊為 AllStaff，但 ReportsHome 開頭即 canSeeMoney(user)
-	// → 技師會拿到 403（財務數字屬店內機密）。導覽要反映「實際能不能進去」，
-	// 不是包裝器怎麼寫，否則技師看到報表連結卻點不進去。
 	{Path: "/reports", Name: "報表", Group: "帳務人事", NameKey: "nav.reports", GroupKey: "group.account", Roles: counterUp},
 	{Path: "/analytics", Name: "經營分析", Group: "帳務人事", NameKey: "nav.analytics", GroupKey: "group.account", Roles: counterUp},
 	{Path: "/ap", Name: "應付帳款", Group: "帳務人事", NameKey: "nav.ap", GroupKey: "group.account", Roles: counterUp},
