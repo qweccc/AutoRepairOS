@@ -388,7 +388,7 @@ func normalizeDate(s string) string {
 	if y > 0 && y < 1911 { // 民國年 → 公元
 		y += 1911
 	}
-	if y < 1000 || m < 1 || m > 12 || d < 1 || d > 31 {
+	if y < 1000 || y > 9999 || m < 1 || m > 12 || d < 1 || d > 31 {
 		return s
 	}
 	return fmt.Sprintf("%04d-%02d-%02d", y, m, d)
