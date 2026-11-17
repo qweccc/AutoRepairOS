@@ -38,3 +38,23 @@ func TestLayoutLangAndTheme(t *testing.T) {
 		t.Fatalf("theme dropdown should mark light selected: %.300s", s)
 	}
 }
+
+// TestLayoutHTMXErrorHandlerIsRegistered 守住「HTMX 失敗時要能在表單上顯示訊息」
+// 這條路。這個 listener 以前寫成 document.body.addEventListener，但 script 位於
+// <head>、body 還沒被剖析，於是每一頁載入都丟 TypeError，handler 從來沒裝上去
+// （失敗訊息只進 console，使用者什麼都沒看到）。監聽對象必須是 head 時期就存在
+// 的 document；這條測試防止它再被改回 body。
+func TestLayoutHTMXErrorHandlerIsRegistered(t *testing.T) {
+	var b strings.Builder
+	if err := Layout("T", "home", model.User{Username: "u", Role: "owner"}, "App").
+		Render(context.Background(), &b); err != nil {
+		t.Fatal(err)
+	}
+	s := b.String()
+	if strings.Contains(s, "document.body.addEventListener('htmx:responseError'") {
+		t.Fatal("htmx:responseError 不可掛在 document.body：script 在 <head>，那一刻 body 還不存在")
+	}
+	if !strings.Contains(s, "document.addEventListener('htmx:responseError'") {
+		t.Fatal("缺少 htmx:responseError 監聽，HTMX 失敗時將無法顯示錯誤訊息")
+	}
+}

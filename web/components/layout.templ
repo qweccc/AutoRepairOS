@@ -53,7 +53,7 @@ templ Layout(title, active string, user model.User, appName string) {
 			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/htmx.min.js"></script>
 			<script src="/static/prefs.js"></script>
-<script>document.body.addEventListener('htmx:responseError',function(e){if(e.detail&&e.detail.xhr){var form=document.querySelector('main form');var msg=e.detail.xhr.responseText||document.body.getAttribute('data-i18n-operation-failed')||'Operation failed';if(form){var box=form.querySelector('.msg-err');if(!box){box=document.createElement('div');box.className='msg msg-err';form.insertBefore(box,form.firstChild);}box.textContent=msg;}else{console.error(msg);}}});</script>
+<script>document.addEventListener('htmx:responseError',function(e){if(e.detail&&e.detail.xhr){var form=document.querySelector('main form');var msg=e.detail.xhr.responseText||document.body.getAttribute('data-i18n-operation-failed')||'Operation failed';if(form){var box=form.querySelector('.msg-err');if(!box){box=document.createElement('div');box.className='msg msg-err';form.insertBefore(box,form.firstChild);}box.textContent=msg;}else{console.error(msg);}}});</script>
 			<script src="/static/html5-qrcode.min.js"></script>
 		</head>
 		<body data-i18n-operation-failed={ i18n.T(ctx, "common.operation_failed") } data-i18n-js={ i18n.JSBundle(ctx) } hx-headers={ `{"X-CSRF-Token":"` + session.CSRFTokenFromContext(ctx) + `"}` }>
