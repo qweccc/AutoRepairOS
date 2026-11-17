@@ -54,7 +54,9 @@ func NewReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) 
 			return
 		}
 	}
-	renderReceivableForm(w, r, user, rec, "", "")
+	// action 必須明講：表單不在的情況下（action 留空）瀏覽器會把 POST 送回
+	// 目前網址 /receivables/new，而那個路徑沒有 POST 路由 → 畫面上是 404。
+	renderReceivableForm(w, r, user, rec, "/receivables", "")
 }
 
 // receivableFormBody 收款表單（新增與編輯共用）。

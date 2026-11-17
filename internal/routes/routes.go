@@ -44,6 +44,13 @@ func New(d Deps) *chi.Mux {
 	r.Get("/inspections", handler.AllStaff(handler.ListVehicleInspections))
 	r.Get("/expenses", handler.CounterUpPage(handler.ListExpenses))
 	r.Get("/receivables", handler.CounterUpPage(handler.ListReceivables))
+	// 收款（結帳）的新增/編輯/搜尋：路由遷移時漏註冊，導致收據頁的
+	// 「收款結帳」按鈕與收款頁的「＋ 新增」都吃到 404。handler 一直都在，
+	// 只是沒人掛（見 git show 35195c1^:main.go）。
+	r.Get("/receivables/new", handler.CounterUpPage(handler.NewReceivableForm))
+	r.Post("/receivables", handler.CounterUp(handler.CreateReceivable))
+	r.Get("/receivables/{id}/edit", handler.CounterUpPage(handler.EditReceivableForm))
+	r.Post("/receivables/{id}", handler.CounterUp(handler.UpdateReceivable))
 	r.Get("/equipment", handler.AllStaff(handler.ListEquipment))
 	r.Post("/equipment", handler.CounterUp(handler.CreateEquipment))
 	r.Get("/appointments", handler.AllStaff(handler.ListAppointments))
@@ -183,5 +190,82 @@ func New(d Deps) *chi.Mux {
 	r.Get("/api/inventory/search", handler.AllStaff(handler.SearchInventoryAPI))
 	r.Get("/api/work-orders/search", handler.RequireLogin(handler.SearchWorkOrdersAPI))
 	r.Get("/api/vehicles/search", handler.RequireLogin(handler.SearchVehiclesAPI))
+	// 遷移時漏掛（同 receivables 的新增/編輯）：handler 在、路由不在，
+	// 收款頁的即時搜尋會永遠回 404。
+	r.Get("/api/receivables/search", handler.AllStaff(handler.SearchReceivablesAPI))
+	// 進貨單列表的即時搜尋：handler 一直都在，路由從來沒掛（UI 有引用）。
+	r.Get("/api/purchase-orders/search", handler.RequireLogin(handler.SearchPurchaseOrdersAPI))
+
+	// ---------------------------------------------------------------------------
+	// 路由遷移（35195c1「migrate remaining nav routes」）時漏掛的回歸修復。
+	// 這些端點在遷移前的 main.go 都有，handler 也還在，UI/JS 也仍指向它們，
+	// 但注册列沒有被搬過來 → 畫面上的按鈕一律 404（EX: 進貨單「新增」、
+	// 報表/經營分析匯出、供應商建檔、各頁的即時搜尋、負庫存修正）。
+	// 清單由 gen_restore.py 比對遷移前後的注冊產生，判準是
+	// 「handler 仍存在 + 程式內仍有参照」。
+	// ---------------------------------------------------------------------------
+	r.Post("/api/suppliers/quick-create", handler.CounterUp(handler.QuickCreateSupplier))
+	r.Get("/api/lookup/search", handler.RequireLogin(handler.SearchLookupAPI))
+	r.Get("/api/insurance/search", handler.RequireLogin(handler.SearchInsuranceAPI))
+	r.Get("/api/suppliers/search", handler.RequireLogin(handler.SearchSuppliersAPI))
+	r.Get("/api/appointments/search", handler.RequireLogin(handler.SearchAppointmentsAPI))
+	r.Get("/api/appointments/calendar", handler.AllStaff(handler.AppointmentCalendarAPI))
+	r.Get("/api/subcontracts/search", handler.RequireLogin(handler.SearchSubcontractsAPI))
+	r.Get("/api/equipment/search", handler.RequireLogin(handler.SearchEquipmentAPI))
+	r.Get("/api/staff/search", handler.OwnerOnly(handler.SearchStaffAPI))
+	r.Get("/api/insurances/search", handler.RequireLogin(handler.SearchInsurancesAPI))
+	r.Get("/api/inspections/search", handler.RequireLogin(handler.SearchInspectionsAPI))
+	r.Get("/api/expenses/search", handler.AllStaff(handler.SearchExpensesAPI))
+	r.Post("/api/quick-vehicle", handler.CounterUp(handler.QuickVehicle))
+	r.Post("/inventory/negative/fix", handler.CounterUpPage(handler.ApplyNegativeStockFix))
+	r.Post("/suppliers", handler.CounterUp(handler.CreateSupplier))
+	r.Get("/api/phrases/search", handler.RequireLogin(handler.SearchPhrasesAPI))
+	r.Get("/insurances/expiring", handler.AllStaff(handler.ListVehicleInsurances))
+	r.Get("/insurances/new", handler.CounterUpPage(handler.NewVehicleInsuranceForm))
+	r.Post("/insurances", handler.CounterUp(handler.CreateVehicleInsurance))
+	r.Get("/inspections/new", handler.CounterUpPage(handler.NewVehicleInspectionForm))
+	r.Post("/inspections", handler.CounterUp(handler.CreateVehicleInspection))
+	r.Get("/ap/statement", handler.CounterUpPage(handler.APStatement))
+	r.Get("/ap/statement.csv", handler.CounterUp(handler.APStatementCSV))
+	r.Get("/lookup/new", handler.CounterUpPage(handler.NewLookupItemForm))
+	r.Post("/lookup", handler.CounterUp(handler.CreateLookupItem))
+	r.Post("/scheduled-tasks/maintenance-due/run", handler.OwnerOnly(handler.RunMaintenanceScanNow))
+	r.Get("/reports/export", handler.AllStaff(handler.ReportsExport))
+	r.Get("/analytics/export", handler.CounterUp(handler.AnalyticsExport))
+	r.Get("/purchase-orders/new", handler.CounterUpPage(handler.NewPurchaseOrderForm))
+
+	// 同批遺漏（第二組）：各頁的編輯/更新/刪除。這些連結在列表頁由
+	// templ 動態產生（"/phrases/"+id+"/edit"），所以即使 seed 沒資料、
+	// 爬頁面看不到，真實車廠有資料時每一列都會點到 404。
+	r.Get("/api/insurances/expiring", handler.RequireLogin(handler.ExpiringInsurancesAPI))
+	r.Post("/vehicles/{id}/delete", handler.OwnerOnly(handler.DeleteVehicle))
+	r.Get("/inventory/{id}/edit", handler.AllStaff(handler.EditInventoryForm))
+	r.Post("/inventory/{id}", handler.CounterUp(handler.UpdateInventoryItem))
+	r.Get("/suppliers/{id}/edit", handler.CounterUpPage(handler.EditSupplierForm))
+	r.Post("/suppliers/{id}", handler.CounterUp(handler.UpdateSupplier))
+	r.Get("/staff/{id}/edit", handler.CounterUpPage(handler.EditStaffForm))
+	r.Post("/staff/{id}", handler.CounterUp(handler.UpdateStaff))
+	r.Get("/phrases/{id}/edit", handler.AllStaff(handler.EditPhraseForm))
+	r.Post("/phrases/{id}/update", handler.AllStaff(handler.UpdatePhrase))
+	r.Post("/phrases/{id}/delete", handler.AllStaff(handler.DeletePhrase))
+	r.Get("/insurances/{id}/edit", handler.CounterUpPage(handler.EditVehicleInsuranceForm))
+	r.Post("/insurances/{id}", handler.CounterUp(handler.UpdateVehicleInsurance))
+	r.Post("/insurances/{id}/delete", handler.CounterUp(handler.DeleteVehicleInsurance))
+	r.Get("/inspections/{id}/edit", handler.CounterUpPage(handler.EditVehicleInspectionForm))
+	r.Post("/inspections/{id}", handler.CounterUp(handler.UpdateVehicleInspection))
+	r.Post("/inspections/{id}/delete", handler.CounterUp(handler.DeleteVehicleInspection))
+	r.Get("/lookup/{id}/edit", handler.CounterUpPage(handler.EditLookupItemForm))
+	r.Post("/lookup/{id}", handler.CounterUp(handler.UpdateLookupItem))
+	r.Post("/scheduled-tasks/work-order-ready/run", handler.OwnerOnly(handler.RunWorkOrderReadyNow))
+	r.Get("/appointments/{id}/edit", handler.AllStaff(handler.EditAppointmentForm))
+	r.Post("/appointments/{id}", handler.CounterUp(handler.UpdateAppointment))
+	r.Post("/appointments/{id}/delete", handler.OwnerOnly(handler.DeleteAppointment))
+	r.Get("/vehicles/{id}/mileage/new", handler.CounterUpPage(handler.AddVehicleMileageForm))
+	r.Get("/subcontracts/{id}/edit", handler.AllStaff(handler.EditSubcontractForm))
+	r.Post("/subcontracts/{id}", handler.CounterUp(handler.UpdateSubcontract))
+	r.Get("/equipment/{id}/edit", handler.AllStaff(handler.EditEquipmentForm))
+	r.Post("/equipment/{id}", handler.CounterUp(handler.UpdateEquipment))
+	r.Post("/equipment/{id}/delete", handler.OwnerOnly(handler.DeleteEquipment))
+	r.Get("/purchase-orders/{id}", handler.AllStaff(handler.ShowPurchaseOrder))
 	return r
 }
