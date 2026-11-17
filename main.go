@@ -66,13 +66,19 @@ func main() {
 	// docker 的工作目錄沒有這個資料夾，就改用編進 binary 的內嵌字典。
 	// 兩者都失敗才真的沒有字典（介面會顯示 raw key），所以只 log 不中斷。
 	if err := i18n.Load("locales"); err != nil {
-		log.Printf("i18n 字典載入失敗（改讀內嵌字典）：%v", err)
 		// embed 的 FS 裡檔案在 locales/ 子目錄下，要先切到那一層。
 		sub, subErr := fs.Sub(localeFiles, "locales")
-		if subErr != nil {
-			log.Printf("i18n 內嵌字典定位失敗：%v", subErr)
-		} else if err := i18n.LoadEmbedded(sub); err != nil {
-			log.Printf("i18n 內嵌字典也載入失敗（介面將顯示原始 key）：%v", err)
+		switch {
+		case subErr != nil:
+			log.Printf("i18n 字典載入失敗（找不到 locales/，內嵌字典定位也失敗）：%v / %v", err, subErr)
+		default:
+			if embErr := i18n.LoadEmbedded(sub); embErr != nil {
+				log.Printf("i18n 字典載入失敗（磁碟與內嵌都失敗，介面將顯示原始 key）：%v / %v", err, embErr)
+			} else {
+				// exe（cwd=release/）與 docker（cwd=/app）本來就沒有 locales/，
+				// 走內嵌字典是正常路徑，不要印成「失敗」嚇人。
+				log.Printf("找不到 locales/ 目錄（exe/docker 部署的正常情況），改用內嵌字典")
+			}
 		}
 	}
 	log.Printf("AutoRepairOS 啟動：%s", versionText())
