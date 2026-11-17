@@ -88,6 +88,9 @@ func passbookWriteTestDB(t *testing.T) {
 			t.Fatalf("setup database: %v\nSQL: %s", err, statement)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func postWorkOrderStatus(t *testing.T, id int64, status string) *httptest.ResponseRecorder {

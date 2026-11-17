@@ -8,7 +8,7 @@ import "context"
 // implementation). The caller owns the transaction lifecycle.
 func RecalculateWorkOrderTotal(ctx context.Context, tx sqlExecutor, woID int64) error {
 	_, err := tx.ExecContext(ctx, `UPDATE work_orders SET total_amount =
-		COALESCE((SELECT SUM(COALESCE(subtotal, COALESCE(quantity,0)*COALESCE(unit_price,0))) FROM work_order_items WHERE work_order_id = ?), 0),
+		COALESCE((SELECT SUM(COALESCE(subtotal, COALESCE(quantity,0)*COALESCE(unit_price,0))) FROM active_work_order_items WHERE work_order_id = ?), 0),
 		updated_at = CURRENT_TIMESTAMP WHERE id = ?`, woID, woID)
 	return err
 }

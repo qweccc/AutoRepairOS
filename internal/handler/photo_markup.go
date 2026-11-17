@@ -58,7 +58,7 @@ func AddPhotoAnnotation(w http.ResponseWriter, r *http.Request, user model.User)
 			return
 		}
 		var found int
-		err = db.DB.QueryRow(`SELECT 1 FROM work_order_items
+		err = db.DB.QueryRow(`SELECT 1 FROM active_work_order_items
 			WHERE id = ? AND work_order_id = ?`, *req.ItemID, workOrderID).Scan(&found)
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "明細不屬於此工單", http.StatusBadRequest)

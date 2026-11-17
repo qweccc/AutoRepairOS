@@ -45,6 +45,9 @@ func setupPhotoMarkupTestDB(t *testing.T) {
 			t.Fatalf("setup: %v\nSQL: %s", err, s)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestPhotoAnnotationCRUD(t *testing.T) {

@@ -43,6 +43,9 @@ func setupCampaignTestDB(t *testing.T) {
 			t.Fatalf("setup campaign database: %v", err)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func execCampaignFixture(t *testing.T, q string, args ...interface{}) {

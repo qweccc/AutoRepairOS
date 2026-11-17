@@ -132,7 +132,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='subcontract'
 				THEN woi.subtotal ELSE 0 END),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
@@ -188,7 +188,7 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// ============ 熱銷零件（FR-ANA-03）============
 	partRows, _ := db.DB.Query(`SELECT COALESCE(i.name, woi.description), COALESCE(SUM(woi.quantity),0),
 			COALESCE(SUM(woi.subtotal),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.item_type='part' AND wo.status='paid'

@@ -61,7 +61,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 用 EXISTS 而非 JOIN：同一張工單可能分多列用同一個料號
 	// （實測 5,489 組，最多 10 列），JOIN 會讓該工單重複出現。
 	if part != "" {
-		where += ` AND EXISTS (SELECT 1 FROM work_order_items i
+		where += ` AND EXISTS (SELECT 1 FROM active_work_order_items i
 			LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 			WHERE i.work_order_id = wo.id
 			  AND (ii.part_number LIKE ? OR ii.name LIKE ? OR i.description LIKE ?))`
@@ -132,7 +132,7 @@ func ListWorkOrders(w http.ResponseWriter, r *http.Request, user model.User) {
 		}
 		q := `SELECT i.work_order_id, COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,''),
 				COALESCE(SUM(i.quantity),0)
-			FROM work_order_items i
+			FROM active_work_order_items i
 			LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 			WHERE i.item_type = 'part' AND i.work_order_id IN (` + strings.Join(ids, ",") + `)
 			GROUP BY i.work_order_id, COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,'')
@@ -242,7 +242,7 @@ func SearchWorkOrdersAPI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if part != "" {
-		where += ` AND EXISTS (SELECT 1 FROM work_order_items i
+		where += ` AND EXISTS (SELECT 1 FROM active_work_order_items i
 			LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 			WHERE i.work_order_id = wo.id
 			  AND (ii.part_number LIKE ? OR ii.name LIKE ? OR i.description LIKE ?))`
@@ -366,7 +366,7 @@ func woPartUsage(workOrderID int64) []struct {
 } {
 	rows, err := db.DB.Query(`SELECT COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,''),
 			COALESCE(SUM(i.quantity),0)
-		FROM work_order_items i
+		FROM active_work_order_items i
 		LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 		WHERE i.work_order_id = ? AND i.item_type = 'part'
 		GROUP BY COALESCE(ii.part_number,''), COALESCE(ii.name, i.description,'')

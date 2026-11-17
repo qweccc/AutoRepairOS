@@ -173,7 +173,7 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 零件成本（當日結帳工單的零件，從庫存主檔帶成本價）
 	var partsCost float64
 	db.DB.QueryRow(`SELECT COALESCE(SUM(COALESCE(i.cost_price,0) * woi.quantity),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.item_type='part' AND wo.status='paid' AND date(wo.created_at) = ?`, date).

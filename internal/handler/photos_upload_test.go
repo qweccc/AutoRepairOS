@@ -54,6 +54,9 @@ func setupPhotoUploadTestDB(t *testing.T) {
 			t.Fatalf("setup failed: %v\nSQL: %s", err, stmt)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func photoUploadRequest(t *testing.T, filename string, itemID string) *http.Request {

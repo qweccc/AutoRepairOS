@@ -28,6 +28,9 @@ func setupInventorySvcDB(t *testing.T) *sql.DB {
 			t.Fatalf("setup: %v\n%s", err, s)
 		}
 	}
+	if err := ensureWOISoftDelete(t, db); err != nil {
+		t.Fatal(err)
+	}
 	return db
 }
 

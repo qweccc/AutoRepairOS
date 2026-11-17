@@ -291,10 +291,11 @@ func (s *InventoryService) Update(ctx context.Context, id int, name, category st
 	return err
 }
 
-// Delete removes an inventory item if it is not referenced by any work orders.
+// Delete 軟刪除庫存項目（標記 deleted_at，不再物理刪除）；若仍被工單明細
+// 參考則拒絕。
 func (s *InventoryService) Delete(ctx context.Context, id int) error {
 	var count int
-	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM work_order_items WHERE inventory_item_id = ?", id).Scan(&count)
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM active_work_order_items WHERE inventory_item_id = ?", id).Scan(&count)
 	if err != nil {
 		return err
 	}
@@ -302,6 +303,8 @@ func (s *InventoryService) Delete(ctx context.Context, id int) error {
 		return ErrReferenceExists
 	}
 
-	_, err = s.db.ExecContext(ctx, "DELETE FROM inventory_items WHERE id = ?", id)
+	// 軟刪除：不留物理刪除的路徑（SRS：重要營業資料不得物理刪除）。
+	// 參考計量改用 active_work_order_items，已刪明細不擋刪除。
+	_, err = s.db.ExecContext(ctx, "UPDATE inventory_items SET deleted_at = datetime('now') WHERE id = ? AND deleted_at IS NULL", id)
 	return err
 }

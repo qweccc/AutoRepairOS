@@ -39,6 +39,9 @@ func setupAnalyticsCostTestDB(t *testing.T) {
 			t.Fatalf("setup analytics cost database: %v", err)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func execCostFixture(t *testing.T, q string, args ...interface{}) {

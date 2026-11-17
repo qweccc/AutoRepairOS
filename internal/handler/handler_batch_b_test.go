@@ -259,8 +259,13 @@ func TestBatchBDeleteWorkOrderItem(t *testing.T) {
 	if rec2.Code != http.StatusFound {
 		t.Fatalf("delete: code=%d body=%s", rec2.Code, rec2.Body.String())
 	}
-	if n := batchBQueryInt(t, `SELECT COUNT(*) FROM work_order_items WHERE id=1`); n != 0 {
-		t.Fatalf("row still exists")
+	// 軟刪除：列還在，但标记 deleted_at，且不再出現在 active 視（所有讀取
+	// 路徑都改看 active_work_order_items）。SRS：工單明細不得物理刪除。
+	if n := batchBQueryInt(t, `SELECT COUNT(*) FROM active_work_order_items WHERE id=1`); n != 0 {
+		t.Fatalf("已刪項目仍出現在 active_work_order_items")
+	}
+	if n := batchBQueryInt(t, `SELECT deleted_at IS NOT NULL FROM work_order_items WHERE id=1`); n != 1 {
+		t.Fatalf("明細未標記 deleted_at（仍会被讀取路徑看見）")
 	}
 	if r := batchBQueryInt(t, `SELECT reserved_quantity FROM inventory_items WHERE id=1`); r != 0 {
 		t.Fatalf("reserved=%d want 0", r)

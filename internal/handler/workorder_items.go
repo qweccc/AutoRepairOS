@@ -157,7 +157,7 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User
 	var itemType string
 	var invID int64
 	var qty int
-	err = tx.QueryRow("SELECT item_type, COALESCE(inventory_item_id,0), quantity FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
+	err = tx.QueryRow("SELECT item_type, COALESCE(inventory_item_id,0), quantity FROM active_work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID).
 		Scan(&itemType, &invID, &qty)
 	if err != nil {
 		http.NotFound(w, r)
@@ -171,7 +171,9 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User
 		return
 	}
 
-	if _, err := tx.Exec("DELETE FROM work_order_items WHERE id = ? AND work_order_id = ?", itemID, woID); err != nil {
+	// 軟刪除（SRS：工單明細不得物理刪除）。已刪的明細由 active_work_order_items
+	// 視自動排除，明細列表、收據、成本統計與結帳扣料都不再計入。
+	if _, err := tx.Exec("UPDATE work_order_items SET deleted_at = datetime('now') WHERE id = ? AND work_order_id = ?", itemID, woID); err != nil {
 		fail(w, "刪除項目失敗")
 		return
 	}
@@ -231,7 +233,7 @@ func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
 		END,
 		COALESCE(i.quantity,0), COALESCE(i.unit_price,0), COALESCE(i.subtotal,0),
 		COALESCE(i.primary_technician_id,0), COALESCE(i.assistant_technician_id,0), COALESCE(i.photo_url,'')
-		FROM work_order_items i
+		FROM active_work_order_items i
 		LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 		WHERE i.work_order_id = ? ORDER BY i.id`, woID)
 	if err != nil {

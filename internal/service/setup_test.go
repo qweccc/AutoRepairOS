@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	_ "modernc.org/sqlite"
+
+	dbpkg "autorepairos/internal/db"
 )
 
 // bgCtx is the shared background context for service tests.
@@ -75,6 +77,9 @@ func setupTestDB(t *testing.T) *sql.DB {
 		if _, err := db.Exec(s); err != nil {
 			t.Fatalf("setupTestDB: %v\nSQL: %s", err, s)
 		}
+	}
+	if err := ensureWOISoftDelete(t, db); err != nil {
+		t.Fatal(err)
 	}
 	return db
 }
@@ -160,4 +165,11 @@ func errRow(db *sql.DB) *sql.Row {
 // noRowsRow returns a *sql.Row whose Scan returns sql.ErrNoRows.
 func noRowsRow(db *sql.DB) *sql.Row {
 	return db.QueryRow("SELECT 1 WHERE 0")
+}
+
+// ensureWOISoftDelete 讓「自走 CREATE TABLE」的測試也有 work_order_items 的
+// 軟刪除欄與 active_work_order_items 視（正式庫由 migration 052 建立）。
+func ensureWOISoftDelete(t *testing.T, d *sql.DB) error {
+	t.Helper()
+	return dbpkg.EnsureWorkOrderItemsSoftDelete(d)
 }

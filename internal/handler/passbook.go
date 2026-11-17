@@ -145,14 +145,14 @@ func RecordPassbookForWorkOrder(woID int64) error {
 		 discount_amount, total_amount, status)
 		SELECT wo.customer_id, wo.vehicle_id, wo.id, 'repair',
 			COALESCE((SELECT GROUP_CONCAT(description || ' x' || quantity, '、')
-				FROM work_order_items WHERE work_order_id = wo.id), ''),
-			COALESCE((SELECT SUM(subtotal) FROM work_order_items
+				FROM active_work_order_items WHERE work_order_id = wo.id), ''),
+			COALESCE((SELECT SUM(subtotal) FROM active_work_order_items
 				WHERE work_order_id = wo.id AND item_type = 'part'), 0),
-			COALESCE((SELECT SUM(subtotal) FROM work_order_items
+			COALESCE((SELECT SUM(subtotal) FROM active_work_order_items
 				WHERE work_order_id = wo.id AND item_type = 'labor'), 0),
-			COALESCE((SELECT SUM(subtotal) FROM work_order_items
+			COALESCE((SELECT SUM(subtotal) FROM active_work_order_items
 				WHERE work_order_id = wo.id AND item_type = 'subcontract'), 0),
-			COALESCE((SELECT SUM(subtotal) FROM work_order_items
+			COALESCE((SELECT SUM(subtotal) FROM active_work_order_items
 				WHERE work_order_id = wo.id), 0),
 			0, 0, ?, 'paid'
 		FROM active_work_orders wo

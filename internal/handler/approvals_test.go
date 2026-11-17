@@ -40,6 +40,9 @@ func setupApprovalTestDB(t *testing.T) *sql.DB {
 			t.Fatalf("建立測試資料失敗: %v (SQL: %s)", err, s)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 
 	return d
 }

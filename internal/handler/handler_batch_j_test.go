@@ -129,6 +129,9 @@ func batchJDeferredFKDB(t *testing.T) {
 			t.Fatalf("setup failed: %v\nSQL: %s", err, stmt)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 	// 遞延外鍵只在明確開啟時才檢查。
 	if _, err := d.Exec("PRAGMA foreign_keys=ON"); err != nil {
 		t.Fatalf("enable foreign keys: %v", err)

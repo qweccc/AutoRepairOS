@@ -100,11 +100,11 @@ func loadReportExportRows(ctx context.Context, from, to string, showCost bool) (
 	subcontractCostColumn := ""
 	if showCost {
 		partsCostColumn = `COALESCE((SELECT SUM(COALESCE(i.cost_price,0) * cost_item.quantity)
-			FROM work_order_items cost_item
+			FROM active_work_order_items cost_item
 			LEFT JOIN active_inventory_items i ON i.id = cost_item.inventory_item_id
 			WHERE cost_item.work_order_id = wo.id AND cost_item.item_type='part'),0),`
 		subcontractCostColumn = `COALESCE((SELECT SUM(sub_item.subtotal)
-			FROM work_order_items sub_item
+			FROM active_work_order_items sub_item
 			WHERE sub_item.work_order_id = wo.id AND sub_item.item_type='subcontract'),0),`
 	}
 	query := `SELECT wo.id, COALESCE(c.name,''), date(wo.created_at),
@@ -149,7 +149,7 @@ func loadReportExportRows(ctx context.Context, from, to string, showCost bool) (
 		COALESCE(wo.discount_amount,0), COALESCE(wo.total_amount,0)
 		FROM active_work_orders wo
 		LEFT JOIN active_customers c ON c.id=wo.customer_id
-		LEFT JOIN work_order_items item ON item.work_order_id=wo.id
+		LEFT JOIN active_work_order_items item ON item.work_order_id=wo.id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY wo.id, c.name
 		ORDER BY wo.id`

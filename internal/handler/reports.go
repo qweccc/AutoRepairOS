@@ -87,7 +87,7 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	// 每張表只放一列（GROUP BY 讓每個 description 一列），所以要分組累積。
 	itemRows, _ := db.DB.Query(`SELECT wo.is_insurance, woi.description,
 		COALESCE(SUM(woi.quantity),0), COALESCE(SUM(woi.subtotal),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		WHERE date(wo.created_at) BETWEEN ? AND ?
 		GROUP BY wo.is_insurance, woi.description

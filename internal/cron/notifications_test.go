@@ -58,6 +58,9 @@ func notificationTestDB(t *testing.T) *sql.DB {
 			t.Fatal(err)
 		}
 	}
+	if err := db.EnsureWorkOrderItemsSoftDelete(d); err != nil {
+		t.Fatal(err)
+	}
 	return d
 }
 

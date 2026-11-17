@@ -200,4 +200,7 @@ func setupReportsExportTestDB(t *testing.T) {
 			t.Fatalf("setup report export database: %v", err)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }

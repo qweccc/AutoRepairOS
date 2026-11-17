@@ -371,7 +371,7 @@ func ShowVehicle(w http.ResponseWriter, r *http.Request, user model.User) {
 	var partsTable string
 	prows, perr := db.DB.Query(`SELECT woi.description, SUM(woi.quantity), MAX(woi.unit_price),
 		COUNT(DISTINCT woi.work_order_id)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		WHERE wo.vehicle_id = ?
 		GROUP BY woi.description

@@ -23,6 +23,9 @@ func TestRecalcWorkOrderTotal(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := d.Exec(`INSERT INTO work_orders (id, total_amount) VALUES (1, 0)`); err != nil {
 		t.Fatal(err)
 	}

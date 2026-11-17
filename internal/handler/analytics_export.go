@@ -72,7 +72,7 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 	rows, _ := db.DB.Query(`SELECT woi.item_type, COALESCE(SUM(woi.subtotal),0), COALESCE(SUM(woi.quantity),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='part' THEN COALESCE(i.cost_price,0)*woi.quantity ELSE 0 END),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='subcontract' THEN woi.subtotal ELSE 0 END),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?
@@ -107,10 +107,10 @@ func AnalyticsExport(w http.ResponseWriter, r *http.Request) {
 	woRows, _ := db.DB.Query(`SELECT wo.id, COALESCE(c.name,''), date(wo.created_at),
 			COALESCE(wo.total_amount,0), COALESCE(wo.discount_amount,0), COALESCE(wo.is_warranty,0),
 			COALESCE((SELECT SUM(COALESCE(i.cost_price,0)*woi.quantity)
-				FROM work_order_items woi
+				FROM active_work_order_items woi
 				LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 				WHERE woi.work_order_id = wo.id AND woi.item_type='part'),0),
-			COALESCE((SELECT SUM(sub.subtotal) FROM work_order_items sub
+			COALESCE((SELECT SUM(sub.subtotal) FROM active_work_order_items sub
 				WHERE sub.work_order_id = wo.id AND sub.item_type='subcontract'),0)
 		FROM active_work_orders wo LEFT JOIN active_customers c ON c.id = wo.customer_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?

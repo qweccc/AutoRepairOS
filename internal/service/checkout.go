@@ -305,7 +305,7 @@ func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 
 			// 回沖庫存：加回零件並記錄異動
 			rows, err := tx.QueryContext(ctx, `SELECT inventory_item_id, quantity
-				FROM work_order_items
+				FROM active_work_order_items
 				WHERE work_order_id = ? AND item_type = 'part'
 					AND inventory_item_id > 0 AND quantity > 0
 				ORDER BY id`, workOrderID)
@@ -459,11 +459,11 @@ func (s *Service) checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, a
 	// 同步工單總金額（以明細加總為準），避免明細與總額不一致導致結帳金額錯誤
 	// 測試環境 schema 可能與實際 schema 不同，儘量嘗試各種方式，若失敗則跳過重算
 	if _, err := tx.ExecContext(ctx, `UPDATE work_orders SET total_amount =
-		COALESCE((SELECT SUM(COALESCE(subtotal, COALESCE(quantity,0)*COALESCE(unit_price,0))) FROM work_order_items WHERE work_order_id = ?), COALESCE(total_amount,0)),
+		COALESCE((SELECT SUM(COALESCE(subtotal, COALESCE(quantity,0)*COALESCE(unit_price,0))) FROM active_work_order_items WHERE work_order_id = ?), COALESCE(total_amount,0)),
 		updated_at = CURRENT_TIMESTAMP WHERE id = ?`, workOrderID, workOrderID); err == nil {
 		// ok
 	} else if _, err2 := tx.ExecContext(ctx, `UPDATE work_orders SET total_amount =
-		COALESCE((SELECT SUM(COALESCE(quantity,0)*COALESCE(unit_price,0)) FROM work_order_items WHERE work_order_id = ?), COALESCE(total_amount,0)),
+		COALESCE((SELECT SUM(COALESCE(quantity,0)*COALESCE(unit_price,0)) FROM active_work_order_items WHERE work_order_id = ?), COALESCE(total_amount,0)),
 		updated_at = CURRENT_TIMESTAMP WHERE id = ?`, workOrderID, workOrderID); err2 == nil {
 		// ok
 	} else {
@@ -506,7 +506,7 @@ func (s *Service) checkoutTx(ctx context.Context, tx sqlExecutor, workOrderID, a
 	_ = customerID
 
 	rows, err := tx.QueryContext(ctx, `SELECT inventory_item_id, quantity
-		FROM work_order_items
+		FROM active_work_order_items
 		WHERE work_order_id = ? AND item_type = 'part'
 			AND inventory_item_id > 0 AND quantity > 0
 		ORDER BY id`, workOrderID)

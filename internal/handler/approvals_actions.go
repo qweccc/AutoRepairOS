@@ -345,7 +345,7 @@ func getCustomer(id int64) (*model.Customer, error) {
 func getWorkOrderItems(woID int64) ([]model.WorkOrderItem, error) {
 	rows, err := db.DB.Query(
 		`SELECT id, item_type, description, quantity, unit_price, subtotal
-			FROM work_order_items WHERE work_order_id = ?`,
+			FROM active_work_order_items WHERE work_order_id = ?`,
 		woID,
 	)
 	if err != nil {

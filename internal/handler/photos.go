@@ -74,7 +74,7 @@ func UploadWorkOrderPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	if itemID > 0 {
 		var found int
-		if err := db.DB.QueryRow(`SELECT COUNT(1) FROM work_order_items
+		if err := db.DB.QueryRow(`SELECT COUNT(1) FROM active_work_order_items
 			WHERE id = ? AND work_order_id = ?`, itemID, woID).Scan(&found); err != nil {
 			http.Error(w, "驗證工單項目失敗", http.StatusInternalServerError)
 			return

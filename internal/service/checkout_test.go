@@ -63,6 +63,9 @@ func newCheckoutTestDB(t *testing.T) *sql.DB {
 			t.Fatalf("setup database: %v\nSQL: %s", err, statement)
 		}
 	}
+	if err := ensureWOISoftDelete(t, db); err != nil {
+		t.Fatal(err)
+	}
 	return db
 }
 

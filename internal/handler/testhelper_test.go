@@ -26,3 +26,11 @@ func openTestDB(t *testing.T) (*sql.DB, error) {
 	t.Cleanup(func() { _ = d.Close() })
 	return d, nil
 }
+
+// ensureWOISoftDelete 讓「自走 CREATE TABLE」的測試也有 work_order_items 的
+// 軟刪除欄與 active_work_order_items 視（正式庫由 migration 052 建立）。
+// 沒有它，所有改讀 active 視的 handler 會因 view 不存在而失敗。
+func ensureWOISoftDelete(t *testing.T, d *sql.DB) error {
+	t.Helper()
+	return db.EnsureWorkOrderItemsSoftDelete(d)
+}

@@ -158,6 +158,9 @@ func setupAnalyticsChartTestDB(t *testing.T) {
 			t.Fatalf("setup analytics chart database: %v", err)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func parseChartAmount(t *testing.T, value string) float64 {

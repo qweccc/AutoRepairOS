@@ -69,7 +69,7 @@ func analyticsPeriodCosts(from, to string) analyticsCosts {
 				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='subcontract'
 				THEN woi.subtotal ELSE 0 END),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		JOIN active_work_orders wo ON wo.id = woi.work_order_id
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE wo.status='paid' AND date(wo.created_at) BETWEEN ? AND ?`, from, to).
@@ -108,7 +108,7 @@ func workOrderCostByID(woID int64) workOrderCostComponents {
 				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='subcontract'
 				THEN woi.subtotal ELSE 0 END),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.work_order_id = ?`, woID).
 		Scan(&out.PartsCost, &out.SubcontractCost)
@@ -145,7 +145,7 @@ func workOrderCostsByIDs(ids []int64) map[int64]workOrderCostComponents {
 				THEN COALESCE(i.cost_price,0) * woi.quantity ELSE 0 END),0),
 			COALESCE(SUM(CASE WHEN woi.item_type='subcontract'
 				THEN woi.subtotal ELSE 0 END),0)
-		FROM work_order_items woi
+		FROM active_work_order_items woi
 		LEFT JOIN active_inventory_items i ON i.id = woi.inventory_item_id
 		WHERE woi.work_order_id IN (`+in+`)
 		GROUP BY woi.work_order_id`, args...)

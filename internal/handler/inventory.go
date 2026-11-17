@@ -188,7 +188,7 @@ func ApplyStockAdjust(w http.ResponseWriter, r *http.Request) {
 func DeleteInventoryItem(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
 
-	used := countRows("SELECT COUNT(1) FROM work_order_items WHERE inventory_item_id = ?", id)
+	used := countRows("SELECT COUNT(1) FROM active_work_order_items WHERE inventory_item_id = ?", id)
 	if used > 0 {
 		fail(w, "此零件已被工單引用，無法刪除")
 		return

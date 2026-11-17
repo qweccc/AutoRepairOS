@@ -64,7 +64,7 @@ func queueWorkOrderCompletedNotification(woID, customerID int64) (bool, error) {
 	}
 
 	rows, err := db.DB.Query(`SELECT description, COALESCE(quantity,1)
-		FROM work_order_items WHERE work_order_id = ? ORDER BY id`, woID)
+		FROM active_work_order_items WHERE work_order_id = ? ORDER BY id`, woID)
 	if err != nil {
 		return false, fmt.Errorf("讀取工單 #%d 項目摘要失敗: %w", woID, err)
 	}

@@ -66,6 +66,12 @@ func Migrate() error {
 		log.Printf("已套用 migration: %s", version)
 	}
 
+	// 軟刪除表/視的最佳保證點：migration 是主要來源，這裡再確保一次，
+	// 讓「讀取路徑改呼叫 active_* 視」這件事不會因為漏跑 migration 而壞掉。
+	if err := EnsureWorkOrderItemsSoftDelete(DB); err != nil {
+		return fmt.Errorf("確保 work_order_items 軟刪除結構失敗: %w", err)
+	}
+
 	return nil
 }
 
