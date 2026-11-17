@@ -42,7 +42,7 @@ type Route struct {
 	// nav_roles_sync_test.go 的 effectiveRoleOverrides）。其餘 AllStaff 頁面
 	// （/staff、/purchase-orders、/inventory、/suppliers…）技師真的看得到。
 	//
-	// 手冊 docs/USER_GUIDE_zh-TW.md 有同一份清單，由
+	// 手冊 docs/user-guide/USER_GUIDE_zh-TW.md 有同一份清單，由
 	// TestManualRoleVisibilityMatchesNav 交叉比對，改這裡要一起改。
 	Roles []string
 }

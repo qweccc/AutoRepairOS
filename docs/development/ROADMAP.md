@@ -137,7 +137,7 @@
 
 ### Templ 覆蓋手法
 
-templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後一次 flush 才觸發，所以 per-write error 分支涵蓋不到。做法：在測試的 `init()` 把 `templruntime.DefaultBufferSize` 設為 1，每次 write 都 flush（`web/pages/pages_writer_sweep_test.go`，函式列表由 `tools/gen_writer_sweep.py` 從 `*_templ.go` 簽名產生）。components 77.3%→91.2% 由此而來。
+templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後一次 flush 才觸發，所以 per-write error 分支涵蓋不到。做法：在測試的 `init()` 把 `templruntime.DefaultBufferSize` 設為 1，每次 write 都 flush（`web/pages/pages_writer_sweep_test.go`，函式列表由本機產生器（不進版控）從 `*_templ.go` 簽名產生）。components 77.3%→91.2% 由此而來。
 
 ## Access 匯入工具修正（外部 review，2026-10-29 已逐條對程式碼驗證）
 

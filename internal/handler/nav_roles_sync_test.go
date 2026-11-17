@@ -135,7 +135,7 @@ func sameRoleSet(a, b []string) bool {
 // 這種漏字用眼睛看不出來，只能靠比對。
 func TestManualRoleVisibilityMatchesNav(t *testing.T) {
 	navSrc := readRepoFile(t, filepath.Join("internal", "nav", "nav.go"))
-	manual := readRepoFile(t, filepath.Join("docs", "USER_GUIDE_zh-TW.md"))
+	manual := readRepoFile(t, filepath.Join("docs", "user-guide", "USER_GUIDE_zh-TW.md"))
 
 	entries := regexp.MustCompile(`\{Path:\s*"([^"]+)",\s*Name:\s*"([^"]+)",\s*Group:\s*"[^"]+",\s*NameKey:\s*"[^"]+",\s*GroupKey:\s*"[^"]+",\s*Roles:\s*([A-Za-z]+)\}`).
 		FindAllStringSubmatch(navSrc, -1)

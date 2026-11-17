@@ -37,7 +37,7 @@ copy .env.example .env
 .\deploy.cmd
 ```
 
-詳細安裝與操作步驟請見 [使用指南](docs/USER_GUIDE_zh-TW.md)。
+詳細安裝與操作步驟請見 [使用指南](docs/user-guide/USER_GUIDE_zh-TW.md)。
 
 ## 測試與品質
 
@@ -57,7 +57,7 @@ copy .env.example .env
 | web/pages | 82.4% |
 | web/components | 91.2% |
 
-`web/pages`、`web/components` 的 statements 由 `*_templ.go` 生成碼主導，光靠 render test 只能到 70% 左右。這裡用的手法是 **failing-writer sweep**：把 templ 的 render buffer 縮成 1 byte，讓每次 write 都 flush，生成碼裡的 per-write error 分支才談得上覆蓋（產生器 `tools/gen_writer_sweep.py`）。
+`web/pages`、`web/components` 的 statements 由 `*_templ.go` 生成碼主導，光靠 render test 只能到 70% 左右。這裡用的手法是 **failing-writer sweep**：把 templ 的 render buffer 縮成 1 byte，讓每次 write 都 flush，生成碼裡的 per-write error 分支才談得上覆蓋（產生器是本機工具、不進版控，產物為 `web/pages/pages_writer_sweep_test.go`）。
 
 介面為雙語：`locales/zh-TW.json` 與 `locales/en.json` 各 1337 個 key，完全對齊。字典已內嵌進 binary，Windows exe 與 Docker image 不再需要工作目錄下有 `locales/` 也能正常翻譯。
 

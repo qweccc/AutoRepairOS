@@ -1,6 +1,6 @@
 // Package vision 提供行照/車牌的視覺辨識（OCR）能力。
 //
-// 分層混合策略（對應 docs/DEVELOPMENT.md）：
+// 分層混合策略（對應 docs/development/DEVELOPMENT.md）：
 //   - cloud 模式：呼叫外部 AI Vision API（預設 Gemini，也可接任何 OpenAI 相容
 //     的 vision endpoint）。準確率最高、開發最快，但需連網。
 //   - local 模式：呼叫區網本地 API 端點（車廠自架 Ollama+LLaVA、PaddleOCR 等）。

@@ -44,6 +44,9 @@ _*.ps1
 _*.sh
 _*.bat
 _*.py
+
+# 本機開發工具（一次性產生器/分析腳本，不進版控）
+/tools/
 out_utf.txt
 out.txt
 *.tmp

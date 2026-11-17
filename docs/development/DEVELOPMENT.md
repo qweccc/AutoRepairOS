@@ -67,8 +67,16 @@ AutoRepairOS/
 │   ├── cron/                # 排程任務
 │   └── integration/         # line、telegram 外部整合
 └── docs/
-    ├── SRS.md               # 需求規格
-    └── DEVELOPMENT.md       # 本文件（含 CSS 設計系統，§9）
+    ├── README.md              # 文件索引（SRS／使用手冊／開發手冊）
+    ├── srs/
+    │   └── SRS.md             # 需求規格
+    ├── user-guide/
+    │   └── USER_GUIDE_zh-TW.md # 使用手冊（安裝、操作、備份還原）
+    └── development/
+        ├── DEVELOPMENT.md     # 本文件（開發規範，含 CSS 設計系統 §9）
+        ├── ROADMAP.md         # 路線圖與進度
+        ├── ROUTES_MIGRATION.md # 路由遷移階段紀錄
+        └── THERMO_NUCLEAR_REMEDIATION.md # 程式品質改善計畫
 ```
 
 **分工原則：**
