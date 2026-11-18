@@ -232,7 +232,7 @@ func loadEstimate(id int64) (pages.EstimateDetail, []pages.EstimateItemRow, erro
 		return e, nil, err
 	}
 	rows, err := db.DB.Query(`SELECT id, item_type, description, quantity, unit_price, subtotal
-		FROM estimate_items WHERE estimate_id = ? ORDER BY id`, id)
+		FROM active_estimate_items WHERE estimate_id = ? ORDER BY id`, id)
 	if err != nil {
 		return e, nil, err
 	}

@@ -112,7 +112,7 @@ func (s *Service) DeleteEstimateItem(ctx context.Context, estimateID, itemID int
 			return err
 		}
 		result, err := tx.ExecContext(ctx,
-			`DELETE FROM estimate_items WHERE id = ? AND estimate_id = ?`, itemID, estimateID)
+			`UPDATE estimate_items SET deleted_at = datetime('now') WHERE id = ? AND estimate_id = ? AND deleted_at IS NULL`, itemID, estimateID)
 		if err != nil {
 			return fmt.Errorf("delete estimate item: %w", err)
 		}
@@ -140,7 +140,7 @@ func (s *Service) SetEstimateDiscount(ctx context.Context, estimateID int64, dis
 		}
 		var subtotal float64
 		if err := tx.QueryRowContext(ctx,
-			`SELECT COALESCE(SUM(subtotal),0) FROM estimate_items WHERE estimate_id = ?`,
+			`SELECT COALESCE(SUM(subtotal),0) FROM active_estimate_items WHERE estimate_id = ?`,
 			estimateID).Scan(&subtotal); err != nil {
 			return fmt.Errorf("calculate estimate subtotal: %w", err)
 		}
@@ -190,7 +190,7 @@ func (s *Service) ConvertEstimate(ctx context.Context, estimateID int64) (int64,
 			return ErrEstimateNotDraft
 		}
 		var itemCount int
-		if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM estimate_items WHERE estimate_id = ?`,
+		if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM active_estimate_items WHERE estimate_id = ?`,
 			estimateID).Scan(&itemCount); err != nil {
 			return fmt.Errorf("count estimate items: %w", err)
 		}
@@ -215,7 +215,7 @@ func (s *Service) ConvertEstimate(ctx context.Context, estimateID int64) (int64,
 			 subtotal, primary_technician_id, assistant_technician_id, photo_url)
 			SELECT ?, item_type, inventory_item_id, description, quantity, unit_price,
 			 subtotal, primary_technician_id, assistant_technician_id, photo_url
-			FROM estimate_items WHERE estimate_id = ? ORDER BY id`, workOrderID, estimateID); err != nil {
+			FROM active_estimate_items WHERE estimate_id = ? ORDER BY id`, workOrderID, estimateID); err != nil {
 			return fmt.Errorf("copy estimate items to work order: %w", err)
 		}
 		if _, err := tx.ExecContext(ctx, `UPDATE estimates SET
@@ -246,11 +246,11 @@ func requireDraftEstimate(ctx context.Context, tx sqlExecutor, estimateID int64)
 func recalculateEstimate(ctx context.Context, tx sqlExecutor, estimateID int64) error {
 	_, err := tx.ExecContext(ctx, `UPDATE estimates SET
 		discount_amount = MIN(discount_amount,
-			COALESCE((SELECT SUM(subtotal) FROM estimate_items WHERE estimate_id = ?),0)),
+			COALESCE((SELECT SUM(subtotal) FROM active_estimate_items WHERE estimate_id = ?),0)),
 		total_amount = MAX(
-			COALESCE((SELECT SUM(subtotal) FROM estimate_items WHERE estimate_id = ?),0) -
+			COALESCE((SELECT SUM(subtotal) FROM active_estimate_items WHERE estimate_id = ?),0) -
 			MIN(discount_amount,
-				COALESCE((SELECT SUM(subtotal) FROM estimate_items WHERE estimate_id = ?),0)), 0)
+				COALESCE((SELECT SUM(subtotal) FROM active_estimate_items WHERE estimate_id = ?),0)), 0)
 		WHERE id = ?`, estimateID, estimateID, estimateID, estimateID)
 	if err != nil {
 		return fmt.Errorf("recalculate estimate total: %w", err)

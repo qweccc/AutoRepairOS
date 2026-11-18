@@ -171,5 +171,8 @@ func noRowsRow(db *sql.DB) *sql.Row {
 // 軟刪除欄與 active_work_order_items 視（正式庫由 migration 052 建立）。
 func ensureWOISoftDelete(t *testing.T, d *sql.DB) error {
 	t.Helper()
-	return dbpkg.EnsureWorkOrderItemsSoftDelete(d)
+	if err := dbpkg.EnsureWorkOrderItemsSoftDelete(d); err != nil {
+		return err
+	}
+	return dbpkg.EnsureEstimateItemsSoftDelete(d)
 }

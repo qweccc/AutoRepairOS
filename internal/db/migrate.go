@@ -71,6 +71,9 @@ func Migrate() error {
 	if err := EnsureWorkOrderItemsSoftDelete(DB); err != nil {
 		return fmt.Errorf("確保 work_order_items 軟刪除結構失敗: %w", err)
 	}
+	if err := EnsureEstimateItemsSoftDelete(DB); err != nil {
+		return fmt.Errorf("確保 estimate_items 軟刪除結構失敗: %w", err)
+	}
 
 	return nil
 }

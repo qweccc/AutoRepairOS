@@ -32,5 +32,8 @@ func openTestDB(t *testing.T) (*sql.DB, error) {
 // 沒有它，所有改讀 active 視的 handler 會因 view 不存在而失敗。
 func ensureWOISoftDelete(t *testing.T, d *sql.DB) error {
 	t.Helper()
-	return db.EnsureWorkOrderItemsSoftDelete(d)
+	if err := db.EnsureWorkOrderItemsSoftDelete(d); err != nil {
+		return err
+	}
+	return db.EnsureEstimateItemsSoftDelete(d)
 }

@@ -49,6 +49,9 @@ func newEstimateTestDB(t *testing.T) *sql.DB {
 			t.Fatalf("setup database: %v\nSQL: %s", err, statement)
 		}
 	}
+	if err := ensureWOISoftDelete(t, d); err != nil {
+		t.Fatal(err)
+	}
 	return d
 }
 
@@ -149,13 +152,20 @@ func TestDeleteEstimateItem(t *testing.T) {
 	if err := svc.DeleteEstimateItem(ctx, estimateID, itemID); err != nil {
 		t.Fatalf("DeleteEstimateItem: %v", err)
 	}
-	// Verify deleted
+	// 軟刪除：列保留但標記 deleted_at，且不再出現在 active 視（讀取路徑都用它）。
 	var count int
-	if err := d.QueryRow(`SELECT COUNT(*) FROM estimate_items WHERE id = ?`, itemID).Scan(&count); err != nil {
+	if err := d.QueryRow(`SELECT COUNT(*) FROM active_estimate_items WHERE id = ?`, itemID).Scan(&count); err != nil {
 		t.Fatal(err)
 	}
 	if count != 0 {
-		t.Errorf("item should be deleted, got count %d", count)
+		t.Errorf("item should be gone from active view, got count %d", count)
+	}
+	var marked int
+	if err := d.QueryRow(`SELECT deleted_at IS NOT NULL FROM estimate_items WHERE id = ?`, itemID).Scan(&marked); err != nil {
+		t.Fatal(err)
+	}
+	if marked != 1 {
+		t.Error("item row should be kept with deleted_at set (soft delete)")
 	}
 	// Delete non-existent should fail
 	if err := svc.DeleteEstimateItem(ctx, estimateID, 9999); err == nil {
