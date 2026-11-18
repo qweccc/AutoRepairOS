@@ -1713,5 +1713,15 @@
   "approval.photos": "維修照片",
   "photomark.item": "關聯工單明細（選填）",
   "receivable.field.credit": "賒帳（月結）",
-  "paymethod.credit": "賒帳（月結）"
+  "paymethod.credit": "賒帳（月結）",
+  "reports.ar_list": "應收帳款清單",
+  "reports.ar_list_note": "已結帳但尚未全額收款的工單；「應收日期」為結帳日，天數由該日起算（本系統未另存到期日欄）。",
+  "reports.ar_empty": "目前沒有應收帳款。",
+  "reports.field.customer": "客戶",
+  "reports.field.plate": "車牌",
+  "reports.field.date": "應收日期",
+  "reports.field.days": "天數",
+  "reports.field.amount": "應收金額",
+  "reports.field.received": "已收",
+  "reports.field.unpaid": "未收"
 }

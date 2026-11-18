@@ -1713,5 +1713,15 @@
   "approval.photos": "Repair photos",
   "photomark.item": "Link to work order item (optional)",
   "receivable.field.credit": "Credit (monthly)",
-  "paymethod.credit": "Credit (monthly)"
+  "paymethod.credit": "Credit (monthly)",
+  "reports.ar_list": "Accounts Receivable",
+  "reports.ar_list_note": "Checked-out work orders not yet fully paid; the receivable date is the checkout date and days are counted from it (no separate due-date field).",
+  "reports.ar_empty": "No outstanding receivables.",
+  "reports.field.customer": "Customer",
+  "reports.field.plate": "Plate",
+  "reports.field.date": "Receivable date",
+  "reports.field.days": "Days",
+  "reports.field.amount": "Amount",
+  "reports.field.received": "Received",
+  "reports.field.unpaid": "Unpaid"
 }

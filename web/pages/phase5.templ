@@ -33,6 +33,24 @@ type Phase5ReportData struct {
 	Low []Phase5ReportLowRow
 	Aging []Phase5ReportAgingRow
 	AgingTotalCount, AgingTotalAmount string
+	ArRows                            []Phase5ReportARRow
+}
+type Phase5ReportARRow struct {
+	Customer, Plate, DateText, Days, Total, Received, Unpaid, BucketLabel, Class string
+}
+
+// agingPill 帳齡分桶的膠囊樣式。
+func agingPill(bucket string) string {
+	switch bucket {
+	case "0-30":
+		return "p-completed"
+	case "31-60":
+		return "p-apprpend"
+	case "61-90":
+		return "p-waitparts"
+	default:
+		return "p-apprno"
+	}
 }
 type Phase5AnalyticsData struct {
 	From, To, GroupBy, Gran string
@@ -204,6 +222,19 @@ templ ReportsPage(data Phase5ReportData, user model.User) {
 				<tr><td>{ row.Label }</td><td class="num">{ row.Count }</td><td class="num">{ row.Amount }</td></tr>
 			}
 			<tr><td>{ i18n.T(ctx, "reports.total") }</td><td class="num">{ data.AgingTotalCount }</td><td class="num">{ data.AgingTotalAmount }</td></tr></table></div>
+		<div class="card"><h2>{ i18n.T(ctx, "reports.ar_list") }</h2>
+			<p style="color:var(--muted);font-size:12.5px">{ i18n.T(ctx, "reports.ar_list_note") }</p>
+			if len(data.ArRows) == 0 {
+				<div class="empty">{ i18n.T(ctx, "reports.ar_empty") }</div>
+			}
+			if len(data.ArRows) > 0 {
+				<table><tr><th>{ i18n.T(ctx, "reports.field.customer") }</th><th>{ i18n.T(ctx, "reports.field.plate") }</th><th>{ i18n.T(ctx, "reports.field.date") }</th><th class="num">{ i18n.T(ctx, "reports.field.days") }</th><th class="num">{ i18n.T(ctx, "reports.field.amount") }</th><th class="num">{ i18n.T(ctx, "reports.field.received") }</th><th class="num">{ i18n.T(ctx, "reports.field.unpaid") }</th><th>{ i18n.T(ctx, "reports.field.aging_bucket") }</th></tr>
+					for _, row := range data.ArRows {
+						<tr><td>{ row.Customer }</td><td>{ row.Plate }</td><td>{ row.DateText }</td><td class="num">{ row.Days }</td><td class="num">{ row.Total }</td><td class="num">{ row.Received }</td><td class="num">{ row.Unpaid }</td><td><span class={ "pill " + agingPill(row.BucketLabel) }>{ row.BucketLabel }</span></td></tr>
+					}
+				</table>
+			}
+		</div>
 		<div class="card"><h2>{ i18n.T(ctx, "reports.low_title") }</h2>@ReportLowTable(data.Low)</div>
 	}
 	}

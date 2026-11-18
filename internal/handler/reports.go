@@ -163,13 +163,19 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 	agingTotalCount := 0
 	agingTotalAmount := 0.0
 	agingRows, _ := db.DB.Query(`SELECT wo.id, wo.total_amount, COALESCE(wo.updated_at, wo.created_at),
-		COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0)
-		FROM active_work_orders wo WHERE wo.status = 'completed'`)
+		COALESCE((SELECT SUM(r.pay_total) FROM receivables r WHERE r.work_order_id = wo.id AND r.voided = 0), 0),
+		COALESCE(c.name,''), COALESCE(v.plate_number,'')
+		FROM active_work_orders wo
+		LEFT JOIN active_customers c ON c.id = wo.customer_id
+		LEFT JOIN active_vehicles v ON v.id = wo.vehicle_id
+		WHERE wo.status = 'completed'`)
+	var arRows []pages.Phase5ReportARRow
 	if agingRows != nil {
 		for agingRows.Next() {
 			var total, received float64
 			var updatedAt string
-			if agingRows.Scan(new(int64), &total, &updatedAt, &received) != nil {
+			var customerName, plate string
+			if agingRows.Scan(new(int64), &total, &updatedAt, &received, &customerName, &plate) != nil {
 				continue
 			}
 			unpaid := total - received
@@ -193,6 +199,15 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 			agingAmounts[bucket] += unpaid
 			agingTotalCount++
 			agingTotalAmount += unpaid
+			cls := ""
+			if bucket == "90+" {
+				cls = "color-red"
+			}
+			arRows = append(arRows, pages.Phase5ReportARRow{
+				Customer: customerName, Plate: plate, DateText: normDate(updatedAt),
+				Days: strconv.Itoa(days), Total: money(total), Received: money(received),
+				Unpaid: money(unpaid), BucketLabel: bucket, Class: cls,
+			})
 		}
 		agingRows.Close()
 	}
@@ -210,5 +225,6 @@ func ReportsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		InsurancePct: pctText(insRevenue, insRevenue+selfRevenue), AnalyticsLink: user.Role == "owner" || user.Role == "counter",
 		StatusSelf: statusRowsFor(false), StatusIns: statusRowsFor(true), ItemsSelf: itemRowsFor(false), ItemsIns: itemRowsFor(true),
 		Tech: techTable, Low: lowTable, Aging: aging, AgingTotalCount: strconv.Itoa(agingTotalCount), AgingTotalAmount: money(agingTotalAmount),
+		ArRows: arRows,
 	}, user).Render(r.Context(), w)
 }
