@@ -44,14 +44,14 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 	var payDate string
 	err := db.DB.QueryRow(`SELECT r.id, r.voucher_no, r.customer_id, COALESCE(c.name,''),
 		COALESCE(r.pay_date,''), r.detail_total, r.real_total, r.discount, r.tax, r.pay_total,
-		r.cash, r.card, r.check_amount, r.transfer_amount,
+		r.cash, r.credit_amount, r.card, r.check_amount, r.transfer_amount,
 		COALESCE(r.transfer_reference,''),
 		COALESCE(r.card_no,''), COALESCE(r.check_no,''), COALESCE(r.check_date,''),
 		COALESCE(r.bank,''), COALESCE(r.notes,''), COALESCE(r.voided,0)
 		FROM receivables r JOIN active_customers c ON c.id = r.customer_id WHERE r.id = ?`, id).
 		Scan(&v.ID, &v.VoucherNo, &v.CustomerID, &v.CustomerName,
 			&payDate, &v.DetailTotal, &v.RealTotal, &v.Discount, &v.Tax, &v.PayTotal,
-			&v.Cash, &v.Card, &v.CheckAmount, &v.TransferAmount, &v.TransferReference,
+			&v.Cash, &v.CreditAmount, &v.Card, &v.CheckAmount, &v.TransferAmount, &v.TransferReference,
 			&v.CardNo, &v.CheckNo, &v.CheckDate, &v.Bank, &v.Notes, &v.Voided)
 	if err != nil {
 		http.NotFound(w, r)
@@ -90,7 +90,7 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
 
 	var payB strings.Builder
 	payB.WriteString(`<table class="amt"><tr><th>` + i18n.T(r.Context(), "print.receipt.col_method") + `</th><th class="num">` + i18n.T(r.Context(), "print.receipt.col_amount") + `</th><th>` + i18n.T(r.Context(), "print.receipt.col_note") + `</th></tr>`)
-	rows := payMethodRows(r.Context(), v.Cash, v.Card, v.CheckAmount, v.TransferAmount)
+	rows := payMethodRows(r.Context(), v.Cash, v.CreditAmount, v.Card, v.CheckAmount, v.TransferAmount)
 	if len(rows) == 0 {
 		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">` + i18n.T(r.Context(), "print.receipt.not_recorded") + `</td></tr>`)
 	}

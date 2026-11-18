@@ -50,7 +50,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 		`CREATE TABLE receivables (
 			id INTEGER PRIMARY KEY, voucher_no TEXT NOT NULL, customer_id INTEGER NOT NULL,
 			vehicle_id INTEGER, work_order_id INTEGER, pay_date TEXT, detail_total REAL,
-			real_total REAL, discount REAL, tax REAL, pay_total REAL, cash REAL, card REAL,
+			real_total REAL, discount REAL, tax REAL, pay_total REAL, cash REAL, credit_amount REAL NOT NULL DEFAULT 0, card REAL,
 			check_amount REAL, transfer_amount REAL DEFAULT 0, transfer_reference TEXT DEFAULT '',
 			card_no TEXT, check_no TEXT, check_date TEXT, bank TEXT,
 			notes TEXT, source TEXT, created_by INTEGER, voided INTEGER NOT NULL DEFAULT 0)`,

@@ -128,7 +128,8 @@ func setupAnalyticsChartTestDB(t *testing.T) {
 		`CREATE VIEW active_inventory_items AS SELECT * FROM inventory_items WHERE deleted_at IS NULL`,
 		`CREATE TABLE receivables (
 			id INTEGER PRIMARY KEY, work_order_id INTEGER, voided INTEGER,
-			cash REAL, card REAL, check_amount REAL, transfer_amount REAL
+			cash REAL, card REAL, check_amount REAL, transfer_amount REAL,
+			credit_amount REAL NOT NULL DEFAULT 0
 		)`,
 		`CREATE TABLE receivable_payments (receivable_id INTEGER, work_order_id INTEGER)`,
 		`CREATE TABLE lookup_items (category TEXT, code TEXT, label TEXT, sort_order INTEGER)`,

@@ -3224,11 +3224,11 @@ func VehicleInspectionFormPage(data InspectionFormData) templ.Component {
 }
 
 type ReceivableFormData struct {
-	Title, Action, VoucherNo, PayDate, CustomerName, CustomerID, WorkOrderID                     string
-	Cash, Card, CardNo, CheckAmount, CheckNo, CheckDate, Bank, TransferAmount, TransferReference string
-	DetailTotal, Discount, Tax, PayTotal, Notes                                                  string
-	Error                                                                                        string
-	User                                                                                         model.User
+	Title, Action, VoucherNo, PayDate, CustomerName, CustomerID, WorkOrderID                             string
+	Cash, Credit, Card, CardNo, CheckAmount, CheckNo, CheckDate, Bank, TransferAmount, TransferReference string
+	DetailTotal, Discount, Tax, PayTotal, Notes                                                          string
+	Error                                                                                                string
+	User                                                                                                 model.User
 }
 
 func ReceivableFormPage(data ReceivableFormData) templ.Component {
@@ -3499,22 +3499,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var217 string
-			templ_7745c5c3_Var217, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.card"))
+			templ_7745c5c3_Var217, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.credit"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 386, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 386, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var217))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 285, "<input name=\"card\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 285, "<input name=\"credit\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var218 string
-			templ_7745c5c3_Var218, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Card).Resolve(ctx)
+			templ_7745c5c3_Var218, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Credit).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 386, Col: 118}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 386, Col: 124}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var218)
 			if templ_7745c5c3_Err != nil {
@@ -3525,22 +3525,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var219 string
-			templ_7745c5c3_Var219, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.card_no"))
+			templ_7745c5c3_Var219, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.card"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 387, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 387, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var219))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 287, "<input name=\"card_no\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 287, "<input name=\"card\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var220 string
-			templ_7745c5c3_Var220, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CardNo).Resolve(ctx)
+			templ_7745c5c3_Var220, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Card).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 387, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 387, Col: 118}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var220)
 			if templ_7745c5c3_Err != nil {
@@ -3551,22 +3551,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var221 string
-			templ_7745c5c3_Var221, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.check_amount"))
+			templ_7745c5c3_Var221, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.card_no"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 388, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 388, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var221))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 289, "<input name=\"check_amount\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 289, "<input name=\"card_no\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var222 string
-			templ_7745c5c3_Var222, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckAmount).Resolve(ctx)
+			templ_7745c5c3_Var222, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CardNo).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 388, Col: 141}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 388, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var222)
 			if templ_7745c5c3_Err != nil {
@@ -3577,22 +3577,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var223 string
-			templ_7745c5c3_Var223, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.check_no"))
+			templ_7745c5c3_Var223, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.check_amount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 389, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 389, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var223))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 291, "<input name=\"check_no\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 291, "<input name=\"check_amount\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var224 string
-			templ_7745c5c3_Var224, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckNo).Resolve(ctx)
+			templ_7745c5c3_Var224, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckAmount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 389, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 389, Col: 141}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var224)
 			if templ_7745c5c3_Err != nil {
@@ -3603,22 +3603,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var225 string
-			templ_7745c5c3_Var225, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.check_date"))
+			templ_7745c5c3_Var225, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.check_no"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 390, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 390, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var225))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 293, "<input name=\"check_date\" type=\"date\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 293, "<input name=\"check_no\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var226 string
-			templ_7745c5c3_Var226, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckDate).Resolve(ctx)
+			templ_7745c5c3_Var226, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckNo).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 390, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 390, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var226)
 			if templ_7745c5c3_Err != nil {
@@ -3629,22 +3629,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var227 string
-			templ_7745c5c3_Var227, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.bank"))
+			templ_7745c5c3_Var227, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.check_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 391, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 391, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var227))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 295, "<input name=\"bank\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 295, "<input name=\"check_date\" type=\"date\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var228 string
-			templ_7745c5c3_Var228, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Bank).Resolve(ctx)
+			templ_7745c5c3_Var228, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.CheckDate).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 391, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 391, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var228)
 			if templ_7745c5c3_Err != nil {
@@ -3655,22 +3655,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var229 string
-			templ_7745c5c3_Var229, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.transfer_amount"))
+			templ_7745c5c3_Var229, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.bank"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 392, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 392, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var229))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 297, "<input name=\"transfer_amount\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 297, "<input name=\"bank\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var230 string
-			templ_7745c5c3_Var230, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TransferAmount).Resolve(ctx)
+			templ_7745c5c3_Var230, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Bank).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 392, Col: 150}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 392, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var230)
 			if templ_7745c5c3_Err != nil {
@@ -3681,87 +3681,87 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var231 string
-			templ_7745c5c3_Var231, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.transfer_ref"))
+			templ_7745c5c3_Var231, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.transfer_amount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 393, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 393, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var231))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 299, "<input name=\"transfer_reference\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 299, "<input name=\"transfer_amount\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var232 string
-			templ_7745c5c3_Var232, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TransferReference).Resolve(ctx)
+			templ_7745c5c3_Var232, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TransferAmount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 393, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 393, Col: 150}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var232)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 300, "\"></label><div class=\"full\" style=\"border-top:1px solid var(--surface-2);padding-top:14px;margin-top:4px\"><p style=\"color:var(--text-sub);font-size:13px;margin:0 0 10px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 300, "\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var233 string
-			templ_7745c5c3_Var233, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.split_hint"))
+			templ_7745c5c3_Var233, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.transfer_ref"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 394, Col: 202}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 394, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var233))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 301, "</p></div><label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 301, "<input name=\"transfer_reference\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var234 string
-			templ_7745c5c3_Var234, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.detail_total"))
+			templ_7745c5c3_Var234, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.TransferReference).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 395, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 394, Col: 122}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var234))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var234)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 302, "<input name=\"detail_total\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 302, "\"></label><div class=\"full\" style=\"border-top:1px solid var(--surface-2);padding-top:14px;margin-top:4px\"><p style=\"color:var(--text-sub);font-size:13px;margin:0 0 10px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var235 string
-			templ_7745c5c3_Var235, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.DetailTotal).Resolve(ctx)
+			templ_7745c5c3_Var235, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.split_hint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 395, Col: 141}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 395, Col: 202}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var235)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var235))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 303, "\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 303, "</p></div><label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var236 string
-			templ_7745c5c3_Var236, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.discount"))
+			templ_7745c5c3_Var236, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.detail_total"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 396, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 396, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var236))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 304, "<input name=\"discount\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 304, "<input name=\"detail_total\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var237 string
-			templ_7745c5c3_Var237, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Discount).Resolve(ctx)
+			templ_7745c5c3_Var237, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.DetailTotal).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 396, Col: 130}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 396, Col: 141}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var237)
 			if templ_7745c5c3_Err != nil {
@@ -3772,22 +3772,22 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var238 string
-			templ_7745c5c3_Var238, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.tax"))
+			templ_7745c5c3_Var238, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.discount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 397, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 397, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var238))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 306, "<input name=\"tax\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 306, "<input name=\"discount\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var239 string
-			templ_7745c5c3_Var239, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Tax).Resolve(ctx)
+			templ_7745c5c3_Var239, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Discount).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 397, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 397, Col: 130}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var239)
 			if templ_7745c5c3_Err != nil {
@@ -3798,80 +3798,106 @@ func ReceivableFormPage(data ReceivableFormData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var240 string
-			templ_7745c5c3_Var240, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.pay_total"))
+			templ_7745c5c3_Var240, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.tax"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 398, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 398, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var240))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 308, "<input name=\"pay_total\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 308, "<input name=\"tax\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var241 string
-			templ_7745c5c3_Var241, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.PayTotal).Resolve(ctx)
+			templ_7745c5c3_Var241, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Tax).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 398, Col: 132}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 398, Col: 115}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var241)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 309, "\"></label> <label class=\"full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 309, "\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var242 string
-			templ_7745c5c3_Var242, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
+			templ_7745c5c3_Var242, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "receivable.field.pay_total"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 399, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 399, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var242))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 310, "<textarea name=\"notes\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 310, "<input name=\"pay_total\" type=\"number\" min=\"0\" step=\"1\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var243 string
-			templ_7745c5c3_Var243, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
+			templ_7745c5c3_Var243, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.PayTotal).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 399, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 399, Col: 132}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var243))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var243)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 311, "</textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 311, "\"></label> <label class=\"full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var244 string
-			templ_7745c5c3_Var244, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.save"))
+			templ_7745c5c3_Var244, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 400, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 400, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var244))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 312, "</button><a class=\"btn btn-s\" href=\"/receivables\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 312, "<textarea name=\"notes\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var245 string
-			templ_7745c5c3_Var245, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.cancel"))
+			templ_7745c5c3_Var245, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 400, Col: 172}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 400, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var245))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 313, "</a></div></form></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 313, "</textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var246 string
+			templ_7745c5c3_Var246, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.save"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 401, Col: 90}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var246))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 314, "</button><a class=\"btn btn-s\" href=\"/receivables\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var247 string
+			templ_7745c5c3_Var247, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.cancel"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 401, Col: 172}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var247))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 315, "</a></div></form></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -3940,7 +3966,7 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		user := data.User
-		templ_7745c5c3_Var247 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var249 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -3956,154 +3982,128 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 314, "<div class=\"card\"><h2>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var248 string
-			templ_7745c5c3_Var248, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "mainttpl.list_heading"), len(data.Rows)))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 448, Col: 75}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var248))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 315, "</h2><p style=\"color:var(--text-sub);font-size:13.5px;margin:0 0 14px\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var249 string
-			templ_7745c5c3_Var249, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.intro"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 449, Col: 101}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var249))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 316, "</p><form method=\"GET\" action=\"/maintenance-templates\" style=\"margin-bottom:12px\"><input name=\"q\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 316, "<div class=\"card\"><h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var250 string
-			templ_7745c5c3_Var250, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Query).Resolve(ctx)
+			templ_7745c5c3_Var250, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(i18n.T(ctx, "mainttpl.list_heading"), len(data.Rows)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 451, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 449, Col: 75}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var250)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var250))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 317, "\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 317, "</h2><p style=\"color:var(--text-sub);font-size:13.5px;margin:0 0 14px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var251 string
-			templ_7745c5c3_Var251, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.search_ph")).Resolve(ctx)
+			templ_7745c5c3_Var251, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.intro"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 451, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 450, Col: 101}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var251)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var251))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 318, "\" style=\"padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px\"> <button class=\"btn btn-p\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 318, "</p><form method=\"GET\" action=\"/maintenance-templates\" style=\"margin-bottom:12px\"><input name=\"q\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var252 string
-			templ_7745c5c3_Var252, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.search"))
+			templ_7745c5c3_Var252, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Query).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 452, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 452, Col: 39}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var252))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var252)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 319, "</button> <a class=\"btn btn-s\" href=\"/maintenance-templates\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 319, "\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var253 string
-			templ_7745c5c3_Var253, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.clear"))
+			templ_7745c5c3_Var253, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.search_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 453, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 452, Col: 89}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var253))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var253)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 320, "</a> <a class=\"btn btn-p\" href=\"/maintenance-templates/new\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 320, "\" style=\"padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:280px\"> <button class=\"btn btn-p\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var254 string
-			templ_7745c5c3_Var254, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.new"))
+			templ_7745c5c3_Var254, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.search"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 453, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var254))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 321, "</a></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 321, "</button> <a class=\"btn btn-s\" href=\"/maintenance-templates\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var255 string
+			templ_7745c5c3_Var255, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.clear"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 454, Col: 85}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var255))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 322, "</a> <a class=\"btn btn-p\" href=\"/maintenance-templates/new\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var256 string
+			templ_7745c5c3_Var256, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.new"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 455, Col: 89}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var256))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 323, "</a></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(data.Rows) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 322, "<div class=\"empty\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var255 string
-				templ_7745c5c3_Var255, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.empty"))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 457, Col: 55}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var255))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 323, "</div>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 324, "<table><tr><th>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var256 string
-				templ_7745c5c3_Var256, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.code"))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 459, Col: 56}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var256))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 325, "</th><th>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 324, "<div class=\"empty\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var257 string
-				templ_7745c5c3_Var257, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.name"))
+				templ_7745c5c3_Var257, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.empty"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 459, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 458, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var257))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 326, "</th><th class=\"num\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 325, "</div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 326, "<table><tr><th>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var258 string
-				templ_7745c5c3_Var258, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.item_count"))
+				templ_7745c5c3_Var258, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.code"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 459, Col: 168}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 460, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var258))
 				if templ_7745c5c3_Err != nil {
@@ -4114,92 +4114,92 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var259 string
-				templ_7745c5c3_Var259, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.actions"))
+				templ_7745c5c3_Var259, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.name"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 459, Col: 218}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 460, Col: 103}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var259))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 328, "</th></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 328, "</th><th class=\"num\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var260 string
+				templ_7745c5c3_Var260, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.item_count"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 460, Col: 168}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var260))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 329, "</th><th>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var261 string
+				templ_7745c5c3_Var261, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.actions"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 460, Col: 218}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var261))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 330, "</th></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, row := range data.Rows {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 329, "<tr><td><code>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var260 string
-					templ_7745c5c3_Var260, templ_7745c5c3_Err = templ.JoinStringErrs(row.Code)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 462, Col: 28}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var260))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 330, "</code></td><td><b>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var261 string
-					templ_7745c5c3_Var261, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 462, Col: 59}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var261))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 331, "</b></td><td class=\"num\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 331, "<tr><td><code>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var262 string
-					templ_7745c5c3_Var262, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(row.ItemCount))
+					templ_7745c5c3_Var262, templ_7745c5c3_Err = templ.JoinStringErrs(row.Code)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 462, Col: 115}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 463, Col: 28}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var262))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 332, "</td><td><a class=\"btn btn-s\" href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 332, "</code></td><td><b>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var263 string
-					templ_7745c5c3_Var263, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
+					templ_7745c5c3_Var263, templ_7745c5c3_Err = templ.JoinStringErrs(row.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 464, Col: 97}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 463, Col: 59}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var263)
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var263))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 333, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 333, "</b></td><td class=\"num\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var264 string
-					templ_7745c5c3_Var264, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.view_items"))
+					templ_7745c5c3_Var264, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(row.ItemCount))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 464, Col: 136}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 463, Col: 115}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var264))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 334, "</a> <a class=\"btn btn-p\" href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 334, "</td><td><a class=\"btn btn-s\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var265 string
-					templ_7745c5c3_Var265, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit").ResolveURL(ctx)
+					templ_7745c5c3_Var265, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates?id=" + strconv.FormatInt(row.ID, 10)).ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 465, Col: 104}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 465, Col: 97}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var265)
 					if templ_7745c5c3_Err != nil {
@@ -4210,41 +4210,67 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var266 string
-					templ_7745c5c3_Var266, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.edit"))
+					templ_7745c5c3_Var266, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.view_items"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 465, Col: 135}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 465, Col: 136}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var266))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 336, "</a><form method=\"POST\" action=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 336, "</a> <a class=\"btn btn-p\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var267 string
-					templ_7745c5c3_Var267, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete").ResolveURL(ctx)
+					templ_7745c5c3_Var267, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/edit").ResolveURL(ctx)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 466, Col: 107}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 466, Col: 104}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var267)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 337, "\" style=\"display:inline\" data-confirm=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 337, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var268 string
-					templ_7745c5c3_Var268, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.confirm_delete")).Resolve(ctx)
+					templ_7745c5c3_Var268, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.edit"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 466, Col: 186}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 466, Col: 135}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var268)
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var268))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 338, "\" onsubmit=\"return confirm(this.getAttribute('data-confirm'))\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 338, "</a><form method=\"POST\" action=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var269 string
+					templ_7745c5c3_Var269, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(row.ID, 10) + "/delete").ResolveURL(ctx)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 467, Col: 107}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var269)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 339, "\" style=\"display:inline\" data-confirm=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var270 string
+					templ_7745c5c3_Var270, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.confirm_delete")).Resolve(ctx)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 467, Col: 186}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var270)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 340, "\" onsubmit=\"return confirm(this.getAttribute('data-confirm'))\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -4252,68 +4278,42 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 339, "<button class=\"btn btn-d\" type=\"submit\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 341, "<button class=\"btn btn-d\" type=\"submit\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var269 string
-					templ_7745c5c3_Var269, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.delete"))
+					var templ_7745c5c3_Var271 string
+					templ_7745c5c3_Var271, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.delete"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 468, Col: 80}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 469, Col: 80}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var269))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var271))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 340, "</button></form></td></tr>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 342, "</button></form></td></tr>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 341, "</table>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 343, "</table>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 342, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 344, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if data.Detail != nil {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 343, "<div class=\"card\"><h2>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var270 string
-				templ_7745c5c3_Var270, templ_7745c5c3_Err = templ.JoinStringErrs(data.Detail.Code)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 478, Col: 27}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var270))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 344, " ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var271 string
-				templ_7745c5c3_Var271, templ_7745c5c3_Err = templ.JoinStringErrs(data.Detail.Name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 478, Col: 48}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var271))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 345, "（")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 345, "<div class=\"card\"><h2>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var272 string
-				templ_7745c5c3_Var272, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(data.Detail.Items)))
+				templ_7745c5c3_Var272, templ_7745c5c3_Err = templ.JoinStringErrs(data.Detail.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 478, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 479, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var272))
 				if templ_7745c5c3_Err != nil {
@@ -4324,190 +4324,216 @@ func ListMaintenanceTemplatesPage(data MaintenanceTemplateListData) templ.Compon
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var273 string
-				templ_7745c5c3_Var273, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.detail_items_suffix"))
+				templ_7745c5c3_Var273, templ_7745c5c3_Err = templ.JoinStringErrs(data.Detail.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 478, Col: 139}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 479, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var273))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 347, "）</h2>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 347, "（")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var274 string
+				templ_7745c5c3_Var274, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(data.Detail.Items)))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 479, Col: 91}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var274))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 348, " ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var275 string
+				templ_7745c5c3_Var275, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.detail_items_suffix"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 479, Col: 139}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var275))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 349, "）</h2>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if len(data.Detail.Items) == 0 {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 348, "<div class=\"empty\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var274 string
-					templ_7745c5c3_Var274, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.detail_empty"))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 480, Col: 63}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var274))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 349, "</div>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 350, "<table><tr><th class=\"num\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var275 string
-					templ_7745c5c3_Var275, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.index"))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 482, Col: 70}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var275))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 351, "</th><th>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 350, "<div class=\"empty\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var276 string
-					templ_7745c5c3_Var276, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.part_number"))
+					templ_7745c5c3_Var276, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.detail_empty"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 482, Col: 124}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 481, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var276))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 352, "</th><th>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 351, "</div>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 352, "<table><tr><th class=\"num\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var277 string
-					templ_7745c5c3_Var277, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.item_name"))
+					templ_7745c5c3_Var277, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.index"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 482, Col: 176}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 483, Col: 70}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var277))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 353, "</th><th class=\"num\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 353, "</th><th>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var278 string
-					templ_7745c5c3_Var278, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.quantity"))
+					templ_7745c5c3_Var278, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.part_number"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 482, Col: 239}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 483, Col: 124}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var278))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 354, "</th><th class=\"num\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 354, "</th><th>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var279 string
-					templ_7745c5c3_Var279, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.unit_price"))
+					templ_7745c5c3_Var279, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.item_name"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 482, Col: 304}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 483, Col: 176}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var279))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 355, "</th></tr>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 355, "</th><th class=\"num\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var280 string
+					templ_7745c5c3_Var280, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.quantity"))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 483, Col: 239}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var280))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 356, "</th><th class=\"num\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var281 string
+					templ_7745c5c3_Var281, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.unit_price"))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 483, Col: 304}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var281))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 357, "</th></tr>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					for i, item := range data.Detail.Items {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 356, "<tr><td class=\"num\">")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var280 string
-						templ_7745c5c3_Var280, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(i + 1))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 484, Col: 49}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var280))
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 357, "</td><td><code>")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var281 string
-						templ_7745c5c3_Var281, templ_7745c5c3_Err = templ.JoinStringErrs(item.PartNumber)
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 484, Col: 83}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var281))
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 358, "</code></td><td>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 358, "<tr><td class=\"num\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var282 string
-						templ_7745c5c3_Var282, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
+						templ_7745c5c3_Var282, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(i + 1))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 484, Col: 119}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 485, Col: 49}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var282))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 359, "</td><td class=\"num\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 359, "</td><td><code>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var283 string
-						templ_7745c5c3_Var283, templ_7745c5c3_Err = templ.JoinStringErrs(item.Quantity)
+						templ_7745c5c3_Var283, templ_7745c5c3_Err = templ.JoinStringErrs(item.PartNumber)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 484, Col: 157}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 485, Col: 83}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var283))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 360, "</td><td class=\"num\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 360, "</code></td><td>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var284 string
-						templ_7745c5c3_Var284, templ_7745c5c3_Err = templ.JoinStringErrs(item.Price)
+						templ_7745c5c3_Var284, templ_7745c5c3_Err = templ.JoinStringErrs(item.Description)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 484, Col: 192}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 485, Col: 119}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var284))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 361, "</td></tr>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 361, "</td><td class=\"num\">")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var285 string
+						templ_7745c5c3_Var285, templ_7745c5c3_Err = templ.JoinStringErrs(item.Quantity)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 485, Col: 157}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var285))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 362, "</td><td class=\"num\">")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var286 string
+						templ_7745c5c3_Var286, templ_7745c5c3_Err = templ.JoinStringErrs(item.Price)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 485, Col: 192}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var286))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 363, "</td></tr>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 362, "</table>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 364, "</table>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 363, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 365, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout(i18n.T(ctx, "mainttpl.title"), "/maintenance-templates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var247), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout(i18n.T(ctx, "mainttpl.title"), "/maintenance-templates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var249), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4532,7 +4558,7 @@ func NewMaintenanceTemplatePage(user model.User) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var286 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var288 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -4544,20 +4570,20 @@ func NewMaintenanceTemplatePage(user model.User) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 364, "<div class=\"card\"><h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 366, "<div class=\"card\"><h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var287 string
-			templ_7745c5c3_Var287, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.new_title"))
+			var templ_7745c5c3_Var289 string
+			templ_7745c5c3_Var289, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.new_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 496, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 497, Col: 43}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var287))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var289))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 365, "</h2><form class=\"frm\" method=\"POST\" action=\"/maintenance-templates\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 367, "</h2><form class=\"frm\" method=\"POST\" action=\"/maintenance-templates\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -4565,38 +4591,12 @@ func NewMaintenanceTemplatePage(user model.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 366, "<label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var288 string
-			templ_7745c5c3_Var288, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.code"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 499, Col: 48}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var288))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 367, "<input name=\"code\" required placeholder=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var289 string
-			templ_7745c5c3_Var289, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.code_ph")).Resolve(ctx)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 499, Col: 123}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var289)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 368, "\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 368, "<label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var290 string
-			templ_7745c5c3_Var290, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.name"))
+			templ_7745c5c3_Var290, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.code"))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 500, Col: 48}
 			}
@@ -4604,12 +4604,12 @@ func NewMaintenanceTemplatePage(user model.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 369, "<input name=\"name\" required placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 369, "<input name=\"code\" required placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var291 string
-			templ_7745c5c3_Var291, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.name_ph")).Resolve(ctx)
+			templ_7745c5c3_Var291, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.code_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 500, Col: 123}
 			}
@@ -4617,78 +4617,104 @@ func NewMaintenanceTemplatePage(user model.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 370, "\"></label> <label class=\"full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 370, "\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var292 string
-			templ_7745c5c3_Var292, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
+			templ_7745c5c3_Var292, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.name"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 501, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 501, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var292))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 371, "<textarea name=\"notes\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 371, "<input name=\"name\" required placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var293 string
-			templ_7745c5c3_Var293, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.notes_ph")).Resolve(ctx)
+			templ_7745c5c3_Var293, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.name_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 501, Col: 125}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 501, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var293)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 372, "\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 372, "\"></label> <label class=\"full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var294 string
-			templ_7745c5c3_Var294, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "inspection.create"))
+			templ_7745c5c3_Var294, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 502, Col: 97}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 502, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var294))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 373, "</button><a class=\"btn btn-s\" href=\"/maintenance-templates\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 373, "<textarea name=\"notes\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var295 string
-			templ_7745c5c3_Var295, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.cancel"))
+			templ_7745c5c3_Var295, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.notes_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 502, Col: 189}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 502, Col: 125}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var295))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var295)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 374, "</a></div></form><p style=\"color:var(--muted);font-size:12.5px;margin-top:10px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 374, "\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var296 string
-			templ_7745c5c3_Var296, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.new_hint"))
+			templ_7745c5c3_Var296, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "inspection.create"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 504, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 503, Col: 97}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var296))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 375, "</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 375, "</button><a class=\"btn btn-s\" href=\"/maintenance-templates\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var297 string
+			templ_7745c5c3_Var297, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.cancel"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 503, Col: 189}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var297))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 376, "</a></div></form><p style=\"color:var(--muted);font-size:12.5px;margin-top:10px\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var298 string
+			templ_7745c5c3_Var298, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.new_hint"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 505, Col: 101}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var298))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 377, "</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout(i18n.T(ctx, "mainttpl.new_title"), "/maintenance-templates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var286), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout(i18n.T(ctx, "mainttpl.new_title"), "/maintenance-templates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var288), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -4714,7 +4740,7 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		user := data.User
-		templ_7745c5c3_Var298 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Var300 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -4726,46 +4752,46 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 376, "<div class=\"card\"><h2>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var299 string
-			templ_7745c5c3_Var299, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.edit_title"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 513, Col: 44}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var299))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 377, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var300 string
-			templ_7745c5c3_Var300, templ_7745c5c3_Err = templ.JoinStringErrs(data.Code)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 513, Col: 58}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var300))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 378, "</h2><form class=\"frm\" method=\"POST\" action=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 378, "<div class=\"card\"><h2>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var301 string
-			templ_7745c5c3_Var301, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
+			templ_7745c5c3_Var301, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.edit_title"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 514, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 514, Col: 44}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var301)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var301))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 379, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 379, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var302 string
+			templ_7745c5c3_Var302, templ_7745c5c3_Err = templ.JoinStringErrs(data.Code)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 514, Col: 58}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var302))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 380, "</h2><form class=\"frm\" method=\"POST\" action=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var303 string
+			templ_7745c5c3_Var303, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10)).ResolveURL(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 515, Col: 103}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var303)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 381, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -4773,38 +4799,12 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 380, "<label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var302 string
-			templ_7745c5c3_Var302, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.code"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 516, Col: 48}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var302))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 381, "<input value=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var303 string
-			templ_7745c5c3_Var303, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Code).Resolve(ctx)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 516, Col: 74}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var303)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 382, "\" disabled style=\"opacity:0.6\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 382, "<label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var304 string
-			templ_7745c5c3_Var304, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.name"))
+			templ_7745c5c3_Var304, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.code"))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 517, Col: 48}
 			}
@@ -4812,85 +4812,111 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 383, "<input name=\"name\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 383, "<input value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var305 string
-			templ_7745c5c3_Var305, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
+			templ_7745c5c3_Var305, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Code).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 517, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 517, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var305)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 384, "\" required></label> <label class=\"full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 384, "\" disabled style=\"opacity:0.6\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var306 string
-			templ_7745c5c3_Var306, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
+			templ_7745c5c3_Var306, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.name"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 518, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 518, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var306))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 385, "<textarea name=\"notes\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 385, "<input name=\"name\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var307 string
-			templ_7745c5c3_Var307, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
+			templ_7745c5c3_Var307, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Name).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 518, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 518, Col: 86}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var307))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var307)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 386, "</textarea></label></form><h3 style=\"margin:20px 0 8px;font-size:14px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 386, "\" required></label> <label class=\"full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var308 string
-			templ_7745c5c3_Var308, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.standard_items"))
+			templ_7745c5c3_Var308, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.notes"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 520, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 519, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var308))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 387, "</h3><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 10px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 387, "<textarea name=\"notes\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var309 string
-			templ_7745c5c3_Var309, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.items_hint"))
+			templ_7745c5c3_Var309, templ_7745c5c3_Err = templ.JoinStringErrs(data.Notes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 521, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 519, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var309))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 388, "</p><form method=\"POST\" action=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 388, "</textarea></label></form><h3 style=\"margin:20px 0 8px;font-size:14px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var310 string
-			templ_7745c5c3_Var310, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/items").ResolveURL(ctx)
+			templ_7745c5c3_Var310, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.standard_items"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 522, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 521, Col: 89}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var310)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var310))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 389, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 389, "</h3><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 10px\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var311 string
+			templ_7745c5c3_Var311, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.items_hint"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 522, Col: 103}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var311))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 390, "</p><form method=\"POST\" action=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var312 string
+			templ_7745c5c3_Var312, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/items").ResolveURL(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 523, Col: 102}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var312)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 391, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -4898,40 +4924,14 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 390, "<table style=\"width:100%\"><tr><th>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var311 string
-			templ_7745c5c3_Var311, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.part_number"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 525, Col: 57}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var311))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 391, "</th><th>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var312 string
-			templ_7745c5c3_Var312, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.item_name"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 525, Col: 109}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var312))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 392, "</th><th>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 392, "<table style=\"width:100%\"><tr><th>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var313 string
-			templ_7745c5c3_Var313, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.quantity"))
+			templ_7745c5c3_Var313, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.part_number"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 525, Col: 160}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 526, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var313))
 			if templ_7745c5c3_Err != nil {
@@ -4942,168 +4942,194 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var314 string
-			templ_7745c5c3_Var314, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.unit_price"))
+			templ_7745c5c3_Var314, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.item_name"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 525, Col: 213}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 526, Col: 109}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var314))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 394, "</th><th></th></tr><tbody id=\"tplItems\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 394, "</th><th>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var315 string
+			templ_7745c5c3_Var315, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.quantity"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 526, Col: 160}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var315))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 395, "</th><th>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var316 string
+			templ_7745c5c3_Var316, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.field.unit_price"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 526, Col: 213}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var316))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 396, "</th><th></th></tr><tbody id=\"tplItems\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, item := range data.Items {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 395, "<tr class=\"tpl-item\"><td><input name=\"part_number\" value=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var315 string
-				templ_7745c5c3_Var315, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.PartNumber).Resolve(ctx)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 529, Col: 62}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var315)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 396, "\" placeholder=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var316 string
-				templ_7745c5c3_Var316, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.part_number_ph")).Resolve(ctx)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 529, Col: 117}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var316)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 397, "\" style=\"width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><input name=\"item_desc\" value=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 397, "<tr class=\"tpl-item\"><td><input name=\"part_number\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var317 string
-				templ_7745c5c3_Var317, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Description).Resolve(ctx)
+				templ_7745c5c3_Var317, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.PartNumber).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 530, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 530, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var317)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 398, "\" required style=\"width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><input name=\"item_qty\" type=\"number\" min=\"0\" step=\"0.1\" value=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 398, "\" placeholder=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var318 string
-				templ_7745c5c3_Var318, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Quantity).Resolve(ctx)
+				templ_7745c5c3_Var318, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.part_number_ph")).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 531, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 530, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var318)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 399, "\" style=\"width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><input name=\"item_price\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 399, "\" style=\"width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><input name=\"item_desc\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var319 string
-				templ_7745c5c3_Var319, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Price).Resolve(ctx)
+				templ_7745c5c3_Var319, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Description).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 532, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 531, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var319)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 400, "\" style=\"width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><button type=\"button\" class=\"btn btn-d\" onclick=\"this.closest('tr').remove()\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 400, "\" required style=\"width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><input name=\"item_qty\" type=\"number\" min=\"0\" step=\"0.1\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var320 string
-				templ_7745c5c3_Var320, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.remove"))
+				templ_7745c5c3_Var320, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Quantity).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 533, Col: 123}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 532, Col: 90}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var320))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 401, "</button></td></tr>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var320)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 401, "\" style=\"width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><input name=\"item_price\" type=\"number\" min=\"0\" step=\"1\" value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var321 string
+				templ_7745c5c3_Var321, templ_7745c5c3_Err = templruntime.NewAttributeExpression(item.Price).Resolve(ctx)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 533, Col: 87}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var321)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 402, "\" style=\"width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td><td><button type=\"button\" class=\"btn btn-d\" onclick=\"this.closest('tr').remove()\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var322 string
+				templ_7745c5c3_Var322, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.remove"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 534, Col: 123}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var322))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 403, "</button></td></tr>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 402, "</tbody></table><div style=\"margin-top:10px;display:flex;gap:9px\"><button type=\"button\" class=\"btn btn-s\" onclick=\"addTplRow()\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var321 string
-			templ_7745c5c3_Var321, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.add_row"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 539, Col: 101}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var321))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 403, "</button> <button type=\"submit\" class=\"btn btn-p\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var322 string
-			templ_7745c5c3_Var322, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.save_items"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 540, Col: 82}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var322))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 404, "</button></div></form><div style=\"margin-top:18px;padding-top:14px;border-top:1px solid var(--border)\"><a class=\"btn btn-p\" href=\"/maintenance-templates\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 404, "</tbody></table><div style=\"margin-top:10px;display:flex;gap:9px\"><button type=\"button\" class=\"btn btn-s\" onclick=\"addTplRow()\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var323 string
-			templ_7745c5c3_Var323, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.back"))
+			templ_7745c5c3_Var323, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.add_row"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 544, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 540, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var323))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 405, "</a><form method=\"POST\" action=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 405, "</button> <button type=\"submit\" class=\"btn btn-p\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var324 string
-			templ_7745c5c3_Var324, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete").ResolveURL(ctx)
+			templ_7745c5c3_Var324, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.save_items"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 545, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 541, Col: 82}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var324)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var324))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 406, "\" style=\"display:inline\" data-confirm=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 406, "</button></div></form><div style=\"margin-top:18px;padding-top:14px;border-top:1px solid var(--border)\"><a class=\"btn btn-p\" href=\"/maintenance-templates\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var325 string
-			templ_7745c5c3_Var325, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.confirm_delete")).Resolve(ctx)
+			templ_7745c5c3_Var325, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.back"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 545, Col: 183}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 545, Col: 86}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var325)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var325))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 407, "\" onsubmit=\"return confirm(this.getAttribute('data-confirm'))\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 407, "</a><form method=\"POST\" action=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var326 string
+			templ_7745c5c3_Var326, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/maintenance-templates/" + strconv.FormatInt(data.ID, 10) + "/delete").ResolveURL(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 546, Col: 104}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var326)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 408, "\" style=\"display:inline\" data-confirm=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var327 string
+			templ_7745c5c3_Var327, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.confirm_delete")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 546, Col: 183}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var327)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 409, "\" onsubmit=\"return confirm(this.getAttribute('data-confirm'))\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -5111,52 +5137,52 @@ func EditMaintenanceTemplatePage(data MaintenanceTemplateEditData) templ.Compone
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 408, "<button class=\"btn btn-d\" type=\"submit\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var326 string
-			templ_7745c5c3_Var326, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.delete_plan"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 547, Col: 83}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var326))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 409, "</button></form></div></div><script data-part-number-ph=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var327 string
-			templ_7745c5c3_Var327, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.part_number_ph_optional")).Resolve(ctx)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 551, Col: 80}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var327)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 410, "\" data-remove-label=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 410, "<button class=\"btn btn-d\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var328 string
-			templ_7745c5c3_Var328, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.remove")).Resolve(ctx)
+			templ_7745c5c3_Var328, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "mainttpl.delete_plan"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 551, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 548, Col: 83}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var328)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var328))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 411, "\">\nfunction addTplRow(){\n\t\t\t\tvar sc = document.currentScript.dataset;\n\t\t\t\tvar tb = document.getElementById('tplItems');\n\t\t\t\tvar tr = document.createElement('tr');\n\t\t\t\ttr.className = 'tpl-item';\n\t\t\t\ttr.innerHTML = '<td><input name=\"part_number\" placeholder=\"' + sc.partNumberPh + '\" style=\"width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><input name=\"item_desc\" required style=\"width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><input name=\"item_qty\" type=\"number\" min=\"0\" step=\"0.1\" value=\"1\" style=\"width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><input name=\"item_price\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" style=\"width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><button type=\"button\" class=\"btn btn-d\">' + sc.removeLabel + '</button></td>';\n\t\t\t\ttr.querySelector('button').addEventListener('click', function () { this.closest('tr').remove(); });\n\t\t\t\ttb.appendChild(tr);\n\t\t\t}\n\t\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 411, "</button></form></div></div><script data-part-number-ph=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var329 string
+			templ_7745c5c3_Var329, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "mainttpl.part_number_ph_optional")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 552, Col: 80}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var329)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 412, "\" data-remove-label=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var330 string
+			templ_7745c5c3_Var330, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.remove")).Resolve(ctx)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/stage7_forms.templ`, Line: 552, Col: 131}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var330)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 413, "\">\nfunction addTplRow(){\n\t\t\t\tvar sc = document.currentScript.dataset;\n\t\t\t\tvar tb = document.getElementById('tplItems');\n\t\t\t\tvar tr = document.createElement('tr');\n\t\t\t\ttr.className = 'tpl-item';\n\t\t\t\ttr.innerHTML = '<td><input name=\"part_number\" placeholder=\"' + sc.partNumberPh + '\" style=\"width:120px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><input name=\"item_desc\" required style=\"width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><input name=\"item_qty\" type=\"number\" min=\"0\" step=\"0.1\" value=\"1\" style=\"width:80px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><input name=\"item_price\" type=\"number\" min=\"0\" step=\"1\" value=\"0\" style=\"width:100px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text)\"></td>' +\n\t\t\t\t\t'<td><button type=\"button\" class=\"btn btn-d\">' + sc.removeLabel + '</button></td>';\n\t\t\t\ttr.querySelector('button').addEventListener('click', function () { this.closest('tr').remove(); });\n\t\t\t\ttb.appendChild(tr);\n\t\t\t}\n\t\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Layout(i18n.T(ctx, "mainttpl.edit_title"), "/maintenance-templates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var298), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Layout(i18n.T(ctx, "mainttpl.edit_title"), "/maintenance-templates", user, AppName).Render(templ.WithChildren(ctx, templ_7745c5c3_Var300), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

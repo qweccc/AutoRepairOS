@@ -363,7 +363,7 @@ templ VehicleInspectionFormPage(data InspectionFormData) {
 
 type ReceivableFormData struct {
 	Title, Action, VoucherNo, PayDate, CustomerName, CustomerID, WorkOrderID string
-	Cash, Card, CardNo, CheckAmount, CheckNo, CheckDate, Bank, TransferAmount, TransferReference string
+	Cash, Credit, Card, CardNo, CheckAmount, CheckNo, CheckDate, Bank, TransferAmount, TransferReference string
 	DetailTotal, Discount, Tax, PayTotal, Notes string
 	Error string
 	User model.User
@@ -383,6 +383,7 @@ templ ReceivableFormPage(data ReceivableFormData) {
 				<label>{ i18n.T(ctx, "receivable.field.workorder") }<input name="work_order_id" value={ data.WorkOrderID } placeholder={ i18n.T(ctx, "receivable.workorder_ph") }></label>
 				<div class="full" style="border-top:1px solid var(--surface-2);padding-top:14px;margin-top:4px"><p style="color:var(--text-sub);font-size:13px;margin:0 0 10px">{ i18n.T(ctx, "receivable.methods_hint") }</p></div>
 				<label>{ i18n.T(ctx, "receivable.field.cash") }<input name="cash" type="number" min="0" step="1" value={ data.Cash }></label>
+				<label>{ i18n.T(ctx, "receivable.field.credit") }<input name="credit" type="number" min="0" step="1" value={ data.Credit }></label>
 				<label>{ i18n.T(ctx, "receivable.field.card") }<input name="card" type="number" min="0" step="1" value={ data.Card }></label>
 				<label>{ i18n.T(ctx, "receivable.field.card_no") }<input name="card_no" value={ data.CardNo }></label>
 				<label>{ i18n.T(ctx, "receivable.field.check_amount") }<input name="check_amount" type="number" min="0" step="1" value={ data.CheckAmount }></label>

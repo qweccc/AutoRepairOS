@@ -151,13 +151,14 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	// 支付方式分布（以收款紀錄為準）
-	var cash, card, checkAmt, transferAmt, payTotal float64
+	var cash, creditAmt, card, checkAmt, transferAmt, payTotal float64
 	var receiptCount int
-	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(cash),0), COALESCE(SUM(card),0),
+	db.DB.QueryRow(`SELECT COUNT(1), COALESCE(SUM(cash),0), COALESCE(SUM(credit_amount),0),
+		COALESCE(SUM(card),0),
 		COALESCE(SUM(check_amount),0), COALESCE(SUM(transfer_amount),0),
 		COALESCE(SUM(pay_total),0)
 		FROM receivables WHERE COALESCE(pay_date,'') = ? AND COALESCE(voided,0) = 0`, date).
-		Scan(&receiptCount, &cash, &card, &checkAmt, &transferAmt, &payTotal)
+		Scan(&receiptCount, &cash, &creditAmt, &card, &checkAmt, &transferAmt, &payTotal)
 
 	// 工單統計（當日結帳的工單）
 	var paidCount, insCount int
@@ -187,7 +188,7 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var payB strings.Builder
 	payB.WriteString(`<table class="amt"><tr><th>` + i18n.T(r.Context(), "print.daily.col_method") + `</th><th class="num">` + i18n.T(r.Context(), "print.daily.col_amount") + `</th><th class="num">` + i18n.T(r.Context(), "print.daily.col_pct") + `</th></tr>`)
-	for _, x := range payMethodRows(r.Context(), cash, card, checkAmt, transferAmt) {
+	for _, x := range payMethodRows(r.Context(), cash, creditAmt, card, checkAmt, transferAmt) {
 		pct := 0.0
 		if payTotal > 0 {
 			pct = x.Value / payTotal * 100
@@ -195,7 +196,7 @@ func PrintDailyReport(w http.ResponseWriter, r *http.Request, user model.User) {
 		payB.WriteString(`<tr><td>` + x.Label + `</td><td class="num">` + money(x.Value) +
 			`</td><td class="num">` + strconv.FormatFloat(pct, 'f', 1, 64) + `%</td></tr>`)
 	}
-	if len(payMethodRows(r.Context(), cash, card, checkAmt, transferAmt)) == 0 {
+	if len(payMethodRows(r.Context(), cash, creditAmt, card, checkAmt, transferAmt)) == 0 {
 		payB.WriteString(`<tr><td colspan="3" style="color:#64748b">` + i18n.T(r.Context(), "print.daily.empty") + `</td></tr>`)
 	}
 	payB.WriteString(`<tr class="grand"><td><b>` + i18n.T(r.Context(), "print.daily.total") + `</b></td><td class="num"><b>` + money(payTotal) +

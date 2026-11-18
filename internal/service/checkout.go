@@ -43,6 +43,7 @@ type ReceiptInput struct {
 	Tax               float64
 	PayTotal          float64
 	Cash              float64
+	CreditAmount      float64
 	Card              float64
 	CheckAmount       float64
 	TransferAmount    float64
@@ -82,11 +83,11 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 	if receipt.VoucherNo == "" {
 		return errors.New("receipt voucher number is required")
 	}
-	if receipt.Cash < 0 || receipt.Card < 0 || receipt.CheckAmount < 0 ||
+	if receipt.Cash < 0 || receipt.CreditAmount < 0 || receipt.Card < 0 || receipt.CheckAmount < 0 ||
 		receipt.TransferAmount < 0 || receipt.PayTotal < 0 {
 		return errors.New("receipt amounts cannot be negative")
 	}
-	sum := receipt.Cash + receipt.Card + receipt.CheckAmount + receipt.TransferAmount
+	sum := receipt.Cash + receipt.CreditAmount + receipt.Card + receipt.CheckAmount + receipt.TransferAmount
 	if sum == 0 && receipt.PayTotal == 0 {
 		return errors.New("receipt total amount is required")
 	}
@@ -134,13 +135,13 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 		_, err = tx.ExecContext(ctx, `INSERT INTO receivables
 			(voucher_no, customer_id, vehicle_id, work_order_id, pay_date,
 			 detail_total, real_total, discount, tax, pay_total,
-			 cash, card, check_amount, transfer_amount, transfer_reference,
+			 cash, credit_amount, card, check_amount, transfer_amount, transfer_reference,
 			 card_no, check_no, check_date, bank,
 			 notes, source, created_by)
-			VALUES (?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,'manual',?)`,
+			VALUES (?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,?,? ,?,?,?,?,? ,'manual',?)`,
 			receipt.VoucherNo, receipt.CustomerID, nullableID(vehicleID), nullableID(receipt.WorkOrderID), receipt.PayDate,
 			receipt.DetailTotal, receipt.RealTotal, receipt.Discount, receipt.Tax, receipt.PayTotal,
-			receipt.Cash, receipt.Card, receipt.CheckAmount, receipt.TransferAmount,
+			receipt.Cash, receipt.CreditAmount, receipt.Card, receipt.CheckAmount, receipt.TransferAmount,
 			nullableString(receipt.TransferReference), nullableString(receipt.CardNo),
 			nullableString(receipt.CheckNo), nullableString(receipt.CheckDate),
 			nullableString(receipt.Bank), nullableString(receipt.Notes), nullableID(receipt.CreatedBy))
@@ -177,7 +178,7 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 	if receipt.VoucherNo == "" {
 		return errors.New("receipt voucher number is required")
 	}
-	if receipt.Cash < 0 || receipt.Card < 0 || receipt.CheckAmount < 0 ||
+	if receipt.Cash < 0 || receipt.CreditAmount < 0 || receipt.Card < 0 || receipt.CheckAmount < 0 ||
 		receipt.TransferAmount < 0 || receipt.PayTotal < 0 {
 		return errors.New("receipt amounts cannot be negative")
 	}
@@ -207,12 +208,12 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 		_, err = tx.ExecContext(ctx, `UPDATE receivables SET
 			voucher_no = ?, pay_date = ?, detail_total = ?, real_total = ?,
 			discount = ?, tax = ?, pay_total = ?,
-			cash = ?, card = ?, check_amount = ?, transfer_amount = ?, transfer_reference = ?,
+			cash = ?, credit_amount = ?, card = ?, check_amount = ?, transfer_amount = ?, transfer_reference = ?,
 			card_no = ?, check_no = ?, check_date = ?, bank = ?,
 			notes = ?
 			WHERE id = ? AND voided = 0`,
 			receipt.VoucherNo, receipt.PayDate, receipt.DetailTotal, receipt.RealTotal,
-			receipt.Discount, receipt.Tax, receipt.PayTotal, receipt.Cash, receipt.Card,
+			receipt.Discount, receipt.Tax, receipt.PayTotal, receipt.Cash, receipt.CreditAmount, receipt.Card,
 			receipt.CheckAmount, receipt.TransferAmount, nullableString(receipt.TransferReference),
 			nullableString(receipt.CardNo), nullableString(receipt.CheckNo),
 			nullableString(receipt.CheckDate), nullableString(receipt.Bank),

@@ -1711,5 +1711,7 @@
   "staff.field.phone_ph": "0912-345-678",
   "workorder.form.voice": "🎤 語音輸入",
   "approval.photos": "維修照片",
-  "photomark.item": "關聯工單明細（選填）"
+  "photomark.item": "關聯工單明細（選填）",
+  "receivable.field.credit": "賒帳（月結）",
+  "paymethod.credit": "賒帳（月結）"
 }

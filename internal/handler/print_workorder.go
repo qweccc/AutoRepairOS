@@ -59,10 +59,13 @@ type payMethodRow struct {
 // payMethodRows 收款方式的拆分列。
 //
 // 一筆收款可能同時使用多種方式，因此逐項列出而非互斥分類。
-func payMethodRows(ctx context.Context, cash, card, check, transfer float64) []payMethodRow {
+func payMethodRows(ctx context.Context, cash, credit, card, check, transfer float64) []payMethodRow {
 	var out []payMethodRow
 	if cash > 0 {
 		out = append(out, payMethodRow{Code: "cash", Label: i18n.T(ctx, "paymethod.cash"), Value: cash})
+	}
+	if credit > 0 {
+		out = append(out, payMethodRow{Code: "credit", Label: i18n.T(ctx, "paymethod.credit"), Value: credit})
 	}
 	if card > 0 {
 		out = append(out, payMethodRow{Code: "card", Label: i18n.T(ctx, "paymethod.card"), Value: card})

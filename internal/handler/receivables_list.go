@@ -15,7 +15,7 @@ const receivableCols = `r.id, r.voucher_no, r.customer_id, COALESCE(c.name,''),
 	COALESCE(r.work_order_id,0),
 	COALESCE(r.pay_date,''), r.detail_total, r.real_total,
 	r.discount, r.tax, r.pay_total,
-	r.cash, r.card, r.check_amount, r.transfer_amount,
+	r.cash, r.credit_amount, r.card, r.check_amount, r.transfer_amount,
 	COALESCE(r.transfer_reference,''),
 	COALESCE(r.card_no,''), COALESCE(r.check_no,''), COALESCE(r.check_date,''),
 	COALESCE(r.bank,''), COALESCE(r.notes,''), r.voided, r.source`
@@ -39,6 +39,7 @@ type receivable struct {
 	Tax               float64
 	PayTotal          float64
 	Cash              float64
+	CreditAmount      float64
 	Card              float64
 	CheckAmount       float64
 	TransferAmount    float64
@@ -58,7 +59,7 @@ func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, e
 		&r.VehicleID, &r.PlateNumber, &r.WorkOrderID,
 		&r.PayDate, &r.DetailTotal, &r.RealTotal,
 		&r.Discount, &r.Tax, &r.PayTotal,
-		&r.Cash, &r.Card, &r.CheckAmount, &r.TransferAmount, &r.TransferReference,
+		&r.Cash, &r.CreditAmount, &r.Card, &r.CheckAmount, &r.TransferAmount, &r.TransferReference,
 		&r.CardNo, &r.CheckNo, &r.CheckDate,
 		&r.Bank, &r.Notes, &r.Voided, &r.Source)
 	return r, err
@@ -70,19 +71,22 @@ func scanReceivable(rows interface{ Scan(...interface{}) error }) (receivable, e
 // 因此這裡是「顯示用」的分類，不是互斥的真實欄位。
 func payMethod(r receivable) (string, string) {
 	hasCash := r.Cash > 0
+	hasCredit := r.CreditAmount > 0
 	hasCard := r.Card > 0
 	hasCheck := r.CheckAmount > 0
 	hasTransfer := r.TransferAmount > 0
 	switch {
-	case hasCash && !hasCard && !hasCheck && !hasTransfer:
+	case hasCredit && !hasCash && !hasCard && !hasCheck && !hasTransfer:
+		return "賒帳", "p-waitparts"
+	case hasCash && !hasCredit && !hasCard && !hasCheck && !hasTransfer:
 		return "現金", "p-completed"
-	case hasCard && !hasCash && !hasCheck && !hasTransfer:
+	case hasCard && !hasCash && !hasCredit && !hasCheck && !hasTransfer:
 		return "信用卡", "p-apprpend"
-	case hasCheck && !hasCash && !hasCard && !hasTransfer:
+	case hasCheck && !hasCash && !hasCredit && !hasCard && !hasTransfer:
 		return "票據", "p-waitparts"
-	case hasTransfer && !hasCash && !hasCard && !hasCheck:
+	case hasTransfer && !hasCash && !hasCredit && !hasCard && !hasCheck:
 		return "轉帳", "p-waitparts"
-	case !hasCash && !hasCard && !hasCheck && !hasTransfer:
+	case !hasCash && !hasCredit && !hasCard && !hasCheck && !hasTransfer:
 		return "未收款", "p-apprno"
 	default:
 		return "混合", "p-apprpend"

@@ -158,11 +158,15 @@ func TestPrintDocHelpers(t *testing.T) {
 	if tb.Total != 1050 || tb.Tax <= 0 || tb.Taxable+tb.Tax != 1050 {
 		t.Fatalf("tax %+v", tb)
 	}
-	rows := payMethodRows(context.Background(), 100, 50, 0, 25)
+	rows := payMethodRows(context.Background(), 100, 50, 0, 0, 25)
 	if len(rows) != 3 {
 		t.Fatalf("rows %d", len(rows))
 	}
-	if len(payMethodRows(context.Background(), 0, 0, 0, 0)) != 0 {
+	creditOnly := payMethodRows(context.Background(), 0, 80, 0, 0, 0)
+	if len(creditOnly) != 1 || creditOnly[0].Code != "credit" {
+		t.Fatalf("credit row %+v", creditOnly)
+	}
+	if len(payMethodRows(context.Background(), 0, 0, 0, 0, 0)) != 0 {
 		t.Fatal("empty rows")
 	}
 	rec := httptest.NewRecorder()

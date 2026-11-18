@@ -71,7 +71,7 @@ func renderReceivableForm(w http.ResponseWriter, r *http.Request, user model.Use
 		Title: "收款紀錄", Action: action,
 		VoucherNo: rec.VoucherNo, PayDate: normDate(rec.PayDate),
 		CustomerName: rec.CustomerName, CustomerID: strconv.FormatInt(rec.CustomerID, 10),
-		WorkOrderID: intOrEmpty(rec.WorkOrderID), Cash: sel(rec.Cash), Card: sel(rec.Card),
+		WorkOrderID: intOrEmpty(rec.WorkOrderID), Cash: sel(rec.Cash), Credit: sel(rec.CreditAmount), Card: sel(rec.Card),
 		CardNo: rec.CardNo, CheckAmount: sel(rec.CheckAmount), CheckNo: rec.CheckNo,
 		CheckDate: normDate(rec.CheckDate), Bank: rec.Bank, TransferAmount: sel(rec.TransferAmount),
 		TransferReference: rec.TransferReference, DetailTotal: sel(rec.DetailTotal),
@@ -108,20 +108,21 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 	card := atofDefault(r.FormValue("card"), 0)
 	checkAmt := atofDefault(r.FormValue("check_amount"), 0)
 	transferAmt := atofDefault(r.FormValue("transfer_amount"), 0)
+	creditAmt := atofDefault(r.FormValue("credit"), 0)
 	payTotal := atofDefault(r.FormValue("pay_total"), 0)
 	// 合計留空時自動加總，避免櫃檯填了方式卻忘了填合計。
 	if payTotal == 0 {
-		payTotal = cash + card + checkAmt + transferAmt
+		payTotal = cash + creditAmt + card + checkAmt + transferAmt
 	}
-	if cash < 0 || card < 0 || checkAmt < 0 || transferAmt < 0 || payTotal < 0 {
+	if cash < 0 || creditAmt < 0 || card < 0 || checkAmt < 0 || transferAmt < 0 || payTotal < 0 {
 		redirectMsg(w, r, "/receivables/new", "收款金額不可為負數")
 		return
 	}
-	if cash+card+checkAmt+transferAmt == 0 && payTotal == 0 {
+	if cash+creditAmt+card+checkAmt+transferAmt == 0 && payTotal == 0 {
 		redirectMsg(w, r, "/receivables/new", "請至少填一種付款方式或收款合計")
 		return
 	}
-	sum := cash + card + checkAmt + transferAmt
+	sum := cash + creditAmt + card + checkAmt + transferAmt
 	if paymentMismatch(sum, payTotal) {
 		redirectMsg(w, r, "/receivables/new", "收款合計與各付款方式加總不符")
 		return
@@ -159,7 +160,7 @@ func CreateReceivable(w http.ResponseWriter, r *http.Request) {
 	err := service.New(db.DB).CreateReceipt(r.Context(), service.ReceiptInput{
 		VoucherNo: voucher, CustomerID: customerID, WorkOrderID: woID, PayDate: payDate,
 		DetailTotal: detailTotal, RealTotal: realTotal, Discount: discount, Tax: tax,
-		PayTotal: payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+		PayTotal: payTotal, Cash: cash, CreditAmount: creditAmt, Card: card, CheckAmount: checkAmt,
 		TransferAmount: transferAmt, TransferReference: strings.TrimSpace(r.FormValue("transfer_reference")),
 		CardNo: cardNo, CheckNo: checkNo, CheckDate: checkDate, Bank: bank,
 		Notes: notes, CreatedBy: actorID,
@@ -189,7 +190,7 @@ func EditReceivableForm(w http.ResponseWriter, r *http.Request, user model.User)
 		&rec.VehicleID, &rec.PlateNumber, &rec.WorkOrderID,
 		&rec.PayDate, &rec.DetailTotal, &rec.RealTotal,
 		&rec.Discount, &rec.Tax, &rec.PayTotal,
-		&rec.Cash, &rec.Card, &rec.CheckAmount, &rec.TransferAmount, &rec.TransferReference,
+		&rec.Cash, &rec.CreditAmount, &rec.Card, &rec.CheckAmount, &rec.TransferAmount, &rec.TransferReference,
 		&rec.CardNo, &rec.CheckNo, &rec.CheckDate,
 		&rec.Bank, &rec.Notes, &rec.Voided, &rec.Source)
 	if err != nil {
@@ -214,20 +215,21 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 	card := atofDefault(r.FormValue("card"), 0)
 	checkAmt := atofDefault(r.FormValue("check_amount"), 0)
 	transferAmt := atofDefault(r.FormValue("transfer_amount"), 0)
+	creditAmt := atofDefault(r.FormValue("credit"), 0)
 	payTotal := atofDefault(r.FormValue("pay_total"), 0)
 	if payTotal == 0 {
-		payTotal = cash + card + checkAmt + transferAmt
+		payTotal = cash + creditAmt + card + checkAmt + transferAmt
 	}
 	editPath := "/receivables/" + strconv.FormatInt(id, 10) + "/edit"
-	if cash < 0 || card < 0 || checkAmt < 0 || transferAmt < 0 || payTotal < 0 {
+	if cash < 0 || creditAmt < 0 || card < 0 || checkAmt < 0 || transferAmt < 0 || payTotal < 0 {
 		formError(w, r, "編輯收款紀錄", editPath, "收款金額不可為負數")
 		return
 	}
-	if cash+card+checkAmt+transferAmt == 0 && payTotal == 0 {
+	if cash+creditAmt+card+checkAmt+transferAmt == 0 && payTotal == 0 {
 		formError(w, r, "編輯收款紀錄", editPath, "請至少填一種付款方式或收款合計")
 		return
 	}
-	sum := cash + card + checkAmt + transferAmt
+	sum := cash + creditAmt + card + checkAmt + transferAmt
 	if paymentMismatch(sum, payTotal) {
 		formError(w, r, "編輯收款紀錄", editPath, "收款合計與各付款方式加總不符")
 		return
@@ -253,7 +255,7 @@ func UpdateReceivable(w http.ResponseWriter, r *http.Request) {
 		RealTotal:   atofDefault(r.FormValue("real_total"), 0),
 		Discount:    atofDefault(r.FormValue("discount"), 0),
 		Tax:         atofDefault(r.FormValue("tax"), 0),
-		PayTotal:    payTotal, Cash: cash, Card: card, CheckAmount: checkAmt,
+		PayTotal:    payTotal, Cash: cash, CreditAmount: creditAmt, Card: card, CheckAmount: checkAmt,
 		TransferAmount: transferAmt, TransferReference: nullStr(r.FormValue("transfer_reference")),
 		CardNo: nullStr(r.FormValue("card_no")), CheckNo: nullStr(r.FormValue("check_no")),
 		CheckDate: normDate(r.FormValue("check_date")), Bank: nullStr(r.FormValue("bank")),
