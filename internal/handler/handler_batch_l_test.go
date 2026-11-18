@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -971,7 +972,10 @@ func batchLUseFakeDB(t *testing.T, conn *batchLFakeConn) {
 func batchLLoginRows(q string) (driver.Rows, error) {
 	switch {
 	case strings.Contains(q, "FROM sessions WHERE id"):
-		return batchLRows([]string{"user_id", "created_at"}, []driver.Value{int64(1), "2026-11-10 10:00:00"}), nil
+		// 建立時間用「現在」而不是寫死的日期：session TTL 是 7 天，
+		// 寫死的日子（2026-11-10）過了那天之後所有依賴假登入的測試都會
+		// 變成 401（時間炸彈）。
+		return batchLRows([]string{"user_id", "created_at"}, []driver.Value{int64(1), time.Now().Add(-time.Hour).Format("2006-01-02 15:04:05")}), nil
 	case strings.Contains(q, "FROM users WHERE id"):
 		return batchLRows([]string{"id", "username", "role", "name", "active"},
 			[]driver.Value{int64(1), "owner1", "owner", "老闆", int64(1)}), nil
