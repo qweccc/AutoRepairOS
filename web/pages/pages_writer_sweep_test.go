@@ -49,7 +49,7 @@ func allSweepPages() map[string]templ.Component {
 		"ReportsPage":                  ReportsPage(Phase5ReportData{}, testOwner),
 		"WorklogsPage":                 WorklogsPage(Phase5WorklogData{}, testOwner),
 		"AnalyticsPage":                AnalyticsPage(Phase5AnalyticsData{Chart: components.Empty("c"), Campaign: components.Empty(""), Technician: components.Empty("")}, testOwner),
-		"PhotoMarkerOverlay":           PhotoMarkerOverlay("/p.jpg", 1),
+		"PhotoMarkerOverlay":           PhotoMarkerOverlay("/p.jpg", 1, ""),
 		"PhrasesPage":                  PhrasesPage(nil, testOwner, ""),
 		"PrintPage":                    PrintPage(PrintPageData{Title: "t"}),
 		"ListPurchaseOrdersPage":       ListPurchaseOrdersPage(nil, 0, 1, 20, "", "", testOwner),

@@ -148,7 +148,7 @@ func TestRenderAllPages(t *testing.T) {
 		{"EditWorklogPage", EditWorklogPage(Phase5EditWorklogData{WOID: "1", Technician: "技師A"}, testOwner), "技師A"},
 		{"CommissionsPage", CommissionsPage(Phase5CommissionsData{Month: "2026-11", Rows: []Phase5CommissionRow{{Name: "技師A"}}}, testOwner), "技師A"},
 		{"AnalyticsPage", AnalyticsPage(Phase5AnalyticsData{From: "2026-11-01", To: "2026-11-09", Gran: "day", Chart: components.Empty("圖表"), Campaign: components.Empty(""), Technician: components.Empty("")}, testOwner), ""},
-		{"PhotoMarkerOverlay", PhotoMarkerOverlay("/photos/1.jpg", 1), "1"},
+		{"PhotoMarkerOverlay", PhotoMarkerOverlay("/photos/1.jpg", 1, ""), "1"},
 		{"WalkaroundCanvas", WalkaroundCanvas(1, []struct {
 			ID       int64
 			MarkType string
@@ -220,7 +220,7 @@ func TestRenderAllPages(t *testing.T) {
 		{"ShowWorkOrderPageTech", ShowWorkOrderPage(testWO, nil, 0, "", nil, "", nil, nil, false, "", nil, "", nil, false, nil, testTech), ""},
 		{"ShowWorkOrderPageInsurance", ShowWorkOrderPage(model.WorkOrder{ID: 2, PlateNumber: "XYZ-9999", Status: "completed", IsInsurance: true, InsuranceCompanyID: 1}, []model.WorkOrderItem{{ID: 2, WorkOrderID: 2, ItemType: "part", Description: "煞車皮", Quantity: 2, UnitPrice: 1500}, {ID: 3, WorkOrderID: 2, ItemType: "labor", Description: "工資", Quantity: 1, UnitPrice: 1000}}, 4000, "已完工", map[string]string{"completed": "pill-ok"}, "已同意", map[string]string{"approved": "pill-ok"}, map[int64]string{1: "技師A"}, true, "已完工", testSOPRecs, "opt", []int64{1}, true, []PendingApproval{{ID: 1, Description: "追加項目"}}, testOwner), "已完工"},
 		{"EstimateItemTypes", EstimateDetailPage(estDetail, []EstimateItemRow{{ID: 1, ItemType: "part", Description: "煞車皮", Quantity: 2, UnitPrice: 1500, Subtotal: 3000}, {ID: 2, ItemType: "labor", Description: "工資", Quantity: 1, UnitPrice: 1000, Subtotal: 1000}, {ID: 3, ItemType: "other", Description: "雜項", Quantity: 1, UnitPrice: 200, Subtotal: 200}}, testOwner, true), "煞車皮"},
-		{"PhotosWithMarker", WorkOrderPhotosPage(1, []PhotoCard{{WorkOrderID: 1, ID: 5, OriginalName: "b.jpg", Marker: PhotoMarkerOverlay("/photos/5.jpg", 5)}}, "/data/photos", testCounter, ""), "b.jpg"},
+		{"PhotosWithMarker", WorkOrderPhotosPage(1, []PhotoCard{{WorkOrderID: 1, ID: 5, OriginalName: "b.jpg", Marker: PhotoMarkerOverlay("/photos/5.jpg", 5, "")}}, "/data/photos", testCounter, ""), "b.jpg"},
 		{"WorkOrderItemsTable", WorkOrderItemsTable(1, []model.WorkOrderItem{testWOItem}, map[int64]string{1: "技師A"}, true, 800, testOwner), "換機油"},
 		{"AddItemForm", AddItemForm(1), ""},
 		{"StatusControls", StatusControls(testWO, true), ""},

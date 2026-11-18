@@ -267,7 +267,7 @@ func TestRenderVariantsRound2(t *testing.T) {
 		{"AnalyticsPageFull", AnalyticsPage(Phase5AnalyticsData{From: "2026-10-01", To: "2026-10-31", GroupBy: "month", Gran: "day", ShowCost: true, CanExportCosts: true, Chart: components.Empty("圖表"), Campaign: components.Empty("行銷"), Technician: components.Empty("技師"), ProfitLoss: []Phase5Table{{Headers: []string{"項目", "金額"}, Rows: [][]Phase5Cell{{{Value: "營收"}, {Value: "100000"}}}}}, Cars: []Phase5Table{{Headers: []string{"車種"}, Rows: [][]Phase5Cell{{{Value: "Toyota"}}}}}, Parts: []Phase5Table{{Headers: []string{"零件"}, Rows: [][]Phase5Cell{{{Value: "機油"}}}}}, Dead: []Phase5Table{{Headers: []string{"呆滯"}, Rows: [][]Phase5Cell{{{Value: "濾芯"}}}}}, ActiveCust: "100", NewCust: "20", OldCust: "80", RepeatCust: "30", AvgPerCust: "1000", DiscountTotal: "5000", WarrantyCount: "5", WarrantyRevenue: "10000", WarrantyDiscount: "1000", WarrantyCostTotal: "6000", WarrantyGross: "4000", WarrantyLaborRecorded: false, DeadCostTotal: "2000", DeadCount: "3", Flash: "已匯出", ARO: "50000", OrderCount: "50", GrossStat: "30000", RepeatRate: "30%", GrossNote: "備註"}, testOwner), "營收"},
 		{"AnalyticsPageNoCost", AnalyticsPage(Phase5AnalyticsData{From: "2026-10-01", To: "2026-10-31", Gran: "week", ShowCost: false, CanExportCosts: false, Chart: components.Empty("圖表"), Campaign: components.Empty(""), Technician: components.Empty(""), WarrantyLaborRecorded: true}, testCounter), ""},
 		// Photo markup
-		{"PhotoMarkerOverlayOther", PhotoMarkerOverlay("/photos/9.jpg", 9), "9"},
+		{"PhotoMarkerOverlayOther", PhotoMarkerOverlay("/photos/9.jpg", 9, ""), "9"},
 		{"WalkaroundCanvasMulti", WalkaroundCanvas(2, []struct {
 			ID       int64
 			MarkType string
@@ -277,7 +277,7 @@ func TestRenderVariantsRound2(t *testing.T) {
 		}{{ID: 1, MarkType: "scratch", X: 5, Y: 6, Note: "刮傷"}, {ID: 2, MarkType: "dent", X: 50, Y: 60, Note: ""}, {ID: 3, MarkType: "chip", X: 90, Y: 10, Note: "跳石"}}), ""},
 		{"WalkaroundMarkTypeSelectScratch", WalkaroundMarkTypeSelect("scratch"), "scratch"},
 		{"PhotoAnnotationForm2", PhotoAnnotationForm(2), ""},
-		{"WorkOrderPhotosPageNote", WorkOrderPhotosPage(2, []PhotoCard{{WorkOrderID: 2, ID: 7, TypeLabel: "車損", OriginalName: "c.jpg", Uploader: "技師A", CreatedAt: "2026-11-05", Size: "1.2MB", Note: "右前門凹痕", Marker: PhotoMarkerOverlay("/photos/7.jpg", 7)}}, "/data/photos", testOwner, ""), "右前門凹痕"},
+		{"WorkOrderPhotosPageNote", WorkOrderPhotosPage(2, []PhotoCard{{WorkOrderID: 2, ID: 7, TypeLabel: "車損", OriginalName: "c.jpg", Uploader: "技師A", CreatedAt: "2026-11-05", Size: "1.2MB", Note: "右前門凹痕", Marker: PhotoMarkerOverlay("/photos/7.jpg", 7, "")}}, "/data/photos", testOwner, ""), "右前門凹痕"},
 		// Phrases / print / receipt
 		{"PhrasesPageEmpty", PhrasesPage(nil, testCounter, "已儲存"), "已儲存"},
 		{"PhrasesPageOff", PhrasesPage([]model.TechnicianPhrase{{ID: 2, Phrase: "停用詞", Category: "檢查", Active: 0}}, testOwner, ""), "停用詞"},

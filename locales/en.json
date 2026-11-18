@@ -1710,5 +1710,6 @@
   "staff.field.phone": "Phone",
   "staff.field.phone_ph": "0912-345-678",
   "workorder.form.voice": "🎤 Voice input",
-  "approval.photos": "Repair photos"
+  "approval.photos": "Repair photos",
+  "photomark.item": "Link to work order item (optional)"
 }

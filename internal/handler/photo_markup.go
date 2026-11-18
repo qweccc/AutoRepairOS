@@ -76,10 +76,14 @@ func AddPhotoAnnotation(w http.ResponseWriter, r *http.Request, user model.User)
 		color = "#ff0000"
 	}
 
+	var itemVal interface{}
+	if req.ItemID != nil && *req.ItemID > 0 {
+		itemVal = *req.ItemID
+	}
 	_, err = db.DB.Exec(`INSERT INTO photo_annotations
-		(photo_id, work_order_id, annotation_type, x1, y1, x2, y2, color, note, created_by)
-		VALUES (?,?,?,?,?,?,?,?,?,?)`,
-		photoID, workOrderID, req.Type, req.X1, req.Y1, req.X2, req.Y2, color, req.Note, user.ID)
+		(photo_id, work_order_id, item_id, annotation_type, x1, y1, x2, y2, color, note, created_by)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+		photoID, workOrderID, itemVal, req.Type, req.X1, req.Y1, req.X2, req.Y2, color, req.Note, user.ID)
 	if err != nil {
 		log.Printf("新增照片標記失敗: %v", err)
 		fail(w, "新增標記失敗")

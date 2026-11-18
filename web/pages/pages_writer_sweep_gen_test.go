@@ -107,7 +107,7 @@ func TestWriterSweepAllPages(t *testing.T) {
 		"EditWorklogPage":              EditWorklogPage(Phase5EditWorklogData{}, model.User{}),
 		"CommissionsPage":              CommissionsPage(Phase5CommissionsData{}, model.User{}),
 		"AnalyticsPage":                AnalyticsPage(Phase5AnalyticsData{}, model.User{}),
-		"PhotoMarkerOverlay":           PhotoMarkerOverlay("", 0),
+		"PhotoMarkerOverlay":           PhotoMarkerOverlay("", 0, ""),
 		"WalkaroundCanvas":             WalkaroundCanvas(0, nil),
 		"WalkaroundMarkTypeSelect":     WalkaroundMarkTypeSelect(""),
 		"PhotoAnnotationForm":          PhotoAnnotationForm(0),

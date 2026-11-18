@@ -36,6 +36,24 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 		return
 	}
 
+	// 標記可關聯工單明細（FR-WO-05）：選項由本頁工單的項目組成。
+	// 必須在打開照片 rows「之前」查好——測試的記憶體 DB 是
+	// MaxOpenConns(1)，一邊迭代 rows 一邊發第二個 Query 會死鎖。
+	itemOpts := ""
+	if irows, ierr := db.DB.Query(`SELECT id, COALESCE(description,'')
+		FROM active_work_order_items WHERE work_order_id = ? ORDER BY id`, woID); ierr == nil {
+		var b strings.Builder
+		for irows.Next() {
+			var iid int64
+			var desc string
+			if irows.Scan(&iid, &desc) == nil {
+				b.WriteString(`<option value="` + strconv.FormatInt(iid, 10) + `">` + htmlEsc(desc) + `</option>`)
+			}
+		}
+		irows.Close()
+		itemOpts = b.String()
+	}
+
 	rows, err := db.DB.Query(`SELECT p.id, p.work_order_id, COALESCE(p.item_id,0),
 		p.filename, COALESCE(p.original_name,''), COALESCE(p.mime_type,''),
 		COALESCE(p.file_size,0), COALESCE(p.photo_type,'damage'), COALESCE(p.note,''),
@@ -65,7 +83,7 @@ func ListWorkOrderPhotos(w http.ResponseWriter, r *http.Request, user model.User
 			WorkOrderID: woIDv, ID: id, TypeLabel: typeLabel,
 			OriginalName: orDash(origName), Uploader: uploader, CreatedAt: createdAt,
 			Size: sizeKB(size), Note: note,
-			Marker: pages.PhotoMarkerOverlay("/work-orders/"+strconv.FormatInt(woIDv, 10)+"/photos/"+strconv.FormatInt(id, 10), id),
+			Marker: pages.PhotoMarkerOverlay("/work-orders/"+strconv.FormatInt(woIDv, 10)+"/photos/"+strconv.FormatInt(id, 10), id, itemOpts),
 		})
 	}
 	if err := rows.Err(); err != nil {

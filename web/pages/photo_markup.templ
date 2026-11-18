@@ -2,13 +2,14 @@ package pages
 
 import (
 	"strconv"
+	"strings"
 
 	"autorepairos/internal/i18n"
 	"autorepairos/web/components"
 )
 
 // PhotoMarkerOverlay 照片 Canvas 標記疊加層。
-templ PhotoMarkerOverlay(photoURL string, photoID int64) {
+templ PhotoMarkerOverlay(photoURL string, photoID int64, itemOptsHTML string) {
 	<div data-photo-marker-wrap style="position:relative;display:inline-block;max-width:100%;">
 		<img data-photo-marker-img src={ photoURL } style="max-width:100%;max-height:480px;display:block;" />
 		<canvas data-photo-marker-canvas
@@ -17,6 +18,11 @@ templ PhotoMarkerOverlay(photoURL string, photoID int64) {
 	</div>
 	<button class="btn btn-s" type="button" data-photo-marker-toggle>{ i18n.T(ctx, "photomark.toggle") }</button>
 	<div data-photo-marker-controls style="display:none;margin-top:8px">
+		if strings.TrimSpace(itemOptsHTML) != "" {
+			<label>{ i18n.T(ctx, "photomark.item") }
+				<select id="annotation-item" name="item_id"><option value="">—</option>@templ.Raw(itemOptsHTML)</select>
+			</label>
+		}
 		@PhotoAnnotationForm(photoID)
 	</div>
 	<div data-photo-annotation-list style="margin-top:8px;font-size:12px;color:var(--text-sub)"></div>

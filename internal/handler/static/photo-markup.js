@@ -226,6 +226,7 @@
           var payload = {
             type: form.querySelector('[name="type"]').value,
             work_order_id: workOrderID,
+            item_id: (function () { var el = document.getElementById("annotation-item"); if (!el || !el.value) { return null; } return Number(el.value); })(),
             x1: Number(form.elements.x1.value),
             y1: Number(form.elements.y1.value),
             x2: Number(form.elements.x2.value),

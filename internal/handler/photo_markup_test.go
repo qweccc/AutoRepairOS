@@ -30,7 +30,7 @@ func setupPhotoMarkupTestDB(t *testing.T) {
 		`CREATE TABLE work_order_items (id INTEGER PRIMARY KEY, work_order_id INTEGER NOT NULL)`,
 		`CREATE TABLE work_order_photos (id INTEGER PRIMARY KEY, work_order_id INTEGER, item_id INTEGER, filename TEXT, original_name TEXT, mime_type TEXT, file_size INTEGER, photo_type TEXT, note TEXT, uploaded_by INTEGER, created_at TEXT, deleted_at TEXT)`,
 		`CREATE VIEW IF NOT EXISTS active_work_order_photos AS SELECT * FROM work_order_photos WHERE deleted_at IS NULL`,
-		`CREATE TABLE photo_annotations (id INTEGER PRIMARY KEY, photo_id INTEGER, work_order_id INTEGER, annotation_type TEXT, x1 REAL, y1 REAL, x2 REAL, y2 REAL, color TEXT, note TEXT, created_by INTEGER, created_at TEXT, deleted_at TEXT)`,
+		`CREATE TABLE photo_annotations (id INTEGER PRIMARY KEY, photo_id INTEGER, work_order_id INTEGER, item_id INTEGER, annotation_type TEXT, x1 REAL, y1 REAL, x2 REAL, y2 REAL, color TEXT, note TEXT, created_by INTEGER, created_at TEXT, deleted_at TEXT)`,
 		`CREATE VIEW IF NOT EXISTS active_photo_annotations AS SELECT * FROM photo_annotations WHERE deleted_at IS NULL`,
 		`CREATE TABLE walkaround_marks (id INTEGER PRIMARY KEY, work_order_id INTEGER, vehicle_id INTEGER, mark_type TEXT, x REAL, y REAL, note TEXT, photo_id INTEGER, created_by INTEGER, created_at TEXT, deleted_at TEXT)`,
 		`CREATE VIEW IF NOT EXISTS active_walkaround_marks AS SELECT * FROM walkaround_marks WHERE deleted_at IS NULL`,
