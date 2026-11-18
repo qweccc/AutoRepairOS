@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -69,6 +71,28 @@ func UpdateWorkOrderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if WorkOrderStatus(status) == WorkOrderStatusPaid {
+		// FR-FIN-02：結帳必須有對應的收款紀錄。直接從狀態下拉把工單改成
+		// 「已結帳」時，若既有多筆收款（含賒帳）仍不足以覆蓋應收，就擋下
+		// 並請櫃檯先開收款單——避免「結帳了，卻不知道收了多少、怎麼收」。
+		// 正常流程是「收款付足 → 自動結帳」，那條路已經存在（見 service.CreateReceipt）。
+		var woTotal, received float64
+		if err := db.DB.QueryRow(`SELECT
+			COALESCE(wo.total_amount - COALESCE(wo.discount_amount,0), 0),
+			COALESCE((SELECT SUM(r.pay_total) FROM receivables r
+				WHERE r.work_order_id = wo.id AND COALESCE(r.voided,0) = 0), 0)
+			FROM active_work_orders wo WHERE wo.id = ?`, id).
+			Scan(&woTotal, &received); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				http.NotFound(w, r)
+				return
+			}
+			fail(w, "確認應收金額失敗")
+			return
+		}
+		if received < woTotal-0.005 {
+			fail(w, fmt.Sprintf("本工單應收 %s，目前收款合計 %s，尚未足以結帳；請先到「收款」建立收款單（差額可記「賒帳」，之後再沖銷）", money(woTotal), money(received)))
+			return
+		}
 		if err := service.New(db.DB).Checkout(r.Context(), id, actorID); err != nil {
 			if errors.Is(err, service.ErrNotFound) {
 				http.NotFound(w, r)

@@ -33,7 +33,7 @@ func passbookWriteTestDB(t *testing.T) {
 		`CREATE VIEW active_vehicles AS SELECT * FROM vehicles WHERE deleted_at IS NULL`,
 		`CREATE TABLE work_orders (
 			id INTEGER PRIMARY KEY, customer_id INTEGER, vehicle_id INTEGER, status TEXT,
-			total_amount REAL DEFAULT 0, updated_at TEXT, deleted_at TEXT
+			total_amount REAL DEFAULT 0, discount_amount REAL DEFAULT 0, updated_at TEXT, deleted_at TEXT
 		)`,
 		`CREATE VIEW active_work_orders AS SELECT * FROM work_orders WHERE deleted_at IS NULL`,
 		`CREATE TABLE work_order_items (
@@ -83,6 +83,9 @@ func passbookWriteTestDB(t *testing.T) {
 			VALUES (10,'part','煞車來令片',2,100),
 			       (10,'labor','更換工資',1,200),
 			       (10,'subcontract','碟盤研磨',1,50)`,
+		// FR-FIN-02：結帳需有對應收款紀錄，這裡先備一筆付足的收款。
+		`INSERT INTO receivables (voucher_no, customer_id, work_order_id, pay_date, pay_total, cash, voided, source)
+			VALUES ('RCV-PASSBOOK-1', 1, 10, '2026-11-18', 350, 350, 0, 'manual')`,
 	} {
 		if _, err := d.Exec(statement); err != nil {
 			t.Fatalf("setup database: %v\nSQL: %s", err, statement)
