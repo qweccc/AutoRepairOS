@@ -1723,5 +1723,14 @@
   "reports.field.days": "Days",
   "reports.field.amount": "Amount",
   "reports.field.received": "Received",
-  "reports.field.unpaid": "Unpaid"
+  "reports.field.unpaid": "Unpaid",
+  "notify.appointment_guide_body": "Your vehicle %s has an appointment today at %s (%s). Please check in at the counter first.",
+  "notify.appointment_guide_subject": "Same-day appointment notice (#%s)",
+  "insurancelist.print": "Print renewal list",
+  "insurancelist.print_title": "Insurance renewal list (due within 30 days)",
+  "insurancelist.print_note": "Policies expiring within 30 days, for counter staff to remind customers.",
+  "insurancelist.print_empty": "No policies expiring soon.",
+  "reports.print": "Print",
+  "common.print": "Print",
+  "analytics.year_revenue": "Year-to-date revenue"
 }

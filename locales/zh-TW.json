@@ -1723,5 +1723,14 @@
   "reports.field.days": "天數",
   "reports.field.amount": "應收金額",
   "reports.field.received": "已收",
-  "reports.field.unpaid": "未收"
+  "reports.field.unpaid": "未收",
+  "notify.appointment_guide_body": "您的愛車 %s 預約今日 %s 進場（服務：%s）。進場前請先至櫃檯報到，可先看當日維修項目與預估費用。",
+  "notify.appointment_guide_subject": "預約當日提醒（預約 #%s）",
+  "insurancelist.print": "列印催保清單",
+  "insurancelist.print_title": "催保單清單（30 天內到期）",
+  "insurancelist.print_note": "列出 30 天內到期的保單，供櫃檯電話或臨櫃提醒客戶續保。",
+  "insurancelist.print_empty": "目前沒有即將到期的保單。",
+  "reports.print": "列印",
+  "common.print": "列印",
+  "analytics.year_revenue": "今年營收"
 }

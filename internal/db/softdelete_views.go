@@ -23,7 +23,6 @@ func ignorableSoftDeleteErr(err error) bool {
 //     有這組表/視，否則所有讀取路徑會因 view 不存在而失敗。
 //   - 啟動流程：Migrate 之後再確保一次，讓「migration 之外新增的软刪除表」
 //     有一處單一的定義來源。
-//
 func EnsureWorkOrderItemsSoftDelete(d *sql.DB) error {
 	return ensureSoftDelete(d, "work_order_items", "active_work_order_items")
 }

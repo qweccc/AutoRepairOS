@@ -103,6 +103,13 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		costs = analyticsPeriodCosts(from, to)
 	}
 
+	// FR-ANA-05：年營收（今年至今日已結帳工單的淨營收）。
+	var yearRevenue float64
+	db.DB.QueryRow(`SELECT COALESCE(SUM(total_amount - COALESCE(discount_amount,0)),0)
+		FROM active_work_orders WHERE status='paid'
+		  AND date(created_at) BETWEEN date('now','localtime','start of year') AND date('now','localtime')`).
+		Scan(&yearRevenue)
+
 	aro := 0.0
 	if paidCount > 0 {
 		aro = revenue / float64(paidCount)
@@ -343,6 +350,6 @@ func AnalyticsHome(w http.ResponseWriter, r *http.Request, user model.User) {
 		DiscountTotal: money(discountTotal), WarrantyCount: strconv.Itoa(warrantyCount), WarrantyRevenue: money(warrantyRev), WarrantyDiscount: money(warrantyDiscount),
 		WarrantyCostTotal: money(warrantyCostTotal), WarrantyGross: money(warrantyGross), WarrantyLaborRecorded: warrantyLaborRecorded,
 		DeadCostTotal: money(deadCostTotal), DeadCount: strconv.Itoa(deadCount), Campaign: campTable, Technician: techEfficiencyTable,
-		Flash: flash(r), ARO: money(aro), OrderCount: strconv.Itoa(orderCount), GrossStat: grossStatValue(r.Context(), showCost, costs, grossPct), RepeatRate: fmt.Sprintf("%.1f%%", repeatRate), GrossNote: grossNote, CanExportCosts: showCost,
+		Flash: flash(r), ARO: money(aro), YearRevenue: money(yearRevenue), OrderCount: strconv.Itoa(orderCount), GrossStat: grossStatValue(r.Context(), showCost, costs, grossPct), RepeatRate: fmt.Sprintf("%.1f%%", repeatRate), GrossNote: grossNote, CanExportCosts: showCost,
 	}, user).Render(r.Context(), w)
 }

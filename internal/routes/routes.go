@@ -220,6 +220,7 @@ func New(d Deps) *chi.Mux {
 	r.Post("/suppliers", handler.CounterUp(handler.CreateSupplier))
 	r.Get("/api/phrases/search", handler.RequireLogin(handler.SearchPhrasesAPI))
 	r.Get("/insurances/expiring", handler.AllStaff(handler.ListVehicleInsurances))
+	r.Get("/insurances/print", handler.CounterUpPage(handler.PrintInsuranceReminders))
 	r.Get("/insurances/new", handler.CounterUpPage(handler.NewVehicleInsuranceForm))
 	r.Post("/insurances", handler.CounterUp(handler.CreateVehicleInsurance))
 	r.Get("/inspections/new", handler.CounterUpPage(handler.NewVehicleInspectionForm))

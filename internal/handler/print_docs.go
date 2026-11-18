@@ -145,7 +145,7 @@ func PrintReceiptWithTax(w http.ResponseWriter, r *http.Request) {
       <p class="tiny">` + i18n.T(r.Context(), "print.printed_at") + `` + time.Now().Format("2006-01-02 15:04") + `</p>
     </div>
   </div>
-  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/receivables">` + i18n.T(r.Context(), "print.receipt.back") + `</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/receivables">`+i18n.T(r.Context(), "print.receipt.back")+`</a>`)
 
 	renderPrintPage(w, i18n.T(r.Context(), "print.receipt.doc_title")+orDash(v.VoucherNo), body)
 }
@@ -276,8 +276,8 @@ func PrintARStatement(w http.ResponseWriter, r *http.Request, user model.User) {
 		htmlEsc(user.Username) + `</p>
     </div>
   </div>
-  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/receivables?customer=`+strconv.FormatInt(customerID, 10)+`">` + i18n.T(r.Context(), "print.ar.view_receipts") + `</a>`,
-		`<a class="btn btn-s" href="/customers">` + i18n.T(r.Context(), "print.ar.back_customers") + `</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/receivables?customer=`+strconv.FormatInt(customerID, 10)+`">`+i18n.T(r.Context(), "print.ar.view_receipts")+`</a>`,
+		`<a class="btn btn-s" href="/customers">`+i18n.T(r.Context(), "print.ar.back_customers")+`</a>`)
 
 	renderPrintPage(w, i18n.T(r.Context(), "print.ar.doc_title")+custName, body)
 }

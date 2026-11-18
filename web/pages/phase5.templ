@@ -61,7 +61,7 @@ type Phase5AnalyticsData struct {
 	DiscountTotal, WarrantyCount, WarrantyRevenue, WarrantyDiscount string
 	WarrantyCostTotal, WarrantyGross string
 	WarrantyLaborRecorded bool
-	DeadCostTotal, DeadCount, Flash, ARO, OrderCount, GrossStat, RepeatRate, GrossNote string
+	DeadCostTotal, DeadCount, Flash, ARO, YearRevenue, OrderCount, GrossStat, RepeatRate, GrossNote string
 }
 type Phase5WorklogData struct {
 	Flash, WOID, StatusLabel, StatusPill, InsuranceLabel, WODateDefault string
@@ -207,7 +207,7 @@ templ ReportLowTable(rows []Phase5ReportLowRow) {
 
 templ ReportsPage(data Phase5ReportData, user model.User) {
 	@components.Layout(i18n.T(ctx, "reports.title"), "/reports", user, AppName) {
-		<div class="card"><h2>{ i18n.T(ctx, "reports.overview") }</h2><form method="GET" action="/reports"><label>{ i18n.T(ctx, "reports.from") }</label><input name="from" value={ data.From }/><label>{ i18n.T(ctx, "reports.to") }</label><input name="to" value={ data.To }/><button class="btn btn-p" type="submit">{ i18n.T(ctx, "reports.query") }</button><a class="btn btn-p" href="/reports/daily">{ i18n.T(ctx, "reports.daily") }</a><a class="btn btn-s" href={ "/reports/export?from=" + data.From + "&amp;to=" + data.To }>{ i18n.T(ctx, "reports.export_detail") }</a>
+		<div class="card"><h2>{ i18n.T(ctx, "reports.overview") }</h2><form method="GET" action="/reports"><label>{ i18n.T(ctx, "reports.from") }</label><input name="from" value={ data.From }/><label>{ i18n.T(ctx, "reports.to") }</label><input name="to" value={ data.To }/><button class="btn btn-p" type="submit">{ i18n.T(ctx, "reports.query") }</button><a class="btn btn-p" href="/reports/daily">{ i18n.T(ctx, "reports.daily") }</a><a class="btn btn-s" href={ "/reports/export?from=" + data.From + "&amp;to=" + data.To }>{ i18n.T(ctx, "reports.export_detail") }</a><button class="btn btn-s" type="button" onclick="window.print()">{ i18n.T(ctx, "reports.print") }</button>
 			if data.AnalyticsLink {
 				<a class="btn btn-s" href="/analytics">{ i18n.T(ctx, "reports.analytics") }</a>
 			}
@@ -310,11 +310,15 @@ templ AnalyticsPage(data Phase5AnalyticsData, user model.User) {
 			<a class={ phase5ButtonClass(data.Gran, "year") } href={ "/analytics?gran=year&amp;group=" + data.GroupBy }>{ i18n.T(ctx, "analytics.year") }</a>
 			<form method="GET" action="/analytics"><input type="hidden" name="gran" value="custom"/><input type="hidden" name="group" value={ data.GroupBy }/><input name="from" value={ data.From }/><input name="to" value={ data.To }/><select name="group"><option value="kind">{ i18n.T(ctx, "analytics.group_kind") }</option><option value="customer">{ i18n.T(ctx, "analytics.group_customer") }</option><option value="vehicle">{ i18n.T(ctx, "analytics.group_vehicle") }</option></select><button class="btn btn-p" type="submit">{ i18n.T(ctx, "reports.query") }</button><a class="btn btn-s" href={ "/reports/export?from=" + data.From + "&amp;to=" + data.To }>{ i18n.T(ctx, "analytics.export_orders") }</a>
 				if data.CanExportCosts {
-					<a class="btn btn-s" href={ "/analytics/export?from=" + data.From + "&amp;to=" + data.To }>{ i18n.T(ctx, "analytics.export_summary") }</a>
+					<a class="btn btn-s" href={ "/analytics/export?from=" + data.From + "&amp;to=" + data.To }>{ i18n.T(ctx, "analytics.export_summary") }</a><button class="btn btn-s" type="button" onclick="window.print()">{ i18n.T(ctx, "common.print") }</button>
 				}
 			</form>
 			<p>{ i18n.T(ctx, "reports.period_prefix") }{ data.From } ~ { data.To }</p>
-			<div><div class="stat"><b>{ data.ARO }</b><span>{ i18n.T(ctx, "analytics.aro") }</span></div><div class="stat"><b>{ data.OrderCount }</b><span>{ i18n.T(ctx, "analytics.visits") }</span></div>
+			<div><div class="stat"><b>{ data.ARO }</b><span>{ i18n.T(ctx, "analytics.aro") }</span></div>
+				if data.CanExportCosts {
+					<div class="stat"><b>{ data.YearRevenue }</b><span>{ i18n.T(ctx, "analytics.year_revenue") }</span></div>
+				}
+				<div class="stat"><b>{ data.OrderCount }</b><span>{ i18n.T(ctx, "analytics.visits") }</span></div>
 				if data.CanExportCosts {
 					<div class="stat"><b>{ data.GrossStat }</b><span>{ i18n.T(ctx, "analytics.gross_margin") }</span></div>
 				}

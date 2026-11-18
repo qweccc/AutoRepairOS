@@ -241,7 +241,7 @@ func PrintWorkOrderCompletion(w http.ResponseWriter, r *http.Request, user model
       <p class="tiny">` + i18n.T(r.Context(), "print.completion.print_note") + `` + time.Now().Format("2006-01-02 15:04") + `</p>
     </div>
   </div>
-  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/work-orders/`+strconv.FormatInt(wo.ID, 10)+`">` + i18n.T(r.Context(), "print.completion.back") + `</a>`)
+  ` + printToolbar(r.Context(), `<a class="btn btn-s" href="/work-orders/`+strconv.FormatInt(wo.ID, 10)+`">`+i18n.T(r.Context(), "print.completion.back")+`</a>`)
 
 	renderPrintPage(w, i18n.T(r.Context(), "print.completion.doc_title")+"#"+strconv.FormatInt(wo.ID, 10), body)
 }

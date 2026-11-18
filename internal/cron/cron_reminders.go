@@ -9,6 +9,7 @@ import (
 
 	"autorepairos/internal/db"
 )
+
 func scanMaintenanceDue() error {
 	_, err := scanMaintenanceDueInternal()
 	return err
@@ -103,69 +104,82 @@ func scanAppointmentReminders() error {
 
 // ScanAppointmentRemindersNow 供測試及手動觸發使用，回傳新增筆數。
 func ScanAppointmentRemindersNow() (int, error) {
-	tomorrow := time.Now().In(time.FixedZone("Asia/Taipei", 8*60*60)).AddDate(0, 0, 1).Format("2006-01-02")
-	rows, err := db.DB.Query(`SELECT a.id, c.id, COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
-		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
-		COALESCE(v.plate_number,''), COALESCE(a.appointment_time,''), COALESCE(a.service_type,'')
-		FROM active_appointments a
-		JOIN active_customers c ON c.id=a.customer_id
-		JOIN active_vehicles v ON v.id=a.vehicle_id
-		WHERE a.appointment_date=? AND a.status IN ('booked','confirmed')
-		ORDER BY a.id`, tomorrow)
-	if err != nil {
-		return 0, err
+	tpe := time.FixedZone("Asia/Taipei", 8*60*60)
+	now := time.Now().In(tpe)
+	// FR-APP-05：預約提醒包含「前一日提醒」與「當日進場前導」兩種。
+	type round struct {
+		date     string
+		kind     string
+		bodyTmpl string
+		subjTmpl string
 	}
-	type item struct {
-		appointmentID        int64
-		customer             reminderCandidate
-		plate, time, service string
+	rounds := []round{
+		{now.AddDate(0, 0, 1).Format("2006-01-02"), "appointment_reminder", "notify.appointment_body", "notify.appointment_subject"},
+		{now.Format("2006-01-02"), "appointment_guide", "notify.appointment_guide_body", "notify.appointment_guide_subject"},
 	}
-	var items []item
-	for rows.Next() {
-		var candidate item
-		if err := rows.Scan(&candidate.appointmentID, &candidate.customer.customerID,
-			&candidate.customer.name, &candidate.customer.pref, &candidate.customer.lineID,
-			&candidate.customer.telegramID, &candidate.plate, &candidate.time, &candidate.service); err != nil {
+	totalQueued := 0
+	for _, rd := range rounds {
+		rows, err := db.DB.Query(`SELECT a.id, c.id, COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
+			COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+			COALESCE(v.plate_number,''), COALESCE(a.appointment_time,''), COALESCE(a.service_type,'')
+			FROM active_appointments a
+			JOIN active_customers c ON c.id=a.customer_id
+			JOIN active_vehicles v ON v.id=a.vehicle_id
+			WHERE a.appointment_date=? AND a.status IN ('booked','confirmed')
+			ORDER BY a.id`, rd.date)
+		if err != nil {
+			return totalQueued, err
+		}
+		type item struct {
+			appointmentID        int64
+			customer             reminderCandidate
+			plate, time, service string
+		}
+		var items []item
+		for rows.Next() {
+			var candidate item
+			if err := rows.Scan(&candidate.appointmentID, &candidate.customer.customerID,
+				&candidate.customer.name, &candidate.customer.pref, &candidate.customer.lineID,
+				&candidate.customer.telegramID, &candidate.plate, &candidate.time, &candidate.service); err != nil {
+				rows.Close()
+				return totalQueued, err
+			}
+			items = append(items, candidate)
+		}
+		if err := rows.Err(); err != nil {
 			rows.Close()
-			return 0, err
+			return totalQueued, err
 		}
-		items = append(items, candidate)
-	}
-	if err := rows.Err(); err != nil {
 		rows.Close()
-		return 0, err
-	}
-	rows.Close()
 
-	queued := 0
-	for _, item := range items {
-		channel, enabled := item.customer.channel()
-		if !enabled {
-			continue
+		for _, item := range items {
+			channel, enabled := item.customer.channel()
+			if !enabled {
+				continue
+			}
+			body := fmt.Sprintf(tr(rd.bodyTmpl), item.plate, item.time, item.service)
+			subject := fmt.Sprintf(tr(rd.subjTmpl), item.appointmentID)
+			res, err := db.DB.Exec(`INSERT INTO notifications
+				(customer_id, channel, kind, subject, body, scheduled_at)
+				SELECT ?, ?, ?, ?, ?, ?
+				WHERE NOT EXISTS (
+					SELECT 1 FROM notifications
+					WHERE customer_id=? AND kind=? AND subject=?
+					  AND datetime(created_at) >= datetime(?)
+				)`,
+				item.customer.customerID, channel, rd.kind, subject, body, dbTime(time.Now().UTC()),
+				item.customer.customerID, rd.kind, subject, time.Now().UTC().Add(-7*24*time.Hour).Format(sqlTimeLayout))
+			if err != nil {
+				return totalQueued, err
+			}
+			added, err := res.RowsAffected()
+			if err != nil {
+				return totalQueued, err
+			}
+			totalQueued += int(added)
 		}
-		body := fmt.Sprintf(tr("notify.appointment_body"),
-			item.plate, item.time, item.service)
-		subject := fmt.Sprintf(tr("notify.appointment_subject"), item.appointmentID)
-		res, err := db.DB.Exec(`INSERT INTO notifications
-			(customer_id, channel, kind, subject, body, scheduled_at)
-			SELECT ?, ?, 'appointment_reminder', ?, ?, ?
-			WHERE NOT EXISTS (
-				SELECT 1 FROM notifications
-				WHERE customer_id=? AND kind='appointment_reminder' AND subject=?
-				  AND datetime(created_at) >= datetime(?)
-			)`,
-			item.customer.customerID, channel, subject, body, dbTime(time.Now().UTC()),
-			item.customer.customerID, subject, time.Now().UTC().Add(-7*24*time.Hour).Format(sqlTimeLayout))
-		if err != nil {
-			return queued, err
-		}
-		added, err := res.RowsAffected()
-		if err != nil {
-			return queued, err
-		}
-		queued += int(added)
 	}
-	return queued, nil
+	return totalQueued, nil
 }
 
 type reminderCandidate struct {

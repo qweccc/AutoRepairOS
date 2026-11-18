@@ -348,3 +348,45 @@ func SearchInspectionsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	pages.VehicleInspectionSearchRows(result).Render(r.Context(), w)
 }
+
+// PrintInsuranceReminders 催生（催保）單：30 天內到期的保單印成清單，
+// 供櫃檯電話／臨櫃提醒客戶续保（SRS FR-INS-03）。
+func PrintInsuranceReminders(w http.ResponseWriter, r *http.Request, user model.User) {
+	rows, err := db.DB.Query(`SELECT v.plate_number, c.name,
+		COALESCE(ic.name, vi.company_no, ''), COALESCE(vi.policy_number,''), vi.expiry_date
+		FROM active_vehicle_insurances vi
+		JOIN active_vehicles v ON v.id = vi.vehicle_id
+		JOIN active_customers c ON c.id = v.customer_id
+		LEFT JOIN insurance_companies ic ON ic.id = vi.insurance_company_id
+		WHERE vi.expiry_date >= date('now','localtime')
+			AND vi.expiry_date <= date('now','localtime','+30 days')
+		ORDER BY vi.expiry_date ASC, vi.id ASC`)
+	if err != nil {
+		http.Error(w, "查詢即將到期保單失敗", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	b.WriteString(`<h1>` + htmlEsc(i18n.T(r.Context(), "insurancelist.print_title")) + `</h1>`)
+	b.WriteString(`<p style="color:#64748b">` + htmlEsc(i18n.T(r.Context(), "insurancelist.print_note")) + `</p>`)
+	b.WriteString(`<table class="amt"><tr><th>` + htmlEsc(i18n.T(r.Context(), "reports.field.plate")) + `</th><th>`)
+	b.WriteString(htmlEsc(i18n.T(r.Context(), "reports.field.customer")) + `</th><th>`)
+	b.WriteString(htmlEsc(i18n.T(r.Context(), "insurancelist.field.company")) + `</th><th>`)
+	b.WriteString(htmlEsc(i18n.T(r.Context(), "insurancelist.field.policy_number")) + `</th><th>`)
+	b.WriteString(htmlEsc(i18n.T(r.Context(), "insurancelist.field.expiry_th")) + `</th></tr>`)
+	n := 0
+	for rows.Next() {
+		var plate, customer, company, policy, expiry string
+		if rows.Scan(&plate, &customer, &company, &policy, &expiry) == nil {
+			b.WriteString(`<tr><td>` + htmlEsc(plate) + `</td><td>` + htmlEsc(customer) + `</td><td>` +
+				htmlEsc(company) + `</td><td>` + htmlEsc(policy) + `</td><td>` + normDate(expiry) + `</td></tr>`)
+			n++
+		}
+	}
+	if n == 0 {
+		b.WriteString(`<tr><td colspan="5" style="color:#64748b">` + htmlEsc(i18n.T(r.Context(), "insurancelist.print_empty")) + `</td></tr>`)
+	}
+	b.WriteString(`</table>`)
+	renderPrintPage(w, i18n.T(r.Context(), "insurancelist.print_title"), b.String())
+}

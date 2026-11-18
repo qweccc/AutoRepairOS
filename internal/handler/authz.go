@@ -61,7 +61,7 @@ func CounterUpPage(fn func(http.ResponseWriter, *http.Request, model.User)) http
 }
 
 // OwnerOnlyPage 給「限系統管理員」且要拿到登入者身分的頁面 handler
-//（SRS FR-STF-02：/staff 等管理頁的寫入與編輯一律限 owner）。
+// （SRS FR-STF-02：/staff 等管理頁的寫入與編輯一律限 owner）。
 func OwnerOnlyPage(fn func(http.ResponseWriter, *http.Request, model.User)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := currentUser(r)
