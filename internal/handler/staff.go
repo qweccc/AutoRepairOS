@@ -58,9 +58,9 @@ func CreateStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		return
 	}
 
-	_, err = db.DB.Exec(`INSERT INTO users (username, password, role, name, staff_kind, staff_branch, active)
-		VALUES (?,?,?,?,?,?,1)`,
-		username, string(hashedPassword), role, name, staffKind, staffBranch)
+	_, err = db.DB.Exec(`INSERT INTO users (username, password, role, name, phone, staff_kind, staff_branch, active)
+		VALUES (?,?,?,?,?,?,?,1)`,
+		username, string(hashedPassword), role, name, nullStr(strings.TrimSpace(r.FormValue("phone"))), staffKind, staffBranch)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			fail(w, "帳號已存在")
@@ -97,13 +97,14 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(u.national_id,''), COALESCE(u.birthday,''),
 		COALESCE(u.insurance_start,''), COALESCE(u.insurance_end,''),
 		COALESCE(u.dependent_of,0), COALESCE(p.name,''),
+		COALESCE(u.phone,''),
 		COALESCE(u.active,1)
 		FROM users u
 		LEFT JOIN users p ON p.id = u.dependent_of
 		WHERE u.id = ?`, id).Scan(
 		&s.ID, &s.Username, &s.Name, &s.Role, &s.Branch, &s.Kind,
 		&s.NationalID, &s.Birthday, &s.InsuranceStart, &s.InsuranceEnd,
-		&s.DependentOf, &s.DepOfName, &s.Active)
+		&s.DependentOf, &s.DepOfName, &s.Phone, &s.Active)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -131,7 +132,7 @@ func EditStaffForm(w http.ResponseWriter, r *http.Request, user model.User) {
 	pages.EditStaffPage(pages.StaffEditData{
 		ID: s.ID, Name: s.Name, Username: s.Username, Error: r.URL.Query().Get("err"), NationalID: s.NationalID,
 		Birthday: s.Birthday, InsuranceStart: s.InsuranceStart, InsuranceEnd: s.InsuranceEnd,
-		Kind: s.Kind, Branch: s.Branch, Active: s.Active,
+		Kind: s.Kind, Branch: s.Branch, Phone: s.Phone, Active: s.Active,
 		BranchOpts: lookupSelectOptions("branch", s.Branch), User: user,
 		InsuranceHistory: history,
 	}).Render(r.Context(), w)
@@ -220,10 +221,10 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec(`UPDATE users SET
 		national_id = ?, birthday = ?, insurance_start = ?, insurance_end = ?,
-		staff_kind = ?, staff_branch = ?, active = ?
+		phone = ?, staff_kind = ?, staff_branch = ?, active = ?
 		WHERE id = ?`,
 		nullStr(nationalID), nullStr(birthday), nullStr(insuranceStart), nullStr(insuranceEnd),
-		staffKind, staffBranch, active, id)
+		nullStr(strings.TrimSpace(r.FormValue("phone"))), staffKind, staffBranch, active, id)
 	if err != nil {
 		log.Printf("員工 #%d 資料更新失敗: %v", id, err)
 		renderStaffUpdateError(w, r, user, "更新失敗，請確認資料庫可寫入後再試")

@@ -113,6 +113,7 @@ type StaffEditData struct {
 	Username         string
 	Error            string
 	NationalID       string
+	Phone            string
 	Birthday         string
 	InsuranceStart   string
 	InsuranceEnd     string
@@ -141,7 +142,8 @@ templ EditStaffPage(data StaffEditData) {
 					<option value="1" selected?={ data.Active == 1 }>{ i18n.T(ctx, "staff.active") }</option>
 					<option value="0" selected?={ data.Active == 0 }>{ i18n.T(ctx, "staff.inactive") }</option>
 				</select></label>
-				<label>{ i18n.T(ctx, "staff.field.kind") }<select name="staff_kind">
+				<label>{ i18n.T(ctx, "staff.field.phone") }<input name="phone" value={ data.Phone } placeholder={ i18n.T(ctx, "staff.field.phone_ph") }></label>
+					<label>{ i18n.T(ctx, "staff.field.kind") }<select name="staff_kind">
 					<option value="employee" selected?={ data.Kind == "employee" }>{ i18n.T(ctx, "staff.kind_employee") }</option>
 					<option value="dependent" selected?={ data.Kind == "dependent" || data.Kind == "family" }>{ i18n.T(ctx, "staff.kind_dependent") }</option>
 				</select></label>

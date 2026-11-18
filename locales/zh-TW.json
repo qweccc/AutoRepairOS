@@ -23,7 +23,7 @@
   "customer.bind_again": "重新綁定",
   "customer.confirm_unbind_line": "確定取消綁定？取消後這位客戶將無法在 LINE 查到自己的維修紀錄。",
   "customer.confirm_unbind_telegram": "確定取消 Telegram 綁定？",
-  "customer.search_empty": "查無符合「%s」的客戶",
+  "customer.search_empty": "查無客戶",
   "customer.title": "客戶管理",
   "customer.new": "新增客戶",
   "vehicle.mileage.col.date": "日期",
@@ -212,7 +212,6 @@
   "customer.action.ar_statement": "催款單",
   "customer.delete_confirm": "確定刪除這位客戶？",
   "customer.empty_no_match": "沒有符合條件的客戶",
-  "customer.search_empty": "查無客戶",
   "workorder.detail": "工單",
   "workorder.col.model": "車型",
   "workorder.col.mileage": "進廠里程",
@@ -1707,5 +1706,7 @@
   "notify.maintenance_subject": "定期保養提醒",
   "notify.more_items": "\n另有 %d 項",
   "notify.no_items": "- 無明細",
-  "notify.separator": "、"
+  "notify.separator": "、",
+  "staff.field.phone": "電話",
+  "staff.field.phone_ph": "0912-345-678"
 }

@@ -23,7 +23,7 @@
   "customer.bind_again": "Rebind",
   "customer.confirm_unbind_line": "Unbind? This customer will no longer see their service history on LINE.",
   "customer.confirm_unbind_telegram": "Unbind Telegram?",
-  "customer.search_empty": "No customer matches \"%s\"",
+  "customer.search_empty": "No customers found",
   "customer.title": "Customer Management",
   "customer.new": "New Customer",
   "vehicle.mileage.col.date": "Date",
@@ -212,7 +212,6 @@
   "customer.action.ar_statement": "Collection notice",
   "customer.delete_confirm": "Delete this customer?",
   "customer.empty_no_match": "No customers match the criteria",
-  "customer.search_empty": "No customers found",
   "workorder.detail": "Work Order",
   "workorder.col.model": "Vehicle Model",
   "workorder.col.mileage": "Intake Mileage",
@@ -1707,5 +1706,7 @@
   "notify.maintenance_subject": "Service Due Reminder",
   "notify.more_items": "\n+%d more",
   "notify.no_items": "- No details",
-  "notify.separator": ", "
+  "notify.separator": ", ",
+  "staff.field.phone": "Phone",
+  "staff.field.phone_ph": "0912-345-678"
 }

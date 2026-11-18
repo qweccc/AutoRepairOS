@@ -35,6 +35,7 @@ type staffRow struct {
 	InsuranceEnd   string
 	DependentOf    int64
 	DepOfName      string
+	Phone          string
 	Active         int
 }
 
@@ -85,6 +86,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		COALESCE(u.national_id,''), COALESCE(u.birthday,''),
 		COALESCE(u.insurance_start,''), COALESCE(u.insurance_end,''),
 		COALESCE(u.dependent_of,0), COALESCE(p.name,''),
+		COALESCE(u.phone,''),
 		COALESCE(u.active,1)
 		FROM users u
 		LEFT JOIN users p ON p.id = u.dependent_of` + where +
@@ -104,7 +106,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		var s staffRow
 		if err := rows.Scan(&s.ID, &s.Username, &s.Name, &s.Role, &s.Branch, &s.Kind,
 			&s.NationalID, &s.Birthday, &s.InsuranceStart, &s.InsuranceEnd,
-			&s.DependentOf, &s.DepOfName, &s.Active); err != nil {
+			&s.DependentOf, &s.DepOfName, &s.Phone, &s.Active); err != nil {
 			continue
 		}
 		list = append(list, s)
@@ -144,6 +146,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 			InsEndRed:   endRed,
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
+			Phone:       s.Phone,
 			Active:      s.Active,
 			CanEdit:     user.Role == "owner",
 		})
@@ -186,6 +189,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 		COALESCE(u.national_id,''), COALESCE(u.birthday,''),
 		COALESCE(u.insurance_start,''), COALESCE(u.insurance_end,''),
 		COALESCE(u.dependent_of,0), COALESCE(p.name,''),
+		COALESCE(u.phone,''),
 		COALESCE(u.active,1)
 		FROM users u
 		LEFT JOIN users p ON p.id = u.dependent_of`+where+
@@ -202,7 +206,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 		var s staffRow
 		if err := rows.Scan(&s.ID, &s.Username, &s.Name, &s.Role, &s.Branch, &s.Kind,
 			&s.NationalID, &s.Birthday, &s.InsuranceStart, &s.InsuranceEnd,
-			&s.DependentOf, &s.DepOfName, &s.Active); err != nil {
+			&s.DependentOf, &s.DepOfName, &s.Phone, &s.Active); err != nil {
 			continue
 		}
 		kindCls := "background:var(--primary-bg);color:var(--primary)"
@@ -232,6 +236,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 			InsEndRed:   endRed,
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
+			Phone:       s.Phone,
 			Active:      s.Active,
 			CanEdit:     canEdit,
 		})
