@@ -70,6 +70,8 @@ func New(d Deps) *chi.Mux {
 	r.Get("/approval/{token}", handler.ApprovalPageHandler)
 	r.Post("/approval/approve/{token}", handler.ApproveRequestHandler)
 	r.Post("/approval/reject/{token}", handler.RejectRequestHandler)
+	// 授權頁的公開照片端點（客戶無 session，憑 token 取照片）。
+	r.Get("/approval-photo/{token}/{photo_id}", handler.ApprovalPhoto)
 	r.Get("/api/passbook", handler.PassbookAPI)
 	r.Get("/maintenance-templates/new", handler.CounterUpPage(handler.NewMaintenanceTemplateForm))
 	r.Get("/sop-templates/new", handler.CounterUpPage(handler.NewSOPTemplateForm))
@@ -163,9 +165,6 @@ func New(d Deps) *chi.Mux {
 	r.Get("/equipment/{id}/maintenance", handler.AllStaff(handler.ListEquipmentMaintenance))
 	r.Post("/equipment/{id}/maintenance", handler.CounterUp(handler.CreateEquipmentMaintenance))
 	r.Post("/webhook/line", handler.LineWebhook)
-	r.Get("/approval/{token}", handler.ApprovalPageHandler)
-	r.Post("/approval/approve/{token}", handler.ApproveRequestHandler)
-	r.Post("/approval/reject/{token}", handler.RejectRequestHandler)
 	r.Get("/api/passbook", handler.PassbookAPI)
 	r.Post("/equipment/{id}/maintenance/{maint_id}/delete", handler.OwnerOnly(handler.DeleteEquipmentMaintenance))
 	r.Get("/login", handler.LoginHandler)

@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -374,5 +376,51 @@ func ApprovalPageHandler(w http.ResponseWriter, r *http.Request) {
 		Customer:  customer,
 		Items:     items,
 	}
+	// FR-WO-06：授權頁要含照片。這裡掛工單既有的照片（縮圖），
+	// 點選由公開的 ApprovalPhoto 端點提供（客戶沒有登入 session）。
+	if prows, perr := db.DB.Query(`SELECT p.id, COALESCE(p.note,'')
+		FROM active_work_order_photos p WHERE p.work_order_id = ? ORDER BY p.id DESC LIMIT 12`, req.WorkOrderID); perr == nil {
+		for prows.Next() {
+			var pid int64
+			var note string
+			if err := prows.Scan(&pid, &note); err == nil {
+				data.Photos = append(data.Photos, pages.ApprovalPhoto{
+					URL:  "/approval-photo/" + req.Token + "/" + strconv.FormatInt(pid, 10),
+					Note: note,
+				})
+			}
+		}
+		prows.Close()
+	}
 	renderApprovalPage(w, data)
+}
+
+// ApprovalPhoto 給授權頁的公開照片端點：只憑 token 取照片，不須登入。
+// 安全邊界與授權頁相同——token 無效、已過期／已決定、或照片不屬於該工單
+// 一律 404（不回 403，避免洩漏「_token 存在但照片不是他的」）。
+func ApprovalPhoto(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+	photoID := mustInt(r.PathValue("photo_id"))
+	if token == "" || photoID <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+	req, err := GetApprovalRequestByToken(token)
+	if err != nil || req.WorkOrderID <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+	var name string
+	if err := db.DB.QueryRow(`SELECT filename FROM active_work_order_photos
+		WHERE id = ? AND work_order_id = ?`, photoID, req.WorkOrderID).Scan(&name); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	fullPath := filepath.Join(photoDir, filepath.Base(name))
+	if _, err := os.Stat(fullPath); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Cache-Control", "private, max-age=600")
+	http.ServeFile(w, r, fullPath)
 }

@@ -1708,5 +1708,7 @@
   "notify.no_items": "- No details",
   "notify.separator": ", ",
   "staff.field.phone": "Phone",
-  "staff.field.phone_ph": "0912-345-678"
+  "staff.field.phone_ph": "0912-345-678",
+  "workorder.form.voice": "🎤 Voice input",
+  "approval.photos": "Repair photos"
 }

@@ -194,8 +194,9 @@ templ AddItemForm(woID int64) {
 		</label>
 		<label class="full">{ i18n.T(ctx, "workorder.col.desc") }
 			<input name="description" id="itemDesc" placeholder={ i18n.T(ctx, "workorder.form.desc_ph") } required>
-			<div style="margin-top:4px">
-				<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">{ i18n.T(ctx, "workorder.form.phrases") }</button>
+			<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">
+							<button type="button" class="btn btn-s" id="phraseBtn" onclick="togglePhrasePicker()">{ i18n.T(ctx, "workorder.form.phrases") }</button>
+							<button type="button" class="btn btn-s" id="voiceBtn" onclick="startItemVoice()">{ i18n.T(ctx, "workorder.form.voice") }</button>
 				<div id="phrasePicker" style="display:none;margin-top:8px;border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--surface)">
 					<input type="search" id="phraseSearch" name="phrase" class="search-input" placeholder={ i18n.T(ctx, "workorder.form.phrase_search_ph") } style="width:100%;margin-bottom:8px"
 						hx-get="/api/phrases/search" hx-trigger="keyup changed delay:300ms, search"
@@ -228,8 +229,31 @@ templ AddItemForm(woID int64) {
 				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "workorder.form.add_item") }</button></div>
 	</form>
 	@PartSearchScript()
-	@PhrasePickerScript()
-}
+		@PhrasePickerScript()
+		<script>
+			function startItemVoice() {
+				var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+				var btn = document.getElementById("voiceBtn");
+				if (!SR) {
+					alert("此瀏覽器不支援語音辨識（Chrome／Edge 才可用）");
+					return;
+				}
+				var rec = new SR();
+				rec.lang = "zh-TW";
+				rec.interimResults = false;
+				rec.maxAlternatives = 1;
+				rec.onresult = function (e) {
+					var text = e.results[0][0].transcript;
+					var el = document.getElementById("itemDesc");
+					if (el) { el.value = el.value ? el.value + " " + text : text; }
+				};
+				rec.onend = function () { if (btn) { btn.textContent = "🎤 語音輸入"; } };
+				rec.onerror = function () { if (btn) { btn.textContent = "🎤 語音輸入"; } };
+				if (btn) { btn.textContent = "● 錄音中…"; }
+				try { rec.start(); } catch (err) { if (btn) { btn.textContent = "🎤 語音輸入"; } }
+			}
+		</script>
+	}
 
 // StatusControls 狀態切換控制（HTMX 無刷新）。
 templ StatusControls(wo model.WorkOrder, canEdit bool) {

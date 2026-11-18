@@ -1708,5 +1708,7 @@
   "notify.no_items": "- 無明細",
   "notify.separator": "、",
   "staff.field.phone": "電話",
-  "staff.field.phone_ph": "0912-345-678"
+  "staff.field.phone_ph": "0912-345-678",
+  "workorder.form.voice": "🎤 語音輸入",
+  "approval.photos": "維修照片"
 }

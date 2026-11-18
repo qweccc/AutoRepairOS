@@ -14,11 +14,18 @@ type ApprovalPageData struct {
 	WorkOrder   *model.WorkOrder
 	Customer    *model.Customer
 	Items       []model.WorkOrderItem
-	IsExpired   bool
+		Photos      []ApprovalPhoto
+		IsExpired   bool
 	IsDecided   bool
 	ErrorMsg    string
 	DecidedText string
-}
+	}
+
+	// ApprovalPhoto 授權頁附上的工單照片（縮圖，點擊放大）。
+	type ApprovalPhoto struct {
+		URL  string
+		Note string
+	}
 
 templ ApprovalPage(data ApprovalPageData) {
 	<!DOCTYPE html>
@@ -66,12 +73,23 @@ templ ApprovalPage(data ApprovalPageData) {
 					</div>
 				}
 				if len(data.Items) > 0 {
-					<div class="info"><strong>{ i18n.T(ctx, "approval.wo_items") }</strong><br/>
-						for _, item := range data.Items {
-							<div class="item">{ item.Description } x{ strconv.Itoa(item.Quantity) } - ${ strconv.FormatFloat(item.Subtotal, 'f', 0, 64) }</div>
-						}
-					</div>
-				}
+									<div class="info"><strong>{ i18n.T(ctx, "approval.wo_items") }</strong><br/>
+										for _, item := range data.Items {
+											<div class="item">{ item.Description } x{ strconv.Itoa(item.Quantity) } - ${ strconv.FormatFloat(item.Subtotal, 'f', 0, 64) }</div>
+										}
+									</div>
+								}
+								if len(data.Photos) > 0 {
+									<div class="info"><strong>{ i18n.T(ctx, "approval.photos") }</strong><br/>
+										<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+											for _, ph := range data.Photos {
+												<a href={ ph.URL } target="_blank" rel="noopener">
+													<img src={ ph.URL } alt={ ph.Note } style="width:120px;height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"/>
+												</a>
+											}
+										</div>
+									</div>
+								}
 				<form method="POST" action={ "/approval/approve/" + data.Request.Token }>
 					<button type="submit" class="btn btn-approve">✅ { i18n.T(ctx, "approval.approve") }</button>
 				</form>
