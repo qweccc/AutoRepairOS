@@ -232,7 +232,8 @@ func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
 			ELSE i.description
 		END,
 		COALESCE(i.quantity,0), COALESCE(i.unit_price,0), COALESCE(i.subtotal,0),
-		COALESCE(i.primary_technician_id,0), COALESCE(i.assistant_technician_id,0), COALESCE(i.photo_url,'')
+		COALESCE(i.primary_technician_id,0), COALESCE(i.assistant_technician_id,0), COALESCE(i.photo_url,''),
+		COALESCE(ii.bin_location,'')
 		FROM active_work_order_items i
 		LEFT JOIN active_inventory_items ii ON ii.id = i.inventory_item_id
 		WHERE i.work_order_id = ? ORDER BY i.id`, woID)
@@ -247,7 +248,7 @@ func loadWorkOrderItems(woID int64) ([]model.WorkOrderItem, float64) {
 		var it model.WorkOrderItem
 		if err := rows.Scan(&it.ID, &it.WorkOrderID, &it.ItemType, &it.InventoryItemID,
 			&it.Description, &it.Quantity, &it.UnitPrice, &it.Subtotal,
-			&it.PrimaryTechnicianID, &it.AssistantTechID, &it.PhotoURL); err != nil {
+			&it.PrimaryTechnicianID, &it.AssistantTechID, &it.PhotoURL, &it.BinLocation); err != nil {
 			continue
 		}
 		total += it.Subtotal

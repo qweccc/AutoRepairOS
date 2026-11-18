@@ -60,6 +60,23 @@ func CounterUpPage(fn func(http.ResponseWriter, *http.Request, model.User)) http
 	}
 }
 
+// OwnerOnlyPage 給「限系統管理員」且要拿到登入者身分的頁面 handler
+//（SRS FR-STF-02：/staff 等管理頁的寫入與編輯一律限 owner）。
+func OwnerOnlyPage(fn func(http.ResponseWriter, *http.Request, model.User)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := currentUser(r)
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		if user.Role != "owner" {
+			http.Error(w, "權限不足：此功能僅限 系統管理員 使用", http.StatusForbidden)
+			return
+		}
+		fn(w, r, user)
+	}
+}
+
 // Actor 是目前登入者的最小身分資訊，給需要「用自己的身分寫入」的 handler。
 type Actor struct {
 	ID   int64

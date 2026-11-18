@@ -191,6 +191,7 @@ type WorkOrderItem struct {
 	PrimaryTechnicianID int64   `json:"primary_technician_id,omitempty"`
 	AssistantTechID     int64   `json:"assistant_tech_id,omitempty"`
 	PhotoURL            string  `json:"photo_url,omitempty"`
+	BinLocation         string  `json:"bin_location,omitempty"`
 }
 
 // Passbook 車輛維修履歷與保養收據（SRS FR-VH-05：LINE 數位維修履歷卡）。

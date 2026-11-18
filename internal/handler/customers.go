@@ -222,11 +222,17 @@ func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if telegramID != "" {
-		if otherID, otherName := telegramBindingTakenByOther(telegramID, 0); otherID != 0 {
-			fail(w, fmt.Sprintf("這個 Telegram ID 已綁定客戶 #%d（%s）", otherID, otherName))
+			if otherID, otherName := telegramBindingTakenByOther(telegramID, 0); otherID != 0 {
+				fail(w, fmt.Sprintf("這個 Telegram ID 已綁定客戶 #%d（%s）", otherID, otherName))
+				return
+			}
+		}
+		// FR-CRM-04：Telegram 偏好必須有 ID（新客戶可後續用綁定端點補 LINE，
+		// 但 Telegram ID 是表單就能填的，這裡就要齊）。
+		if notifPref(r.FormValue("notification_preference")) == "telegram" && telegramID == "" {
+			rejectCustomer("已選擇 Telegram 通知，請先填入客戶的 Telegram ID")
 			return
 		}
-	}
 
 	// FIX: Use POST /customers/new for customer creation via a specific route.
 	// If this handler is reached via /customers/new, it will still work because
@@ -311,10 +317,33 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, err := db.DB.Exec(`UPDATE customers SET name=?, phone=?, telegram_user_id=?,
-		address=?, notification_preference=?, notes=?, tags=?, campaign_code=?, birthday=? WHERE id=?`,
-		name, phone, nullStr(telegramID), nullStr(r.FormValue("address")),
-		notifPref(r.FormValue("notification_preference")), nullStr(r.FormValue("notes")),
+	// FR-CRM-04：选了 LINE／Telegram 就要有對應的綁定 ID，否則通知會静默不送。
+		// 這裡先查既有綁定（LINE 由綁定端點維護、Telegram 可由表單维护），
+		// 缺绑定就擋下，提示先去綁定——不讓人以為已設定成功。
+		pref := notifPref(r.FormValue("notification_preference"))
+		var boundLine, boundTelegram string
+		if err := db.DB.QueryRow(`SELECT COALESCE(line_user_id,''), COALESCE(telegram_user_id,'')
+			FROM customers WHERE id = ?`, id).Scan(&boundLine, &boundTelegram); err != nil {
+			formError(w, r, "編輯客戶", editPath, "讀取客戶綁定資料失敗")
+			return
+		}
+		effectiveTelegram := telegramID
+		if effectiveTelegram == "" {
+			effectiveTelegram = boundTelegram
+		}
+		if pref == "line" && boundLine == "" {
+			formError(w, r, "編輯客戶", editPath, "已選擇 LINE 通知，但客戶尚未綁定 LINE 帳號；請先完成 LINE 綁定再設這個偏好")
+			return
+		}
+		if pref == "telegram" && effectiveTelegram == "" {
+			formError(w, r, "編輯客戶", editPath, "已選擇 Telegram 通知，但客戶尚未輸入 Telegram ID；請先填入 ID 再設這個偏好")
+			return
+		}
+
+		res, err := db.DB.Exec(`UPDATE customers SET name=?, phone=?, telegram_user_id=?,
+			address=?, notification_preference=?, notes=?, tags=?, campaign_code=?, birthday=? WHERE id=?`,
+			name, phone, nullStr(telegramID), nullStr(r.FormValue("address")),
+			pref, nullStr(r.FormValue("notes")),
 		normTags(r.FormValue("tags")), nullStr(r.FormValue("campaign_code")),
 		nullStr(r.FormValue("birthday")), id)
 	if err != nil {

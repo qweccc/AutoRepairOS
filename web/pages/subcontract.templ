@@ -19,6 +19,7 @@ type SubcontractRow struct {
 	Status       string
 	StatusLabel  string
 	StatusPill   string
+	ExpectedDate string
 }
 
 // ListSubcontractsPage 外包加工列表頁（HTMX 即時搜尋）。
@@ -63,7 +64,7 @@ templ ListSubcontractsPage(rows []SubcontractRow, total, page, size int, q, stat
 			<table>
 				<tr>
 					<th>ID</th><th>{ i18n.T(ctx, "subcontract.field.workorder_th") }</th><th>{ i18n.T(ctx, "subcontract.field.vendor_th") }</th><th>{ i18n.T(ctx, "subcontract.field.content_th") }</th><th class="num">{ i18n.T(ctx, "subcontract.field.cost_th") }</th>
-					<th class="num">{ i18n.T(ctx, "subcontract.field.charge_th") }</th><th class="num">{ i18n.T(ctx, "subcontract.field.margin_th") }</th><th>{ i18n.T(ctx, "estimates.field.status") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th>
+					<th class="num">{ i18n.T(ctx, "subcontract.field.charge_th") }</th><th class="num">{ i18n.T(ctx, "subcontract.field.margin_th") }</th><th>{ i18n.T(ctx, "estimates.field.status") }</th><th>{ i18n.T(ctx, "subcontract.field.expected") }</th><th>{ i18n.T(ctx, "insurancelist.field.actions") }</th>
 				</tr>
 				<tbody id="subcontract-rows">
 					for _, s := range rows {
@@ -90,6 +91,7 @@ templ SubcontractRowContent(s SubcontractRow) {
 		<td class="num">{ moneyFmt(s.ChargeAmount) }</td>
 		<td class="num">{ moneyFmt(margin) }</td>
 		<td><span class={ "pill " + s.StatusPill }>{ s.StatusLabel }</span></td>
+		<td>{ s.ExpectedDate }</td>
 		<td>
 			<a class="btn btn-s" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/edit" }>{ i18n.T(ctx, "common.edit") }</a>
 			<a class="btn btn-d" href={ "/subcontracts/" + strconv.FormatInt(s.ID, 10) + "/delete" }
@@ -102,7 +104,7 @@ templ SubcontractRowContent(s SubcontractRow) {
 // SubcontractSearchRows HTMX 即時搜尋回傳的純列。
 templ SubcontractSearchRows(rows []SubcontractRow) {
 	if len(rows) == 0 {
-		<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "subcontract.search_empty") }</td></tr>
+		<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:20px">{ i18n.T(ctx, "subcontract.search_empty") }</td></tr>
 	}
 	for _, s := range rows {
 		@SubcontractRowContent(s)

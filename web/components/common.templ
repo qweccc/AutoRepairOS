@@ -144,7 +144,19 @@ templ PlateScanUI(fieldMapJSON string) {
 			}
 		} catch (e) { /* 解析失敗就用空 map，按鈕仍可點，只是不回填 */ }
 		document.addEventListener("DOMContentLoaded", function () {
-			if (window.initPlateScan) {
+					// FR-IN-02：未設定視覺辨識（cloud key / local url 都缺）時，
+					// 後端不注入 client、/api/vision/recognize 會回 503；此時把整塊
+					// 拍照 UI 藏起來，避免出現按了沒反應的按鈕。
+					fetch("/api/vision/status", { credentials: "same-origin" })
+						.then(function (r) { return r.json(); })
+						.then(function (s) {
+							if (s && s.enabled === false) {
+								var holder = document.querySelector("[data-fieldmap]");
+								if (holder) { holder.style.display = "none"; }
+							}
+						})
+						.catch(function () { /* 查不到狀態就維持顯示，由按鈕本身的錯誤處理提示 */ });
+					if (window.initPlateScan) {
 				window.initPlateScan({
 					buttonId: "plateScanBtn",
 					inputId: "plateScanInput",

@@ -954,7 +954,7 @@ func PlateScanUI(fieldMapJSON string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</span></div><script>\r\n\t\t// fieldMapJSON 由 templ 用屬性插值放在上面 div 的 data-fieldmap，\r\n\t\t// 這裡讀出來再 JSON.parse。\r\n\t\t// 不可寫成 JS 物件字面值 fieldMap: { ... }：templ 不對 <script> 內文\r\n\t\t// 做 {} 插值，會原樣輸出 `fieldMap: { fieldMapJSON }` → SyntaxError，\r\n\t\t// 整段 script 掛掉、按鈕監聽沒綁上（症狀：按了沒反應）。\r\n\t\tvar plateFieldMap = {};\r\n\t\ttry {\r\n\t\t\tvar holder = document.querySelector(\"[data-fieldmap]\");\r\n\t\t\tif (holder && holder.getAttribute(\"data-fieldmap\")) {\r\n\t\t\t\tplateFieldMap = JSON.parse(holder.getAttribute(\"data-fieldmap\"));\r\n\t\t\t}\r\n\t\t} catch (e) { /* 解析失敗就用空 map，按鈕仍可點，只是不回填 */ }\r\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\r\n\t\t\tif (window.initPlateScan) {\r\n\t\t\t\twindow.initPlateScan({\r\n\t\t\t\t\tbuttonId: \"plateScanBtn\",\r\n\t\t\t\t\tinputId: \"plateScanInput\",\r\n\t\t\t\t\tfieldMap: plateFieldMap\r\n\t\t\t\t});\r\n\t\t\t}\r\n\t\t});\r\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</span></div><script>\r\n\t\t// fieldMapJSON 由 templ 用屬性插值放在上面 div 的 data-fieldmap，\r\n\t\t// 這裡讀出來再 JSON.parse。\r\n\t\t// 不可寫成 JS 物件字面值 fieldMap: { ... }：templ 不對 <script> 內文\r\n\t\t// 做 {} 插值，會原樣輸出 `fieldMap: { fieldMapJSON }` → SyntaxError，\r\n\t\t// 整段 script 掛掉、按鈕監聽沒綁上（症狀：按了沒反應）。\r\n\t\tvar plateFieldMap = {};\r\n\t\ttry {\r\n\t\t\tvar holder = document.querySelector(\"[data-fieldmap]\");\r\n\t\t\tif (holder && holder.getAttribute(\"data-fieldmap\")) {\r\n\t\t\t\tplateFieldMap = JSON.parse(holder.getAttribute(\"data-fieldmap\"));\r\n\t\t\t}\r\n\t\t} catch (e) { /* 解析失敗就用空 map，按鈕仍可點，只是不回填 */ }\r\n\t\tdocument.addEventListener(\"DOMContentLoaded\", function () {\r\n\t\t\t\t\t// FR-IN-02：未設定視覺辨識（cloud key / local url 都缺）時，\r\n\t\t\t\t\t// 後端不注入 client、/api/vision/recognize 會回 503；此時把整塊\r\n\t\t\t\t\t// 拍照 UI 藏起來，避免出現按了沒反應的按鈕。\r\n\t\t\t\t\tfetch(\"/api/vision/status\", { credentials: \"same-origin\" })\r\n\t\t\t\t\t\t.then(function (r) { return r.json(); })\r\n\t\t\t\t\t\t.then(function (s) {\r\n\t\t\t\t\t\t\tif (s && s.enabled === false) {\r\n\t\t\t\t\t\t\t\tvar holder = document.querySelector(\"[data-fieldmap]\");\r\n\t\t\t\t\t\t\t\tif (holder) { holder.style.display = \"none\"; }\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t})\r\n\t\t\t\t\t\t.catch(function () { /* 查不到狀態就維持顯示，由按鈕本身的錯誤處理提示 */ });\r\n\t\t\t\t\tif (window.initPlateScan) {\r\n\t\t\t\twindow.initPlateScan({\r\n\t\t\t\t\tbuttonId: \"plateScanBtn\",\r\n\t\t\t\t\tinputId: \"plateScanInput\",\r\n\t\t\t\t\tfieldMap: plateFieldMap\r\n\t\t\t\t});\r\n\t\t\t}\r\n\t\t});\r\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -990,7 +990,7 @@ func BarcodeScanUI(buttonId, targetId, containerId string) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(buttonId).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/common.templ`, Line: 165, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/common.templ`, Line: 177, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 		if templ_7745c5c3_Err != nil {
@@ -1003,7 +1003,7 @@ func BarcodeScanUI(buttonId, targetId, containerId string) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "inventory.scan_barcode"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/common.templ`, Line: 165, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/common.templ`, Line: 177, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -1016,7 +1016,7 @@ func BarcodeScanUI(buttonId, targetId, containerId string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templruntime.NewAttributeExpression(containerId).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/common.templ`, Line: 166, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/common.templ`, Line: 178, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {

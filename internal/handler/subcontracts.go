@@ -105,6 +105,7 @@ func ListSubcontracts(w http.ResponseWriter, r *http.Request, user model.User) {
 			Status:       s.Status,
 			StatusLabel:  subcontractStatusLabel[s.Status],
 			StatusPill:   subcontractStatusPill[s.Status],
+			ExpectedDate: s.ExpectedDate,
 		})
 	}
 
@@ -148,6 +149,7 @@ func SearchSubcontractsAPI(w http.ResponseWriter, r *http.Request) {
 			Status:       s.Status,
 			StatusLabel:  subcontractStatusLabel[s.Status],
 			StatusPill:   subcontractStatusPill[s.Status],
+			ExpectedDate: s.ExpectedDate,
 		})
 	}
 	pages.SubcontractSearchRows(result).Render(r.Context(), w)

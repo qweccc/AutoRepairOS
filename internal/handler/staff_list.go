@@ -145,7 +145,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
 			Active:      s.Active,
-			CanEdit:     true,
+			CanEdit:     user.Role == "owner",
 		})
 	}
 
@@ -155,7 +155,7 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 	}
 
 	pages.ListStaffPage(staffRows, total, page, size, q, kind, empCount, depCount, insuredCount,
-		user.Role == "owner" || user.Role == "counter", roleOpts, lookupOptions("branch", ""),
+		user.Role == "owner", roleOpts, lookupOptions("branch", ""),
 		user).Render(r.Context(), w)
 }
 
@@ -163,6 +163,9 @@ func ListStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	kind := strings.TrimSpace(r.URL.Query().Get("kind"))
+	// 本端點僅限 owner（見 routes.go），列上的編輯鈕維持可顯示。
+	u, _ := currentUser(r)
+	canEdit := u.Role == "owner"
 	if r.URL.Query().Get("format") == "picker" {
 		searchStaffPicker(w, r, q)
 		return
@@ -230,7 +233,7 @@ func SearchStaffAPI(w http.ResponseWriter, r *http.Request) {
 			DepOf:       s.DependentOf,
 			DepOfName:   s.DepOfName,
 			Active:      s.Active,
-			CanEdit:     true,
+			CanEdit:     canEdit,
 		})
 	}
 	pages.StaffSearchRows(result).Render(r.Context(), w)

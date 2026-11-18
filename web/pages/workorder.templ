@@ -129,7 +129,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 	if len(items) > 0 {
 	<table>
 		<tr>
-			<th>{ i18n.T(ctx, "workorder.col.type") }</th><th>{ i18n.T(ctx, "workorder.col.desc") }</th><th class="num">{ i18n.T(ctx, "workorder.col.qty") }</th>
+			<th>{ i18n.T(ctx, "workorder.col.type") }</th><th>{ i18n.T(ctx, "workorder.col.desc") }</th><th>{ i18n.T(ctx, "inventory.field.bin") }</th><th class="num">{ i18n.T(ctx, "workorder.col.qty") }</th>
 			{{ showMoney := user.Role == "owner" || user.Role == "counter" }}
 			if showMoney {
 				<th class="num">{ i18n.T(ctx, "workorder.col.unit_price") }</th><th class="num">{ i18n.T(ctx, "workorder.col.subtotal") }</th>
@@ -140,6 +140,7 @@ templ WorkOrderItemsTable(woID int64, items []model.WorkOrderItem, techNames map
 				<tr>
 					<td>@components.Pill(itemTypeLabel(ctx, it.ItemType), "p-progress")</td>
 					<td>{ it.Description }</td>
+					<td style="color:var(--muted);font-size:12.5px">{ it.BinLocation }</td>
 					<td class="num">{ strconv.Itoa(it.Quantity) }</td>
 					if showMoney {
 						<td class="num">{ money(it.UnitPrice) }</td>
