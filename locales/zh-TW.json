@@ -10,6 +10,8 @@
   "nav.staff": "員工",
   "nav.logout": "登出",
   "nav.auditLog": "稽核紀錄",
+  "dashboard.issue.backup_health": "備份異常",
+  "dashboard.issue.backup_health_desc": "最新一次備份失敗，或 48 小時內沒有成功備份。請到「排程」頁查看備份紀錄並手動執行備份。",
   "audit.title": "稽核紀錄",
   "audit.note": "記錄收款作廢、庫存回沖、明細刪除、價格異動與工單活動代碼更新等關鍵操作（最近 200 筆）。",
   "audit.col_time": "時間",

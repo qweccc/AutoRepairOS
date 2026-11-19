@@ -10,6 +10,8 @@
   "nav.staff": "Staff",
   "nav.logout": "Logout",
   "nav.auditLog": "Audit Log",
+  "dashboard.issue.backup_health": "Backup problem",
+  "dashboard.issue.backup_health_desc": "The latest backup failed, or no successful backup in the last 48 hours. Check backup records on the Scheduled Tasks page and run a backup.",
   "audit.title": "Audit Log",
   "audit.note": "Key operations: receipt voids, inventory reversals, item deletions, price changes and work order campaign updates (latest 200).",
   "audit.col_time": "Time",

@@ -272,6 +272,18 @@ func IndexHandler(w http.ResponseWriter, r *http.Request, user model.User) {
 				   OR c.id IS NULL`,
 		},
 	}
+	// 備份健康（僅 owner）：最新一次備份失敗、或 48 小時內沒有成功備份。
+	if user.Role == "owner" {
+		issues = append(issues, pages.DashboardIssue{
+			Label:  "dashboard.issue.backup_health",
+			Detail: "dashboard.issue.backup_health_desc",
+			Href:   "/scheduled-tasks",
+			Query: `SELECT CASE
+				WHEN (SELECT status FROM backup_records ORDER BY datetime(created_at) DESC, id DESC LIMIT 1) = 'failed' THEN 1
+				WHEN NOT EXISTS (SELECT 1 FROM backup_records WHERE status='success' AND datetime(created_at) >= datetime('now','-48 hours')) THEN 1
+				ELSE 0 END`,
+		})
+	}
 	issuesOut := make([]pages.DashboardIssue, 0, len(issues))
 	for _, issue := range issues {
 		var count int
