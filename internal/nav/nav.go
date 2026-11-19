@@ -94,6 +94,7 @@ var Routes = []Route{
 	{Path: "/ap", Name: "應付帳款", Group: "帳務人事", NameKey: "nav.ap", GroupKey: "group.account", Roles: counterUp},
 	{Path: "/lookup", Name: "代碼對照", Group: "後台設定", NameKey: "nav.lookup", GroupKey: "group.admin", Roles: counterUp},
 	{Path: "/scheduled-tasks", Name: "排程", Group: "後台設定", NameKey: "nav.scheduled", GroupKey: "group.admin", Roles: nil},
+	{Path: "/audit-log", Name: "稽核紀錄", Group: "後台設定", NameKey: "nav.auditLog", GroupKey: "group.admin", Roles: []string{RoleOwner}},
 	{Path: "/subcontracts", Name: "外包", Group: "後台設定", NameKey: "nav.subcontracts", GroupKey: "group.admin", Roles: nil},
 	{Path: "/equipment", Name: "設備", Group: "後台設定", NameKey: "nav.equipment", GroupKey: "group.admin", Roles: nil},
 	{Path: "/phrases", Name: "技師片語", Group: "後台設定", NameKey: "nav.phrases", GroupKey: "group.admin", Roles: nil},

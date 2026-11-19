@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -175,6 +176,14 @@ func DeleteWorkOrderItem(w http.ResponseWriter, r *http.Request, user model.User
 	// 視自動排除，明細列表、收據、成本統計與結帳扣料都不再計入。
 	if _, err := tx.Exec("UPDATE work_order_items SET deleted_at = datetime('now') WHERE id = ? AND work_order_id = ?", itemID, woID); err != nil {
 		fail(w, "刪除項目失敗")
+		return
+	}
+
+	// 稽核留痕：軟刪是誰做的（與軟刪同一交易，失敗就整體 rollback）。
+	if _, err := tx.Exec(`INSERT INTO audit_log (actor_id, action, entity_type, entity_id, detail_json)
+		VALUES (?, 'soft_delete', 'work_order_item', ?, ?)`,
+		user.ID, itemID, fmt.Sprintf(`{"work_order_id":%d,"item_type":%q,"quantity":%d}`, woID, itemType, qty)); err != nil {
+		fail(w, "寫入稽核紀錄失敗")
 		return
 	}
 

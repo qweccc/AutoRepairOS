@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -159,6 +160,9 @@ func DeleteEstimateItem(w http.ResponseWriter, r *http.Request) {
 	if err := service.New(db.DB).DeleteEstimateItem(r.Context(), estimateID, itemID); err != nil {
 		fail(w, "刪除估價項目失敗："+err.Error())
 		return
+	}
+	if u, err := currentUser(r); err == nil {
+		recordAudit(u.ID, "delete", "estimate_item", itemID, fmt.Sprintf(`{"estimate_id":%d}`, estimateID))
 	}
 	http.Redirect(w, r, "/estimates/"+strconv.FormatInt(estimateID, 10), http.StatusSeeOther)
 }

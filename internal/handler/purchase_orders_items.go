@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -79,6 +80,9 @@ func DeletePurchaseOrderItem(w http.ResponseWriter, r *http.Request) {
 		WHERE id = ? AND order_id = ? AND deleted_at IS NULL`, itemID, orderID); err != nil {
 		fail(w, "刪除品項失敗")
 		return
+	}
+	if u, err := currentUser(r); err == nil {
+		recordAudit(u.ID, "soft_delete", "purchase_order_item", itemID, fmt.Sprintf(`{"order_id":%d}`, orderID))
 	}
 	recalcPurchaseOrderTotal(orderID)
 	items, total := loadPurchaseOrderItems(orderID)

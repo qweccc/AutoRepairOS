@@ -1,0 +1,53 @@
+package pages
+
+import (
+	"context"
+	"strconv"
+
+	"autorepairos/internal/i18n"
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+// AuditLogRow 一筆操作稽核。
+type AuditLogRow struct {
+	CreatedAt, Actor, Action, EntityType, Detail string
+	EntityID                                   int64
+}
+
+// AuditLogPage owner 限定的稽核紀錄頁。
+templ AuditLogPage(rows []AuditLogRow, user model.User) {
+	@components.Layout(i18n.T(ctx, "audit.title"), "/audit-log", user, AppName) {
+		<div class="card">
+			<h2>{ i18n.T(ctx, "audit.title") }</h2>
+			<p style="color:var(--muted);font-size:12.5px;margin:0 0 14px">
+				{ i18n.T(ctx, "audit.note") }
+			</p>
+			if len(rows) > 0 {
+				<table>
+					<tr><th>{ i18n.T(ctx, "audit.col_time") }</th><th>{ i18n.T(ctx, "audit.col_actor") }</th><th>{ i18n.T(ctx, "audit.col_action") }</th><th>{ i18n.T(ctx, "audit.col_entity") }</th><th class="num">ID</th><th>{ i18n.T(ctx, "audit.col_detail") }</th></tr>
+					for _, a := range rows {
+						<tr>
+							<td>{ a.CreatedAt }</td>
+							<td>{ a.Actor }</td>
+							<td>{ auditActionLabel(ctx, a.Action) }</td>
+							<td><code>{ a.EntityType }</code></td>
+							<td class="num">{ strconv.FormatInt(a.EntityID, 10) }</td>
+							<td style="font-size:11.5px"><code>{ a.Detail }</code></td>
+						</tr>
+					}
+				</table>
+			} else {
+				<div class="empty">{ i18n.T(ctx, "audit.empty") }</div>
+			}
+		</div>
+	}
+}
+
+func auditActionLabel(ctx context.Context, action string) string {
+	key := "audit.action." + action
+	if v := i18n.T(ctx, key); v != key {
+		return v
+	}
+	return action
+}

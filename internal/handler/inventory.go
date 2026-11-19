@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -104,6 +105,12 @@ func UpdateInventoryItem(w http.ResponseWriter, r *http.Request) {
 		supArg = s
 	}
 
+	// 價格異動留痕：先讀舊價，更新成功且價格有變才寫稽核（before/after）。
+	var oldCost, oldSell float64
+	db.DB.QueryRow(`SELECT COALESCE(cost_price,0), COALESCE(selling_price,0) FROM inventory_items WHERE id=?`, id).Scan(&oldCost, &oldSell)
+	newCost := atofDefault(r.FormValue("cost_price"), 0)
+	newSell := atofDefault(r.FormValue("selling_price"), 0)
+
 	res, err := db.DB.Exec(`UPDATE inventory_items SET supplier_id=?, part_number=?, barcode=?,
 		name=?, category=?, bin_location=?, cost_price=?, selling_price=?, min_safety_stock=? WHERE id=?`,
 		supArg, part, nullStr(r.FormValue("barcode")), name, nullStr(r.FormValue("category")), bin,
@@ -120,6 +127,12 @@ func UpdateInventoryItem(w http.ResponseWriter, r *http.Request) {
 	if n, _ := res.RowsAffected(); n == 0 {
 		http.NotFound(w, r)
 		return
+	}
+	if newCost != oldCost || newSell != oldSell {
+		if u, err := currentUser(r); err == nil {
+			recordAudit(u.ID, "price_change", "inventory_item", id,
+				fmt.Sprintf(`{"cost_before":%g,"cost_after":%g,"selling_before":%g,"selling_after":%g}`, oldCost, newCost, oldSell, newSell))
+		}
 	}
 
 	redirectMsg(w, r, "/inventory", "零件已更新")
