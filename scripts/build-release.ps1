@@ -59,6 +59,15 @@ Remove-Item -Path (Join-Path $webOutput "pages") -Recurse -Force -ErrorAction Si
 Remove-Item -Path (Join-Path $webOutput "components") -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -Path (Join-Path $webOutput "static") -Recurse -Force -ErrorAction SilentlyContinue
 
+# release/locales 是舊版手動殘留：exe 從 cwd（release/）載入字典時，
+# 這份過期字典會「贏過」 embedded 版本，新功能鍵全部缺字（畫面變 raw key）。
+# exe/docker 一律靠 go:embed 的字典，建置時直接清掉這個影子副本。
+$staleLocales = Join-Path $releaseDir "locales"
+if (Test-Path -LiteralPath $staleLocales) {
+    Remove-Item -Path $staleLocales -Recurse -Force
+    Write-Host "已移除 $staleLocales（避免shadowing內嵌字典）"
+}
+
 $launcherScript = Join-Path $releaseDir "start.ps1"
 $launcherCommand = Join-Path $releaseDir "start.cmd"
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "release-start.ps1") -Destination $launcherScript -Force
