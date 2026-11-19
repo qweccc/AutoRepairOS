@@ -476,8 +476,8 @@ Service Layer 採漸進式抽取：目前共用結帳流程由 `internal/service
 │  docker-compose.yml                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
 │  │  app (Go)   │  │ sqlite-web  │  │  ollama    │          │
-│  │  :8090      │  │  (reverse   │  │  (cron)     │          │
-│  │             │  │   proxy)    │  │             │          │
+│  │  :8090      │  │  (DB 瀏覽)  │  │ (LLM 推論)  │          │
+│  │             │  │  debug 用   │  │  選用服務   │          │
 │  └─────────────┘  └─────────────┘  └─────────────┘          │
 │                                                             │
 │  Volumes:                                                   │
