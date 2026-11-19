@@ -70,3 +70,6 @@ cookies.txt
 
 # 瀏覽器除錯殘留
 _trash_browser_*/
+
+# 覆蓋率輸出（測試工具產物，不進版控）
+/coverage
