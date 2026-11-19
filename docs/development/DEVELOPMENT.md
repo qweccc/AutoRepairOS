@@ -320,7 +320,10 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
 
 1. `go build ./...` — 必須 exit 0
 2. `GOOS=linux go build ./...` — 動到 `internal/integration/vision` 時必做（Docker 是 Linux build）
-3. `templ generate` — 改了 `.templ` 一定要跑
+3. `templ generate` — 改了 `.templ` 一定要跑；**指令必須與 CI 一致**
+   （`go run github.com/a-h/templ/cmd/templ@v0.3.1100 generate -path web`），
+   再用同指令加 `-check` 確認 0 updates（`-path` 不同會讓 CI 的 drift 檢查
+   判別成幾十個檔全漂移）。
 4. 本地 8099 起 smoke test：
    - `curl` 登入（正確密碼 302、錯誤 401）
    - 每個動到的頁面 curl 200
@@ -331,6 +334,17 @@ DB_PATH="file:data/autorepair.db?_busy_timeout=5000" PORT=8099 "$LOCALAPPDATA/Te
    **docker container 不關**（留在背景持續服務）
 6. `bash build.sh` — 產 release（舊版 exe 自動移到 unpublished/release-exe/）
 7. `docker compose up -d --force-recreate` — 只在部署新版時做，不是每次測都重啟
+
+### 驗證工具（都在 `unpublished/analysis-and-tests/tools/`，不進版控）
+
+一次性、可重跑的檢查腳本（不得進版控；本 repo 只有交付物與測試上 GitHub）：
+
+- `release_smoke.py`：exe 交付後必跑（修好的端點、表單 action、css md5、啟動 log git 修訂）。
+- `locale_grid.py`：3 角色 × 26 頁 × 2 語系的渲染面語系複測（漏 key、切換生效）。
+- `role_route_matrix.py`：104 條 GET 路由 × 3 角色的實機權限矩陣（越權／死路／5xx，含 KNOWN_NO_ENTRY 分類）。
+- `a11y_check.py`：HTML＋WCAG 雙主題快測，`--base-url/--user/--pages/--json/--css-only`，FAIL 時 exit 1（密碼用 `ARB_PASSWORD`）。
+- `e2e_checkout_fixture.py`、`http_edge_probe.py`、`route_migration_gap.py`、`bench/`（效能基準）與 Access 匯入工具群。
+- 注意：**SRS／回歸用的 benchmark 與覆蓋率輸出不留在版控**（曾誤 track `cmd/bench` 與 `coverage`，已移出）。
 
 **改了前端（CSS/JS/templ）一定要清 service worker 快取再驗**：`offline.js` 會註冊
 `/sw.js`，它把 `app.css`、`htmx.min.js` 等靜態檔快取起來。後端 `serveStatic`
