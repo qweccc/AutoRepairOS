@@ -221,6 +221,36 @@ func (s *InventoryService) ApplyStockDelta(ctx context.Context, itemID int, delt
 	return after, nil
 }
 
+// ApplyStocktakeCountTx 把盤點實盤量寫入庫存（絕對值設定，非增減），
+// 並在同一交易內寫 inventory_movements（delta＝實盤−目前帳面）。
+// 盤點是「校正帳面」，不做库存不足檢查——負庫存 legacy 正是盤點要修的對象。
+// delta 為 0 不寫異動；回傳是否有調整。
+func (s *InventoryService) ApplyStocktakeCountTx(ctx context.Context, tx sqlExecutor, itemID int64, counted int, stocktakeID int64, actorID int64) (bool, error) {
+	var current int
+	err := tx.QueryRowContext(ctx, `SELECT COALESCE(stock_quantity,0) FROM inventory_items WHERE id = ? AND deleted_at IS NULL`, itemID).Scan(&current)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, ErrItemNotFound
+		}
+		return false, err
+	}
+	delta := counted - current
+	if delta == 0 {
+		return false, nil
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE inventory_items SET stock_quantity = ? WHERE id = ?`, counted, itemID); err != nil {
+		return false, err
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO inventory_movements
+		(inventory_item_id, delta, before_quantity, after_quantity, reason, source, work_order_id, created_by)
+		VALUES (?,?,?,?,?,?,?,?)`,
+		itemID, delta, current, counted,
+		fmt.Sprintf("盤點 #%d", stocktakeID), "stocktake", nil, nullableID(actorID)); err != nil {
+		return false, fmt.Errorf("%w: %v", ErrMovementWrite, err)
+	}
+	return true, nil
+}
+
 // List returns all inventory items.
 func (s *InventoryService) List(ctx context.Context) ([]map[string]interface{}, error) {
 	rows, err := s.db.QueryContext(ctx, "SELECT id, name, stock_quantity, reserved_quantity, category FROM inventory_items")

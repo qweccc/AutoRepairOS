@@ -78,6 +78,7 @@ var Routes = []Route{
 	{Path: "/purchase-orders", Name: "進貨單", Group: "進貨庫存", NameKey: "nav.purchaseOrders", GroupKey: "group.stock", Roles: nil},
 	{Path: "/suppliers", Name: "廠商", Group: "進貨庫存", NameKey: "nav.suppliers", GroupKey: "group.stock", Roles: nil},
 	{Path: "/inventory", Name: "庫存", Group: "進貨庫存", NameKey: "nav.inventory", GroupKey: "group.stock", Roles: nil},
+	{Path: "/stocktakes", Name: "盤點", Group: "進貨庫存", NameKey: "nav.stocktakes", GroupKey: "group.stock", Roles: counterUp},
 	{Path: "/maintenance-templates", Name: "保養套餐", Group: "保養保險", NameKey: "nav.maintenanceTemplates", GroupKey: "group.care", Roles: nil},
 	{Path: "/sop-templates", Name: "SOP 模板", Group: "保養保險", NameKey: "nav.sopTemplates", GroupKey: "group.care", Roles: nil},
 	{Path: "/insurances", Name: "投保", Group: "保養保險", NameKey: "nav.insurances", GroupKey: "group.care", Roles: nil},

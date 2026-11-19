@@ -445,3 +445,34 @@ type ApprovalRequest struct {
 	DecisionSource string `json:"decision_source,omitempty"`
 	Notes          string `json:"notes,omitempty"`
 }
+
+// Stocktake 盤點單（FR-IN-06）。CountedCount/DiffCount 為查詢時計算的進度。
+type Stocktake struct {
+	ID           int64  `json:"id"`
+	Code         string `json:"code"`
+	ScopeType    string `json:"scope_type"`
+	ScopeValue   string `json:"scope_value,omitempty"`
+	Status       string `json:"status"`
+	Note         string `json:"note,omitempty"`
+	ItemCount    int    `json:"item_count"`
+	CreatedBy    int64  `json:"created_by,omitempty"`
+	CompletedBy  int64  `json:"completed_by,omitempty"`
+	CreatedAt    string `json:"created_at"`
+	CompletedAt  string `json:"completed_at,omitempty"`
+	CountedCount int    `json:"counted_count"`
+	DiffCount    int    `json:"diff_count"`
+}
+
+// StocktakeItem 盤點明細：建單時的帳面快照＋實盤量（CountedQty nil＝未盤）。
+type StocktakeItem struct {
+	ID              int64  `json:"id"`
+	StocktakeID     int64  `json:"stocktake_id"`
+	InventoryItemID int64  `json:"inventory_item_id"`
+	PartNumber      string `json:"part_number"`
+	Name            string `json:"name"`
+	BinLocation     string `json:"bin_location"`
+	SystemQty       int    `json:"system_qty"`
+	CountedQty      *int   `json:"counted_qty"`
+	CountedBy       int64  `json:"counted_by,omitempty"`
+	CountedAt       string `json:"counted_at,omitempty"`
+}

@@ -1,0 +1,242 @@
+package pages
+
+import (
+	"context"
+	"strconv"
+
+	"autorepairos/internal/i18n"
+	"autorepairos/internal/model"
+	"autorepairos/web/components"
+)
+
+// ListStocktakesPage 盤點紀錄列表（FR-IN-06）。
+templ ListStocktakesPage(list []model.Stocktake, user model.User) {
+	@components.Layout(i18n.T(ctx, "stocktake.title"), "/stocktakes", user, AppName) {
+		@components.Card(i18n.T(ctx, "stocktake.list_title")) {
+			<div style="margin-bottom:14px">
+				<a class="btn btn-p" href="/stocktakes/new">{ i18n.T(ctx, "stocktake.new") }</a>
+			</div>
+			if len(list) == 0 {
+				@components.Empty(i18n.T(ctx, "stocktake.empty"))
+			} else {
+				<table>
+					<tr><th>{ i18n.T(ctx, "stocktake.code") }</th><th>{ i18n.T(ctx, "stocktake.scope") }</th><th>{ i18n.T(ctx, "stocktake.status") }</th><th class="num">{ i18n.T(ctx, "stocktake.progress") }</th><th class="num">{ i18n.T(ctx, "stocktake.col_delta") }</th><th>{ i18n.T(ctx, "stocktake.created_at") }</th><th>{ i18n.T(ctx, "stocktake.completed_at") }</th></tr>
+					for _, st := range list {
+						<tr>
+							<td><a href={ "/stocktakes/" + strconv.FormatInt(st.ID, 10) }>{ st.Code }</a></td>
+							<td>{ stocktakeScopeLabel(ctx, st) }</td>
+							<td>@components.Pill(stocktakeStatusLabel(ctx, st.Status), stocktakeStatusPill(st.Status))</td>
+							<td class="num">{ strconv.Itoa(st.CountedCount) + "/" + strconv.Itoa(st.ItemCount) }</td>
+							<td class="num">{ strconv.Itoa(st.DiffCount) }</td>
+							<td>{ st.CreatedAt }</td>
+							<td>{ st.CompletedAt }</td>
+						</tr>
+					}
+				</table>
+			}
+		}
+	}
+}
+
+// NewStocktakePage 建立盤點單：選範圍（全庫／分類／庫位）。
+templ NewStocktakePage(categoriesHTML string, bins []string, user model.User) {
+	@components.Layout(i18n.T(ctx, "stocktake.new"), "/stocktakes", user, AppName) {
+		@components.Card(i18n.T(ctx, "stocktake.new")) {
+			<form class="frm" method="POST" action="/stocktakes">
+				@components.CSRFInput()
+				<label class="full">{ i18n.T(ctx, "stocktake.scope") }
+					<span style="display:flex;gap:14px;margin-top:6px">
+						<label style="display:inline-flex;align-items:center;gap:4px"><input type="radio" name="scope_type" value="all" checked onchange="stScope()"/>{ i18n.T(ctx, "stocktake.scope_all") }</label>
+						<label style="display:inline-flex;align-items:center;gap:4px"><input type="radio" name="scope_type" value="category" onchange="stScope()"/>{ i18n.T(ctx, "stocktake.scope_category") }</label>
+						<label style="display:inline-flex;align-items:center;gap:4px"><input type="radio" name="scope_type" value="bin" onchange="stScope()"/>{ i18n.T(ctx, "stocktake.scope_bin") }</label>
+					</span>
+				</label>
+				<label>{ i18n.T(ctx, "stocktake.category_label") }
+					<select name="scope_value" id="stCat" disabled>@templ.Raw(categoriesHTML)</select>
+				</label>
+				<label>{ i18n.T(ctx, "stocktake.bin_label") }
+					<select name="scope_value" id="stBin" disabled>
+						for _, b := range bins {
+							<option value={ b }>{ b }</option>
+						}
+					</select>
+				</label>
+				<label class="full">{ i18n.T(ctx, "stocktake.note") }<input name="note" maxlength="200"/></label>
+				<div class="full"><button class="btn btn-p" type="submit">{ i18n.T(ctx, "stocktake.create") }</button></div>
+			</form>
+			<script>
+				function stScope() {
+					var v = document.querySelector('input[name="scope_type"]:checked').value;
+					document.getElementById("stCat").disabled = v !== "category";
+					document.getElementById("stBin").disabled = v !== "bin";
+				}
+			</script>
+		}
+	}
+}
+
+// StocktakePage 盤點單計數表：搜尋（含條碼）＋逐筆實盤＋完成/取消。
+templ StocktakePage(st model.Stocktake, items []model.StocktakeItem, flashMsg string, user model.User) {
+	@components.Layout(st.Code, "/stocktakes", user, AppName) {
+		if flashMsg != "" {
+			<div class="msg msg-ok">{ flashMsg }</div>
+		}
+		@components.Card(i18n.T(ctx, "stocktake.count_sheet")) {
+			<p style="margin:0 0 10px">
+				<b>{ st.Code }</b>
+				<span style="color:var(--muted);margin-left:10px">{ stocktakeScopeLabel(ctx, st) }</span>
+				<span style="margin-left:10px">@components.Pill(stocktakeStatusLabel(ctx, st.Status), stocktakeStatusPill(st.Status))</span>
+			</p>
+			if st.Note != "" {
+				<p style="color:var(--muted);font-size:12.5px;margin:0 0 10px">{ st.Note }</p>
+			}
+			@StocktakeProgress(st)
+			if st.Status == "counting" {
+				<div style="margin-top:14px;display:flex;gap:8px">
+					<form method="POST" action={ "/stocktakes/" + strconv.FormatInt(st.ID, 10) + "/complete" } data-confirm={ i18n.T(ctx, "stocktake.confirm_complete") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
+						@components.CSRFInput()
+						<button class="btn btn-p" type="submit">{ i18n.T(ctx, "stocktake.complete") }</button>
+					</form>
+					<form method="POST" action={ "/stocktakes/" + strconv.FormatInt(st.ID, 10) + "/cancel" } data-confirm={ i18n.T(ctx, "stocktake.confirm_cancel") } onsubmit="return confirm(this.getAttribute('data-confirm'))">
+						@components.CSRFInput()
+						<button class="btn btn-o" type="submit">{ i18n.T(ctx, "stocktake.cancel") }</button>
+					</form>
+				</div>
+			}
+		}
+		@components.Card(i18n.T(ctx, "stocktake.items")) {
+			<div style="display:flex;gap:8px;margin-bottom:12px">
+				<input id="stSearch" name="q" placeholder={ i18n.T(ctx, "stocktake.search_ph") }
+					hx-get={ "/stocktakes/" + strconv.FormatInt(st.ID, 10) }
+					hx-trigger="keyup changed delay:300ms, input changed delay:300ms, search"
+					hx-target="#stocktakeRows" hx-swap="innerHTML" style="flex:1"/>
+				<button class="btn btn-s" type="button" id="stScanBtn">{ i18n.T(ctx, "stocktake.scan") }</button>
+			</div>
+			<div id="stScanBox" style="display:none;max-width:320px;margin-bottom:12px"></div>
+			<table>
+				<tr><th>{ i18n.T(ctx, "stocktake.col_part") }</th><th>{ i18n.T(ctx, "stocktake.col_name") }</th><th>{ i18n.T(ctx, "stocktake.col_bin") }</th><th class="num">{ i18n.T(ctx, "stocktake.col_system") }</th><th class="num">{ i18n.T(ctx, "stocktake.col_counted") }</th><th class="num">{ i18n.T(ctx, "stocktake.col_delta") }</th></tr>
+				<tbody id="stocktakeRows">
+					@StocktakeRows(st.ID, items, st.Status == "counting")
+				</tbody>
+			</table>
+		}
+		<script src="/static/html5-qrcode.min.js"></script>
+		<script>
+			document.addEventListener("DOMContentLoaded", function () {
+				var btn = document.getElementById("stScanBtn");
+				var box = document.getElementById("stScanBox");
+				var search = document.getElementById("stSearch");
+				if (!btn || typeof Html5Qrcode === "undefined") { if (btn) btn.style.display = "none"; return; }
+				var scanner = null;
+				btn.addEventListener("click", function () {
+					if (scanner) { scanner.stop().then(function () { scanner.clear(); }).catch(function () {}); scanner = null; box.style.display = "none"; return; }
+					box.style.display = "block";
+					scanner = new Html5Qrcode("stScanBox");
+					scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, function (text) {
+						search.value = text;
+						search.dispatchEvent(new Event("input", { bubbles: true }));
+						scanner.stop().then(function () { scanner.clear(); }).catch(function () {});
+						scanner = null; box.style.display = "none";
+						search.focus();
+					}, function () {}).catch(function () { box.style.display = "none"; scanner = null; });
+				});
+			});
+		</script>
+	}
+}
+
+// StocktakeRows 計數表列（HTMX 搜尋回應只回這個片段）。
+templ StocktakeRows(stID int64, items []model.StocktakeItem, editable bool) {
+	for _, it := range items {
+		@StocktakeRow(stID, it, editable)
+	}
+}
+
+// StocktakeRow 單筆盤點列：實盤輸入 hx-post 存檔後整列換新＋進度 OOB 更新。
+templ StocktakeRow(stID int64, it model.StocktakeItem, editable bool) {
+	<tr id={ "strow-" + strconv.FormatInt(it.ID, 10) }>
+		<td><code>{ it.PartNumber }</code></td>
+		<td>{ it.Name }</td>
+		<td>{ it.BinLocation }</td>
+		<td class="num">{ strconv.Itoa(it.SystemQty) }</td>
+		<td class="num">
+			if editable {
+				<input type="number" min="0" name="counted_qty" value={ stocktakeCountedValue(it) }
+					placeholder={ i18n.T(ctx, "stocktake.counted_placeholder") } style="width:90px"
+					hx-post={ "/stocktakes/" + strconv.FormatInt(stID, 10) + "/items/" + strconv.FormatInt(it.ID, 10) }
+					hx-trigger="change, keyup[key=='Enter']"
+					hx-target={ "#strow-" + strconv.FormatInt(it.ID, 10) } hx-swap="outerHTML"/>
+			}
+			if !editable {
+				{ stocktakeCountedValue(it) }
+			}
+		</td>
+		<td class="num"><span class={ stocktakeDeltaPill(it) }>{ stocktakeDeltaText(ctx, it) }</span></td>
+	</tr>
+}
+
+// StocktakeProgress 盤點進度（OOB .swap 目標）。
+templ StocktakeProgress(st model.Stocktake) {
+	<div id="stocktakeProgress" hx-swap-oob="true" style="font-size:13px">
+		{ i18n.T(ctx, "stocktake.progress") }：<b>{ strconv.Itoa(st.CountedCount) + "/" + strconv.Itoa(st.ItemCount) }</b>
+		<span style="margin-left:12px">{ i18n.T(ctx, "stocktake.col_delta") }：<b>{ strconv.Itoa(st.DiffCount) }</b> { i18n.T(ctx, "stocktake.items") }</span>
+	</div>
+}
+
+func stocktakeScopeLabel(ctx context.Context, st model.Stocktake) string {
+	switch st.ScopeType {
+	case "category":
+		return i18n.T(ctx, "stocktake.scope_category") + "：" + st.ScopeValue
+	case "bin":
+		return i18n.T(ctx, "stocktake.scope_bin") + "：" + st.ScopeValue
+	default:
+		return i18n.T(ctx, "stocktake.scope_all")
+	}
+}
+
+func stocktakeStatusLabel(ctx context.Context, status string) string {
+	return i18n.T(ctx, "stocktake.status."+status)
+}
+
+func stocktakeStatusPill(status string) string {
+	switch status {
+	case "completed":
+		return "p-completed"
+	case "cancelled":
+		return "p-apprno"
+	default:
+		return "p-progress"
+	}
+}
+
+func stocktakeCountedValue(it model.StocktakeItem) string {
+	if it.CountedQty == nil {
+		return ""
+	}
+	return strconv.Itoa(*it.CountedQty)
+}
+
+func stocktakeDeltaText(ctx context.Context, it model.StocktakeItem) string {
+	if it.CountedQty == nil {
+		return i18n.T(ctx, "stocktake.uncounted")
+	}
+	d := *it.CountedQty - it.SystemQty
+	if d > 0 {
+		return "+" + strconv.Itoa(d)
+	}
+	return strconv.Itoa(d)
+}
+
+func stocktakeDeltaPill(it model.StocktakeItem) string {
+	if it.CountedQty == nil {
+		return "pill"
+	}
+	d := *it.CountedQty - it.SystemQty
+	if d > 0 {
+		return "pill p-completed"
+	}
+	if d < 0 {
+		return "pill p-apprno"
+	}
+	return "pill"
+}

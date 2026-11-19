@@ -221,6 +221,7 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 ### 仍待處理
 
 - [x] T2.5 辨識進度回報（2026-11-19 完成，polling 版，見上）。
+- [x] FR-IN-06 庫存盤點（2026-11-19）：盤點單（全庫/分類/庫位快照）→逐筆實盤（HTMX 列更新＋進度 OOB＋條碼搜尋/相機）→完成以絕對值校正庫存（movement source=stocktake＋audit）；migration 058、限櫃檯以上、測試 3 案。解决健檢發現的 4001 筆負庫存 legacy。
 
 ## 2026-11-19 全量複查修補
 
