@@ -75,14 +75,16 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot "release-start.cmd") -Destinatio
 
 $settingsFile = Join-Path $releaseDir ".env"
 $settingsExample = Join-Path $releaseDir ".env.example"
-Copy-Item -LiteralPath (Join-Path $PSScriptRoot "release.env.example") -Destination $settingsExample -Force
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot "..\.env.example") -Destination $settingsExample -Force
 # 只在不存在時才建立 .env：這個檔是給部署者填機密的，每次建置都覆蓋會把
 # 人家填好的密碼沖掉。
 #
 # 注意：也因此 release/.env 可能是很久以前複製的，其中的非機密設定
 # （如 DB_ENABLE_WAL）會停留在當時的預設值。改預設值時要一併更新
-# scripts/release.env.example 與既有的 release/.env，否則 release 版會
+# 根目錄 .env.example 與既有的 release/.env，否則 release 版會
 # 靜默跑在舊預設上 —— 這個坑在把 DB_ENABLE_WAL 預設改為 true 時就踩到了。
+# .env.example 直接從根目錄複製（唯一權威 key 清單）；舊的
+# scripts/release.env.example 精簡版已廢除——第二份來源必然落後（實測缺了整輪新 key）。
 if (-not (Test-Path -LiteralPath $settingsFile)) {
     Copy-Item -LiteralPath $settingsExample -Destination $settingsFile
 }
