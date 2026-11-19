@@ -195,6 +195,12 @@ func CreateWorkOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := res.LastInsertId()
+	if campaignCode := strings.TrimSpace(r.FormValue("campaign_code")); campaignCode != "" {
+		if _, err := tx.Exec(`UPDATE work_orders SET campaign_code = ? WHERE id = ?`, campaignCode, id); err != nil {
+			fail(w, "建立工單失敗")
+			return
+		}
+	}
 
 	// 預約標記為已進廠。限定狀態：已在 arrived 的不重複寫、已取消／已完成的不改。
 	if apptArg != nil {

@@ -457,111 +457,124 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</label> <label class=\"full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 string
-			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.form.complaint"))
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.form.campaign_code"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 76, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 76, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<textarea name=\"customer_complaint\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<input name=\"campaign_code\" list=\"campaignCodes\" maxlength=\"100\"></label> <datalist id=\"campaignCodes\"></datalist> <label class=\"full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var28 string
-			templ_7745c5c3_Var28, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.form.complaint_ph")).Resolve(ctx)
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.form.complaint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 76, Col: 159}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 78, Col: 65}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<textarea name=\"customer_complaint\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var29 string
-			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(data.Complaint)
+			templ_7745c5c3_Var29, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.form.complaint_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 76, Col: 178}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 78, Col: 159}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</textarea></label><div class=\"full\" style=\"border-top:1px solid var(--surface-2);padding-top:16px;margin-top:4px\"><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 12px\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var30 string
-			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.hint"))
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(data.Complaint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 79, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 78, Col: 178}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</p></div><label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</textarea></label><div class=\"full\" style=\"border-top:1px solid var(--surface-2);padding-top:16px;margin-top:4px\"><p style=\"color:var(--muted);font-size:12.5px;margin:0 0 12px\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var31 string
-			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.category"))
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.hint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 82, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 81, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<select name=\"is_insurance\" id=\"isInsurance\"><option value=\"0\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</p></div><label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var32 string
-			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.self_pay"))
+			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.category"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 83, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 84, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</option> <option value=\"1\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<select name=\"is_insurance\" id=\"isInsurance\"><option value=\"0\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var33 string
-			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.insurance"))
+			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.self_pay"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 84, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 85, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</option></select></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</option> <option value=\"1\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.company"))
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.insurance"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 86, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 86, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<select name=\"insurance_company_id\" id=\"insuranceCompany\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</option></select></label> <label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var35 string
+			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.company"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 88, Col: 51}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<select name=\"insurance_company_id\" id=\"insuranceCompany\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -569,215 +582,215 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</select> <input type=\"hidden\" name=\"insurance_company_id_mirror\" id=\"insuranceCompanyMirror\" value=\"\"></label> <label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var35 string
-			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.no_label"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 89, Col: 52}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<input name=\"claim_no\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</select> <input type=\"hidden\" name=\"insurance_company_id_mirror\" id=\"insuranceCompanyMirror\" value=\"\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var36 string
-			templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.claim.no_ph")).Resolve(ctx)
+			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.no_label"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 89, Col: 127}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 91, Col: 52}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<input name=\"claim_no\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var37 string
-			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.accident_date"))
+			templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.claim.no_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 90, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 91, Col: 127}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<input name=\"accident_date\" type=\"date\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var38 string
-			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.deductible"))
+			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.accident_date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 91, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 92, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<input name=\"deductible_amount\" type=\"number\" min=\"0\" step=\"1\" placeholder=\"0\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<input name=\"accident_date\" type=\"date\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var39 string
-			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.date"))
+			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.deductible"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 92, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 93, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<input name=\"claim_date\" type=\"date\"></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<input name=\"deductible_amount\" type=\"number\" min=\"0\" step=\"1\" placeholder=\"0\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var40 string
-			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.amount"))
+			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.date"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 93, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 94, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<input name=\"claim_amount\" type=\"number\" min=\"0\" step=\"0.01\" value=\"0\"></label> <label class=\"full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<input name=\"claim_date\" type=\"date\"></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var41 string
-			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.note"))
+			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.amount"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 94, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 95, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<textarea name=\"claim_note\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<input name=\"claim_amount\" type=\"number\" min=\"0\" step=\"0.01\" value=\"0\"></label> <label class=\"full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var42 string
-			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.create"))
+			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.claim.note"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 96, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 96, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</button> <a class=\"btn btn-s\" href=\"/work-orders\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<textarea name=\"claim_note\"></textarea></label><div class=\"full\"><button class=\"btn btn-p\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var43 string
-			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.cancel"))
+			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.create"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 97, Col: 79}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 98, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</a></div></form></div><script>\r\n\t\t\t// 未勾選保險件時把保險欄位停用，避免誤填。\r\n\t\t\t// 注意：disabled 的 input 不會隨表單送出，所以保險公司另以 hidden 鏡像保存 id，\r\n\t\t\t// 否則「選了保險件但沒改公司」時後端會收不到 insurance_company_id。\r\n\t\t\t(function () {\r\n\t\t\t\tvar sel = document.getElementById('isInsurance');\r\n\t\t\t\tvar mirror = document.getElementById('insuranceCompanyMirror');\r\n\t\t\t\tvar company = document.querySelector('[name=\"insurance_company_id\"]');\r\n\t\t\t\tvar others = ['claim_no', 'accident_date', 'deductible_amount', 'claim_date', 'claim_amount', 'claim_note'];\r\n\t\t\t\tfunction sync() {\r\n\t\t\t\t\tvar on = sel && sel.value === '1';\r\n\t\t\t\t\tothers.forEach(function (n) {\r\n\t\t\t\t\t\tvar el = document.querySelector('[name=\"' + n + '\"]');\r\n\t\t\t\t\t\tif (el) el.disabled = !on;\r\n\t\t\t\t\t});\r\n\t\t\t\t\tif (company) company.disabled = !on;\r\n\t\t\t\t\tif (mirror) mirror.value = (on && company) ? company.value : '';\r\n\t\t\t\t}\r\n\t\t\t\tif (sel) {\r\n\t\t\t\t\tsel.addEventListener('change', sync);\r\n\t\t\t\t\tif (company) company.addEventListener('change', sync);\r\n\t\t\t\t\tsync();\r\n\t\t\t\t}\r\n\t\t\t})();\r\n\t\t</script> <link rel=\"stylesheet\" href=\"/static/vehicle-search.css\"><script src=\"/static/vehicle-search.js\" defer></script> <div id=\"quickModal\" class=\"modal-backdrop hidden\" data-i18n-unknown-owner=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</button> <a class=\"btn btn-s\" href=\"/work-orders\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var44 string
-			templ_7745c5c3_Var44, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.unknown_owner")).Resolve(ctx)
+			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.cancel"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 131, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 99, Col: 79}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "\" data-i18n-duplicate-title=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</a></div></form></div><script>\r\n\t\t\t// 未勾選保險件時把保險欄位停用，避免誤填。\r\n\t\t\t// 注意：disabled 的 input 不會隨表單送出，所以保險公司另以 hidden 鏡像保存 id，\r\n\t\t\t// 否則「選了保險件但沒改公司」時後端會收不到 insurance_company_id。\r\n\t\t\t(function () {\r\n\t\t\t\tvar sel = document.getElementById('isInsurance');\r\n\t\t\t\tvar mirror = document.getElementById('insuranceCompanyMirror');\r\n\t\t\t\tvar company = document.querySelector('[name=\"insurance_company_id\"]');\r\n\t\t\t\tvar others = ['claim_no', 'accident_date', 'deductible_amount', 'claim_date', 'claim_amount', 'claim_note'];\r\n\t\t\t\tfunction sync() {\r\n\t\t\t\t\tvar on = sel && sel.value === '1';\r\n\t\t\t\t\tothers.forEach(function (n) {\r\n\t\t\t\t\t\tvar el = document.querySelector('[name=\"' + n + '\"]');\r\n\t\t\t\t\t\tif (el) el.disabled = !on;\r\n\t\t\t\t\t});\r\n\t\t\t\t\tif (company) company.disabled = !on;\r\n\t\t\t\t\tif (mirror) mirror.value = (on && company) ? company.value : '';\r\n\t\t\t\t}\r\n\t\t\t\tif (sel) {\r\n\t\t\t\t\tsel.addEventListener('change', sync);\r\n\t\t\t\t\tif (company) company.addEventListener('change', sync);\r\n\t\t\t\t\tsync();\r\n\t\t\t\t}\r\n\t\t\t})();\r\n\t\t</script> <link rel=\"stylesheet\" href=\"/static/vehicle-search.css\"><script src=\"/static/vehicle-search.js\" defer></script> <div id=\"quickModal\" class=\"modal-backdrop hidden\" data-i18n-unknown-owner=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var45 string
-			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.duplicate_title")).Resolve(ctx)
+			templ_7745c5c3_Var45, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.unknown_owner")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 132, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 133, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" data-i18n-current-owner=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" data-i18n-duplicate-title=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var46 string
-			templ_7745c5c3_Var46, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.current_owner")).Resolve(ctx)
+			templ_7745c5c3_Var46, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.duplicate_title")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 133, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 134, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" data-i18n-use-existing=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" data-i18n-current-owner=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var47 string
-			templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.use_existing")).Resolve(ctx)
+			templ_7745c5c3_Var47, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.current_owner")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 134, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 135, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" data-i18n-duplicate-hint=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" data-i18n-use-existing=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var48 string
-			templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.duplicate_hint")).Resolve(ctx)
+			templ_7745c5c3_Var48, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.use_existing")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 135, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 136, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" data-i18n-create-failed=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" data-i18n-duplicate-hint=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var49 string
-			templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.operation_failed")).Resolve(ctx)
+			templ_7745c5c3_Var49, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.duplicate_hint")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 136, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 137, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\"><div class=\"modal-card\"><div class=\"modal-header\"><h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" data-i18n-create-failed=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var50 string
-			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.title"))
+			templ_7745c5c3_Var50, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.operation_failed")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 139, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 138, Col: 67}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</h3><button type=\"button\" class=\"close-btn\" onclick=\"closeQuickModal()\">✕</button></div><form id=\"quickForm\" hx-post=\"/api/quick-vehicle\" hx-target=\"#quickVehicleStatus\" hx-swap=\"innerHTML\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "\"><div class=\"modal-card\"><div class=\"modal-header\"><h3>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var51 string
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.title"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 141, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</h3><button type=\"button\" class=\"close-btn\" onclick=\"closeQuickModal()\">✕</button></div><form id=\"quickForm\" hx-post=\"/api/quick-vehicle\" hx-target=\"#quickVehicleStatus\" hx-swap=\"innerHTML\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -785,111 +798,111 @@ func NewWorkOrderPage(data NewWorkOrderPageData, user model.User) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"frm\"><label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.plate"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 145, Col: 51}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<input name=\"plate_number\" id=\"quickPlate\" required></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<div class=\"frm\"><label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var52 string
-			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.model"))
+			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.plate"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 146, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 147, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<input name=\"brand_model\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<input name=\"plate_number\" id=\"quickPlate\" required></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var53 string
-			templ_7745c5c3_Var53, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.model_ph")).Resolve(ctx)
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.model"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 146, Col: 132}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 148, Col: 51}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\" required></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<input name=\"brand_model\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var54 string
-			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.owner"))
+			templ_7745c5c3_Var54, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "workorder.quick.model_ph")).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 147, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 148, Col: 132}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<input name=\"customer_name\" required></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "\" required></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var55 string
-			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.phone"))
+			templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.owner"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 148, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 149, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<input name=\"customer_phone\" required></label> <label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<input name=\"customer_name\" required></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var56 string
-			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.mileage"))
+			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.phone"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 149, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 150, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<input name=\"current_mileage\" type=\"number\" min=\"0\" required></label></div><div class=\"modal-actions\"><button type=\"submit\" class=\"btn btn-p\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "<input name=\"customer_phone\" required></label> <label>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var57 string
-			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.create"))
+			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.mileage"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 152, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 151, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"closeQuickModal()\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<input name=\"current_mileage\" type=\"number\" min=\"0\" required></label></div><div class=\"modal-actions\"><button type=\"submit\" class=\"btn btn-p\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var58 string
-			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.cancel"))
+			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.quick.create"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 153, Col: 107}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 154, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</button></div><div id=\"quickVehicleStatus\" role=\"status\"></div></form></div></div><script>\r\n\t\t\tfunction openQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.remove('hidden');\r\n\t\t\t\tdocument.getElementById('quickPlate').focus();\r\n\t\t\t}\r\n\t\t\tfunction closeQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.add('hidden');\r\n\t\t\t\tdocument.getElementById('quickForm').reset();\r\n\t\t\t}\r\n\t\t\tdocument.addEventListener('htmx:afterRequest', function(e) {\r\n\t\t\t\tif (e.detail.elt !== document.getElementById('quickForm')) return;\r\n\t\t\t\tvar parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, 'text/html');\r\n\t\t\t\tvar result = parsed.getElementById('quickVehicleResult');\r\n\t\t\t\tif (!result || result.dataset.ok !== 'true') return;\r\n\t\t\t\t\t\t\t// 車牌已存在時先問清楚再帶入。\r\n\t\t\t\t\t\t\t// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於\r\n\t\t\t\t\t\t\t// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。\r\n\t\t\t\t\t\t\tif (result.dataset.duplicate === 'true') {\r\n\t\t\t\t\t\t\t\tvar qd = document.getElementById('quickModal').dataset;\n\t\t\t\t\t\t\t\tvar who = (result.dataset.ownerName || qd.i18nUnknownOwner) +\r\n\t\t\t\t\t\t\t\t\t(result.dataset.ownerPhone ? '（' + result.dataset.ownerPhone + '）' : '');\r\n\t\t\t\t\t\t\t\tvar msg = qd.i18nDuplicateTitle.replace('%s', result.dataset.label.split(' / ')[0]) + '\n\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nCurrentOwner + who + '\n\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nUseExisting + '\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nDuplicateHint;\r\n\t\t\t\t\t\t\t\tif (!confirm(msg)) {\r\n\t\t\t\t\t\t\t\t\treturn;   // 不帶入，modal 保持開啟讓櫃檯修正\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tcloseQuickModal();\r\n\t\t\t\t\t\t\tvar input = document.getElementById('vehicle_id');\r\n\t\t\t\t\t\t\tinput.value = result.dataset.vehicleId;\r\n\t\t\t\t\t\t\tvar vs = document.querySelector('.vs-input');\r\n\t\t\t\t\t\t\tif (vs) vs.value = result.dataset.label;\r\n\t\t\t\t\t\t\tvar hint = document.querySelector('[name=\"current_mileage\"]');\r\n\t\t\t\t\t\t\tif (hint) hint.value = result.dataset.mileage || '';\r\n\t\t\t\t\t\t\tvar btn = document.querySelector('.btn-p');\r\n\t\t\t\t\t\t\tif (btn) btn.focus();\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('htmx:responseError', function(e) {\r\n\t\t\t\tif (e.detail.elt === document.getElementById('quickForm')) {\r\n\t\t\t\t\talert(e.detail.xhr.responseText || document.getElementById('quickModal').dataset.i18nCreateFailed);\r\n\t\t\t\t}\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });\r\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</button> <button type=\"button\" class=\"btn btn-s\" onclick=\"closeQuickModal()\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var59 string
+			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "workorder.cancel"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/workorder_new.templ`, Line: 155, Col: 107}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "</button></div><div id=\"quickVehicleStatus\" role=\"status\"></div></form></div></div><script>\r\n\t\t\tfunction openQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.remove('hidden');\r\n\t\t\t\tdocument.getElementById('quickPlate').focus();\r\n\t\t\t}\r\n\t\t\tfunction closeQuickModal() {\r\n\t\t\t\tdocument.getElementById('quickModal').classList.add('hidden');\r\n\t\t\t\tdocument.getElementById('quickForm').reset();\r\n\t\t\t}\r\n\t\t\tdocument.addEventListener('htmx:afterRequest', function(e) {\r\n\t\t\t\tif (e.detail.elt !== document.getElementById('quickForm')) return;\r\n\t\t\t\tvar parsed = new DOMParser().parseFromString(e.detail.xhr.responseText, 'text/html');\r\n\t\t\t\tvar result = parsed.getElementById('quickVehicleResult');\r\n\t\t\t\tif (!result || result.dataset.ok !== 'true') return;\r\n\t\t\t\t\t\t\t// 車牌已存在時先問清楚再帶入。\r\n\t\t\t\t\t\t\t// 櫃檯可能只是打錯車牌，或這真的是同一台車回廠——但直接帶入等於\r\n\t\t\t\t\t\t\t// 默默把工單（含之後的收款）掛到現有車主身上，選錯車的代價很高。\r\n\t\t\t\t\t\t\tif (result.dataset.duplicate === 'true') {\r\n\t\t\t\t\t\t\t\tvar qd = document.getElementById('quickModal').dataset;\n\t\t\t\t\t\t\t\tvar who = (result.dataset.ownerName || qd.i18nUnknownOwner) +\r\n\t\t\t\t\t\t\t\t\t(result.dataset.ownerPhone ? '（' + result.dataset.ownerPhone + '）' : '');\r\n\t\t\t\t\t\t\t\tvar msg = qd.i18nDuplicateTitle.replace('%s', result.dataset.label.split(' / ')[0]) + '\n\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nCurrentOwner + who + '\n\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nUseExisting + '\n' +\r\n\t\t\t\t\t\t\t\t\tqd.i18nDuplicateHint;\r\n\t\t\t\t\t\t\t\tif (!confirm(msg)) {\r\n\t\t\t\t\t\t\t\t\treturn;   // 不帶入，modal 保持開啟讓櫃檯修正\r\n\t\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tcloseQuickModal();\r\n\t\t\t\t\t\t\tvar input = document.getElementById('vehicle_id');\r\n\t\t\t\t\t\t\tinput.value = result.dataset.vehicleId;\r\n\t\t\t\t\t\t\tvar vs = document.querySelector('.vs-input');\r\n\t\t\t\t\t\t\tif (vs) vs.value = result.dataset.label;\r\n\t\t\t\t\t\t\tvar hint = document.querySelector('[name=\"current_mileage\"]');\r\n\t\t\t\t\t\t\tif (hint) hint.value = result.dataset.mileage || '';\r\n\t\t\t\t\t\t\tvar btn = document.querySelector('.btn-p');\r\n\t\t\t\t\t\t\tif (btn) btn.focus();\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('htmx:responseError', function(e) {\r\n\t\t\t\tif (e.detail.elt === document.getElementById('quickForm')) {\r\n\t\t\t\t\talert(e.detail.xhr.responseText || document.getElementById('quickModal').dataset.i18nCreateFailed);\r\n\t\t\t\t}\r\n\t\t\t});\r\n\t\t\tdocument.addEventListener('keydown', function(e){ if(e.key==='Escape') closeQuickModal(); });\r\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
