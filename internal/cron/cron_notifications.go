@@ -220,6 +220,18 @@ func processPendingNotifications() (int, error) {
 }
 
 func processPendingNotificationsWithSender(send func(notificationItem) error) (int, error) {
+	total := 0
+	for total < 1000 {
+		n, err := processPendingNotificationsBatch(send)
+		total += n
+		if err != nil || n == 0 {
+			return total, err
+		}
+	}
+	return total, nil
+}
+
+func processPendingNotificationsBatch(send func(notificationItem) error) (int, error) {
 	scanTime := time.Now().UTC()
 	leaseExpired := notificationProcessingTime(scanTime.Add(-notificationLease))
 	rows, err := db.DB.Query(`SELECT n.id, COALESCE(n.customer_id,0), n.channel, n.kind,
@@ -229,7 +241,7 @@ func processPendingNotificationsWithSender(send func(notificationItem) error) (i
 		LEFT JOIN active_customers c ON c.id = n.customer_id
 		WHERE (n.status='pending' AND n.scheduled_at <= ?)
 		   OR (n.status='processing' AND n.processing_at <= ?)
-		ORDER BY n.scheduled_at LIMIT 50`, dbTime(scanTime), leaseExpired)
+		ORDER BY n.scheduled_at LIMIT 200`, dbTime(scanTime), leaseExpired)
 	if err != nil {
 		return 0, err
 	}
