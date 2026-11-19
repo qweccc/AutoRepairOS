@@ -178,3 +178,42 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 
 ### 建議補的測試（review 末條建議）
 - [x] T3.6 補 SQLite fixture 測試覆蓋（2026-10-29）：新增 `unpublished/analysis-and-tests/tools/test_import_idempotency.py`（11 則，`python -m unittest test_import_idempotency` 全綠）。涵蓋重跑冪等、中途失敗重續（state 為空仍正確）、來源資料修改不重複、完整重置清收款、保險公司名稱解析與工單端到端寫入。已用「換回舊 hash 法 → 3 則變紅」確認測試有鑑別力。
+## 2026-11 SRS 全量複查與交付輪（至 2026-11-19）
+
+80 條 FR 分 5 組平行查核、逐條對程式給證據後分批修正並推送；同輪完成測試、
+無障礙與交付環保收斂。以下數字皆為實跑結果，可重現。
+
+### SRS 缺口收斂（commit 軸）
+
+| 項目 | 成果 |
+|---|---|
+| 安全性／權限 | FR-STF-02（`/staff` 寫入限 owner，新增 `OwnerOnlyPage`）、CRM-04 通知綁定檢查、IDOR（列印/照片頁）修正 |
+| 資料一致性 | 工單明細／估價項目改軟刪（migration 052／053）、員工電話（054）、照片標記指定明細（055）、收款賒帳（056） |
+| 金流 | FR-FIN-01 賒帳/月結、FR-FIN-02 結帳需有足額收款紀錄且防超額收款、FR-FIN-03/04 應收清單＋帳齡 |
+| 其他 | FR-APP-05 當日進場前導、FR-INS-03 催保單列印、FR-INV-05 庫位、FR-SUB-02 外包預計完成日、FR-WO-05/06/07、FR-PRINT-07 列印鈕、FR-ANA-05 今年營收 |
+
+### 測試與驗證（皆為實跑數字）
+
+- `go test ./...`：**17/17 package 全綠**（含 Templ drift CI 同步指令）。
+- 角色 × GET 路由矩陣（104 條路由 × 3 角色 = **312 次**）：越權 0、死路 0、5xx 0；4 條「無畫面入口的收緊防線」與 1 條 IDOR 正常拒絕已分類標註。
+- HTTP 併發結帳：8 緒結帳只扣一次庫、4 緒全額收款只成立一筆（修掉原本會收 4× 的超額收款）。
+- 屬性測試（固定種子亂數序列）：庫存不為負、reserved ≤ stock、異動對帳成立。
+- a11y 快測：10/10 頁 + 雙主題 14/14 對比 PASS；真瀏覽器 Tab 焦點 2px 外框。
+- 語系網格：3 角色 × 26 頁 × 2 語系，漏 key 0、英文頁残留判讀完成。
+
+### 交付與部署
+
+- exe：`release/AutoRepairOS-2026-11-19_090450.exe`（git 992d69d）；冒煙全 PASS（含修復端點、收款表單 action、css md5、啟動 log git 修訂）。
+- Docker：`--force-recreate` 後 054/055/056 套用、8090 正常、正式 volume 資料無損（85,825 工單 / 6,512 客戶 / 12,964 車輛）。
+- 正式 DB 健檢：`PRAGMA integrity_check = ok`、`foreign_key_check` 無違規。
+- 交付環保：`release/` 剛好 6 件交付物（清掉舊 zip/目錄、`release/data`，以及會 shadowing 內嵌字典的 `release/locales`）；docker 舊 tag 清空僅留 `latest`；`cmd/bench` 與 `coverage` 移出版控（改放 `unpublished/`）。
+
+### 工具（均在 `unpublished/analysis-and-tests/tools/`，不進版控）
+
+`route_migration_gap.py`、`gen_restore.py`、`release_smoke.py`、`locale_grid.py`、
+`role_route_matrix.py`（含 KNOWN_NO_ENTRY 分類）、`e2e_checkout_fixture.py`、
+`a11y_check.py`（HTML＋WCAG 雙主題，FAIL exit 1）、`http_edge_probe.py`、`bench/`。
+
+### 仍待處理
+
+- [ ] T2.5 辨識進度回報（未來排程，見上）。
