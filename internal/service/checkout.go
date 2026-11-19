@@ -14,7 +14,7 @@ var ErrDuplicateVoucher = errors.New("receipt voucher number already exists")
 
 // Service contains business operations backed by an injected database.
 type Service struct {
-	db              *sql.DB
+	db               *sql.DB
 	inventoryService *InventoryService
 }
 
@@ -26,7 +26,7 @@ type sqlExecutor interface {
 
 func New(db *sql.DB) *Service {
 	return &Service{
-		db:              db,
+		db:               db,
 		inventoryService: NewInventoryService(db),
 	}
 }
@@ -121,6 +121,26 @@ func (s *Service) CreateReceipt(ctx context.Context, receipt ReceiptInput) error
 			}
 			if customerID != receipt.CustomerID {
 				return errors.New("receipt customer does not match work order")
+			}
+			if receipt.WorkOrderID > 0 {
+				// FR-FIN-02：避免同一工單被重複／超額收款（連點、兩個櫃檯同時收）。
+				// 既有非作廢收款加上本次若超過應收，就擋下（必須在 INSERT 之前算）。
+				var received float64
+				err = tx.QueryRowContext(ctx, `SELECT COALESCE(SUM(pay_total),0)
+				FROM receivables WHERE work_order_id = ? AND voided = 0`, receipt.WorkOrderID).Scan(&received)
+				if err != nil {
+					return fmt.Errorf("sum receipts for over-collection guard: %w", err)
+				}
+				var woTotal float64
+				err = tx.QueryRowContext(ctx, `SELECT COALESCE(total_amount,0) FROM active_work_orders WHERE id = ?`,
+					receipt.WorkOrderID).Scan(&woTotal)
+				if err != nil {
+					return fmt.Errorf("load work order total for over-collection guard: %w", err)
+				}
+				if received+receipt.PayTotal > woTotal+0.005 {
+					return fmt.Errorf("收款合計 %.2f 將超過本工單應收 %.2f（已有 %.2f）；請確認是否重複收款",
+						received+receipt.PayTotal, woTotal, received)
+				}
 			}
 		} else {
 			err = tx.QueryRowContext(ctx, `SELECT id FROM active_customers WHERE id = ?`, receipt.CustomerID).Scan(&customerID)

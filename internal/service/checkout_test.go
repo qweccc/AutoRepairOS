@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"testing"
 
 	_ "modernc.org/sqlite"
@@ -441,5 +442,67 @@ func assertUnchangedCheckoutState(t *testing.T, db *sql.DB) {
 	if status != "completed" || stock != 8 || reserved != 4 || spent != 12 || unpaid != 80 || movements != 0 {
 		t.Fatalf("state not rolled back: status=%q stock=%d reserved=%d spent=%v unpaid=%v movements=%d",
 			status, stock, reserved, spent, unpaid, movements)
+	}
+}
+
+// FR-FIN-02：同一工單不能被超額收款（連點／兩櫃檯）。第一筆付足後，
+// 再送一筆不同單號的全額收款要被擋下，且不得結帳、不得扣庫。
+func TestCreateReceiptRejectsOverCollection(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	svc := New(db)
+	first := ReceiptInput{
+		VoucherNo: "RCV-FIRST", CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16",
+		PayTotal: 125, Cash: 125, CreatedBy: 21,
+	}
+	if err := svc.CreateReceipt(context.Background(), first); err != nil {
+		t.Fatalf("first receipt: %v", err)
+	}
+	second := first
+	second.VoucherNo = "RCV-DUP"
+	err := svc.CreateReceipt(context.Background(), second)
+	if err == nil {
+		t.Fatal("over-collection receipt was accepted")
+	}
+	if !strings.Contains(err.Error(), "超過") {
+		t.Fatalf("error should explain over-collection, got %v", err)
+	}
+	var receipts int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM receivables WHERE work_order_id=10 AND voided=0`).
+		Scan(&receipts); err != nil {
+		t.Fatal(err)
+	}
+	if receipts != 1 {
+		t.Fatalf("receipt count after rejected duplicate = %d, want 1", receipts)
+	}
+	var movements int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM inventory_movements`).Scan(&movements); err != nil {
+		t.Fatal(err)
+	}
+	if movements != 1 {
+		t.Fatalf("inventory movements = %d, want exactly 1", movements)
+	}
+}
+
+// 分段收款仍可用：兩筆合計等於應收時可以成立並結帳。
+func TestCreateReceiptAllowsSplitPaymentsUpToTotal(t *testing.T) {
+	db := newCheckoutTestDB(t)
+	svc := New(db)
+	base := ReceiptInput{CustomerID: 1, WorkOrderID: 10, PayDate: "2026-10-16", CreatedBy: 21}
+	a := base
+	a.VoucherNo, a.PayTotal, a.Cash = "RCV-A", 60, 60
+	b := base
+	b.VoucherNo, b.PayTotal, b.CreditAmount = "RCV-B", 65, 65
+	if err := svc.CreateReceipt(context.Background(), a); err != nil {
+		t.Fatalf("partial receipt A: %v", err)
+	}
+	if err := svc.CreateReceipt(context.Background(), b); err != nil {
+		t.Fatalf("partial receipt B: %v", err)
+	}
+	var status string
+	if err := db.QueryRow(`SELECT status FROM work_orders WHERE id=10`).Scan(&status); err != nil {
+		t.Fatal(err)
+	}
+	if status != "paid" {
+		t.Fatalf("split payment did not auto-checkout, status=%s", status)
 	}
 }
