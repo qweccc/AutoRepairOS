@@ -229,3 +229,28 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 - 補強：owner-only `/audit-log`、照片佇列每 5 分鐘自動重試（5 次後 `permanent_failure`）、052–057 rollback 檔與 `MigrateDownTo`、scratch volume 還原工具 `gen_restore.py`。
 
 驗證：`go build ./...`、`go test ./...`、Templ `generate -check -path web` 均通過。
+
+### 第二輪補完與部署（2026-11-19 晚，Hermes）
+
+- 稽核留痕補齊：工單明細軟刪（交易內）、PO 品項軟刪、估價項目刪除、零件價格異動（before/after）；`/audit-log` 改 Templ＋i18n＋owner 導覽。
+- FR-CRM-05 補完：工單明細頁 CampaignRow 可編輯 campaign_code；開單 datalist 帶入既有代碼。
+- 維運 CLI：`--backup-now`（手動完整備份）、`--migrate-down-to <version>`（回滾前強制備份）。
+- 文件：USER_GUIDE 同步密碼政策／備份外部掛載／稽核頁／campaign／照片自動重試／登入安全；SRS §8.5 部署圖說明修正。
+- 已部署（docker compose up -d --build --force-recreate）：login HTTP 200、4 個安全標頭上線、migration 057 已套用、排程器 8 任務、BACKUP_DIR=/backups（主機 bind mount，移出資料 volume）。
+
+### 還原演練紀錄（2026-11-19 16:1x，首次實際演練）
+
+- 備份檔：`autorepair_20261119_161044.tar.gz`（11,625,336 bytes；DB 43,167,444 bytes；照片 0 張——尚未上傳過照片）。
+- 工具：`gen_restore.py`（還原到 scratch volume `autorepairos-restore-scratch`）＋`restore_drill.sh`（筆數對帳）。
+- `PRAGMA integrity_check` = **ok**。
+- 筆數對帳（restored vs 正式快照，全數一致）：
+  | 表 | 還原 | 正式 |
+  |---|---|---|
+  | work_orders | 85825 | 85825 |
+  | customers | 6512 | 6512 |
+  | vehicles | 12964 | 12964 |
+  | receivables | 1 | 1 |
+  | inventory_items | 10363 | 10363 |
+  | work_order_items | 344745 | 344745 |
+- 照片：tar 0 vs 正式 0（一致）。演練後 scratch volume 已刪除，未觸碰正式資料。
+- 注意：備份 tar 內 DB 檔名帶時間戳（`autorepair_<stamp>.db`），非 `autorepair.db`；gen_restore.py 已修正為動態尋找 *.db。
