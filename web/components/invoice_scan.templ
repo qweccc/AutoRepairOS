@@ -65,29 +65,50 @@ templ InvoiceScanUI() {
 				btn.disabled = true;
 				var oldText = btn.textContent;
 				btn.textContent = L.scanning;
+				function reset() {
+					btn.disabled = false;
+					btn.textContent = oldText;
+					input.value = "";
+				}
+				function handleDoc(j) {
+					if (!j.items || j.items.length === 0) {
+						alert(L.noItems);
+						return;
+					}
+					applyDoc(j);
+				}
 
 				var reader = new FileReader();
 				reader.onload = function () {
-					fetch("/api/vision/invoice", {
+					// T2.5：async=1 背景辨識＋每 2 秒 polling，按鈕顯示經過秒數。
+					fetch("/api/vision/invoice?async=1", {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
 						body: JSON.stringify({ image: reader.result })
 					})
 						.then(function (r) { return r.json(); })
 						.then(function (j) {
-							if (!j.ok) { alert(L.failed + (j.error || L.unknownError)); return; }
-							if (!j.items || j.items.length === 0) {
-								alert(L.noItems);
+							if (!j.ok) { alert(L.failed + (j.error || L.unknownError)); reset(); return; }
+							if (j.job_id) {
+								var t0 = Date.now();
+								var timer = setInterval(function () {
+									fetch("/api/vision/jobs/" + j.job_id)
+										.then(function (r) { return r.json(); })
+										.then(function (s) {
+											if (!s.ok) { clearInterval(timer); alert(L.failed + (s.error || L.unknownError)); reset(); return; }
+											btn.textContent = L.scanning + " " + Math.round((Date.now() - t0) / 1000) + "s";
+											if (s.status === "done") { clearInterval(timer); handleDoc(s); reset(); }
+											else if (s.status === "error") { clearInterval(timer); alert(L.failed + (s.error || L.unknownError)); reset(); }
+										})
+										.catch(function () { /* 暫時網路失敗繼續 poll */ });
+								}, 2000);
 								return;
 							}
-							applyDoc(j);
+							// 舊版 server 無 async：同步結果直接套。
+							handleDoc(j);
+							reset();
 						})
-						.catch(function () { alert(L.requestFailed); })
-						.finally(function () {
-							btn.disabled = false;
-							btn.textContent = oldText;
-							input.value = "";
-						});
+						.catch(function () { alert(L.requestFailed); reset(); });
 				};
 				reader.readAsDataURL(file);
 			});

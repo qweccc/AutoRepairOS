@@ -26,10 +26,16 @@
       btn.disabled = true;
       var oldText = btn.textContent;
       btn.textContent = II["scan.scanning"];
+      function reset() {
+        btn.disabled = false;
+        btn.textContent = oldText;
+        fileInput.value = "";
+      }
 
       var reader = new FileReader();
       reader.onload = function () {
-        fetch("/api/vision/recognize", {
+        // T2.5：async=1 背景辨識＋每 2 秒 polling，按鈕顯示經過秒數。
+        fetch("/api/vision/recognize?async=1", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image: reader.result }),
@@ -40,22 +46,60 @@
           .then(function (j) {
             if (!j.ok) {
               alert(II["scan.failed"] + (j.error || II["scan.unknown_error"]));
+              reset();
               return;
             }
+            if (j.job_id) {
+              pollVisionJob(j.job_id, btn, II["scan.scanning"], function (s) {
+                fillFields(s.reading, opts.fieldMap || {});
+                reset();
+              }, function (err) {
+                alert(II["scan.failed"] + (err || II["scan.unknown_error"]));
+                reset();
+              });
+              return;
+            }
+            // 舊版 server 無 async：同步結果直接填。
             fillFields(j.reading, opts.fieldMap || {});
+            reset();
           })
           .catch(function () {
             alert(II["scan.request_failed"]);
-          })
-          .finally(function () {
-            btn.disabled = false;
-            btn.textContent = oldText;
-            fileInput.value = "";
+            reset();
           });
       };
       reader.readAsDataURL(file);
     });
   };
+
+  // pollVisionJob 每 2 秒查辨識進度；按鈕文字帶經過秒數讓使用者有感。
+  function pollVisionJob(jobId, btn, label, onDone, onFail) {
+    var t0 = Date.now();
+    var timer = setInterval(function () {
+      fetch("/api/vision/jobs/" + jobId)
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (s) {
+          if (!s.ok) {
+            clearInterval(timer);
+            onFail(s.error);
+            return;
+          }
+          btn.textContent = label + " " + Math.round((Date.now() - t0) / 1000) + "s";
+          if (s.status === "done") {
+            clearInterval(timer);
+            onDone(s);
+          } else if (s.status === "error") {
+            clearInterval(timer);
+            onFail(s.error);
+          }
+        })
+        .catch(function () {
+          /* 暫時網路失敗繼續 poll */
+        });
+    }, 2000);
+  }
 
   function fillFields(reading, fieldMap) {
     var filled = 0;

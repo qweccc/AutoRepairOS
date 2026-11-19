@@ -89,10 +89,14 @@
 - 涉及檔案：internal/handler/vision.go
 - 驗收：減少重複程式碼 → 抽 `decodeVisionImage`（解析/驗證/503·400·413 共用），RecognizePlate/RecognizeInvoice 各縮短約 30 行
 
-### [ ] T2.5 辨識進度回報（未來）
-- 考慮 WebSocket 或 polling
-- 涉及檔案：web/static/*.js
-- 驗收：使用者感知進度
+### [x] T2.5 辨識進度回報（2026-11-19，polling 版）
+- 後端：`internal/handler/vision_jobs.go` 記憶體 job store（15 分鐘 TTL、建立時清掃）；
+  `/api/vision/recognize` 與 `/api/vision/invoice` 加 `?async=1` 回 job_id 背景辨識；
+  新增 `GET /api/vision/jobs/{id}`（RequireLogin）回 status/elapsed_ms/結果。同步模式保留（向後相容）。
+- 前端：`static/scan.js` 與 `invoice_scan.templ` 改 async＋每 2 秒 polling，
+  按鈕顯示「辨識中… Ns」經過秒數；舊 server 無 job_id 時退回同步行為。
+- 測試：`vision_jobs_test.go`（done/error/404/TTL 清掃）。
+- 驗收：使用者感知進度 ✓（秒數即時更新）。
 
 ## DATE 欄位 Scan 回歸（2026-11-10，提高 handler 覆蓋率時發現）
 
@@ -216,7 +220,7 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 
 ### 仍待處理
 
-- [ ] T2.5 辨識進度回報（未來排程，見上）。
+- [x] T2.5 辨識進度回報（2026-11-19 完成，polling 版，見上）。
 
 ## 2026-11-19 全量複查修補
 

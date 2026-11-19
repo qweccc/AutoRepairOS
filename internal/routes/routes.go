@@ -176,6 +176,7 @@ func New(d Deps) *chi.Mux {
 	r.Get("/api/vision/status", handler.RequireLogin(handler.VisionStatus))
 	r.Post("/api/vision/recognize", handler.CounterUp(handler.RecognizePlate))
 	r.Post("/api/vision/invoice", handler.CounterUp(handler.RecognizeInvoice))
+	r.Get("/api/vision/jobs/{id}", handler.RequireLogin(handler.VisionJobStatus))
 	r.Get("/api/suppliers", handler.RequireLogin(handler.SupplierOptionsAPI))
 	r.Get("/", handler.AllStaff(handler.IndexHandler))
 	r.Get("/technicians/commissions", handler.AllStaff(handler.ListTechnicianCommissions))

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -81,6 +82,18 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	// T2.5：async=1 改背景工作＋polling，前端可顯示經過秒數。
+	if r.URL.Query().Get("async") == "1" {
+		jobID := startVisionJob(func() (map[string]interface{}, error) {
+			reading, err := visionClient.Recognize(context.Background(), b64)
+			if err != nil {
+				return nil, err
+			}
+			return map[string]interface{}{"reading": reading}, nil
+		})
+		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "job_id": jobID, "status": "running"})
+		return
+	}
 	reading, err := visionClient.Recognize(r.Context(), b64)
 	if err != nil {
 		writeJSON(w, http.StatusBadGateway, map[string]interface{}{"ok": false, "error": err.Error()})
@@ -99,6 +112,26 @@ func RecognizePlate(w http.ResponseWriter, r *http.Request) {
 func RecognizeInvoice(w http.ResponseWriter, r *http.Request) {
 	b64, ok := decodeVisionImage(w, r)
 	if !ok {
+		return
+	}
+	// T2.5：async=1 改背景工作＋polling（同 RecognizePlate）。
+	if r.URL.Query().Get("async") == "1" {
+		jobID := startVisionJob(func() (map[string]interface{}, error) {
+			doc, err := visionClient.RecognizeInvoice(context.Background(), b64)
+			if err != nil {
+				return nil, err
+			}
+			items := doc.Items
+			if items == nil {
+				items = []vision.InvoiceLine{}
+			}
+			return map[string]interface{}{
+				"supplier_name": doc.SupplierName,
+				"order_date":    doc.OrderDate,
+				"items":         items,
+			}, nil
+		})
+		writeJSON(w, http.StatusOK, map[string]interface{}{"ok": true, "job_id": jobID, "status": "running"})
 		return
 	}
 	doc, err := visionClient.RecognizeInvoice(r.Context(), b64)
