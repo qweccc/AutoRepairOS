@@ -258,3 +258,18 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
   | work_order_items | 344745 | 344745 |
 - 照片：tar 0 vs 正式 0（一致）。演練後 scratch volume 已刪除，未觸碰正式資料。
 - 注意：備份 tar 內 DB 檔名帶時間戳（`autorepair_<stamp>.db`），非 `autorepair.db`；gen_restore.py 已修正為動態尋找 *.db。
+
+### 效能基準實測（2026-11-19，NFR §7.1 證據）
+
+工具：`unpublished/analysis-and-tests/tools/bench`（本輪修正：列表測試改真實 JOIN＋排序＋完整取回、5 次取最慢，不再只量 COUNT；unpublished/go.mod 模組名修正為 `autorepairos/unpublished`＋replace 才能編譯）。
+環境：Windows 11 / Go 1.27 / modernc SQLite WAL；scratch 測試庫，scale=10000（實際產生：客戶 10000、車輛 15000、庫存 5000、工單 20000、通知 1000）。
+
+| 項目 | 實測 | 門檻（SRS §7.1） | 結果 |
+|---|---|---|---|
+| 車輛列表（10k 筆，JOIN lookup＋里程彙整） | 26.5ms | <300ms | PASS |
+| 工單列表（10k 筆，28 欄 5 JOIN，5 次最慢） | 52.0ms | <300ms | PASS |
+| 庫存列表（5k 筆，5 次最慢） | 8.6ms | <300ms | PASS |
+| 客戶列表（10k 筆，5 次最慢） | 20.7ms | <300ms | PASS |
+| 通知批次（1000 筆 pending→sent，5 批×200） | 6.0s | <1 分鐘 | PASS |
+
+通知吞吐實測 1000 筆／6 秒，遠超 SRS「每分鐘 1000 筆」要求（本輪 cron 改每批 200、單次上限 1000 後之實測）。
