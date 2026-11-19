@@ -90,8 +90,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	ip := loginClientIP(r)
-	if loginLimiter.isLocked(ip) {
-		loginFail(w, r, "登入嘗試次數過多，請 15 分鐘後再試")
+	userKey := "user:" + strings.ToLower(strings.TrimSpace(username))
+	if loginLimiter.isLocked("ip:"+ip) || loginLimiter.isLocked(userKey) {
+		loginFail(w, r, i18n.T(r.Context(), "auth.login_rate_limited"))
 		return
 	}
 
@@ -105,24 +106,28 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		"SELECT id, username, password, role, name, active FROM users WHERE username = ?", username,
 	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &user.Name, &user.Active)
 	if err != nil {
-		loginLimiter.recordFail(ip)
+		loginLimiter.recordFail("ip:" + ip)
+		loginLimiter.recordFail(userKey)
 		loginFail(w, r, "帳號或密碼錯誤")
 		return
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
-		loginLimiter.recordFail(ip)
+		loginLimiter.recordFail("ip:" + ip)
+		loginLimiter.recordFail(userKey)
 		loginFail(w, r, "帳號或密碼錯誤")
 		return
 	}
 
 	if user.Active == 0 {
-		loginLimiter.recordFail(ip)
-		loginFail(w, r, "帳號已停用，請聯絡管理員")
+		loginLimiter.recordFail("ip:" + ip)
+		loginLimiter.recordFail(userKey)
+		loginFail(w, r, i18n.T(r.Context(), "auth.account_disabled"))
 		return
 	}
 
-	loginLimiter.reset(ip)
+	loginLimiter.reset("ip:" + ip)
+	loginLimiter.reset(userKey)
 
 	// 記錄「登入前所在頁面」，登出後回跳過去。
 	returnTo := r.FormValue("return_to")

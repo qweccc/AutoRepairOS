@@ -177,7 +177,7 @@ func main() {
 	}()
 
 	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
-	if err := http.ListenAndServe(":"+port, handler.CSRFProtection(i18n.Middleware(r))); err != nil {
+	if err := http.ListenAndServe(":"+port, handler.SecurityHeaders(handler.CSRFProtection(i18n.Middleware(r)))); err != nil {
 		log.Printf("HTTP 服務結束: %v", err)
 		shutdown()
 		os.Exit(1)
