@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -254,7 +255,7 @@ func CheckSOPCompletionForStatus(woID int64, targetStatus string) error {
 	err := db.DB.QueryRow(`SELECT COUNT(1) FROM work_order_sop_records
 		WHERE work_order_id = ? AND required = 1 AND completed = 0`, woID).Scan(&incomplete)
 	if err != nil {
-		return nil // 查詢失敗不擋，避免影響沒用 SOP 的舊工單
+		return fmt.Errorf("檢查 SOP 完成狀態失敗: %w", err)
 	}
 
 	if incomplete > 0 {
