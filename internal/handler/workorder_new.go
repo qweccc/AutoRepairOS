@@ -206,8 +206,27 @@ func buildNewWorkOrderPageData(r *http.Request, user model.User, preVehicle int6
 		TechnicianOptions:  technicianOptions(),
 		InsuranceOptions:   insuranceOptionsSel(r.Context(), 0),
 		CustomerHintHTML:   customerHint,
+		CampaignCodes:      campaignCodeOptions(),
 	}
 	return data
+}
+
+// campaignCodeOptions 帶入既有的活動代碼，讓櫃檯用點選而非重打（FR-CRM-05）。
+func campaignCodeOptions() []string {
+	rows, err := db.DB.Query(`SELECT DISTINCT campaign_code FROM work_orders
+		WHERE campaign_code IS NOT NULL AND campaign_code != '' ORDER BY campaign_code LIMIT 100`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var c string
+		if rows.Scan(&c) == nil {
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 // SearchWorkOrderVehiclesAPI 回傳開工單選擇器的車輛選項。

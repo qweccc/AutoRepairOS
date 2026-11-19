@@ -23,6 +23,7 @@ type NewWorkOrderPageData struct {
 	TechnicianOptions  string
 	InsuranceOptions   string
 	CustomerHintHTML   string
+	CampaignCodes      []string
 }
 
 templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
@@ -74,7 +75,11 @@ templ NewWorkOrderPage(data NewWorkOrderPageData, user model.User) {
 				</select></label>
 				<label>{ i18n.T(ctx, "workorder.form.owner") } @templ.Raw(data.CustomerHintHTML)</label>
 				<label>{ i18n.T(ctx, "workorder.form.campaign_code") }<input name="campaign_code" list="campaignCodes" maxlength="100"/></label>
-				<datalist id="campaignCodes"></datalist>
+				<datalist id="campaignCodes">
+					for _, c := range data.CampaignCodes {
+						<option value={ c }></option>
+					}
+				</datalist>
 				<label class="full">{ i18n.T(ctx, "workorder.form.complaint") }<textarea name="customer_complaint" placeholder={ i18n.T(ctx, "workorder.form.complaint_ph") }>{ data.Complaint }</textarea></label>
 				<div class="full" style="border-top:1px solid var(--surface-2);padding-top:16px;margin-top:4px">
 					<p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">

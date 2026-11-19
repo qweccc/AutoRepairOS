@@ -45,7 +45,8 @@ templ ShowWorkOrderPage(wo model.WorkOrder, items []model.WorkOrderItem, itemTot
 					<th>{ i18n.T(ctx, "workorder.col.created_at") }</th><td>{ wo.CreatedAt.Format("2006-01-02 15:04") }</td>
 				</tr>
 				@InsuranceRow(wo, canEdit)
-			</table>
+				@CampaignRow(wo, canEdit)
+				</table>
 			<div style="margin-top:16px">
 				@StatusControls(wo, canEdit)
 				<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
@@ -327,6 +328,23 @@ templ InsuranceRow(wo model.WorkOrder, canEdit bool) {
 			}
 		</td>
 	</tr>
+}
+
+// CampaignRow 顯示／編輯工單的活動代碼（FR-CRM-05）。已結帳工單唯讀。
+templ CampaignRow(wo model.WorkOrder, canEdit bool) {
+	<tr><th>{ i18n.T(ctx, "workorder.col.campaign") }</th>
+	<td colspan="3">
+		if canEdit {
+			<form class="frm" method="POST" action={ "/work-orders/" + strconv.FormatInt(wo.ID, 10) + "/campaign" } style="display:flex;gap:8px;align-items:end">
+				@components.CSRFInput()
+				<label style="flex:1">{ i18n.T(ctx, "workorder.form.campaign_code") }<input name="campaign_code" maxlength="100" value={ wo.CampaignCode } placeholder="2026-11"></label>
+				<button class="btn btn-s" type="submit">{ i18n.T(ctx, "common.save") }</button>
+			</form>
+		}
+		if !canEdit {
+			{ wo.CampaignCode }
+		}
+	</td></tr>
 }
 
 templ SOPChecklistTable(woID int64, records []model.SOPRecord, canEdit bool) {

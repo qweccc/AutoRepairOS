@@ -33,6 +33,7 @@ func New(d Deps) *chi.Mux {
 	r.Post("/work-orders", handler.CounterUp(handler.CreateWorkOrder))
 	r.Get("/work-orders/{id}", handler.AllStaff(handler.ShowWorkOrder))
 	r.Post("/work-orders/{id}/status", handler.CounterUp(handler.UpdateWorkOrderStatus))
+	r.Post("/work-orders/{id}/campaign", handler.CounterUp(handler.UpdateWorkOrderCampaign))
 	r.Get("/inventory", handler.AllStaff(handler.ListInventory))
 	r.Post("/inventory", handler.CounterUp(handler.CreateInventoryItem))
 	r.Get("/suppliers", handler.AllStaff(handler.ListSuppliers))

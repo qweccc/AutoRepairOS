@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,6 +25,7 @@ const workOrderCols = `wo.id, wo.vehicle_id, wo.customer_id, COALESCE(wo.technic
 	COALESCE(wo.claim_no,''), COALESCE(wo.is_insurance,0),
 	COALESCE(wo.accident_date,''), COALESCE(wo.deductible_amount,0),
 	COALESCE(wo.claim_amount,0), COALESCE(wo.claim_date,''), COALESCE(wo.claim_note,''),
+	COALESCE(wo.campaign_code,''),
 	wo.created_at, wo.updated_at`
 
 func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrder, error) {
@@ -42,6 +44,7 @@ func scanWorkOrder(rows interface{ Scan(...interface{}) error }) (model.WorkOrde
 		&wo.InsuranceCompanyID, &wo.InsuranceName, &wo.ClaimNo, &isIns,
 		&wo.AccidentDate, &wo.DeductibleAmount,
 		&wo.ClaimAmount, &wo.ClaimDate, &wo.ClaimNote,
+		&wo.CampaignCode,
 		&createdAt, &updatedAt)
 	if err != nil {
 		return wo, err
@@ -234,6 +237,22 @@ func parseClaimAmount(s string) (float64, error) {
 }
 
 // UpdateWorkOrderClaim updates claim details on an existing, mutable work order.
+
+// UpdateWorkOrderCampaign 更新工單的活動代碼（FR-CRM-05）。
+// 代碼是行銷歸因用的選填欄位；空字串以 NULL 儲存，避免 COALESCE 把空字串
+// 當成「有值」而在分析頁畫出空白列。
+func UpdateWorkOrderCampaign(w http.ResponseWriter, r *http.Request) {
+	id := mustInt(r.PathValue("id"))
+	code := strings.TrimSpace(r.FormValue("campaign_code"))
+	if _, err := db.DB.Exec(`UPDATE work_orders SET campaign_code = ? WHERE id = ?`, nullStr(code), id); err != nil {
+		fail(w, "更新活動代碼失敗")
+		return
+	}
+	if u, err := currentUser(r); err == nil {
+		recordAudit(u.ID, "update", "work_order", id, fmt.Sprintf(`{"campaign_code":%q}`, code))
+	}
+	redirectMsg(w, r, "/work-orders/"+strconv.FormatInt(id, 10), "活動代碼已更新")
+}
 
 func UpdateWorkOrderClaim(w http.ResponseWriter, r *http.Request) {
 	id := mustInt(r.PathValue("id"))
