@@ -217,3 +217,15 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 ### 仍待處理
 
 - [ ] T2.5 辨識進度回報（未來排程，見上）。
+
+## 2026-11-19 全量複查修補
+
+本輪依 `.hermes/plans/2026-11-19_141211-full-review.md` 收斂高風險缺口：
+
+- P0：全站安全標頭、可信代理登入限流（含帳號維度與容量清掃）、收款作廢與庫存回沖 audit trail。
+- P1：收款單號改為 SQLite 原子 `RETURNING`、session fail-closed/改密清除舊 session、每日 session 清理、通知每批 200 並單次最多 1000、SOP 查詢失敗改 fail-closed。
+- 功能與文件：工單新增 campaign code 輸入、英文報表單位補齊、備份 bind mount 移出資料 volume、SRS 部署圖與 Thermo 進度表同步；LINE 履歷加入下次保養日期/里程建議。
+- Migration 057 新增 `audit_log`、收款作廢操作者/時間欄位與索引。
+- 補強：owner-only `/audit-log`、照片佇列每 5 分鐘自動重試（5 次後 `permanent_failure`）、052–057 rollback 檔與 `MigrateDownTo`、scratch volume 還原工具 `gen_restore.py`。
+
+驗證：`go build ./...`、`go test ./...`、Templ `generate -check -path web` 均通過。

@@ -6,9 +6,9 @@
 |------|------|------|
 | T1 | `internal/handler/workorders.go` 拆分 | ✅ |
 | T2 | `internal/cron/cron.go` 拆分 | ⬜ |
-| T3 | handler 測試覆蓋率提升至 60%+ | ⬜ |
-| T4 | db 測試覆蓋率提升至 50%+ | ⬜ |
-| T5 | session 測試覆蓋率提升至 50%+ | ⬜ |
+| T3 | handler 測試覆蓋率提升至 60%+ | ✅ 83.4% |
+| T4 | db 測試覆蓋率提升至 50%+ | ✅ 97.8% |
+| T5 | session 測試覆蓋率提升至 50%+ | ✅ 95.3% |
 | T6 | 清理 TODO — insurance revenue deduction | ⬜ |
 | T7 | 清理 TODO — approval flow completion | ⬜ |
 | T8 | 業務邏輯從 handler 移至 service 層 | ✅ |
@@ -166,9 +166,9 @@
 |------|------|--------|
 | T1 | ✅ (workorders.go 拆分為 3 檔) | eebca04 |
 | T2 | ✅ (backup + reminder scanning extracted) | f7964ae |
-| T3 | 🔄 (handler 25.7%，需補測試) | |
-| T4 | ⏸️ (db 14.9%，需大量測試補充) | |
-| T5 | ⏸️ (session 7.8%，需大量測試補充) | |
+| T3 | ✅ (handler 83.4%) | 2026-11-19 |
+| T4 | ✅ (db 97.8%) | 2026-11-19 |
+| T5 | ✅ (session 95.3%) | 2026-11-19 |
 | T6 | ✅ (採用定義 A，不扣免額) | 5a82693 |
 | T7 | ✅ (已實作 applyApprovalItems) | |
 | T8 | ✅ (inventory 調整/總額重算/狀態轉換交易已移 service；handler 只留解析與回應) | |

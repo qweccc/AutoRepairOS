@@ -475,7 +475,7 @@ Service Layer 採漸進式抽取：目前共用結帳流程由 `internal/service
 ├─────────────────────────────────────────────────────────────┤
 │  docker-compose.yml                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │  app (Go)   │  │  nginx      │  │  backup     │          │
+│  │  app (Go)   │  │ sqlite-web  │  │  ollama    │          │
 │  │  :8090      │  │  (reverse   │  │  (cron)     │          │
 │  │             │  │   proxy)    │  │             │          │
 │  └─────────────┘  └─────────────┘  └─────────────┘          │
@@ -483,7 +483,7 @@ Service Layer 採漸進式抽取：目前共用結帳流程由 `internal/service
 │  Volumes:                                                   │
 │  - autorepair.db (SQLite WAL)                               │
 │  - /photos (照片儲存)                                        │
-│  - /backups (備份儲存)                                      │
+│  - /backups（主機/NAS bind mount；由 app cron 寫入）           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
