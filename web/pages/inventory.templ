@@ -81,6 +81,7 @@ templ ListInventoryPage(rows []InventoryRow, total, lowCount, negCount, page, si
 			// HTMX 即時搜尋
 			<div class="search-bar">
 				<input type="search" id="inventorySearch" class="search-input wide" name="q" value={ q }
+				aria-label={ i18n.T(ctx, "inventory.search_placeholder") }
 					placeholder={ i18n.T(ctx, "inventory.search_placeholder") }
 					hx-get="/api/inventory/search"
 					hx-trigger="keyup changed delay:300ms, search"

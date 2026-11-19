@@ -47,6 +47,7 @@ templ ListWorkOrdersPage(rows []WorkOrderRow, total, page, size int,
 			<div style="margin-bottom:12px">@templ.Raw(tabsHTML)</div>
 			<form method="GET" action="/work-orders" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
 				<input type="search" name="q" value={ q }
+				aria-label={ i18n.T(ctx, "workorder.search_ph") }
 					placeholder={ i18n.T(ctx, "workorder.search_ph") }
 					hx-get="/api/work-orders/search"
 					hx-trigger="keyup changed delay:300ms, search"

@@ -60,6 +60,7 @@ templ ListReceivablesPage(rows []ReceivableRow, total, page, size int,
 				<a class="btn btn-s" href="/receivables?unpaid=1">{ i18n.T(ctx, "receivable.unpaid") }</a>
 			</div>
 			<input type="search" name="q" value={ q }
+			aria-label={ i18n.T(ctx, "receivable.search_placeholder") }
 				placeholder={ i18n.T(ctx, "receivable.search_placeholder") }
 				hx-get="/api/receivables/search"
 				hx-trigger="keyup changed delay:300ms, search"

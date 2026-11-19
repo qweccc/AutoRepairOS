@@ -30,7 +30,7 @@ templ LoginPage(appName, errMsg, returnTo string) {
 		<body>
 			<div class="wrap">
 				<form class="login" method="POST" action="/login">
-					<h2 style="text-align:center;margin:0 0 24px;color:var(--primary)">🔧 { appName }</h2>
+					<h1 style="text-align:center;margin:0 0 24px;color:var(--primary);font-size:22px">🔧 { appName }</h1>
 					if errMsg != "" {
 						<div class="login-err">{ errMsg }</div>
 					}

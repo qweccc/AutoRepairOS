@@ -15,11 +15,11 @@
   --text: #0f172a;
   --primary: #0284c7;
   --primary-soft: #e0f2fe;
-  --muted: #64748b;
+  --muted: #5b6b80;
   --muted-2: #334155;
   --text-sub: #475569;
   --danger-bg: #fee2e2;
-  --danger: #dc2626;
+  --danger: #cf2424;
   --danger-text: #991b1b;
   --warn: #92400e;
   --ok: #166534;
@@ -37,7 +37,7 @@
   --text: #e2e8f0;
   --primary: #38bdf8;
   --primary-soft: #bae6fd;
-  --muted: #64748b;
+  --muted: #8ea2ba;
   --muted-2: #cbd5e1;
   --text-sub: #94a3b8;
   --danger-bg: #7f1d1d;
@@ -379,6 +379,16 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--primary);
+}
+/* a11y：鍵盤焦點在連結/按鈕上也要看得到 */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none;
 }
 textarea {
   resize: vertical;

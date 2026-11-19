@@ -110,6 +110,7 @@ templ ListVehicleInsurancesPage(rows []VehicleInsuranceRow, total, page, size in
 				@templ.Raw(compTabsHTML)
 			</div>
 			<input type="search" name="q" value={ q }
+			aria-label={ i18n.T(ctx, "insurancelist.search_ph") }
 				placeholder={ i18n.T(ctx, "insurancelist.search_ph") }
 				hx-get={ searchURL }
 				hx-trigger="keyup changed delay:300ms, search"
@@ -186,6 +187,7 @@ templ ListVehicleInspectionsPage(rows []InspectionRow, total, page, size int, q 
 				{ i18n.T(ctx, "insurancelist.inspection_intro") }
 			</p>
 			<input type="search" name="q" value={ q }
+			aria-label={ i18n.T(ctx, "insurancelist.search_ph") }
 				placeholder={ i18n.T(ctx, "insurancelist.inspection_search_ph") }
 				hx-get="/api/inspections/search"
 				hx-trigger="keyup changed delay:300ms, search"

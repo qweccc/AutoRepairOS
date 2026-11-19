@@ -89,6 +89,7 @@ templ ListStaffPage(rows []StaffRow, total, page, size int, q, kind string,
 				<a class={ "btn " + btnCls(kind == "dependent") } href="/staff?kind=dependent">{ i18n.T(ctx, "staff.kind_dependent") } { strconv.Itoa(depCount) }</a>
 			</div>
 			<input type="search" name="q" value={ q }
+			aria-label={ i18n.T(ctx, "staff.search_ph") }
 				placeholder={ i18n.T(ctx, "staff.search_ph") }
 				hx-get="/api/staff/search"
 				hx-trigger="keyup changed delay:300ms, search"

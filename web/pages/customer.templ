@@ -71,6 +71,7 @@ templ ListCustomersPage(rows []CustomerRow, total, page, size int, q string, for
 			<h2>{ fmt.Sprintf(i18n.T(ctx, "customer.list_title"), total) }</h2>
 			// HTMX 即時搜尋：輸入後 300ms 自動查詢，無需按送出
 			<input type="search" name="q" value={ q }
+			aria-label={ i18n.T(ctx, "customer.search_placeholder") }
 				placeholder={ i18n.T(ctx, "customer.search_placeholder") }
 				hx-get="/api/customers/search"
 				hx-trigger="keyup changed delay:300ms, search"
