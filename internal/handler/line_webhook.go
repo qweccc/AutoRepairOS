@@ -183,6 +183,22 @@ func customerPassbookSummary(lineUserID string) string {
 	if count == 0 {
 		return "目前沒有維修履歷紀錄"
 	}
+	var nextDate, nextMileage string
+	if err := db.DB.QueryRow(`SELECT COALESCE(MIN(NULLIF(next_maintenance_date,'')), ''),
+		COALESCE(MAX(next_maintenance_mileage), 0)
+		FROM active_vehicles WHERE customer_id = ?`, customerID).Scan(&nextDate, &nextMileage); err == nil {
+		if nextDate != "" || nextMileage != "0" {
+			summary.WriteString("\n\n建議更換／保養項目：")
+			if nextDate != "" {
+				fmt.Fprintf(&summary, "\n下次日期：%s", nextDate)
+			}
+			if nextMileage != "" && nextMileage != "0" {
+				fmt.Fprintf(&summary, "\n下次里程：%s km", nextMileage)
+			}
+		}
+	} else {
+		log_line("查詢客戶 #%d 下次保養建議失敗: %v", customerID, err)
+	}
 	return summary.String()
 }
 
