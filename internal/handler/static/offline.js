@@ -210,7 +210,8 @@
               resolve(null);
               return;
             }
-            rec.retryCount = count;
+            rec.retryCount = Math.min(count, 5);
+            rec.abandoned = rec.retryCount >= 5;
             store.put(rec).onsuccess = () => resolve(rec);
           };
           req.onerror = () => reject(req.error);
@@ -255,6 +256,7 @@
           let chain = Promise.resolve();
 
           items.forEach(function (item) {
+            if ((item.retryCount || 0) >= 5 || item.abandoned) return;
             chain = chain.then(function () {
               return Retry.sendOne(item)
                 .then(function (ok) {

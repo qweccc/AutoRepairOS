@@ -11,7 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	"autorepairos/internal/cron"
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
 )
@@ -28,6 +30,15 @@ var allowedPhotoTypes = map[string]string{
 	"image/png":  ".png",
 	"image/webp": ".webp",
 	"image/gif":  ".gif",
+}
+
+func init() {
+	cron.Register(cron.Task{
+		Key:      "photo_upload_retry",
+		Name:     "照片佇列自動重試",
+		Interval: 5 * time.Minute,
+		Run:      retryFailedPhotoUploads,
+	})
 }
 
 // UploadWorkOrderPhoto 接收 multipart 上傳並先持久化至照片佇列。
@@ -208,6 +219,7 @@ func processPhotoUpload(queueID int64) error {
 		&woID, &itemID, &fileName, &mime, &size, &storedName, &photoType, &note); err != nil {
 		return fmt.Errorf("讀取佇列記錄失敗: %w", err)
 	}
+
 	res, err := db.DB.Exec(`UPDATE photo_upload_queue SET status='uploading',
 		updated_at=datetime('now','localtime')
 		WHERE id=? AND status IN ('pending','failed')`, queueID)
@@ -222,6 +234,7 @@ func processPhotoUpload(queueID int64) error {
 		if status == "done" {
 			return nil
 		}
+
 		return fmt.Errorf("照片佇列目前狀態為 %s", status)
 	}
 	fail := func(cause error) error {
@@ -305,6 +318,42 @@ func processPhotoUpload(queueID int64) error {
 	}
 	if err := os.Remove(pendingPath); err != nil && !os.IsNotExist(err) {
 		log.Printf("刪除已完成照片暫存檔 %s 失敗: %v", pendingPath, err)
+	}
+	return nil
+}
+
+func retryFailedPhotoUploads() error {
+	rows, err := db.DB.Query(`SELECT id FROM photo_upload_queue
+		WHERE status IN ('pending','failed') AND retry_count < 5
+		ORDER BY updated_at ASC LIMIT 100`)
+	if err != nil {
+		return fmt.Errorf("讀取照片重試佇列失敗: %w", err)
+	}
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			rows.Close()
+			return fmt.Errorf("讀取照片重試項目失敗: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return err
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	for _, id := range ids {
+		if err := processPhotoUpload(id); err != nil {
+			log.Printf("照片佇列自動重試 #%d 失敗: %v", id, err)
+		}
+		if _, err := db.DB.Exec(`UPDATE photo_upload_queue
+			SET status='permanent_failure', updated_at=datetime('now','localtime')
+			WHERE id=? AND status='failed' AND retry_count >= 5`, id); err != nil {
+			return fmt.Errorf("更新照片永久失敗狀態 #%d: %w", id, err)
+		}
 	}
 	return nil
 }
