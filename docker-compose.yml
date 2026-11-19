@@ -30,6 +30,9 @@ services:
       # 資料不在 ./data，查看方式：docker compose exec autorepairos ls -la /app/data
       # 取回備份：docker compose cp autorepairos:/app/data/autorepair.db ./autorepair.db
       - autorepairos-data:/app/data
+      # 備份必須位於資料 volume 外，避免 volume 損毀時連備份一併遺失。
+      # 可用 BACKUP_HOST_PATH 指向 NAS/USB；預設為專案旁的 data/backups。
+      - ${BACKUP_HOST_PATH:-./data/backups}:/backups
       # web/ 掛載進容器，讓 exe 與 docker 共用同一份前端檔案。
       # 改 web/ 內容兩邊立即生效，不用重新 build。
       - ./web:/app/web
@@ -41,6 +44,7 @@ services:
       # WAL 讓讀寫不互斥，車廠同時有櫃檯開單、技師記工時、報表查詢時特別有感。
       - DB_PATH=file:/app/data/autorepair.db?_busy_timeout=5000
       - DB_ENABLE_WAL=${DB_ENABLE_WAL:-true}
+      - BACKUP_DIR=/backups
       # 首次初始化必須由 .env 提供管理員密碼；避免使用公開可猜測的預設密碼。
       - RUN_SEED=${RUN_SEED:-false}
       - DEFAULT_OWNER_USERNAME=${DEFAULT_OWNER_USERNAME:-owner}
