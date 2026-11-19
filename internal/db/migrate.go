@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//go:embed migration/*.up.sql
+//go:embed migration/*.up.sql migration/*.down.sql
 var migrationFS embed.FS
 
 // Migrate 依檔名排序執行所有尚未套用的 migration，並記錄在 schema_migrations。
@@ -76,6 +76,49 @@ func Migrate() error {
 	}
 
 	return nil
+}
+
+// MigrateDownTo rolls back adjacent migrations down to targetVersion.
+// Callers must create a backup before invoking this destructive operation.
+func MigrateDownTo(targetVersion string) error {
+	applied, err := appliedVersions()
+	if err != nil {
+		return err
+	}
+	files, err := fs.Glob(migrationFS, "migration/*.down.sql")
+	if err != nil {
+		return err
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(files)))
+	for _, name := range files {
+		version := strings.TrimSuffix(strings.TrimPrefix(name, "migration/"), ".down.sql")
+		if !applied[version] {
+			continue
+		}
+		body, err := migrationFS.ReadFile(name)
+		if err != nil {
+			return fmt.Errorf("讀取 rollback %s 失敗: %w", version, err)
+		}
+		tx, err := DB.Begin()
+		if err != nil {
+			return err
+		}
+		if err := execScript(tx, string(body)); err != nil {
+			tx.Rollback()
+			return fmt.Errorf("回滾 migration %s 失敗: %w", version, err)
+		}
+		if _, err := tx.Exec("DELETE FROM schema_migrations WHERE version = ?", version); err != nil {
+			tx.Rollback()
+			return err
+		}
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+		if version == targetVersion {
+			return nil
+		}
+	}
+	return fmt.Errorf("找不到已套用的目標 migration %s", targetVersion)
 }
 
 func appliedVersions() (map[string]bool, error) {
