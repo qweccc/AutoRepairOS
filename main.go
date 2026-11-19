@@ -92,6 +92,31 @@ func main() {
 		log.Fatalf("Migration 執行失敗: %v", err)
 	}
 
+	// --migrate-down-to <version>：回滾模式。先強制備份（DB+照片），
+	// 再逐版相鄰回滾到目標版本；完成後直接結束，不啟動 HTTP 服務。
+	// --backup-now：手動觸發一次完整備份後結束（維運／還原演練用）。
+	for i, arg := range os.Args {
+		if arg == "--backup-now" {
+			if err := cron.DailyBackup(); err != nil {
+				log.Fatalf("手動備份失敗: %v", err)
+			}
+			log.Printf("手動備份完成")
+			os.Exit(0)
+		}
+		if arg == "--migrate-down-to" && i+1 < len(os.Args) {
+			target := os.Args[i+1]
+			log.Printf("回滾模式：目標版本 %s（先強制備份）", target)
+			if err := cron.DailyBackup(); err != nil {
+				log.Fatalf("回滾前備份失敗，中止回滾: %v", err)
+			}
+			if err := db.MigrateDownTo(target); err != nil {
+				log.Fatalf("回滾失敗: %v", err)
+			}
+			log.Printf("回滾完成：%s", target)
+			os.Exit(0)
+		}
+	}
+
 	// 檢查 lookup 分頁籤與資料是否配套（只 log 警告，不中斷啟動）。
 	handler.CheckLookupCategories()
 
