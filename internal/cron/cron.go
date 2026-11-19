@@ -2,6 +2,8 @@ package cron
 
 import (
 	"time"
+
+	"autorepairos/internal/db"
 )
 
 // init 註冊所有內建排程任務。
@@ -23,6 +25,17 @@ func init() {
 		Name:     "每日自動備份",
 		Interval: 24 * time.Hour,
 		Run:      DailyBackup,
+	})
+
+	Register(Task{
+		Key:      "session_cleanup",
+		Name:     "清理過期登入階段",
+		Interval: 24 * time.Hour,
+		Run: func() error {
+			_, err := db.DB.Exec(`DELETE FROM sessions
+				WHERE datetime(created_at) < datetime('now', '-7 days')`)
+			return err
+		},
 	})
 
 	Register(Task{

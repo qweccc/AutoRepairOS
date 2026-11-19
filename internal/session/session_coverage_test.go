@@ -123,8 +123,8 @@ func TestExpiredTable(t *testing.T) {
 		in   string
 		want bool
 	}{
-		{"garbage is not expired", "not-a-time", false},
-		{"empty is not expired", "", false},
+		{"garbage is expired", "not-a-time", true},
+		{"empty is expired", "", true},
 		{"old RFC3339", now.Add(-30 * 24 * time.Hour).Format(time.RFC3339), true},
 		{"recent RFC3339", now.Add(-time.Hour).Format(time.RFC3339), false},
 		{"old SQL format", now.Add(-30 * 24 * time.Hour).Format("2006-01-02 15:04:05"), true},
@@ -202,8 +202,8 @@ func TestLookupBranches(t *testing.T) {
 	if _, err := d.Exec(`INSERT INTO sessions (id,user_id,csrf_token,created_at) VALUES ('weird',9,'c','garbage')`); err != nil {
 		t.Fatal(err)
 	}
-	if uid, err := Lookup("weird"); err != nil || uid != 9 {
-		t.Fatalf("Lookup(weird)=%d,%v want 9,nil", uid, err)
+	if uid, err := Lookup("weird"); err == nil || uid != 0 {
+		t.Fatalf("Lookup(weird)=%d,%v want 0,error", uid, err)
 	}
 
 	// Recent RFC3339 created_at: valid.

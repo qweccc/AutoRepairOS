@@ -133,8 +133,7 @@ func DeleteForUser(userID int64) {
 func expired(createdAt string) bool {
 	t, err := parseTime(createdAt)
 	if err != nil {
-		// 格式解析不了時保守視為有效，避免誤踢使用者；呼叫端可另外清理。
-		return false
+		return true
 	}
 	return time.Since(t) > sessionTTL
 }

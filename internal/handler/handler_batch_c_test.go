@@ -273,13 +273,13 @@ func TestBatchCStaff(t *testing.T) {
 	}
 	// owner creates technician
 	rec = httptest.NewRecorder()
-	CreateStaff(rec, postReq(t, "/staff", url.Values{"username": {"tech1"}, "password": {"pw12345"}, "name": {"技師"}, "role": {"technician"}, "staff_kind": {"employee"}}), owner)
+	CreateStaff(rec, postReq(t, "/staff", url.Values{"username": {"tech1"}, "password": {"pw123456"}, "name": {"技師"}, "role": {"technician"}, "staff_kind": {"employee"}}), owner)
 	if rec.Code != 302 {
 		t.Fatalf("create code=%d body=%s", rec.Code, rec.Body.String())
 	}
 	// duplicate username
 	rec = httptest.NewRecorder()
-	CreateStaff(rec, postReq(t, "/staff", url.Values{"username": {"tech1"}, "password": {"pw12345"}, "name": {"技師"}, "role": {"technician"}}), owner)
+	CreateStaff(rec, postReq(t, "/staff", url.Values{"username": {"tech1"}, "password": {"pw123456"}, "name": {"技師"}, "role": {"technician"}}), owner)
 	if rec.Code == 302 {
 		t.Fatal("duplicate should fail")
 	}

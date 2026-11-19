@@ -30,6 +30,10 @@ func CreateStaff(w http.ResponseWriter, r *http.Request, user model.User) {
 		formError(w, r, "新增員工", "/staff", "帳號、密碼、姓名為必填")
 		return
 	}
+	if len([]rune(password)) < 8 {
+		formError(w, r, "新增員工", "/staff", "密碼至少需要 8 個字元")
+		return
+	}
 	validRoles := map[string]bool{"owner": true, "counter": true, "technician": true}
 	if !validRoles[role] {
 		role = "technician"
@@ -171,6 +175,10 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 	}
 	password := strings.TrimSpace(r.FormValue("password"))
 	if password != "" {
+		if len([]rune(password)) < 8 {
+			renderStaffUpdateError(w, r, user, "密碼至少需要 8 個字元")
+			return
+		}
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Printf("員工 #%d 密碼雜湊失敗: %v", id, err)
@@ -182,6 +190,7 @@ func UpdateStaff(w http.ResponseWriter, r *http.Request) {
 			renderStaffUpdateError(w, r, user, "密碼更新失敗，請確認資料庫可寫入後再試")
 			return
 		}
+		session.DeleteForUser(id)
 	}
 
 	// 讀取舊值以判斷是否異動
