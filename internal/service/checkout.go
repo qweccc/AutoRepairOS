@@ -260,12 +260,16 @@ func (s *Service) UpdateReceipt(ctx context.Context, id int64, receipt ReceiptIn
 // VoidReceipt soft-deletes a receipt in a transaction. If voiding makes the
 // associated work order's effective receipts fall below its total and the work
 // order was checked out, it is reverted to completed and inventory is restored.
-func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
+func (s *Service) VoidReceipt(ctx context.Context, id int64, actorIDs ...int64) error {
 	if s == nil || s.db == nil {
 		return errors.New("service database is nil")
 	}
 	if id <= 0 {
 		return ErrReceiptNotFound
+	}
+	var actorID interface{}
+	if len(actorIDs) > 0 && actorIDs[0] > 0 {
+		actorID = actorIDs[0]
 	}
 	return s.withTx(ctx, "void receipt", func(tx sqlExecutor) error {
 		var workOrderID int64
@@ -287,8 +291,14 @@ func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 			return fmt.Errorf("load receipt for void: %w", err)
 		}
 
-		result, err := tx.ExecContext(ctx,
-			`UPDATE receivables SET voided = 1 WHERE id = ? AND voided = 0`, id)
+		voidSQL := `UPDATE receivables SET voided = 1 WHERE id = ? AND voided = 0`
+		voidArgs := []interface{}{id}
+		var hasVoidedBy int
+		if err := tx.QueryRowContext(ctx, `SELECT COUNT(1) FROM pragma_table_info('receivables') WHERE name IN ('voided_by','voided_at')`).Scan(&hasVoidedBy); err == nil && hasVoidedBy == 2 {
+			voidSQL = `UPDATE receivables SET voided = 1, voided_by = ?, voided_at = CURRENT_TIMESTAMP WHERE id = ? AND voided = 0`
+			voidArgs = []interface{}{actorID, id}
+		}
+		result, err := tx.ExecContext(ctx, voidSQL, voidArgs...)
 		if err != nil {
 			return fmt.Errorf("void receipt: %w", err)
 		}
@@ -298,6 +308,17 @@ func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 		}
 		if affected == 0 {
 			return ErrReceiptVoided
+		}
+		var hasAudit int
+		if err := tx.QueryRowContext(ctx, `SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name='audit_log'`).Scan(&hasAudit); err != nil {
+			return fmt.Errorf("check audit log: %w", err)
+		}
+		if hasAudit > 0 {
+			if _, err := tx.ExecContext(ctx, `INSERT INTO audit_log
+				(actor_id, action, entity_type, entity_id, detail_json)
+				VALUES (?, 'void', 'receivable', ?, '{}')`, actorID, id); err != nil {
+				return fmt.Errorf("record receipt audit: %w", err)
+			}
 		}
 
 		if workOrderID <= 0 {
@@ -375,8 +396,17 @@ func (s *Service) VoidReceipt(ctx context.Context, id int64) error {
 					VALUES (?,?,?,?,?,?,?,?)`,
 					delta.inventoryID, delta.quantity, before, after,
 					fmt.Sprintf("作廢收款回沖（工單 #%d）", workOrderID), "void_receipt",
-					workOrderID, nil); err != nil {
+					workOrderID, actorID); err != nil {
 					return fmt.Errorf("record inventory reversal for item %d: %w", delta.inventoryID, err)
+				}
+				if hasAudit > 0 {
+					if _, err = tx.ExecContext(ctx, `INSERT INTO audit_log
+						(actor_id, action, entity_type, entity_id, detail_json)
+						VALUES (?, 'reverse', 'inventory_item', ?, ?)`,
+						actorID, delta.inventoryID,
+						fmt.Sprintf(`{"work_order_id":%d,"quantity":%d}`, workOrderID, delta.quantity)); err != nil {
+						return fmt.Errorf("record inventory audit for item %d: %w", delta.inventoryID, err)
+					}
 				}
 			}
 		}

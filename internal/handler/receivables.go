@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -39,7 +40,12 @@ func NewReceivableForm(w http.ResponseWriter, r *http.Request, user model.User) 
 		return
 	}
 	payDate := today()
-	rec := receivable{VoucherNo: nextVoucherNo(payDate), PayDate: payDate}
+	voucher, err := nextVoucherNoE(payDate)
+	if err != nil {
+		http.Error(w, "產生收款單號失敗", http.StatusInternalServerError)
+		return
+	}
+	rec := receivable{VoucherNo: voucher, PayDate: payDate}
 	if workOrderID := mustInt(r.URL.Query().Get("work_order")); workOrderID > 0 {
 		rec.WorkOrderID = workOrderID
 		err := db.DB.QueryRow(`SELECT wo.customer_id, COALESCE(c.name,'')
@@ -286,7 +292,8 @@ func VoidReceivable(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	err := service.New(db.DB).VoidReceipt(r.Context(), id)
+	user, _ := currentUser(r)
+	err := service.New(db.DB).VoidReceipt(r.Context(), id, user.ID)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrReceiptNotFound), errors.Is(err, service.ErrReceiptVoided):
@@ -304,31 +311,25 @@ func VoidReceivable(w http.ResponseWriter, r *http.Request) {
 // 舊系統的單號格式很雜（'.0003001'、'+9/00001'），新單號另立格式，
 // 讓「舊帳」與「新收」一眼可辨。
 func nextVoucherNo(payDate string) string {
+	voucher, _ := nextVoucherNoE(payDate)
+	return voucher
+}
+
+func nextVoucherNoE(payDate string) (string, error) {
 	day := strings.ReplaceAll(normDate(payDate), "-", "")
 	if day == "" {
 		day = strings.ReplaceAll(today(), "-", "")
 	}
 	prefix := "RCV-" + day + "-"
-	// 使用 voucher_sequences 序號表原子遞增，避免 COUNT(*) 在併發時撞號
 	var n int
-	tx, err := db.DB.Begin()
+	err := db.DB.QueryRow(`INSERT INTO voucher_sequences(prefix, last_seq)
+		VALUES (?, 1)
+		ON CONFLICT(prefix) DO UPDATE SET last_seq = voucher_sequences.last_seq + 1
+		RETURNING last_seq`, prefix).Scan(&n)
 	if err != nil {
-		// fallback：舊邏輯
-		db.DB.QueryRow(`SELECT COUNT(1) FROM receivables WHERE voucher_no LIKE ?`,
-			prefix+"%").Scan(&n)
-		return prefix + pad3(n+1)
+		return "", fmt.Errorf("allocate voucher sequence: %w", err)
 	}
-	defer tx.Rollback()
-	_, _ = tx.Exec(`INSERT INTO voucher_sequences (prefix, last_seq) VALUES (?, 0) ON CONFLICT(prefix) DO NOTHING`, prefix)
-	tx.QueryRow(`SELECT last_seq FROM voucher_sequences WHERE prefix = ?`, prefix).Scan(&n)
-	n++
-	_, _ = tx.Exec(`UPDATE voucher_sequences SET last_seq = ? WHERE prefix = ?`, n, prefix)
-	if err := tx.Commit(); err != nil {
-		db.DB.QueryRow(`SELECT COUNT(1) FROM receivables WHERE voucher_no LIKE ?`,
-			prefix+"%").Scan(&n)
-		return prefix + pad3(n+1)
-	}
-	return prefix + pad3(n)
+	return prefix + pad3(n), nil
 }
 
 func pad3(n int) string {

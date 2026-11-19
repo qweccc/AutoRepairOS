@@ -61,6 +61,7 @@ func New(d Deps) *chi.Mux {
 	r.Post("/purchase-orders", handler.CounterUp(handler.CreatePurchaseOrder))
 	r.Get("/lookup", handler.CounterUpPage(handler.ListLookupItems))
 	r.Get("/scheduled-tasks", handler.AllStaff(handler.ListScheduledTasks))
+	r.Get("/audit-log", handler.OwnerOnlyPage(handler.ListAuditLog))
 	r.Get("/reports", handler.AllStaff(handler.ReportsHome))
 	r.Get("/analytics", handler.CounterUpPage(handler.AnalyticsHome))
 	r.Get("/maintenance-templates", handler.AllStaff(handler.ListMaintenanceTemplates))
