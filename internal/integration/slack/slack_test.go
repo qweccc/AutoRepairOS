@@ -366,8 +366,10 @@ func TestRunSocketModeEndToEnd(t *testing.T) {
 		if id != "env-e2e" {
 			t.Errorf("ack envelope_id = %q", id)
 		}
-	default:
-		t.Error("未收到 ack")
+	case <-time.After(3 * time.Second):
+		// 不可用 non-blocking default：慢速 CI runner 上 server handler
+		// 可能還沒讀完 ack，RunSocketMode 就已返回——會間歇性假失敗。
+		t.Error("未收到 ack（逾時）")
 	}
 }
 
