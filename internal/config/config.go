@@ -9,6 +9,9 @@ import (
 
 type Config struct {
 	Port              string
+	// BindIP 限制 HTTP 監聽位址（空＝所有介面）。內網部署設區網 IP，
+	// 讓 web 不對外網介面開放；外部只經 tunnel 暴露 webhook。
+	BindIP            string
 	DBPath            string
 	EnableWAL         bool
 	RunSeed           bool
@@ -156,6 +159,7 @@ func Load() *Config {
 
 	return &Config{
 		Port:              port,
+		BindIP:            strings.TrimSpace(os.Getenv("BIND_IP")),
 		DBPath:            dbPath,
 		EnableWAL:         walOn,
 		RunSeed:           runSeed,

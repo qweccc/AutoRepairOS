@@ -464,6 +464,7 @@ Docker 模式的地端視覺 LLM 由 compose 內的 `ollama` 容器提供（`oll
 
 - `.env`、資料庫、備份和照片都可能含有機密或個人資料，應限制檔案權限並安全保存。
 - 預設連線使用 HTTP。不要將 `HOST_PORT` 直接暴露到公用網際網路；遠端使用應透過可信任的 VPN 或受正確設定的 HTTPS 反向代理，並配置防火牆。
+- **內網限定部署（本車行現行設定）**：Web 介面只給店內員工用——Docker 的 web 埠只綁 127.0.0.1（給 tunnel）與區網 IP（`.env` 的 `LAN_BIND_IP`，現為 192.168.50.20），其他介面連不進來。客戶一律透過 LINE／Telegram 聊天互動（預約、查詢、履歷），不開放客戶連入 Web。外部只經 Cloudflare Tunnel 暴露 LINE webhook 一條路徑（`^/webhook/line$`），其餘路徑在 tunnel 端回 404。DHCP 若換了區網 IP，要同步更新 `LAN_BIND_IP` 再重啟容器。單機 exe 版可用 `BIND_IP` 環境變數達到相同限制。
 - 每家車廠使用自己的 `.env`、Compose 專案、資料 volume 和備份；不要把不同車廠的資料放進同一個資料庫。
 - 忘記管理員密碼時，請勿重建或刪除資料庫；先保留備份，再由有權限的系統管理員依維運程序處理。
 

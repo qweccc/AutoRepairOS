@@ -7,7 +7,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${HOST_PORT:-8090}:8080"
+      # Web 只綁 loopback（tunnel origin 用）＋區網 IP（店內員工用），
+      # 不對外網/虛擬介面開放；外部僅經 Cloudflare Tunnel 暴露 webhook。
+      # LAN_BIND_IP 設本機區網 IPv4（ipconfig 查）；DHCP 換 IP 時同步更新。
+      - "127.0.0.1:${HOST_PORT:-8090}:8080"
+      - "${LAN_BIND_IP:-192.168.50.20}:${HOST_PORT:-8090}:8080"
     # ===== 憑證用 .env（已 .gitignore 排除，不進版控）=====
     # 1) 建一個 .env.example 放範例（可進版控）：
     #    LINE_CHANNEL_ID=你的 Channel ID

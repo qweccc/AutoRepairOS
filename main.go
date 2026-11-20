@@ -202,7 +202,11 @@ func main() {
 	}()
 
 	log.Printf("%s 啟動中，監聽 port: %s", cfg.AppName, port)
-	if err := http.ListenAndServe(":"+port, handler.SecurityHeaders(handler.CSRFProtection(i18n.Middleware(r)))); err != nil {
+	listenAddr := ":" + port
+	if cfg.BindIP != "" {
+		listenAddr = cfg.BindIP + ":" + port
+	}
+	if err := http.ListenAndServe(listenAddr, handler.SecurityHeaders(handler.CSRFProtection(i18n.Middleware(r)))); err != nil {
 		log.Printf("HTTP 服務結束: %v", err)
 		shutdown()
 		os.Exit(1)
