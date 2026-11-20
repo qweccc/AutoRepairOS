@@ -29,7 +29,7 @@ func notificationTestDB(t *testing.T) *sql.DB {
 
 	for _, stmt := range []string{
 		`CREATE TABLE customers (
-			id INTEGER PRIMARY KEY, name TEXT, line_user_id TEXT, telegram_user_id TEXT,
+			id INTEGER PRIMARY KEY, name TEXT, line_user_id TEXT, telegram_user_id TEXT, discord_user_id TEXT, slack_user_id TEXT,
 			notification_preference TEXT DEFAULT 'line', deleted_at TEXT
 		)`,
 		`CREATE VIEW active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`,

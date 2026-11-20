@@ -13,10 +13,16 @@ import (
 // 綁定欄位依通道切換：line→line_user_id、telegram→telegram_user_id。
 
 func channelColumn(channel string) string {
-	if channel == "telegram" {
+	switch channel {
+	case "telegram":
 		return "telegram_user_id"
+	case "discord":
+		return "discord_user_id"
+	case "slack":
+		return "slack_user_id"
+	default:
+		return "line_user_id"
 	}
-	return "line_user_id"
 }
 
 func resolveCustomerByChannel(channel, userID string) (int64, bool) {

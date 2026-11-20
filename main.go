@@ -184,6 +184,9 @@ func main() {
 	var telegramWG sync.WaitGroup
 	telegramWG.Add(1)
 	go handler.StartTelegramBinding(telegramCtx, &telegramWG)
+	// Discord Gateway／Slack Socket Mode：純出站长連線，token 未設定則各自略過。
+	go handler.StartDiscordBot(telegramCtx, &telegramWG)
+	go handler.StartSlackBot(telegramCtx, &telegramWG)
 
 	var shutdownOnce sync.Once
 	shutdown := func() {

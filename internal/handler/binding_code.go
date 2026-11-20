@@ -16,7 +16,7 @@ import (
 // 僅 owner/counter 可呼叫。碼顯示一次，10 分鐘有效。
 // isValidPlatform checks if the platform is line or telegram.
 func isValidPlatform(platform string) bool {
-	return platform == "line" || platform == "telegram"
+	return platform == "line" || platform == "telegram" || platform == "discord" || platform == "slack"
 }
 
 func GenerateBindingCode(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +108,10 @@ func VerifyBindingCode(platform, code, chatOrLineID string) (int64, error) {
 		}
 	} else if platform == "line" {
 		if err := bindLineUser(chatOrLineID, customerID); err != nil {
+			return 0, err
+		}
+	} else if platform == "discord" || platform == "slack" {
+		if err := bindChannelUserByID(platform, chatOrLineID, customerID); err != nil {
 			return 0, err
 		}
 	} else {

@@ -21,6 +21,10 @@ func notificationLabel(ctx context.Context, pref string) string {
 	switch pref {
 	case "telegram":
 		return i18n.T(ctx, "customer.notify_telegram")
+	case "discord":
+		return i18n.T(ctx, "customer.notify_discord")
+	case "slack":
+		return i18n.T(ctx, "customer.notify_slack")
 	case "sms":
 		return i18n.T(ctx, "customer.notify_sms")
 	case "none":
@@ -265,11 +269,12 @@ func EditCustomerForm(w http.ResponseWriter, r *http.Request, user model.User) {
 
 	var c model.Customer
 	err := db.DB.QueryRow(`SELECT id, name, phone, COALESCE(line_user_id,''), COALESCE(telegram_user_id,''),
+		COALESCE(discord_user_id,''), COALESCE(slack_user_id,''),
 		COALESCE(address,''), COALESCE(notification_preference,'none'), COALESCE(notes,''),
 		COALESCE(tags,''), COALESCE(campaign_code,''),
 		COALESCE(total_spent,0), COALESCE(unpaid_amount,0), COALESCE(birthday,'')
 		FROM active_customers WHERE id = ?`, id).
-		Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.TelegramUserID, &c.Address,
+		Scan(&c.ID, &c.Name, &c.Phone, &c.LineUserID, &c.TelegramUserID, &c.DiscordUserID, &c.SlackUserID, &c.Address,
 			&c.NotificationPref, &c.Notes, &c.Tags, &c.CampaignCode, &c.TotalSpent, &c.UnpaidAmount, &c.Birthday)
 	if err != nil {
 		http.NotFound(w, r)
@@ -394,7 +399,7 @@ func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 
 func notifPref(v string) string {
 	switch v {
-	case "line", "telegram", "none":
+	case "line", "telegram", "discord", "slack", "none":
 		return v
 	case "sms":
 		// 保留 SMS 值但不當作有效通道；通知發送時會標記為失敗

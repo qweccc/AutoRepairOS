@@ -336,6 +336,16 @@ docker volume inspect repairshop_a_autorepairos-data
 
 **Telegram 客戶指令與 LINE 完全相同**：綁定後可傳「進度」（最新工單狀態）、「工單 編號」（指定工單）、「履歷」（維修紀錄＋下次保養建議）、「預約」（多步驟掛號：日期→車輛→服務→確認）。Telegram 走 getUpdates 長輪詢，純出站連線——車行不需為 Telegram 準備公開網址或 tunnel；只要 .env 填了 TELEGRAM_BOT_TOKEN，綁定與客戶指令就會自動啟動（留空則 MOCK，只記錄不外送）。
 
+#### Discord／Slack（同樣用綁定碼，純出站、不需對外）
+
+1. 到「**客戶**」→ 該客戶 → 編輯 →「**Discord 綁定**」或「**Slack 綁定**」區塊 → 按「**產生綁定碼**」。
+2. 把 6 位數綁定碼交給客戶，請客戶**私訊**你們的 Bot 輸入「**綁定 <綁定碼>**」。
+3. 綁定後指令與 LINE／Telegram 完全相同：進度、工單 編號、履歷、預約。
+
+兩者都是純出站长連線（Discord Gateway WebSocket／Slack Socket Mode），車行不需公開網址、不需 tunnel、不開埠。Bot 建立步驟見 `.env.example` 的 Discord／Slack 區塊（Discord 要開 MESSAGE CONTENT intent；Slack 要開 Socket Mode＋message.im 事件）。token 留空＝該通道不啟動。
+
+**選通道建議**：台灣客戶首選 LINE（覆蓋率 >90%），沒 LINE 的客戶用 Telegram；Discord／Slack 客戶覆蓋率低，較適合當內部員工通知通道。客戶通知偏好可在客戶編輯頁選 LINE／Telegram／Discord／Slack／不通知。
+
 #### 取消綁定 / 換帳號
 
 - 客戶換了 LINE 帳號、或原本綁錯人：到該客戶的編輯頁，「LINE 綁定」區塊按「**取消綁定**」，再重新產生綁定碼綁一次。

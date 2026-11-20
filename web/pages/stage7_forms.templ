@@ -195,6 +195,8 @@ templ EditCustomerPage(data CustomerEditData) {
 					<option value="none" selected?={ data.Customer.NotificationPref == "none" }>{ i18n.T(ctx, "customer.notify_none") }</option>
 					<option value="line" selected?={ data.Customer.NotificationPref == "line" }>LINE</option>
 					<option value="telegram" selected?={ data.Customer.NotificationPref == "telegram" }>Telegram</option>
+					<option value="discord" selected?={ data.Customer.NotificationPref == "discord" }>Discord</option>
+					<option value="slack" selected?={ data.Customer.NotificationPref == "slack" }>Slack</option>
 				</select></label>
 				if data.SMSWarning {
 					<div style="color:var(--danger);font-size:11.5px;margin-bottom:8px">{ i18n.T(ctx, "customer.sms_warning") }</div>
@@ -215,6 +217,8 @@ templ EditCustomerPage(data CustomerEditData) {
 		</div>
 		@CustomerLineBinding(data.Customer)
 		@CustomerTelegramBinding(data.Customer)
+		@CustomerChannelBinding(data.Customer, "discord")
+		@CustomerChannelBinding(data.Customer, "slack")
 	}
 }
 
@@ -288,6 +292,52 @@ func lineBindLabel(ctx context.Context, c model.Customer) string {
 func telegramBindLabel(ctx context.Context, c model.Customer) string {
 	if c.TelegramUserID != "" { return i18n.T(ctx, "customer.bind_again") }
 	return i18n.T(ctx, "customer.bind")
+}
+
+func channelBindingID(c model.Customer, platform string) string {
+	if platform == "discord" { return c.DiscordUserID }
+	return c.SlackUserID
+}
+
+func channelBindingPlaceholder(platform string) string {
+	if platform == "discord" { return "123456789012345678" }
+	return "U01234ABCDE"
+}
+
+func channelBindLabel(ctx context.Context, c model.Customer, platform string) string {
+	if channelBindingID(c, platform) != "" { return i18n.T(ctx, "customer.bind_again") }
+	return i18n.T(ctx, "customer.bind")
+}
+
+// CustomerChannelBinding Discord／Slack 綁定卡片（與 Telegram 卡片同構）。
+templ CustomerChannelBinding(c model.Customer, platform string) {
+	<div class="card">
+		<h2>{ i18n.T(ctx, "customer." + platform + "_binding") }</h2>
+		if channelBindingID(c, platform) != "" {
+			<p style="margin:0 0 10px"><span class="pill p-done">{ i18n.T(ctx, "customer.bound") }</span><code style="margin-left:8px">{ channelBindingID(c, platform) }</code></p>
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/" + platform + "-unbind" } data-confirm={ i18n.T(ctx, "customer.confirm_unbind_" + platform) } onsubmit="return confirm(this.getAttribute('data-confirm'))">
+				@components.CSRFInput()
+				<button class="btn btn-d" type="submit">{ i18n.T(ctx, "customer.unbind") }</button>
+			</form>
+		} else {
+			<p style="margin:0 0 10px"><span class="pill">{ i18n.T(ctx, "customer.unbound") }</span></p>
+		}
+		<p style="color:var(--text-sub);font-size:12.5px;margin:12px 0">{ i18n.T(ctx, "customer." + platform + "_hint") }</p>
+		<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=" + platform } hx-post={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/generate-binding-code?platform=" + platform } hx-target={ "#" + platform + "-bind-result" } hx-swap="innerHTML" style="margin:8px 0">
+			@components.CSRFInput()
+			<button class="btn btn-s" type="submit">{ i18n.T(ctx, "customer.generate_" + platform + "_code") }</button>
+		</form>
+		<div id={ platform + "-bind-result" }></div>
+		<details style="margin-top:6px">
+			<summary style="cursor:pointer;color:var(--primary);font-size:13px">{ i18n.T(ctx, "customer.manual_bind") }</summary>
+			<form method="POST" action={ "/customers/" + strconv.FormatInt(c.ID, 10) + "/" + platform + "-bind" } style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+				@components.CSRFInput()
+				<input name={ platform + "_user_id" } placeholder={ channelBindingPlaceholder(platform) } required style="flex:1;min-width:240px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+				<button class="btn btn-p" type="submit">{ channelBindLabel(ctx, c, platform) }</button>
+			</form>
+			<p style="color:var(--muted);font-size:12px;margin:8px 0 0">{ i18n.T(ctx, "customer." + platform + "_id_hint") }</p>
+		</details>
+	</div>
 }
 
 type InsuranceCompanyEditData struct {

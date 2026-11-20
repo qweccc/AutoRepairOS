@@ -12,6 +12,8 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/i18n"
 	"autorepairos/internal/integration/line"
+	"autorepairos/internal/integration/discord"
+	"autorepairos/internal/integration/slack"
 	"autorepairos/internal/integration/telegram"
 )
 
@@ -49,16 +51,17 @@ func QueueWorkOrderCompletedNotification(woID, customerID int64) error {
 }
 
 func queueWorkOrderCompletedNotification(woID, customerID int64) (bool, error) {
-	var customerName, plate, preference, lineUserID, telegramUserID string
+	var customerName, plate, preference, lineUserID, telegramUserID, discordUserID, slackUserID string
 	var totalAmount float64
 	err := db.DB.QueryRow(`SELECT COALESCE(c.name,''), COALESCE(v.plate_number,''),
 		COALESCE(wo.total_amount,0), COALESCE(c.notification_preference,'none'),
-		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+		COALESCE(c.discord_user_id,''), COALESCE(c.slack_user_id,'')
 		FROM active_work_orders wo
 		JOIN active_customers c ON c.id = wo.customer_id
 		JOIN active_vehicles v ON v.id = wo.vehicle_id AND v.customer_id = wo.customer_id
 		WHERE wo.id = ? AND wo.customer_id = ? AND wo.status = 'completed'`, woID, customerID).
-		Scan(&customerName, &plate, &totalAmount, &preference, &lineUserID, &telegramUserID)
+		Scan(&customerName, &plate, &totalAmount, &preference, &lineUserID, &telegramUserID, &discordUserID, &slackUserID)
 	if err != nil {
 		return false, fmt.Errorf("讀取完工工單 #%d 通知資料失敗: %w", woID, err)
 	}
@@ -95,6 +98,10 @@ func queueWorkOrderCompletedNotification(woID, customerID int64) (bool, error) {
 		channel = "line"
 	case preference == "telegram" && strings.TrimSpace(telegramUserID) != "":
 		channel = "telegram"
+	case preference == "discord" && strings.TrimSpace(discordUserID) != "":
+		channel = "discord"
+	case preference == "slack" && strings.TrimSpace(slackUserID) != "":
+		channel = "slack"
 	}
 
 	var body strings.Builder
@@ -208,7 +215,8 @@ var notificationRetryBackoff = [...]time.Duration{
 type notificationItem struct {
 	id, custID, workOrderID          int64
 	channel, kind, subject           string
-	body, lineUserID, telegramUserID string
+	body, lineUserID, telegramUserID   string
+	discordUserID, slackUserID         string
 }
 
 func processPendingNotifications() (int, error) {
@@ -236,7 +244,8 @@ func processPendingNotificationsBatch(send func(notificationItem) error) (int, e
 	leaseExpired := notificationProcessingTime(scanTime.Add(-notificationLease))
 	rows, err := db.DB.Query(`SELECT n.id, COALESCE(n.customer_id,0), n.channel, n.kind,
 			COALESCE(n.subject,''), n.body, COALESCE(n.work_order_id,0),
-			COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+			COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+			COALESCE(c.discord_user_id,''), COALESCE(c.slack_user_id,'')
 		FROM notifications n
 		LEFT JOIN active_customers c ON c.id = n.customer_id
 		WHERE (n.status='pending' AND n.scheduled_at <= ?)
@@ -252,7 +261,8 @@ func processPendingNotificationsBatch(send func(notificationItem) error) (int, e
 		// Scan 的目標數必須與 SELECT 欄位数完全一致；不一致時 Scan 會回錯，
 		// 而原本的 `continue` 會把整列靜默丟棄，結果是「查得到但一筆都沒處理」。
 		if err := rows.Scan(&it.id, &it.custID, &it.channel, &it.kind,
-			&it.subject, &it.body, &it.workOrderID, &it.lineUserID, &it.telegramUserID); err != nil {
+			&it.subject, &it.body, &it.workOrderID, &it.lineUserID, &it.telegramUserID,
+			&it.discordUserID, &it.slackUserID); err != nil {
 			log.Printf("通知 #%d 欄位掃描失敗，放棄處理: %v", it.id, err)
 			continue
 		}
@@ -355,6 +365,20 @@ func deliver(cfg *line.Config, client *line.Client, telegramCfg *telegram.Config
 			return permanentNotificationError(fmt.Errorf("Telegram Bot Token 未設定"))
 		}
 		return telegramClient.SendMessage(it.telegramUserID, it.body)
+	}
+	if it.channel == "discord" {
+		discordCfg, discordClient := discord.Shared()
+		if discordCfg == nil || !discordCfg.Valid() {
+			return permanentNotificationError(fmt.Errorf("Discord Bot Token 未設定"))
+		}
+		return discordClient.SendDirectMessage(it.discordUserID, it.body)
+	}
+	if it.channel == "slack" {
+		slackCfg, slackClient := slack.Shared()
+		if slackCfg == nil || !slackCfg.Valid() {
+			return permanentNotificationError(fmt.Errorf("Slack Bot Token 未設定"))
+		}
+		return slackClient.SendMessage(it.slackUserID, it.body)
 	}
 	// SMS 通道已停用（FR-CRM-04），應在 processPendingNotifications 中標記失敗
 	// 不應到達此處。若到達視為程式錯誤。

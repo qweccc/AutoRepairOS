@@ -167,10 +167,16 @@ func bookingCustomerID(channel, lineUserID string) int64 {
 }
 
 func channelNote(channel string) string {
-	if channel == "telegram" {
+	switch channel {
+	case "telegram":
 		return "Telegram 預約"
+	case "discord":
+		return "Discord 預約"
+	case "slack":
+		return "Slack 預約"
+	default:
+		return "LINE 預約"
 	}
-	return "LINE 預約"
 }
 
 func bookingSummary(s *bookingSession) string {

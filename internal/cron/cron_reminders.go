@@ -55,7 +55,8 @@ func ScanBirthdayRemindersNow() (int, error) {
 	// 比對「月-日」，跨年不受影響；未設定生日（空值）會被 TRIM 濾掉。
 	today := now.Format("01-02")
 	rows, err := db.DB.Query(`SELECT c.id, COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
-		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,'')
+		COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+		COALESCE(c.discord_user_id,''), COALESCE(c.slack_user_id,'')
 		FROM active_customers c
 		WHERE TRIM(COALESCE(c.birthday,'')) != ''
 		  AND strftime('%m-%d', c.birthday) = ?
@@ -67,7 +68,7 @@ func ScanBirthdayRemindersNow() (int, error) {
 	var candidates []reminderCandidate
 	for rows.Next() {
 		var c reminderCandidate
-		if err := rows.Scan(&c.customerID, &c.name, &c.pref, &c.lineID, &c.telegramID); err != nil {
+		if err := rows.Scan(&c.customerID, &c.name, &c.pref, &c.lineID, &c.telegramID, &c.discordID, &c.slackID); err != nil {
 			rows.Close()
 			return 0, err
 		}
@@ -121,6 +122,7 @@ func ScanAppointmentRemindersNow() (int, error) {
 	for _, rd := range rounds {
 		rows, err := db.DB.Query(`SELECT a.id, c.id, COALESCE(c.name,''), COALESCE(c.notification_preference,'none'),
 			COALESCE(c.line_user_id,''), COALESCE(c.telegram_user_id,''),
+			COALESCE(c.discord_user_id,''), COALESCE(c.slack_user_id,''),
 			COALESCE(v.plate_number,''), COALESCE(a.appointment_time,''), COALESCE(a.service_type,'')
 			FROM active_appointments a
 			JOIN active_customers c ON c.id=a.customer_id
@@ -140,7 +142,8 @@ func ScanAppointmentRemindersNow() (int, error) {
 			var candidate item
 			if err := rows.Scan(&candidate.appointmentID, &candidate.customer.customerID,
 				&candidate.customer.name, &candidate.customer.pref, &candidate.customer.lineID,
-				&candidate.customer.telegramID, &candidate.plate, &candidate.time, &candidate.service); err != nil {
+				&candidate.customer.telegramID, &candidate.customer.discordID, &candidate.customer.slackID,
+				&candidate.plate, &candidate.time, &candidate.service); err != nil {
 				rows.Close()
 				return totalQueued, err
 			}
@@ -188,6 +191,8 @@ type reminderCandidate struct {
 	pref       string
 	lineID     string
 	telegramID string
+	discordID  string
+	slackID    string
 }
 
 func (c reminderCandidate) channel() (string, bool) {
@@ -196,6 +201,10 @@ func (c reminderCandidate) channel() (string, bool) {
 		return "line", strings.TrimSpace(c.lineID) != ""
 	case "telegram":
 		return "telegram", strings.TrimSpace(c.telegramID) != ""
+	case "discord":
+		return "discord", strings.TrimSpace(c.discordID) != ""
+	case "slack":
+		return "slack", strings.TrimSpace(c.slackID) != ""
 	default:
 		return "", false
 	}

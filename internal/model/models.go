@@ -67,6 +67,8 @@ type Customer struct {
 	Phone            string    `json:"phone"`
 	LineUserID       string    `json:"line_user_id,omitempty"`
 	TelegramUserID   string    `json:"telegram_user_id,omitempty"`
+	DiscordUserID    string    `json:"discord_user_id,omitempty"`
+	SlackUserID      string    `json:"slack_user_id,omitempty"`
 	Address          string    `json:"address,omitempty"`
 	NotificationPref string    `json:"notification_preference"`
 	Birthday         string    `json:"birthday,omitempty"`

@@ -273,7 +273,7 @@ func birthdayTextIDDB(t *testing.T) *sql.DB {
 	}
 	if _, err := d.Exec(`CREATE TABLE customers (
 		id TEXT PRIMARY KEY, name TEXT, notification_preference TEXT,
-		line_user_id TEXT, telegram_user_id TEXT, birthday TEXT, deleted_at TEXT)`); err != nil {
+		line_user_id TEXT, telegram_user_id TEXT, discord_user_id TEXT, slack_user_id TEXT, birthday TEXT, deleted_at TEXT)`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := d.Exec(`CREATE VIEW active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`); err != nil {
@@ -341,7 +341,7 @@ func TestInspectionScanError(t *testing.T) {
 	}
 	if _, err := d.Exec(`CREATE TABLE customers (
 		id TEXT PRIMARY KEY, name TEXT, notification_preference TEXT,
-		line_user_id TEXT, telegram_user_id TEXT, birthday TEXT, deleted_at TEXT)`); err != nil {
+		line_user_id TEXT, telegram_user_id TEXT, discord_user_id TEXT, slack_user_id TEXT, birthday TEXT, deleted_at TEXT)`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := d.Exec(`CREATE VIEW active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`); err != nil {
@@ -399,7 +399,7 @@ func TestInsuranceScanError(t *testing.T) {
 	}
 	if _, err := d.Exec(`CREATE TABLE customers (
 		id TEXT PRIMARY KEY, name TEXT, notification_preference TEXT,
-		line_user_id TEXT, telegram_user_id TEXT, birthday TEXT, deleted_at TEXT)`); err != nil {
+		line_user_id TEXT, telegram_user_id TEXT, discord_user_id TEXT, slack_user_id TEXT, birthday TEXT, deleted_at TEXT)`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := d.Exec(`CREATE VIEW active_customers AS SELECT * FROM customers WHERE deleted_at IS NULL`); err != nil {
@@ -428,7 +428,7 @@ func TestWorkOrderReadyScanError(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := d.Exec(`CREATE TABLE customers (
-		id TEXT PRIMARY KEY, name TEXT, line_user_id TEXT, telegram_user_id TEXT,
+		id TEXT PRIMARY KEY, name TEXT, line_user_id TEXT, telegram_user_id TEXT, discord_user_id TEXT, slack_user_id TEXT,
 		notification_preference TEXT DEFAULT 'line', deleted_at TEXT)`); err != nil {
 		t.Fatal(err)
 	}
