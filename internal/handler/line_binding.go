@@ -222,7 +222,15 @@ func handlePostback(client *line.Client, ev line.PostbackEvent) {
 func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 	q := strings.TrimSpace(ev.Text)
 
+	// 進行中的預約對話優先攔截（FR-APP-06）；過期或無對話則走一般指令。
+	if reply, handled := handleBookingMessage(ev.UserID, q); handled {
+		return reply
+	}
+
 	switch {
+	case q == "預約" || q == "我要預約" || q == "掛號":
+		return startBooking(ev.UserID)
+
 	case q == "履歷" || q == "維修紀錄" || q == "保養紀錄":
 		return customerPassbookSummary(ev.UserID)
 
@@ -265,6 +273,6 @@ func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
 		return fmt.Sprintf("工單 #%d（%s）狀態：%s", woID, plate, label)
 
 	default:
-		return "您好，請輸入「進度」查詢車輛狀態、「工單 編號」查指定工單，或「履歷」查詢維修紀錄。"
+		return "您好，請輸入「預約」掛號預約、「進度」查詢車輛狀態、「工單 編號」查指定工單，或「履歷」查詢維修紀錄。"
 	}
 }
