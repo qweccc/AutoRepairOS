@@ -119,24 +119,27 @@ func CreateApprovalFromWorkOrder(w http.ResponseWriter, r *http.Request) {
 	// 外送失敗時佇列會重試，而且車廠端不需要知道 LINE 當下是否可達。
 	approveURL := "/approval/" + req.Token
 
-	// 客戶沒綁 LINE：推播根本送不出去。這正是「客戶電話同意」存在的理由——
+	// 客戶沒綁任何聊天通道：推播送不出去。這正是「客戶電話同意」存在的理由——
 	// 授權仍然建立（不可猜測的 token 與待決狀態才是紀錄的重點），
 	// 並把連結直接給櫃檯，讓他想辦法送到客戶手上。
-	if !customerHasLINE(customerID) {
-		log.Printf("追加維修授權已建立（客戶未綁 LINE，未推播）: id=%d work_order=%d",
+	notifyChannel := customerNotificationChannel(customerID)
+	if notifyChannel == "" {
+		log.Printf("追加維修授權已建立（客戶未綁聊天通道，未推播）: id=%d work_order=%d",
 			req.ID, woID)
 		redirectMsg(w, r, woPath, fmt.Sprintf(
-			"已建立追加維修授權。客戶未綁定 LINE，通知沒有送出——"+
+			"已建立追加維修授權。客戶未綁定聊天通道，通知沒有送出——"+
 				"請以電話取得同意後按「客戶電話同意」，或把這個連結給客戶：%s", approveURL))
 		return
 	}
 
 	subject := "追加維修項目授權"
+	// 聊天內直接回覆同意/拒絕（approval_chat.go）；相對路徑連結在聊天裡點不到，
+	// 不再放進客戶訊息。連結仍保留給櫃檯（電話同意情境）。
 	body := fmt.Sprintf("您的車輛需要追加維修項目：\n%s × %d，單價 %s\n\n"+
-		"請點選以下連結確認是否同意（24 小時內有效）：\n%s\n\n"+
+		"請直接回覆「同意」或「拒絕」（24 小時內有效）。\n\n"+
 		"若不同意，車廠將不進行此項維修。",
-		item.Description, item.Quantity, line.Money(item.UnitPrice), approveURL)
-	if err := cron.QueueNotification("approval_request", "line", subject, body, customerID, woID, time.Now()); err != nil {
+		item.Description, item.Quantity, line.Money(item.UnitPrice))
+	if err := cron.QueueNotification("approval_request", notifyChannel, subject, body, customerID, woID, time.Now()); err != nil {
 		// 授權**已經建立**了，只是通知沒進佇列。
 		// 這裡刻意用成功樣式的訊息而不是錯誤：顯示成錯誤會讓櫃檯以為整件事失敗
 		// 而重新建立一次，結果變成兩筆未決授權同時擋住完工。
@@ -147,8 +150,8 @@ func CreateApprovalFromWorkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("追加維修授權已建立: id=%d work_order=%d", req.ID, woID)
-	redirectMsg(w, r, woPath, "已建立追加維修授權，並已通知客戶（連結 24 小時內有效）")
+	log.Printf("追加維修授權已建立: id=%d work_order=%d channel=%s", req.ID, woID, notifyChannel)
+	redirectMsg(w, r, woPath, "已建立追加維修授權，並已通知客戶（回覆「同意」／「拒絕」，24 小時內有效）")
 }
 
 // generateSecureToken 產生密碼學隨機 token（32 bytes = 64 hex chars）

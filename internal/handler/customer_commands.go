@@ -42,6 +42,11 @@ func handleCustomerCommand(channel, userID, q string) string {
 		return reply
 	}
 
+	// 追加維修授權：客戶回「同意」／「拒絕」（FR-WO-06）。
+	if reply, handled := handleApprovalReply(channel, userID, q); handled {
+		return reply
+	}
+
 	switch {
 	case q == "預約" || q == "我要預約" || q == "掛號":
 		return startBooking(channel, userID)
@@ -73,7 +78,7 @@ func handleCustomerCommand(channel, userID, q string) string {
 		return workOrderStatusByID(cid, woID)
 
 	default:
-		return "您好，請輸入「預約」掛號預約、「進度」查詢車輛狀態、「工單 編號」查指定工單，或「履歷」查詢維修紀錄。"
+		return "您好，請輸入「預約」掛號預約、「進度」查詢車輛狀態、「工單 編號」查指定工單、「履歷」查詢維修紀錄；收到追加維修通知時回覆「同意」或「拒絕」。"
 	}
 }
 

@@ -317,7 +317,7 @@ func TestCreateApprovalFromWorkOrderWithoutLineStillCreates(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Location 解碼失敗: %v", err)
 	}
-	for _, want := range []string{"未綁定 LINE", "客戶電話同意"} {
+	for _, want := range []string{"未綁定", "客戶電話同意"} {
 		if !strings.Contains(decoded, want) {
 			t.Errorf("訊息應包含 %q，實際 %q", want, decoded)
 		}

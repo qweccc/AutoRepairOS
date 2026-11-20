@@ -97,7 +97,7 @@ func TestBatchNApprovalFromWorkOrder(t *testing.T) {
 			t.Fatalf("code=%d body=%s", w.Code, w.Body.String())
 		}
 		loc, _ := url.QueryUnescape(w.Header().Get("Location"))
-		if !strings.Contains(loc, "未綁定 LINE") {
+		if !strings.Contains(loc, "未綁定") {
 			t.Fatalf("Location=%q", loc)
 		}
 		if n := batchNCount(t, `SELECT COUNT(*) FROM approval_requests WHERE work_order_id=100`); n != 1 {

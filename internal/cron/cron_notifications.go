@@ -288,8 +288,17 @@ func processPendingNotificationsBatch(send func(notificationItem) error) (int, e
 		claimed++
 
 		switch it.channel {
-		case "internal", "none":
-			// 不外送，直接標記完成，讓佇列不阻塞。
+		case "internal":
+			// 內部通知（待綁定好友等）：best-effort 推播給已設定的老闆通道，
+			// 失敗只記 log——排程頁仍有紀錄，佇列不阻塞。
+			deliverInternal(it)
+			if err := markSent(it.id, claimToken); err != nil {
+				return claimed, err
+			}
+			sent++
+
+		case "none":
+			// 客戶選不通知：直接標記完成，讓佇列不阻塞。
 			if err := markSent(it.id, claimToken); err != nil {
 				return claimed, err
 			}
@@ -386,6 +395,28 @@ func deliver(cfg *line.Config, client *line.Client, telegramCfg *telegram.Config
 		return permanentNotificationError(fmt.Errorf("SMS 通道已停用"))
 	}
 	return client.PushMessage(it.lineUserID, it.body)
+}
+
+// deliverInternal 把內部通知推播到所有已設定的老闆通道
+// （TELEGRAM_CHAT_ID／DISCORD_CHANNEL_ID／SLACK_CHANNEL_ID）。
+// 全未設定時維持原本行為：只留在排程頁。任何失敗只記 log，不影響 markSent。
+func deliverInternal(it notificationItem) {
+	text := it.subject + "\n" + it.body
+	if cfg, client := telegram.Shared(); cfg != nil && cfg.Valid() && strings.TrimSpace(cfg.ChatID) != "" {
+		if err := client.SendMessage(cfg.ChatID, text); err != nil {
+			log.Printf("內部通知 Telegram 推播失敗: %v", err)
+		}
+	}
+	if cfg, client := discord.Shared(); cfg != nil && cfg.Valid() && strings.TrimSpace(cfg.ChannelID) != "" {
+		if err := client.SendMessage(cfg.ChannelID, text); err != nil {
+			log.Printf("內部通知 Discord 推播失敗: %v", err)
+		}
+	}
+	if cfg, client := slack.Shared(); cfg != nil && cfg.Valid() && strings.TrimSpace(cfg.ChannelID) != "" {
+		if err := client.SendMessage(cfg.ChannelID, text); err != nil {
+			log.Printf("內部通知 Slack 推播失敗: %v", err)
+		}
+	}
 }
 
 func claimNotification(id int64, now time.Time, leaseExpired string) (bool, string, error) {
