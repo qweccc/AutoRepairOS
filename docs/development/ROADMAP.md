@@ -224,6 +224,7 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 - [x] FR-IN-06 庫存盤點（2026-11-19）：盤點單（全庫/分類/庫位快照）→逐筆實盤（HTMX 列更新＋進度 OOB＋條碼搜尋/相機）→完成以絕對值校正庫存（movement source=stocktake＋audit）；migration 058、限櫃檯以上、測試 3 案。解决健檢發現的 4001 筆負庫存 legacy。
 - [x] FR-APP-06 LINE 預約掛號（2026-11-20）：已綁定客戶傳「預約」→日期→車輛→服務→確認，建立 booked 預約；記憶體對話狀態 10min TTL、日期寬容解析（ISO/M-D/明天/後天、限 60 天）、多車擇一、随时取消；測試 6 案。
 - [x] 內網限定部署（2026-11-20，用戶政策：web 內網、外部只開 LINE webhook、客戶走聊天）：compose web 埠改綁 127.0.0.1＋LAN_BIND_IP（實測 loopback/LAN 200、vEthernet 拒連）；exe 加 BIND_IP 設定；tunnel ingress 為遠端管理（dashboard），需確認 path ^/webhook/line$＋catch-all 404；.env 的 LINE_WEBHOOK_PUBLIC_URL 是已死的 quick tunnel 舊值，待用戶提供正式 hostname 更新。
+- [x] FR-CRM-06 Telegram 客戶自助對等（2026-11-20）：抽出共用指令層 customer_commands.go（進度/工單/履歷/預約），LINE webhook 與 Telegram getUpdates 共用；預約狀態機加 channel 參數（session 隔離、notes 分 LINE/Telegram 預約）；Telegram 已綁定客戶從「靜默不回」改為完整指令；啟動 log 印 LINE 設定狀態；.env.example 網路說明重寫（named tunnel webhook-only、quick tunnel 警告、Telegram 雙用途）。測試：Telegram 指令 7 斷言＋預約流程＋通道隔離。
 
 ## 2026-11-19 全量複查修補
 

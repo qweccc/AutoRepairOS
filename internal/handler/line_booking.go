@@ -55,10 +55,10 @@ func dropBookingSession(userID string) {
 	delete(bookingSessions, userID)
 }
 
-// startBooking 客戶傳「預約」時進入流程。
-func startBooking(lineUserID string) string {
+// startBooking 客戶傳「預約」時進入流程（channel: line|telegram）。
+func startBooking(channel, lineUserID string) string {
 	var customerID int64
-	err := db.DB.QueryRow(`SELECT id FROM active_customers WHERE line_user_id = ?`, lineUserID).Scan(&customerID)
+	err := db.DB.QueryRow(`SELECT id FROM active_customers WHERE `+channelColumn(channel)+` = ?`, lineUserID).Scan(&customerID)
 	if err != nil {
 		return "請先完成綁定才能預約（輸入「綁定 綁定碼」，綁定碼請向櫃檯索取）。"
 	}
@@ -78,7 +78,7 @@ func startBooking(lineUserID string) string {
 		return "您名下沒有車輛紀錄，請聯絡櫃檯建檔後再預約。"
 	}
 	bookingMu.Lock()
-	bookingSessions[lineUserID] = &bookingSession{
+	bookingSessions[channel+":"+lineUserID] = &bookingSession{
 		Step:     "date",
 		Vehicles: vehicles,
 		Expires:  time.Now().Add(bookingTTL),
@@ -88,13 +88,14 @@ func startBooking(lineUserID string) string {
 }
 
 // handleBookingMessage 進行中的預約對話。回 (回覆, 是否已處理)。
-func handleBookingMessage(lineUserID, q string) (string, bool) {
-	s := getBookingSession(lineUserID)
+func handleBookingMessage(channel, lineUserID, q string) (string, bool) {
+	key := channel + ":" + lineUserID
+	s := getBookingSession(key)
 	if s == nil {
 		return "", false
 	}
 	if q == "取消" {
-		dropBookingSession(lineUserID)
+		dropBookingSession(key)
 		return "已取消預約流程。如需預約請再傳「預約」。", true
 	}
 	s.Expires = time.Now().Add(bookingTTL)
@@ -146,12 +147,12 @@ func handleBookingMessage(lineUserID, q string) (string, bool) {
 	case "confirm":
 		if q == "確認" {
 			_, err := db.DB.Exec(`INSERT INTO appointments (customer_id, vehicle_id, appointment_date, service_type, status, notes)
-				VALUES (?, ?, ?, ?, 'booked', 'LINE 預約')`,
-				bookingCustomerID(lineUserID), s.Vehicle.ID, s.Date, s.Service)
+				VALUES (?, ?, ?, ?, 'booked', ?)`,
+				bookingCustomerID(channel, lineUserID), s.Vehicle.ID, s.Date, s.Service, channelNote(channel))
 			if err != nil {
 				return "預約寫入失敗，請稍後再試或直接聯絡車行。", true
 			}
-			dropBookingSession(lineUserID)
+			dropBookingSession(key)
 			return bookingSummary(s) + "\n預約成功！櫃檯會為您安排時段，如需改期請聯絡車行。", true
 		}
 		return bookingSummary(s) + "\n回覆「確認」送出預約，「取消」放棄。", true
@@ -159,10 +160,17 @@ func handleBookingMessage(lineUserID, q string) (string, bool) {
 	return "", false
 }
 
-func bookingCustomerID(lineUserID string) int64 {
+func bookingCustomerID(channel, lineUserID string) int64 {
 	var id int64
-	db.DB.QueryRow(`SELECT id FROM active_customers WHERE line_user_id = ?`, lineUserID).Scan(&id)
+	db.DB.QueryRow(`SELECT id FROM active_customers WHERE `+channelColumn(channel)+` = ?`, lineUserID).Scan(&id)
 	return id
+}
+
+func channelNote(channel string) string {
+	if channel == "telegram" {
+		return "Telegram 預約"
+	}
+	return "LINE 預約"
 }
 
 func bookingSummary(s *bookingSession) string {

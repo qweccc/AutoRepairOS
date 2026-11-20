@@ -3,9 +3,7 @@ package handler
 import (
 	"bytes"
 	"crypto/rand"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -136,16 +134,15 @@ func LineWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func customerPassbookSummary(lineUserID string) string {
-	var customerID int64
-	if err := db.DB.QueryRow(`SELECT id FROM active_customers WHERE line_user_id = ?`, lineUserID).
-		Scan(&customerID); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "查不到您的客戶綁定資料，請確認手機號碼是否已登錄。"
-		}
-		log_line("查詢維修履歷綁定失敗: %v", err)
-		return "目前無法查詢維修履歷，請稍後再試。"
+	cid, ok := resolveCustomerByChannel("line", lineUserID)
+	if !ok {
+		return "查不到您的客戶綁定資料，請確認手機號碼是否已登錄。"
 	}
+	return customerPassbookSummaryByID(cid)
+}
 
+// customerPassbookSummaryByID 通道無關的維修履歷摘要（LINE／Telegram 共用）。
+func customerPassbookSummaryByID(customerID int64) string {
 	rows, err := db.DB.Query(`SELECT COALESCE(v.plate_number,''), COALESCE(date(pb.created_at),''),
 		COALESCE(pb.service_type,''), COALESCE(pb.description,''),
 		COALESCE(pb.total_amount,0), COALESCE(pb.status,'')
@@ -153,8 +150,8 @@ func customerPassbookSummary(lineUserID string) string {
 		JOIN active_customers c ON c.id = pb.customer_id
 		JOIN active_vehicles v ON v.id = pb.vehicle_id AND v.customer_id = c.id
 		JOIN active_work_orders wo ON wo.id = pb.work_order_id AND wo.vehicle_id = v.id
-		WHERE c.id = ? AND c.line_user_id = ?
-		ORDER BY pb.created_at DESC, pb.id DESC`, customerID, lineUserID)
+		WHERE c.id = ?
+		ORDER BY pb.created_at DESC, pb.id DESC`, customerID)
 	if err != nil {
 		log_line("查詢客戶 #%d 維修履歷失敗: %v", customerID, err)
 		return "目前無法查詢維修履歷，請稍後再試。"

@@ -188,7 +188,10 @@ func StartTelegramBinding(ctx context.Context, wg *sync.WaitGroup) {
 // handleTelegramBindMessage 處理一則來自未綁定客戶的訊息。
 func handleTelegramBindMessage(client *telegram.Client, chatID int64, chatStr, text string) {
 	if isTelegramBound(chatStr) {
-		// 已綁定的客戶再傳訊息：目前只簡單回應，其他指令（進度/履歷）後續擴充。
+		// 已綁定客戶：與 LINE 共用指令層（進度/工單/履歷/預約）。
+		if reply := handleCustomerCommand("telegram", chatStr, text); reply != "" {
+			_ = client.SendMessage(chatStr, reply)
+		}
 		return
 	}
 
@@ -258,6 +261,6 @@ func handleTelegramBindMessage(client *telegram.Client, chatID int64, chatStr, t
 
 		_ = client.SendMessage(chatStr,
 			"✅ 已為您連結，客戶："+cname+
-				"\n共 "+strconv.Itoa(vehicleCount)+" 台有維修紀錄的車輛。\n\n傳「進度」查工單狀態、傳「履歷」查維修紀錄（功能陸續上線）。")
+				"\n共 "+strconv.Itoa(vehicleCount)+" 台有維修紀錄的車輛。\n\n傳「進度」查工單狀態、「履歷」查維修紀錄、「預約」掛號預約。")
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"autorepairos/internal/db"
 	"autorepairos/internal/handler"
 	"autorepairos/internal/i18n"
+	"autorepairos/internal/integration/line"
 	"autorepairos/internal/integration/vision"
 	"autorepairos/internal/routes"
 	"autorepairos/internal/seed"
@@ -82,6 +83,11 @@ func main() {
 		}
 	}
 	log.Printf("AutoRepairOS 啟動：%s", versionText())
+	if lineCfg, _ := line.Shared(); lineCfg != nil && lineCfg.Valid() {
+		log.Printf("LINE Messaging API 已設定（webhook: /webhook/line）")
+	} else {
+		log.Printf("LINE 未設定完整（LINE_CHANNEL_ID/SECRET/TOKEN），客戶 LINE 功能停用")
+	}
 
 	if err := db.Init(cfg); err != nil {
 		log.Fatalf("資料庫初始化失敗: %v", err)

@@ -77,6 +77,7 @@ AutoRepair OS – 汽車修護廠區域網路管理系統。
 - **FR-CRM-03：** 客戶檔案顯示歷史消費總額與未結清欠款（整合 AR）。
 - **FR-CRM-04：** 客戶通知偏好（LINE／Telegram／不通知），供自動化模組使用；選擇 LINE 或 Telegram 時須綁定對應的使用者 ID（LINE 使用該客戶的 line_user_id、Telegram 使用該客戶的 telegram_user_id，均不得誤用內部預設 Chat ID）；通知佇列須依客戶偏好分流；既有 SMS 偏好須明確提示需要更新，不得靜默改成其他通道或假裝已送達。
 - **FR-CRM-05：** 顧客活動代碼：支援在客戶/工單上標記行銷方案代碼，供方案成效分析。
+- **FR-CRM-06：** 客戶聊天自助（LINE／Telegram 功能對等）：綁定後可傳「進度」「工單 編號」「履歷」「預約」；預約為多步驟對話（日期→車輛→服務→確認，10 分鐘逾時、60 天限）。LINE 走 webhook（外部僅暴露此路徑）、Telegram 走 getUpdates 長輪詢（純出站、不需公開網址）；兩通道共用同一指令層與預約狀態機，session 依通道隔離。
 
 ### 5.2 車輛履歷與數位 Passbook (Vehicle History)
 

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -220,59 +219,6 @@ func handlePostback(client *line.Client, ev line.PostbackEvent) {
 
 // handleCustomerMessage 回覆客戶訊息。回傳要送出的文字，空字串代表不需回覆。
 func handleCustomerMessage(client *line.Client, ev line.MessageEvent) string {
-	q := strings.TrimSpace(ev.Text)
-
-	// 進行中的預約對話優先攔截（FR-APP-06）；過期或無對話則走一般指令。
-	if reply, handled := handleBookingMessage(ev.UserID, q); handled {
-		return reply
-	}
-
-	switch {
-	case q == "預約" || q == "我要預約" || q == "掛號":
-		return startBooking(ev.UserID)
-
-	case q == "履歷" || q == "維修紀錄" || q == "保養紀錄":
-		return customerPassbookSummary(ev.UserID)
-
-	case q == "進度" || q == "查詢" || q == "工單":
-		var plate, status string
-		err := db.DB.QueryRow(`SELECT v.plate_number, wo.status
-			FROM active_work_orders wo JOIN active_vehicles v ON v.id = wo.vehicle_id
-			JOIN active_customers c ON c.id = wo.customer_id
-			WHERE c.line_user_id = ? ORDER BY wo.id DESC LIMIT 1`, ev.UserID).
-			Scan(&plate, &status)
-		if err != nil {
-			return "查不到您的車輛紀錄，請確認手機號碼是否已登錄。"
-		}
-		label := workOrderStatusLabel(context.Background(), status)
-		if label == "" {
-			label = status
-		}
-		return fmt.Sprintf("您的車輛 %s 目前狀態：%s", plate, label)
-
-	case strings.HasPrefix(q, "工單"):
-		// 「工單 12」查指定單號
-		idStr := strings.TrimSpace(strings.TrimPrefix(q, "工單"))
-		woID, err := strconv.ParseInt(idStr, 10, 64)
-		if err != nil {
-			return "請輸入工單編號，例如「工單 12」。"
-		}
-		var plate, status string
-		err = db.DB.QueryRow(`SELECT v.plate_number, wo.status
-			FROM active_work_orders wo
-			JOIN active_vehicles v ON v.id = wo.vehicle_id
-			JOIN active_customers c ON c.id = wo.customer_id
-			WHERE wo.id = ? AND c.line_user_id = ?`, woID, ev.UserID).Scan(&plate, &status)
-		if err != nil {
-			return "找不到這張工單，或它不是您的車輛。"
-		}
-		label := workOrderStatusLabel(context.Background(), status)
-		if label == "" {
-			label = status
-		}
-		return fmt.Sprintf("工單 #%d（%s）狀態：%s", woID, plate, label)
-
-	default:
-		return "您好，請輸入「預約」掛號預約、「進度」查詢車輛狀態、「工單 編號」查指定工單，或「履歷」查詢維修紀錄。"
-	}
+	// LINE 與 Telegram 共用指令層（customer_commands.go）；client 僅供外層回訊。
+	return handleCustomerCommand("line", ev.UserID, ev.Text)
 }

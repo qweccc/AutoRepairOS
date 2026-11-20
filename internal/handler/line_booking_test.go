@@ -60,27 +60,27 @@ func TestBookingFlowMultiVehicle(t *testing.T) {
 	seedBookingCustomer(t, 2)
 	date := time.Now().AddDate(0, 0, 3).Format("2006-01-02")
 
-	reply := startBooking("U1")
+	reply := startBooking("line", "U1")
 	if !strings.Contains(reply, "預約日期") {
 		t.Fatalf("start reply=%q", reply)
 	}
 	// 多車 → 選車提示。
-	reply, handled := handleBookingMessage("U1", date)
+	reply, handled := handleBookingMessage("line", "U1", date)
 	if !handled || !strings.Contains(reply, "編號") {
 		t.Fatalf("date step reply=%q handled=%v", reply, handled)
 	}
 	// 選 2 號車。
-	reply, handled = handleBookingMessage("U1", "2")
+	reply, handled = handleBookingMessage("line", "U1", "2")
 	if !handled || !strings.Contains(reply, "ABC-2") || !strings.Contains(reply, "服務內容") {
 		t.Fatalf("vehicle step reply=%q", reply)
 	}
 	// 服務內容 → 確認提示。
-	reply, handled = handleBookingMessage("U1", "定期保養")
+	reply, handled = handleBookingMessage("line", "U1", "定期保養")
 	if !handled || !strings.Contains(reply, "確認") {
 		t.Fatalf("service step reply=%q", reply)
 	}
 	// 確認 → 建立預約。
-	reply, handled = handleBookingMessage("U1", "確認")
+	reply, handled = handleBookingMessage("line", "U1", "確認")
 	if !handled || !strings.Contains(reply, "預約成功") {
 		t.Fatalf("confirm reply=%q", reply)
 	}
@@ -95,7 +95,7 @@ func TestBookingFlowMultiVehicle(t *testing.T) {
 		t.Fatalf("appointment wrong: %d %d %s %s %s %s", cid, vid, d, svc, status, notes)
 	}
 	// 對話結束。
-	if _, handled := handleBookingMessage("U1", "確認"); handled {
+	if _, handled := handleBookingMessage("line", "U1", "確認"); handled {
 		t.Fatal("session should be gone after confirm")
 	}
 }
@@ -104,8 +104,8 @@ func TestBookingSingleVehicleSkipsChoice(t *testing.T) {
 	newMigratedTestDB(t)
 	seedBookingCustomer(t, 1)
 	date := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
-	startBooking("U1")
-	reply, _ := handleBookingMessage("U1", date)
+	startBooking("line", "U1")
+	reply, _ := handleBookingMessage("line", "U1", date)
 	if !strings.Contains(reply, "服務內容") || strings.Contains(reply, "編號") {
 		t.Fatalf("single vehicle should skip choice: %q", reply)
 	}
@@ -114,17 +114,17 @@ func TestBookingSingleVehicleSkipsChoice(t *testing.T) {
 func TestBookingCancelAndPastDate(t *testing.T) {
 	newMigratedTestDB(t)
 	seedBookingCustomer(t, 1)
-	startBooking("U1")
+	startBooking("line", "U1")
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
-	reply, _ := handleBookingMessage("U1", yesterday)
+	reply, _ := handleBookingMessage("line", "U1", yesterday)
 	if !strings.Contains(reply, "過去") {
 		t.Fatalf("past date reply=%q", reply)
 	}
-	reply, _ = handleBookingMessage("U1", "取消")
+	reply, _ = handleBookingMessage("line", "U1", "取消")
 	if !strings.Contains(reply, "已取消") {
 		t.Fatalf("cancel reply=%q", reply)
 	}
-	if _, handled := handleBookingMessage("U1", "anything"); handled {
+	if _, handled := handleBookingMessage("line", "U1", "anything"); handled {
 		t.Fatal("session should be gone after cancel")
 	}
 }
@@ -132,18 +132,18 @@ func TestBookingCancelAndPastDate(t *testing.T) {
 func TestBookingNoVehiclesAndExpiry(t *testing.T) {
 	newMigratedTestDB(t)
 	seedBookingCustomer(t, 0)
-	if reply := startBooking("U1"); !strings.Contains(reply, "沒有車輛") {
+	if reply := startBooking("line", "U1"); !strings.Contains(reply, "沒有車輛") {
 		t.Fatalf("no vehicles reply=%q", reply)
 	}
 	// 過期對話不攔截。
 	if _, err := db.DB.Exec(`INSERT INTO vehicles (id, customer_id, plate_number, brand_model) VALUES (21,1,'DEF-9','Mazda')`); err != nil {
 		t.Fatal(err)
 	}
-	startBooking("U1")
+	startBooking("line", "U1")
 	bookingMu.Lock()
-	bookingSessions["U1"].Expires = time.Now().Add(-time.Minute)
+	bookingSessions["line:U1"].Expires = time.Now().Add(-time.Minute)
 	bookingMu.Unlock()
-	if _, handled := handleBookingMessage("U1", "2026-12-01"); handled {
+	if _, handled := handleBookingMessage("line", "U1", "2026-12-01"); handled {
 		t.Fatal("expired session should not intercept")
 	}
 }
