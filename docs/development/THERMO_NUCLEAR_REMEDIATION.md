@@ -5,12 +5,12 @@
 | 項目 | 檔案 | 狀態 |
 |------|------|------|
 | T1 | `internal/handler/workorders.go` 拆分 | ✅ |
-| T2 | `internal/cron/cron.go` 拆分 | ⬜ |
+| T2 | `internal/cron/cron.go` 拆分 | ✅ |
 | T3 | handler 測試覆蓋率提升至 60%+ | ✅ 83.4% |
 | T4 | db 測試覆蓋率提升至 50%+ | ✅ 97.8% |
 | T5 | session 測試覆蓋率提升至 50%+ | ✅ 95.3% |
-| T6 | 清理 TODO — insurance revenue deduction | ⬜ |
-| T7 | 清理 TODO — approval flow completion | ⬜ |
+| T6 | 清理 TODO — insurance revenue deduction | ✅ 5a82693 |
+| T7 | 清理 TODO — approval flow completion | ✅ |
 | T8 | 業務邏輯從 handler 移至 service 層 | ✅ |
 | T9 | workorders.go spaghetti 條件重構 | ✅ |
 
