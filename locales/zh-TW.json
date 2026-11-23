@@ -460,6 +460,7 @@
   "inventory.negative_intro": "舊系統（CAR35）進貨常未登錄就直接出料，匯入後留下負庫存。負庫存會讓扣料與庫存報表失準，建議從「有在賣的熱門件」開始補正。",
   "inventory.negative_audit": "補正會留下紀錄",
   "inventory.negative_audit_suffix": "（誰、何時、從多少改成多少），日後可追溯。",
+  "inventory.negative_export_csv": "下載盤點單 CSV",
   "inventory.stat.negative_parts": "負庫存料號",
   "inventory.stat.all_parts": "全部料號",
   "inventory.stat.worst_qty": "最負數量",

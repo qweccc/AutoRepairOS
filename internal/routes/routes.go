@@ -157,6 +157,8 @@ func New(d Deps) *chi.Mux {
 	r.Get("/inventory/{id}/stock", handler.AllStaff(handler.StockAdjustForm))
 	r.Get("/inventory/movements", handler.AllStaff(handler.MovementLog))
 	r.Get("/inventory/negative", handler.AllStaff(handler.NegativeStockList))
+	// 負庫存盤點單 CSV（可列印、實盤欄留空，店內逐架清點用）
+	r.Get("/inventory/negative.csv", handler.AllStaff(handler.ExportNegativeStockCSV))
 	r.Post("/suppliers/{id}/deactivate", handler.OwnerOnly(handler.DeactivateSupplier))
 	r.Post("/suppliers/{id}/reactivate", handler.OwnerOnly(handler.ReactivateSupplier))
 	r.Post("/staff/{id}/deactivate", handler.OwnerOnly(handler.DeactivateStaff))

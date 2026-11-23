@@ -407,6 +407,38 @@ func TestBatchBNegativeStock(t *testing.T) {
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("fix form 404: %d", rec.Code)
 	}
+
+	// 盤點單 CSV：只含負庫存、有 BOM、欄位數固定（實盤數/備註留空）
+	csvRec := httptest.NewRecorder()
+	ExportNegativeStockCSV(csvRec, httptest.NewRequest("GET", "/inventory/negative.csv", nil), owner)
+	if csvRec.Code != http.StatusOK {
+		t.Fatalf("negative csv: code=%d body=%s", csvRec.Code, csvRec.Body.String())
+	}
+	if ct := csvRec.Header().Get("Content-Type"); ct != "text/csv; charset=utf-8" {
+		t.Fatalf("negative csv content-type=%q", ct)
+	}
+	if cd := csvRec.Header().Get("Content-Disposition"); !strings.Contains(cd, `filename="negative_stock_`) {
+		t.Fatalf("negative csv disposition=%q", cd)
+	}
+	body := csvRec.Body.String()
+	if !strings.HasPrefix(body, "\ufeff") || !strings.Contains(body, "序號,類別,庫位,料號,品名,供應商,帳面數,缺口,實盤數,備註") {
+		t.Fatalf("negative csv missing BOM/header: %q", body[:60])
+	}
+	if !strings.Contains(body, "電源線") || strings.Contains(body, "N-2") {
+		t.Fatalf("negative csv wrong rows: %q", body)
+	}
+	dataLines := strings.Split(strings.TrimPrefix(body, "\ufeff"), "\n")
+	if len(dataLines) < 2 || strings.TrimSpace(dataLines[len(dataLines)-1]) != "" {
+		t.Fatalf("negative csv malformed: %q", body)
+	}
+	for _, line := range dataLines[1 : len(dataLines)-1] {
+		if got := len(strings.Split(line, ",")); got != 10 {
+			t.Fatalf("negative csv fields=%d want 10 in %q", got, line)
+		}
+		if !strings.HasSuffix(line, ",,") {
+			t.Fatalf("negative csv blank counted/note cells: %q", line)
+		}
+	}
 }
 
 func TestBatchBApplyNegativeStockFix(t *testing.T) {

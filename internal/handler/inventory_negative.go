@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"autorepairos/internal/db"
 	"autorepairos/internal/model"
@@ -220,6 +221,53 @@ func ApplyNegativeStockFix(w http.ResponseWriter, r *http.Request, user model.Us
 
 	redirectMsg(w, r, "/inventory/negative",
 		"已補正："+strconv.Itoa(current)+" → "+strconv.Itoa(target))
+}
+
+// ExportNegativeStockCSV 負庫存盤點單（可列印／帶回系統校正用）。
+//
+// 讓店裡逐架清點：依類別→庫位→料號排序，附「帳面數／缺口」，
+// 「實盤數」「備註」留空給人員手寫；填完直接在 /stocktakes 建單輸入。
+func ExportNegativeStockCSV(w http.ResponseWriter, r *http.Request, user model.User) {
+	_ = user
+
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="negative_stock_`+time.Now().Format("20060102")+`.csv"`)
+
+	rows, err := db.DB.Query(`SELECT COALESCE(i.category,''), COALESCE(i.bin_location,''),
+			i.part_number, i.name, COALESCE(s.name,''), COALESCE(i.stock_quantity,0)
+		FROM active_inventory_items i
+		LEFT JOIN active_suppliers s ON s.id = i.supplier_id
+		WHERE COALESCE(i.stock_quantity,0) < 0
+		ORDER BY CASE WHEN TRIM(COALESCE(i.category,''))='' THEN 1 ELSE 0 END,
+			i.category, i.bin_location, i.part_number, i.id`)
+	if err != nil {
+		fail(w, "查詢負庫存失敗")
+		return
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	b.WriteString("序號,類別,庫位,料號,品名,供應商,帳面數,缺口,實盤數,備註\n")
+	n := 0
+	for rows.Next() {
+		var category, binLoc, part, name, supplier string
+		var qty int
+		if err := rows.Scan(&category, &binLoc, &part, &name, &supplier, &qty); err != nil {
+			continue
+		}
+		n++
+		b.WriteString(strconv.Itoa(n) + "," + csvField(category) + "," + csvField(binLoc) + "," +
+			csvField(part) + "," + csvField(name) + "," + csvField(supplier) + "," +
+			strconv.Itoa(qty) + "," + strconv.Itoa(-qty) + ",,\n")
+	}
+	if err := rows.Err(); err != nil {
+		fail(w, "查詢負庫存失敗")
+		return
+	}
+
+	// BOM：Excel 靠它判斷 UTF-8，少了中文會變亂碼。
+	w.Write([]byte("\ufeff"))
+	w.Write([]byte(b.String()))
 }
 
 // MovementLog 庫存異動紀錄頁。

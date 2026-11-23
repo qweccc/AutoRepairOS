@@ -460,6 +460,7 @@
   "inventory.negative_intro": "The legacy system (CAR35) often issued parts without recording receipts, leaving negative stock after import. Negative stock skews deductions and inventory reports; start correcting best-sellers.",
   "inventory.negative_audit": "Corrections are recorded",
   "inventory.negative_audit_suffix": " (who, when, from what to what) for later traceability.",
+  "inventory.negative_export_csv": "Download stocktake sheet (CSV)",
   "inventory.stat.negative_parts": "Negative-stock parts",
   "inventory.stat.all_parts": "All parts",
   "inventory.stat.worst_qty": "Most negative qty",

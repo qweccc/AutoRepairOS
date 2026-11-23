@@ -45,6 +45,7 @@ templ NegativeStockPage(stats NegativeStockStats, rows []NegativeStockRow, total
 				@negativeSortTab(i18n.T(ctx, "inventory.sort.deficit"), "", sortBy, q)
 				@negativeSortTab(i18n.T(ctx, "inventory.sort.sellable"), "sellable", sortBy, q)
 				@negativeSortTab(i18n.T(ctx, "inventory.sort.name"), "name", sortBy, q)
+				<a class="btn btn-o" href="/inventory/negative.csv">{ i18n.T(ctx, "inventory.negative_export_csv") }</a>
 				<a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.back_list") }</a>
 			</div>
 			<form method="GET" action="/inventory/negative" style="margin-bottom:12px">
