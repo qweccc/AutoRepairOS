@@ -282,3 +282,29 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 | 通知批次（1000 筆 pending→sent，5 批×200） | 6.0s | <1 分鐘 | PASS |
 
 通知吞吐實測 1000 筆／6 秒，遠超 SRS「每分鐘 1000 筆」要求（本輪 cron 改每批 200、單次上限 1000 後之實測）。
+
+## 2026-11-23 資料品質修正與盤點單交付
+
+### 正式 DB 資料修正（修改前備份 `data/backups/pref_fix_20261123.db`，audit_log 7 筆 `data_fix`）
+
+- 負單價 10 筆：查明為退料／折讓列（同工單皆有正項），保留不改。
+- 負總額工單 4 筆（-997／-4345／-46／-45）：以明細加總重算為 3000／810／4350／5550（無收款紀錄，不影響金流）。
+- qty=0 明細 3 筆：DF-4-1／XW-4 的畸零 0.1 元歸零（quantity 0×0 自洽、工單總額與明細趨一致）；XW-5 全零僅標示待人工覆核。
+- 已知殘留：`work_orders.total_amount` 與明細不符仍有 **21,758 筆**（多為 2003–2018 無收款紀錄之舊匯入），尚未批次重算，待政策決定。
+
+### 新功能：負庫存盤點單 CSV
+
+- `GET /inventory/negative.csv`（AllStaff）：依類別→庫位排序輸出所有負庫存（序號/類別/庫位/料號/品名/供應商/帳面數/缺口/實盤數/備註），UTF-8 BOM 可直接開 Excel；頁面加「下載盤點單 CSV」鈕、中英字典、handler 測試。commit `76eb55c`。
+
+### 部署與驗證
+
+- `docker compose up -d --build --force-recreate` 後 8090 login=200；匿名路由保護抽查正常（受保護頁 302→/login、未知 API 404）。
+- 還原演練（`gen_restore.py`＋`restore_drill.sh`，取最新備份 `autorepair_20261122_144308.tar.gz`）：6 表 restored=prod 全等、`integrity_check=ok`、照片 0/0；scratch volume 已清。
+- CI：`451b867` success。
+
+### 未完成／待決定
+
+- release exe 需重建（現行為 2026-11-20 build `d175b85`，尚未含 CSV 功能）。
+- `.env` 的 `LINE_WEBHOOK_PUBLIC_URL` 仍是已死的 quick tunnel 舊值，待用戶提供正式 tunnel hostname。
+- 庫存品項「方砂8孔＃120」selling_price = -8 待店主確認正確售價。
+- Docker 目前關閉（8090 停擺）；每日備份排程在容器內，恢復前 11-23 天的排程備份不會執行。
