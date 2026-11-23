@@ -1261,6 +1261,8 @@ func stocktakeScopeLabel(ctx context.Context, st model.Stocktake) string {
 		return i18n.T(ctx, "stocktake.scope_category") + "：" + st.ScopeValue
 	case "bin":
 		return i18n.T(ctx, "stocktake.scope_bin") + "：" + st.ScopeValue
+	case "csv":
+		return i18n.T(ctx, "stocktake.scope_csv")
 	default:
 		return i18n.T(ctx, "stocktake.scope_all")
 	}

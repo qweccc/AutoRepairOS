@@ -290,7 +290,7 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 - 負單價 10 筆：查明為退料／折讓列（同工單皆有正項），保留不改。
 - 負總額工單 4 筆（-997／-4345／-46／-45）：以明細加總重算為 3000／810／4350／5550（無收款紀錄，不影響金流）。
 - qty=0 明細 3 筆：DF-4-1／XW-4 的畸零 0.1 元歸零（quantity 0×0 自洽、工單總額與明細趨一致）；XW-5 全零僅標示待人工覆核。
-- 已知殘留：`work_orders.total_amount` 與明細不符仍有 **21,758 筆**（多為 2003–2018 無收款紀錄之舊匯入），尚未批次重算，待政策決定。
+- 已知殘留：`work_orders.total_amount` 與明細不符仍有 **21,758 筆**（多為 2003–2018 無收款紀錄之舊匯入），尚未批次重算，待政策決定。（已於同日稍後批次重算，見下方「工單總額批次重算」）
 
 ### 新功能：負庫存盤點單 CSV
 
@@ -301,6 +301,17 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 - `docker compose up -d --build --force-recreate` 後 8090 login=200；匿名路由保護抽查正常（受保護頁 302→/login、未知 API 404）。
 - 還原演練（`gen_restore.py`＋`restore_drill.sh`，取最新備份 `autorepair_20261122_144308.tar.gz`）：6 表 restored=prod 全等、`integrity_check=ok`、照片 0/0；scratch volume 已清。
 - CI：`451b867` success。
+
+### 工單總額批次重算（2026-11-23）
+
+- 工具 `unpublished/analysis-and-tests/tools/fix_workorder_totals.py`（`--dry-run`／`--apply`／`--status`／`--backup-dir`；套用前一律以 SQLite backup API 做一致性快照）。
+- 依 SRS「以明細加總為準」重算：**paid／completed 且有有效明細共 21,719 筆**（淨差 +3,253,169.60）；全部為 2021 年以前舊單，無收款紀錄影響。26 筆無有效明細者不重算、僅列報告。
+- 產出：修改前快照 `data/backups/wo_total_recalc_before_20261123_085441.db`＋明細 CSV（21,719 列）；audit_log 一筆彙整（entity_type=`work_order_batch`）。套後 `integrity_check=ok`、foreign_key_check 無違規、有明細工單 mismatch 歸零。
+
+### 新功能：盤點單 CSV 迴轉匯入（2026-11-23）
+
+- 負庫存頁可將填好「實盤數」的 CSV 上傳（`POST /stocktakes/import`，櫃檯以上），建立 `scope_type='csv'` 的盤點草稿：已填者直接帶 `counted_qty`、未填者留白；料號不存在／已停用者略過並計入摘要訊息；audit_log 記 `stocktake_csv_import`。
+- migration `060_stocktake_csv_scope`（重建 stocktakes 放寬 CHECK 含 csv，含 down）；列表頁範圍顯示「CSV 匯入」。測試 `TestStocktakeCSVImport`（含缺料號欄 400、不建單）。
 
 ### 未完成／待決定
 

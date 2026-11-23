@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"bytes"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -197,4 +200,85 @@ func TestStocktakeSearchFragment(t *testing.T) {
 	if !strings.Contains(body, "零件B") || strings.Contains(body, "零件A") {
 		t.Fatalf("search fragment wrong: %s", body)
 	}
+}
+
+func TestStocktakeCSVImport(t *testing.T) {
+	newMigratedTestDB(t)
+	seedStocktakeParts(t)
+	owner := model.User{ID: 1, Role: "owner"}
+
+	// 與頁面匯出同格式：P-B 已填實盤 55、P-A 未填（待補）、Z-未知 應略過。
+	csvContent := "\ufeff序號,類別,庫位,料號,品名,供應商,帳面數,缺口,實盤數,備註\n" +
+		"1,,A1,P-A,零件A,,10,,,\n" +
+		"2,,A1,P-B,零件B,,-39,39,55,\n" +
+		"3,,X,Z-未知,不存在,,1,,,\n"
+	ct, body := multipartCSVBody(t, "csv", "count.csv", []byte(csvContent))
+	req := httptest.NewRequest("POST", "/stocktakes/import", body)
+	req.Header.Set("Content-Type", ct)
+	rec := httptest.NewRecorder()
+	ImportStocktakeCSV(rec, req, owner)
+	if rec.Code != http.StatusSeeOther && rec.Code != http.StatusFound {
+		t.Fatalf("import code=%d body=%s", rec.Code, rec.Body.String())
+	}
+	var stID int64
+	var scopeType, note string
+	var itemCount int
+	if err := db.DB.QueryRow(`SELECT id, scope_type, COALESCE(note,''), item_count
+		FROM stocktakes ORDER BY id DESC LIMIT 1`).Scan(&stID, &scopeType, &note, &itemCount); err != nil {
+		t.Fatal(err)
+	}
+	if scopeType != "csv" || note != "CSV 匯入" || itemCount != 2 {
+		t.Fatalf("stocktake=%s/%s/%d want csv/CSV 匯入/2", scopeType, note, itemCount)
+	}
+	ids := stocktakeItemIDs(t, stID)
+	if len(ids) != 2 {
+		t.Fatalf("items=%d want 2", len(ids))
+	}
+	var pbc, pac interface{}
+	db.DB.QueryRow(`SELECT counted_qty FROM stocktake_items WHERE stocktake_id=? AND inventory_item_id=902`, stID).Scan(&pbc)
+	db.DB.QueryRow(`SELECT counted_qty FROM stocktake_items WHERE stocktake_id=? AND inventory_item_id=901`, stID).Scan(&pac)
+	if pbc != int64(55) {
+		t.Fatalf("P-B counted=%v want 55", pbc)
+	}
+	if pac != nil {
+		t.Fatalf("P-A counted=%v want NULL", pac)
+	}
+	var audits int
+	db.DB.QueryRow(`SELECT COUNT(1) FROM audit_log WHERE entity_type='stocktake' AND action='stocktake_csv_import'`).Scan(&audits)
+	if audits != 1 {
+		t.Fatalf("audit=%d want 1", audits)
+	}
+
+	// 缺「料號」欄 → 400，且不建立任何盤點單。
+	bad := "序號,實盤數\r\n1,5\r\n"
+	ct2, body2 := multipartCSVBody(t, "csv", "bad.csv", []byte(bad))
+	req2 := httptest.NewRequest("POST", "/stocktakes/import", body2)
+	req2.Header.Set("Content-Type", ct2)
+	rec2 := httptest.NewRecorder()
+	ImportStocktakeCSV(rec2, req2, owner)
+	if rec2.Code != http.StatusBadRequest {
+		t.Fatalf("missing part header code=%d want 400", rec2.Code)
+	}
+	var n int
+	db.DB.QueryRow(`SELECT COUNT(1) FROM stocktakes`).Scan(&n)
+	if n != 1 {
+		t.Fatalf("stocktakes=%d want 1 (no extra)", n)
+	}
+}
+
+func multipartCSVBody(t *testing.T, field, filename string, content []byte) (string, io.Reader) {
+	t.Helper()
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	part, err := w.CreateFormFile(field, filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := part.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return w.FormDataContentType(), &b
 }

@@ -46,6 +46,13 @@ templ NegativeStockPage(stats NegativeStockStats, rows []NegativeStockRow, total
 				@negativeSortTab(i18n.T(ctx, "inventory.sort.sellable"), "sellable", sortBy, q)
 				@negativeSortTab(i18n.T(ctx, "inventory.sort.name"), "name", sortBy, q)
 				<a class="btn btn-o" href="/inventory/negative.csv">{ i18n.T(ctx, "inventory.negative_export_csv") }</a>
+				if user.Role == "owner" || user.Role == "counter" {
+					<form method="POST" action="/stocktakes/import" enctype="multipart/form-data" style="display:inline-flex;gap:8px;align-items:center">
+						@components.CSRFInput()
+						<input type="file" name="csv" accept=".csv,text/csv" required/>
+						<button class="btn btn-p" type="submit">{ i18n.T(ctx, "inventory.negative_import_csv") }</button>
+					</form>
+				}
 				<a class="btn btn-s" href="/inventory">{ i18n.T(ctx, "inventory.back_list") }</a>
 			</div>
 			<form method="GET" action="/inventory/negative" style="margin-bottom:12px">

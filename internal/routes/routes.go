@@ -150,6 +150,8 @@ func New(d Deps) *chi.Mux {
 	r.Get("/stocktakes", handler.CounterUpPage(handler.ListStocktakes))
 	r.Get("/stocktakes/new", handler.CounterUpPage(handler.NewStocktakeForm))
 	r.Post("/stocktakes", handler.CounterUp(handler.CreateStocktake))
+	// 負庫存盤點單 CSV 迴轉匯入：建立盤點草稿（已填實盤者直接帶入）
+	r.Post("/stocktakes/import", handler.CounterUpPage(handler.ImportStocktakeCSV))
 	r.Get("/stocktakes/{id}", handler.CounterUpPage(handler.ShowStocktake))
 	r.Post("/stocktakes/{id}/items/{item_id}", handler.CounterUpPage(handler.UpdateStocktakeItem))
 	r.Post("/stocktakes/{id}/complete", handler.CounterUp(handler.CompleteStocktake))
