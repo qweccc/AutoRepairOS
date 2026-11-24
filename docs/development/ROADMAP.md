@@ -315,7 +315,7 @@ templ 生成的 `*_templ.go` 用 4KB bufio 緩衝，failing-writer 只在最後�
 
 ### 未完成／待決定
 
-- release exe 需重建（現行為 2026-11-20 build `d175b85`，尚未含 CSV 功能）。
+- [x] release exe 重建（2026-11-24）：`release/AutoRepairOS-2026-11-24_090503.exe`（git `cc4c64f`，`scripts/build-release.ps1` 注入 buildTime/gitCommit）；`release_smoke.py` **全部 PASS**（含啟動 log git 修訂、app.css md5）。無修訂的過渡檔已移到 `unpublished/release-exe/`。
 - `.env` 的 `LINE_WEBHOOK_PUBLIC_URL` 仍是已死的 quick tunnel 舊值，待用戶提供正式 tunnel hostname。
 - 庫存品項「方砂8孔＃120」selling_price = -8 待店主確認正確售價。
-- Docker 目前關閉（8090 停擺）；每日備份排程在容器內，恢復前 11-23 天的排程備份不會執行。
+- Docker 已於 2026-11-24 交付完成後關閉（8090 停擺、volume 保留）；每日備份排程在容器內，容器未啟動期間不執行。
